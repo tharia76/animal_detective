@@ -24,6 +24,13 @@ import dogData from '../../assets/images/animals/json/dog-0.json';
 import donkeyData from '../../assets/images/animals/json/donkey-0.json';
 import cowData from '../../assets/images/animals/json/cow-0.json';
 import chickData from '../../assets/images/animals/json/chick-0.json';
+import duckData from '../../assets/images/animals/json/duck-0.json';
+import goatData from '../../assets/images/animals/json/goat-0.json';
+import gooseData from '../../assets/images/animals/json/goose-0.json';
+import horseData from '../../assets/images/animals/json/horse-0.json';
+import llamaData from '../../assets/images/animals/json/llama-0.json';
+import pigData from '../../assets/images/animals/json/pig-0.json';
+import rabbitData from '../../assets/images/animals/json/rabbit-0.json';
 
 
 // Load the actual PNG sprite sheet
@@ -33,6 +40,13 @@ const dogSpriteSheet = require('../../assets/images/animals/png/dog-0.png');
 const donkeySpriteSheet = require('../../assets/images/animals/png/donkey-0.png');
 const cowSpriteSheet = require('../../assets/images/animals/png/cow-0.png');
 const chickSpriteSheet = require('../../assets/images/animals/png/chick-0.png');
+const duckSpriteSheet = require('../../assets/images/animals/png/duck-0.png');
+const goatSpriteSheet = require('../../assets/images/animals/png/goat-0.png');
+const gooseSpriteSheet = require('../../assets/images/animals/png/goose-0.png');
+const horseSpriteSheet = require('../../assets/images/animals/png/horse-0.png');
+const llamaSpriteSheet = require('../../assets/images/animals/png/llama-0.png');
+const pigSpriteSheet = require('../../assets/images/animals/png/pig-0.png');
+const rabbitSpriteSheet = require('../../assets/images/animals/png/rabbit-0.png');
 
 // Extract the frames array and meta from JSON
 const { frames: catFrames, meta: catMeta } = catData;
@@ -41,6 +55,13 @@ const { frames: dogFrames, meta: dogMeta } = dogData;
 const { frames: donkeyFrames, meta: donkeyMeta } = donkeyData;
 const { frames: cowFrames, meta: cowMeta } = cowData;
 const { frames: chickFrames, meta: chickMeta } = chickData;
+const { frames: duckFrames, meta: duckMeta } = duckData;
+const { frames: goatFrames, meta: goatMeta } = goatData;
+const { frames: gooseFrames, meta: gooseMeta } = gooseData;
+const { frames: horseFrames, meta: horseMeta } = horseData;
+const { frames: llamaFrames, meta: llamaMeta } = llamaData;
+const { frames: pigFrames, meta: pigMeta } = pigData;
+const { frames: rabbitFrames, meta: rabbitMeta } = rabbitData;
 
 // Pre-define animals array at module level to avoid re-creation
 const animals = [
@@ -104,6 +125,76 @@ const animals = [
     sound: require('../../assets/sounds/cow.mp3'),
     labelSound: require('../../assets/sounds/labels/cow.wav')
   },
+  {
+    id: 7,
+    name: 'Duck',
+    type: 'sprite',
+    source: duckSpriteSheet,
+    frames: duckFrames,
+    spriteSheetSize: duckMeta.size,
+    sound: require('../../assets/sounds/duck.mp3'),
+    labelSound: require('../../assets/sounds/labels/duck.wav')
+  },  
+  {
+    id: 8,
+    name: 'Goat',
+    type: 'sprite',
+    source: goatSpriteSheet,
+    frames: goatFrames,
+    spriteSheetSize: goatMeta.size,
+    sound: require('../../assets/sounds/goat.mp3'),
+    labelSound: require('../../assets/sounds/labels/goat.wav')
+  },
+  {
+    id: 9,
+    name: 'Goose',
+    type: 'sprite',
+    source: gooseSpriteSheet,
+    frames: gooseFrames,
+    spriteSheetSize: gooseMeta.size,
+    sound: require('../../assets/sounds/goose.mp3'),
+    labelSound: require('../../assets/sounds/labels/goose.wav')
+  },
+  {
+    id: 10,
+    name: 'Horse',
+    type: 'sprite',
+    source: horseSpriteSheet,
+    frames: horseFrames,
+    spriteSheetSize: horseMeta.size,
+    sound: require('../../assets/sounds/horse.mp3'),
+    labelSound: require('../../assets/sounds/labels/horse.wav')
+  },
+  {
+    id: 11,
+    name: 'Llama',
+    type: 'sprite',
+    source: llamaSpriteSheet,
+    frames: llamaFrames,
+    spriteSheetSize: llamaMeta.size,
+    sound: require('../../assets/sounds/llama.mp3'),
+    labelSound: require('../../assets/sounds/labels/llama.wav')
+  },
+  {
+    id: 12,
+    name: 'Pig',
+    type: 'sprite',
+    source: pigSpriteSheet,
+    frames: pigFrames,
+    spriteSheetSize: pigMeta.size,
+    sound: require('../../assets/sounds/pig.mp3'),
+    labelSound: require('../../assets/sounds/labels/pig.wav')
+  },
+  {
+    id: 13,
+    name: 'Rabbit',
+    type: 'sprite',
+    source: rabbitSpriteSheet,
+    frames: rabbitFrames,
+    spriteSheetSize: rabbitMeta.size,
+    sound: require('../../assets/sounds/rabbit.mp3'),
+    labelSound: require('../../assets/sounds/labels/rabbit.wav')
+  }
 ];
 
 // Preload all animal images regardless of type
