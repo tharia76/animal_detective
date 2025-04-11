@@ -308,6 +308,11 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
   },
+  animalImage: {
+    width: screenWidth * 0.5,
+    height: screenHeight * 0.25,
+    resizeMode: 'contain',
+  },
 });
 
 // Pre-create animation configurations
@@ -348,11 +353,10 @@ function SpriteAnimation({
   style?: StyleProp<ViewStyle>
 }) {
   const [frameIndex, setFrameIndex] = useState(0);
-  const intervalRef = useRef<NodeJS.Timer | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     setFrameIndex(0); // reset index on frames change
-
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -521,13 +525,15 @@ export default function HomeScreen() {
   // Play animal sound
   const playAnimalSound = async () => {
     if (isMuted || !currentAnimal.sound) return;
-    
+  
     try {
       // Unload previous sound if exists
       if (soundRef.current) {
+        const status = await soundRef.current.getStatusAsync();
+        if (status.isLoaded && status.isPlaying) return; // Don't play again if already playing
         await soundRef.current.unloadAsync();
       }
-      
+  
       // Load and play new sound
       const { sound } = await Audio.Sound.createAsync(currentAnimal.sound);
       soundRef.current = sound;
@@ -536,6 +542,7 @@ export default function HomeScreen() {
       console.warn('Error playing sound:', error);
     }
   };
+  
   
   // Helper function to stop sound
   const stopSound = useCallback(async () => {
@@ -568,16 +575,29 @@ export default function HomeScreen() {
   
     const playSounds = async () => {
       try {
-        // 1. Проигрываем звук животного
+        // If an animal sound is already playing, don't play it again
+        if (soundRef.current) {
+          const status = await soundRef.current.getStatusAsync();
+          if (status.isLoaded && status.isPlaying) return;
+          await soundRef.current.unloadAsync();
+        }
+  
         const { sound: animalSound } = await Audio.Sound.createAsync(currentAnimal.sound);
+        soundRef.current = animalSound;
         await animalSound.playAsync();
   
-        // 2. Через 1 секунду — озвучка названия
+        // 2. After 1 second, play label sound
         setTimeout(async () => {
-          if (currentAnimal.labelSound) {
-            const { sound: labelSound } = await Audio.Sound.createAsync(currentAnimal.labelSound);
-            await labelSound.playAsync();
+          if (isMuted || !currentAnimal.labelSound) return;
+  
+          // Unload the animal sound to avoid overlapping
+          if (soundRef.current) {
+            await soundRef.current.unloadAsync();
           }
+  
+          const { sound: labelSound } = await Audio.Sound.createAsync(currentAnimal.labelSound);
+          soundRef.current = labelSound;
+          await labelSound.playAsync();
         }, 1000);
       } catch (error) {
         console.warn('Error playing sound sequence:', error);
@@ -586,6 +606,7 @@ export default function HomeScreen() {
   
     playSounds();
   }, [currentAnimal, isMuted]);
+  
   
 
   const toggleSound = useCallback(() => {
