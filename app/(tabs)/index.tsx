@@ -21,44 +21,88 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
 import catData from '../../assets/images/animals/json/cat-0.json';
 import chickenData from '../../assets/images/animals/json/chicken-0.json';
 import dogData from '../../assets/images/animals/json/dog-0.json';
+import donkeyData from '../../assets/images/animals/json/donkey-0.json';
+import cowData from '../../assets/images/animals/json/cow-0.json';
+import chickData from '../../assets/images/animals/json/chick-0.json';
+
 
 // Load the actual PNG sprite sheet
 const catSpriteSheet = require('../../assets/images/animals/png/cat-0.png');  
 const chickenSpriteSheet = require('../../assets/images/animals/png/chicken-0.png');
 const dogSpriteSheet = require('../../assets/images/animals/png/dog-0.png');
+const donkeySpriteSheet = require('../../assets/images/animals/png/donkey-0.png');
+const cowSpriteSheet = require('../../assets/images/animals/png/cow-0.png');
+const chickSpriteSheet = require('../../assets/images/animals/png/chick-0.png');
 
 // Extract the frames array and meta from JSON
-const { frames, meta } = catData;
+const { frames: catFrames, meta: catMeta } = catData;
 const { frames: chickenFrames, meta: chickenMeta } = chickenData;
 const { frames: dogFrames, meta: dogMeta } = dogData;
-const spriteSheetWidth = meta.size.w;
-const spriteSheetHeight = meta.size.h;
+const { frames: donkeyFrames, meta: donkeyMeta } = donkeyData;
+const { frames: cowFrames, meta: cowMeta } = cowData;
+const { frames: chickFrames, meta: chickMeta } = chickData;
 
 // Pre-define animals array at module level to avoid re-creation
 const animals = [
-  { 
-    id: 1, 
-    source: catSpriteSheet, 
-    name: 'Cat', 
-    type: 'sprite', 
-    frames: frames,
-    sound: require('../../assets/sounds/cat.mp3')
+  {
+    id: 1,
+    name: 'Cat',
+    type: 'sprite',
+    source: catSpriteSheet,
+    frames: catFrames,
+    spriteSheetSize: catMeta.size,
+    sound: require('../../assets/sounds/cat.mp3'),
+    labelSound: require('../../assets/sounds/labels/cat.wav')
   },
   {
     id: 2,
-    source: chickenSpriteSheet,
-    name: 'Chicken',
+    name: 'Dog',
     type: 'sprite',
-    frames: chickenFrames,
-    sound: require('../../assets/sounds/chicken.mp3')
+    source: dogSpriteSheet,
+    frames: dogFrames,
+    spriteSheetSize: dogMeta.size,
+    sound: require('../../assets/sounds/dog.mp3'),
+    labelSound: require('../../assets/sounds/labels/dog.wav')
   },
   {
     id: 3,
-    source: dogSpriteSheet,
-    name: 'Dog',
+    name: 'Chicken',
     type: 'sprite',
-    frames: dogFrames,
-    sound: require('../../assets/sounds/dog.mp3')
+    source: chickenSpriteSheet,
+    frames: chickenFrames,
+    spriteSheetSize: chickenMeta.size,
+    sound: require('../../assets/sounds/chicken.mp3'),
+    labelSound: require('../../assets/sounds/labels/chicken.wav')
+  },
+  {
+    id: 4,
+    name: 'Chick',
+    type: 'sprite',
+    source: chickSpriteSheet,
+    frames: chickFrames,
+    spriteSheetSize: chickMeta.size,
+    sound: require('../../assets/sounds/chick.mp3'),
+    labelSound: require('../../assets/sounds/labels/chick.wav')
+  },
+  {
+    id: 5,
+    name: 'Donkey',
+    type: 'sprite',
+    source: donkeySpriteSheet,
+    frames: donkeyFrames,
+    spriteSheetSize: donkeyMeta.size,
+    sound: require('../../assets/sounds/donkey.mp3'),
+    labelSound: require('../../assets/sounds/labels/donkey.wav')
+  },
+  {
+    id: 6,
+    name: 'Cow',
+    type: 'sprite',
+    source: cowSpriteSheet,
+    frames: cowFrames,
+    spriteSheetSize: cowMeta.size,
+    sound: require('../../assets/sounds/cow.mp3'),
+    labelSound: require('../../assets/sounds/labels/cow.wav')
   },
 ];
 
@@ -84,11 +128,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: screenHeight * 0.25,
   },
-  animalImage: {
-    width: screenWidth * 0.5,
-    height: screenHeight * 0.25,
-    resizeMode: 'contain',
-  },
   animalName: {
     fontFamily: 'ComicNeue',
     fontSize: 24,
@@ -97,7 +136,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 20, 
     overflow: 'hidden',
     textAlign: 'center',
     elevation: 2,
@@ -199,52 +238,61 @@ const createAnimationSequence = (animValue: Animated.Value | Animated.ValueXY, t
 };
 
 // Sprite animation component
-function SpriteAnimation({ 
-  frames, 
-  source, 
-  style 
-}: { 
+function SpriteAnimation({
+  frames,
+  source,
+  spriteSheetSize,
+  style
+}: {
   frames: Array<{
     filename: string;
-    frame: { x: number; y: number; w: number; h: number; };
+    frame: { x: number; y: number; w: number; h: number };
     rotated: boolean;
     trimmed: boolean;
-    spriteSourceSize: { x: number; y: number; w: number; h: number; };
-    sourceSize: { w: number; h: number; };
+    spriteSourceSize: { x: number; y: number; w: number; h: number };
+    sourceSize: { w: number; h: number };
   }>,
-  source: ImageSourcePropType, 
-  style?: StyleProp<ViewStyle> 
+  source: ImageSourcePropType,
+  spriteSheetSize: { w: number; h: number },
+  style?: StyleProp<ViewStyle>
 }) {
   const [frameIndex, setFrameIndex] = useState(0);
+  const intervalRef = useRef<NodeJS.Timer | null>(null);
 
-  // Increase the frame index periodically
   useEffect(() => {
+    setFrameIndex(0); // reset index on frames change
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     const frameCount = frames.length;
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setFrameIndex(prev => (prev + 1) % frameCount);
-    }, 100); // 100 ms per frame = ~10 FPS
+    }, 87);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [frames]);
 
-  // Get current frame data
-  const currentFrame = frames[frameIndex].frame;
-  const { x, y, w, h } = currentFrame;
+  const currentFrame = frames[frameIndex];
+  if (!currentFrame) return null; // just in case, avoid crashing
+
+  const { x, y } = currentFrame.frame;
+  const { w, h } = currentFrame.sourceSize;
 
   return (
-    <View style={[styles.frameWindow, { width: w, height: h }]}>
+    <View style={[{ width: w, height: h, overflow: 'hidden' }, style]}>
       <Image
         source={source}
-        style={[
-          styles.spriteImage,
-          {
-            width: spriteSheetWidth,
-            height: spriteSheetHeight,
-            // Shift the large sprite sheet to show only the current frame
-            marginLeft: -x,
-            marginTop: -y
-          }
-        ]}
+        style={{
+          position: 'absolute',
+          width: spriteSheetSize.w,
+          height: spriteSheetSize.h,
+          marginLeft: -x,
+          marginTop: -y,
+        }}
         resizeMode="cover"
       />
     </View>
@@ -424,14 +472,30 @@ export default function HomeScreen() {
   
   const toggleShowName = useCallback(() => {
     setShowName(prev => !prev);
-    if (!isMuted) {
-      playAnimalSound();
-    }
-  }, [isMuted, playAnimalSound]);
   
-  const handleBackgroundLoad = useCallback(() => {
-    setIsBackgroundLoaded(true);
-  }, []);
+    if (isMuted || !currentAnimal.sound) return;
+  
+    const playSounds = async () => {
+      try {
+        // 1. Проигрываем звук животного
+        const { sound: animalSound } = await Audio.Sound.createAsync(currentAnimal.sound);
+        await animalSound.playAsync();
+  
+        // 2. Через 1 секунду — озвучка названия
+        setTimeout(async () => {
+          if (currentAnimal.labelSound) {
+            const { sound: labelSound } = await Audio.Sound.createAsync(currentAnimal.labelSound);
+            await labelSound.playAsync();
+          }
+        }, 1000);
+      } catch (error) {
+        console.warn('Error playing sound sequence:', error);
+      }
+    };
+  
+    playSounds();
+  }, [currentAnimal, isMuted]);
+  
 
   const toggleSound = useCallback(() => {
     setIsMuted(prev => !prev);
@@ -459,11 +523,12 @@ export default function HomeScreen() {
   const renderAnimalContent = () => {
     if (currentAnimal.type === 'sprite' && currentAnimal.frames) {
       return (
-        <SpriteAnimation 
-          frames={currentAnimal.frames} 
-          source={currentAnimal.source} 
-          style={styles.animalImage}
-        />
+<SpriteAnimation 
+  frames={currentAnimal.frames} 
+  source={currentAnimal.source} 
+  spriteSheetSize={currentAnimal.spriteSheetSize}
+  style={{}}
+/>
       );
     } else {
       return (

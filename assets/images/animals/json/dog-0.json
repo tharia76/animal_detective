@@ -74,54 +74,6 @@
 },
 {
 	"filename": "dog_00009.png",
-	"frame": {"x":500,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00010.png",
-	"frame": {"x":750,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00011.png",
-	"frame": {"x":1000,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00012.png",
-	"frame": {"x":1250,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00013.png",
-	"frame": {"x":1500,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00014.png",
-	"frame": {"x":1750,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00015.png",
 	"frame": {"x":250,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -129,7 +81,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00016.png",
+	"filename": "dog_00010.png",
 	"frame": {"x":250,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -137,7 +89,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00017.png",
+	"filename": "dog_00011.png",
 	"frame": {"x":250,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -145,7 +97,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00018.png",
+	"filename": "dog_00012.png",
 	"frame": {"x":250,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -153,7 +105,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00019.png",
+	"filename": "dog_00013.png",
 	"frame": {"x":250,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -161,7 +113,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00020.png",
+	"filename": "dog_00014.png",
 	"frame": {"x":250,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -169,7 +121,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00021.png",
+	"filename": "dog_00015.png",
 	"frame": {"x":250,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -177,7 +129,15 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00022.png",
+	"filename": "dog_00016.png",
+	"frame": {"x":500,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00017.png",
 	"frame": {"x":500,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -185,47 +145,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00023.png",
-	"frame": {"x":750,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00024.png",
-	"frame": {"x":1000,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00025.png",
-	"frame": {"x":1250,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00026.png",
-	"frame": {"x":1500,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00027.png",
-	"frame": {"x":1750,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00028.png",
+	"filename": "dog_00018.png",
 	"frame": {"x":500,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -233,7 +153,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00029.png",
+	"filename": "dog_00019.png",
 	"frame": {"x":500,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -241,7 +161,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00030.png",
+	"filename": "dog_00020.png",
 	"frame": {"x":500,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -249,7 +169,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00031.png",
+	"filename": "dog_00021.png",
 	"frame": {"x":500,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -257,7 +177,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00032.png",
+	"filename": "dog_00022.png",
 	"frame": {"x":500,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -265,7 +185,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00033.png",
+	"filename": "dog_00023.png",
 	"frame": {"x":500,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -273,7 +193,23 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00034.png",
+	"filename": "dog_00024.png",
+	"frame": {"x":750,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00025.png",
+	"frame": {"x":750,"y":250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00026.png",
 	"frame": {"x":750,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -281,39 +217,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00035.png",
-	"frame": {"x":1000,"y":500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00036.png",
-	"frame": {"x":1250,"y":500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00037.png",
-	"frame": {"x":1500,"y":500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00038.png",
-	"frame": {"x":1750,"y":500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00039.png",
+	"filename": "dog_00027.png",
 	"frame": {"x":750,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -321,7 +225,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00040.png",
+	"filename": "dog_00028.png",
 	"frame": {"x":750,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -329,7 +233,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00041.png",
+	"filename": "dog_00029.png",
 	"frame": {"x":750,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -337,7 +241,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00042.png",
+	"filename": "dog_00030.png",
 	"frame": {"x":750,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -345,7 +249,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00043.png",
+	"filename": "dog_00031.png",
 	"frame": {"x":750,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -353,7 +257,31 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00044.png",
+	"filename": "dog_00032.png",
+	"frame": {"x":1000,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00033.png",
+	"frame": {"x":1000,"y":250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00034.png",
+	"frame": {"x":1000,"y":500,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00035.png",
 	"frame": {"x":1000,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -361,31 +289,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00045.png",
-	"frame": {"x":1250,"y":750,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00046.png",
-	"frame": {"x":1500,"y":750,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00047.png",
-	"frame": {"x":1750,"y":750,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00048.png",
+	"filename": "dog_00036.png",
 	"frame": {"x":1000,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -393,7 +297,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00049.png",
+	"filename": "dog_00037.png",
 	"frame": {"x":1000,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -401,7 +305,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00050.png",
+	"filename": "dog_00038.png",
 	"frame": {"x":1000,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -409,7 +313,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00051.png",
+	"filename": "dog_00039.png",
 	"frame": {"x":1000,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -417,96 +321,40 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "dog_00052.png",
+	"filename": "dog_00040.png",
+	"frame": {"x":1250,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00041.png",
+	"frame": {"x":1250,"y":250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00042.png",
+	"frame": {"x":1250,"y":500,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00043.png",
+	"frame": {"x":1250,"y":750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "dog_00044.png",
 	"frame": {"x":1250,"y":1000,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00053.png",
-	"frame": {"x":1500,"y":1000,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00054.png",
-	"frame": {"x":1750,"y":1000,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00055.png",
-	"frame": {"x":1250,"y":1250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00056.png",
-	"frame": {"x":1250,"y":1500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00057.png",
-	"frame": {"x":1250,"y":1750,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00058.png",
-	"frame": {"x":1500,"y":1250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00059.png",
-	"frame": {"x":1750,"y":1250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00060.png",
-	"frame": {"x":1500,"y":1500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00061.png",
-	"frame": {"x":1500,"y":1750,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00062.png",
-	"frame": {"x":1750,"y":1500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "dog_00063.png",
-	"frame": {"x":1750,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
@@ -517,9 +365,8 @@
 	"version": "1.0",
 	"image": "dog-0.png",
 	"format": "RGBA8888",
-	"size": {"w":2000,"h":2000},
+	"size": {"w":1500,"h":2000},
 	"scale": "1",
-	"related_multi_packs": [ "dog-1.json", "dog-2.json" ],
-	"smartupdate": "$TexturePacker:SmartUpdate:94fdc2b7292acc029d6502a5a7c44b0e:050964fd6af5d746ad4be03836ce8d3d:4571eae173026b9e132d561e45864005$"
+	"smartupdate": "$TexturePacker:SmartUpdate:b5a05dbb956b81125de1018cf6b4f664:fc1ecfb59da908ba767a4d887b7c3c1a:929ba77a3e3f9e0b70e1a8bb99d762da$"
 }
 }
