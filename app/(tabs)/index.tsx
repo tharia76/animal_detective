@@ -237,32 +237,34 @@ const styles = StyleSheet.create({
     shadowRadius: 1.5,
     opacity: 0.8,
   },
-  navigationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginHorizontal: 40,
-    marginTop: 40,
-
-  },
   navButton: {
     backgroundColor: 'green',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    marginHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    width: 100,
+    height: 60,
   },
   buttonText: {
     fontFamily: 'ComicNeue',
     color: '#fff',
     fontWeight: 'bold',
     marginHorizontal: 5,
+    marginTop: 40,
+    marginLeft: 10,
+    marginRight: 10,
+    marginBottom: 10,
+    height: 20,
+    width: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -312,6 +314,89 @@ const styles = StyleSheet.create({
     width: screenWidth * 0.5,
     height: screenHeight * 0.25,
     resizeMode: 'contain',
+  },
+  menuContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFDAB9',
+  },
+  menuTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    fontFamily: 'ComicNeue',
+  },
+  levelGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  levelButton: {
+    backgroundColor: 'green',
+    padding: 30,
+    margin: 10,
+    borderRadius: 15,
+    width: screenWidth * 0.35,
+    height: screenWidth * 0.35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  levelText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'ComicNeue',
+    textAlign: 'center',
+  },
+  backToMenuButton: {
+    backgroundColor: 'orange',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+  },
+  instructionBubble: {
+    position: 'absolute',
+    top: 200,
+    left: 20,
+    right: 20,
+    padding: 10,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+    zIndex: 20,
+    // Speech bubble tail
+    borderBottomLeftRadius: 0,
+    // Add a pseudo-element effect with additional styling
+    marginBottom: 15, // Space for the "tail"
+    // The bubble shape
+    transform: [{ perspective: 1000 }],
+  },
+  instructionText: {
+    fontFamily: 'ComicNeue',
+    fontSize: 20,
+    color: '#333',
+    textAlign: 'center',
   },
 });
 
@@ -402,6 +487,8 @@ export default function HomeScreen() {
   const [backgroundUri, setBackgroundUri] = useState<string | null>(null);
   const [showSplash, setShowSplash] = useState(true); // New state for splash screen
   const [isMuted, setIsMuted] = useState(false); // New state for sound muting
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [showInstruction, setShowInstruction] = useState(true);
   
   // Get navigation to hide bottom tab bar
   const navigation = useNavigation();
@@ -417,6 +504,7 @@ export default function HomeScreen() {
   const rightChevronAnim = useRef(new Animated.Value(0)).current;
   const animalFadeAnim = useRef(new Animated.Value(1)).current;
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
+  const arrowAnim = useRef(new Animated.Value(0)).current;
   
   // Load font with caching
   const [fontsLoaded] = useFonts({
@@ -458,7 +546,7 @@ export default function HomeScreen() {
     if (showSplash) {
       navigation.setOptions({ tabBarStyle: { display: 'none' } });
     } else {
-      navigation.setOptions({ tabBarStyle: { backgroundColor: 'green' } });
+      navigation.setOptions({ tabBarStyle: { display: 'none' } });
     }
   }, [showSplash, navigation]);
   
@@ -484,6 +572,17 @@ export default function HomeScreen() {
       clearTimeout(fallbackTimer);
     };
   }, [isBackgroundLoaded]);
+  
+  // Auto-hide instruction after 5 seconds if still showing
+  useEffect(() => {
+    if (!showInstruction) return;
+
+    const timer = setTimeout(() => {
+      setShowInstruction(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [showInstruction]);
   
   // Fade animation when animal changes
   useEffect(() => {
@@ -511,6 +610,24 @@ export default function HomeScreen() {
       leftSequence.stop();
       rightSequence.stop();
     };
+  }, []);
+  
+  // Animate the instruction arrow
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(arrowAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(arrowAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   }, []);
   
   // Cleanup sound when component unmounts
@@ -570,6 +687,7 @@ export default function HomeScreen() {
   
   const toggleShowName = useCallback(() => {
     setShowName(prev => !prev);
+    setShowInstruction(false); // Hide instruction bubble when animal is tapped
   
     if (isMuted || !currentAnimal.sound) return;
   
@@ -631,6 +749,12 @@ export default function HomeScreen() {
     }).start();
   }, []);
 
+  // Back to menu handler
+  const handleBackToMenu = useCallback(() => {
+    stopSound();
+    setSelectedLevel(null);
+  }, [stopSound]);
+
   // Render animal content based on type
   const renderAnimalContent = () => {
     if (currentAnimal.type === 'sprite' && currentAnimal.frames) {
@@ -655,102 +779,163 @@ export default function HomeScreen() {
   };
 
   // Render splash screen or main content
-  return showSplash ? (
+  if (showSplash) {
     // Splash screen with title animation
-    <View style={styles.loadingContainer}>
-      <Animated.View style={{ opacity: titleAnim, marginBottom: 50, alignItems: 'center' }}>
-        {fontsLoaded ? (
-          <Animated.Image 
-            source={require('../../assets/images/catlogo.png')}
-            style={{
-              width: 450,
-              height: 450,
-              resizeMode: 'contain',
-              transform: [{ 
-                translateY: titleAnim.interpolate({
-                  inputRange: [0, 0.5, 1],
-                  outputRange: [20, -10, 0]
-                }) 
-              }]
-            }}
-          />
-        ) : (
-          <Animated.Text 
-            style={[
-              styles.loadingText, 
-              { 
-                fontSize: 50,
-                fontFamily: 'TitleFont',
+    return (
+      <View style={styles.loadingContainer}>
+        <Animated.View style={{ opacity: titleAnim, marginBottom: 50, alignItems: 'center' }}>
+          {fontsLoaded ? (
+            <Animated.Image 
+              source={require('../../assets/images/catlogo.png')}
+              style={{
+                width: 450,
+                height: 450,
+                resizeMode: 'contain',
                 transform: [{ 
                   translateY: titleAnim.interpolate({
                     inputRange: [0, 0.5, 1],
                     outputRange: [20, -10, 0]
                   }) 
-                }] 
-              }
-            ]}
-          >
-            Loading...
-          </Animated.Text>
-        )}
-      </Animated.View>
-      <ActivityIndicator size="large" color="orange" />
-    </View>
-  ) : (
-    // Main app content
-    <Animated.View style={{ flex: 1, opacity: bgFadeAnim }}>
-      <ImageBackground
-        source={backgroundUri ? { uri: backgroundUri } : backgroundImage}
-        style={styles.container}
-        imageStyle={styles.backgroundImageStyle}
-        resizeMode="cover"
-        fadeDuration={0}
-      >
-        <TouchableOpacity style={styles.soundButton} onPress={toggleSound}>
-          <Ionicons 
-            name={isMuted ? "volume-mute" : "volume-high"} 
-            size={38} 
-            color="green" 
-          />
-        </TouchableOpacity>
-        
-        <View style={styles.content}>
-          <View style={styles.animalCard}>
-            <TouchableOpacity onPress={toggleShowName} activeOpacity={0.8}>
-              <Animated.View style={{ opacity: animalFadeAnim }}>
-                {renderAnimalContent()}
-              </Animated.View>
+                }]
+              }}
+            />
+          ) : (
+            <Animated.Text 
+              style={[
+                styles.loadingText, 
+                { 
+                  fontSize: 50,
+                  fontFamily: 'TitleFont',
+                  transform: [{ 
+                    translateY: titleAnim.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [20, -10, 0]
+                    }) 
+                  }] 
+                }
+              ]}
+            >
+              Loading...
+            </Animated.Text>
+          )}
+        </Animated.View>
+        <ActivityIndicator size="large" color="orange" />
+      </View>
+    );
+  }
+
+  if (!selectedLevel) {
+    // Show level selection menu
+    return (
+      <View style={styles.menuContainer}>
+        <Text style={styles.menuTitle}>Select a Level</Text>
+        <View style={styles.levelGrid}>
+          {["Farm", "Zoo", "Ocean"].map(level => (
+            <TouchableOpacity
+              key={level}
+              style={styles.levelButton}
+              onPress={() => setSelectedLevel(level)}
+            >
+              <Text style={styles.levelText}>{level}</Text>
             </TouchableOpacity>
-            {showName && (
-              <Text style={[styles.animalName, fontsLoaded ? {} : {fontFamily: undefined}]} numberOfLines={1}>{currentAnimal.name}</Text>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
+  if (selectedLevel === "Farm") {
+    // Main app content
+    return (
+      <Animated.View style={{ flex: 1, opacity: bgFadeAnim }}>
+        <ImageBackground
+          source={backgroundUri ? { uri: backgroundUri } : backgroundImage}
+          style={styles.container}
+          imageStyle={styles.backgroundImageStyle}
+          resizeMode="cover"
+          fadeDuration={0}
+        >
+          <View style={{ flex: 1, position: 'relative' }}>
+            <TouchableOpacity style={styles.backToMenuButton} onPress={handleBackToMenu}>
+              <Ionicons name="home" size={24} color="#fff" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.soundButton} onPress={toggleSound}>
+              <Ionicons 
+                name={isMuted ? "volume-mute" : "volume-high"} 
+                size={38} 
+                color="green" 
+              />
+            </TouchableOpacity>
+            
+            <View style={styles.content}>
+              <View style={styles.animalCard}>
+                <TouchableOpacity onPress={toggleShowName} activeOpacity={0.8}>
+                  <Animated.View style={{ opacity: animalFadeAnim }}>
+                    {renderAnimalContent()}
+                  </Animated.View>
+                </TouchableOpacity>
+                {showName && (
+                  <Text style={[styles.animalName, fontsLoaded ? {} : {fontFamily: undefined}]} numberOfLines={1}>{currentAnimal.name}</Text>
+                )}
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 100 }}>
+                <TouchableOpacity
+                  style={styles.navButton}
+                  onPress={handlePrevAnimal}
+                  activeOpacity={0.7}
+                >
+                  <Animated.View style={{ transform: [{ translateX: leftChevronAnim }] }}>
+                    <Ionicons name="chevron-back" size={24} color="#fff" />
+                  </Animated.View>
+                  <Text style={styles.buttonText}></Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.navButton}
+                  onPress={handleNextAnimal}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.buttonText}></Text>
+                  <Animated.View style={{ transform: [{ translateX: rightChevronAnim }] }}>
+                    <Ionicons name="chevron-forward" size={24} color="#fff" />
+                  </Animated.View>
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            {showInstruction && (
+              <View style={[styles.instructionBubble, { zIndex: 100 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={styles.instructionText}>
+                    Tap the animal to hear its sound!
+                  </Text>
+                  <Animated.View
+                    style={{
+                      marginLeft: 10,
+                      transform: [
+                        {
+                          translateY: arrowAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, 10],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    <Ionicons
+                      name="arrow-down"
+                      size={24}
+                      color="#333"
+                    />
+                  </Animated.View>
+                </View>
+              </View>
             )}
           </View>
-
-          <View style={styles.navigationContainer}>
-            <TouchableOpacity
-              style={styles.navButton}
-              onPress={handlePrevAnimal}
-              activeOpacity={0.7}
-            >
-              <Animated.View style={{ transform: [{ translateX: leftChevronAnim }] }}>
-                <Ionicons name="chevron-back" size={24} color="#fff" />
-              </Animated.View>
-              <Text style={styles.buttonText}></Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.navButton}
-              onPress={handleNextAnimal}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.buttonText}></Text>
-              <Animated.View style={{ transform: [{ translateX: rightChevronAnim }] }}>
-                <Ionicons name="chevron-forward" size={24} color="#fff" />
-              </Animated.View>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ImageBackground>
-    </Animated.View>
-  );
+        </ImageBackground>
+      </Animated.View>
+    );
+  }
 }
