@@ -31,6 +31,9 @@ import horseData from '../../assets/images/animals/json/horse-0.json';
 import llamaData from '../../assets/images/animals/json/llama-0.json';
 import pigData from '../../assets/images/animals/json/pig-0.json';
 import rabbitData from '../../assets/images/animals/json/rabbit-0.json';
+import roosterData from '../../assets/images/animals/json/rooster-0.json';
+import sheepData from '../../assets/images/animals/json/sheep-0.json';
+import turkeyData from '../../assets/images/animals/json/turkey-0.json';
 
 
 // Load the actual PNG sprite sheet
@@ -47,6 +50,9 @@ const horseSpriteSheet = require('../../assets/images/animals/png/horse-0.png');
 const llamaSpriteSheet = require('../../assets/images/animals/png/llama-0.png');
 const pigSpriteSheet = require('../../assets/images/animals/png/pig-0.png');
 const rabbitSpriteSheet = require('../../assets/images/animals/png/rabbit-0.png');
+const roosterSpriteSheet = require('../../assets/images/animals/png/rooster-0.png');
+const sheepSpriteSheet = require('../../assets/images/animals/png/sheep-0.png');
+const turkeySpriteSheet = require('../../assets/images/animals/png/turkey-0.png');
 
 // Extract the frames array and meta from JSON
 const { frames: catFrames, meta: catMeta } = catData;
@@ -62,6 +68,9 @@ const { frames: horseFrames, meta: horseMeta } = horseData;
 const { frames: llamaFrames, meta: llamaMeta } = llamaData;
 const { frames: pigFrames, meta: pigMeta } = pigData;
 const { frames: rabbitFrames, meta: rabbitMeta } = rabbitData;
+const { frames: roosterFrames, meta: roosterMeta } = roosterData;
+const { frames: sheepFrames, meta: sheepMeta } = sheepData;
+const { frames: turkeyFrames, meta: turkeyMeta } = turkeyData;
 
 // Pre-define animals array at module level to avoid re-creation
 const animals = [
@@ -194,6 +203,36 @@ const animals = [
     spriteSheetSize: rabbitMeta.size,
     sound: require('../../assets/sounds/rabbit.mp3'),
     labelSound: require('../../assets/sounds/labels/rabbit.wav')
+  },
+  {
+    id: 14,
+    name: 'Sheep',
+    type: 'sprite',
+    source: sheepSpriteSheet,
+    frames: sheepFrames,
+    spriteSheetSize: sheepMeta.size,
+    sound: require('../../assets/sounds/sheep.mp3'),
+    labelSound: require('../../assets/sounds/labels/sheep.wav')
+  },  
+  {
+    id: 15,
+    name: 'Rooster',
+    type: 'sprite',
+    source: roosterSpriteSheet,
+    frames: roosterFrames,
+    spriteSheetSize: roosterMeta.size,
+    sound: require('../../assets/sounds/rooster.mp3'),
+    labelSound: require('../../assets/sounds/labels/rooster.wav')
+  },
+  {
+    id: 16,
+    name: 'Turkey',
+    type: 'sprite',
+    source: turkeySpriteSheet,
+    frames: turkeyFrames,
+    spriteSheetSize: turkeyMeta.size,
+    sound: require('../../assets/sounds/turkey.mp3'),
+    labelSound: require('../../assets/sounds/labels/turkey.wav')
   }
 ];
 
