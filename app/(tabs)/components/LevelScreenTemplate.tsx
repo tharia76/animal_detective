@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, Image, ImageBackground, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ImageBackground, Animated, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { useRouter } from 'expo-router';
@@ -36,6 +36,8 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
   const soundRef = useRef<Audio.Sound | null>(null);
   const isSoundPlayingRef = useRef<boolean>(false);
   const router = useRouter();
+  const [showCongratsModal, setShowCongratsModal] = useState(false);
+  const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set([0]));
 
   const currentAnimal = useMemo(() => animals.length > 0 ? animals[currentAnimalIndex] : null, [animals, currentAnimalIndex]);
   const hasAnimals = animals.length > 0;
@@ -167,16 +169,38 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
   const handleNext = useCallback(() => {
     if (!hasAnimals) return;
     stopSound();
-    setCurrentAnimalIndex((prev) => (prev + 1) % animals.length);
+    const nextIndex = (currentAnimalIndex + 1) % animals.length;
+    setCurrentAnimalIndex(nextIndex);
     setShowName(false);
-  }, [animals.length, stopSound, hasAnimals]);
+    
+    // Add the new animal index to visited animals
+    const newVisitedAnimals = new Set(visitedAnimals);
+    newVisitedAnimals.add(nextIndex);
+    setVisitedAnimals(newVisitedAnimals);
+    
+    // Check if all animals have been visited
+    if (newVisitedAnimals.size === animals.length && animals.length > 1) {
+      setShowCongratsModal(true);
+    }
+  }, [animals.length, stopSound, hasAnimals, currentAnimalIndex, visitedAnimals]);
 
   const handlePrev = useCallback(() => {
     if (!hasAnimals) return;
     stopSound();
-    setCurrentAnimalIndex((prev) => (prev - 1 + animals.length) % animals.length);
+    const prevIndex = (currentAnimalIndex - 1 + animals.length) % animals.length;
+    setCurrentAnimalIndex(prevIndex);
     setShowName(false);
-  }, [animals.length, stopSound, hasAnimals]);
+    
+    // Add the new animal index to visited animals
+    const newVisitedAnimals = new Set(visitedAnimals);
+    newVisitedAnimals.add(prevIndex);
+    setVisitedAnimals(newVisitedAnimals);
+    
+    // Check if all animals have been visited
+    if (newVisitedAnimals.size === animals.length && animals.length > 1) {
+      setShowCongratsModal(true);
+    }
+  }, [animals.length, stopSound, hasAnimals, currentAnimalIndex, visitedAnimals]);
 
   const goToHome = useCallback(() => {
     stopSound();
@@ -297,6 +321,50 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
               </Text>
             </View>
           )}
+          
+          <Modal
+            visible={showCongratsModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowCongratsModal(false)}
+          >
+            <View style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.5)'
+            }}>
+              <View style={{
+                backgroundColor: 'white',
+                padding: 20,
+                borderRadius: 10,
+                alignItems: 'center',
+                elevation: 5,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+              }}>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 15 }}>
+                  Congratulations!
+                </Text>
+                <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>
+                  You've seen all the animals in this level!
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#4CAF50',
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 5,
+                  }}
+                  onPress={() => setShowCongratsModal(false)}
+                >
+                  <Text style={{ color: 'white', fontSize: 16 }}>Continue</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </ImageBackground>
     </Animated.View>

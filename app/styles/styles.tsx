@@ -23,7 +23,6 @@ export const styles = StyleSheet.create({
       height: screenHeight * 0.25,
     },
     animalName: {
-      fontFamily: 'ComicNeue',
       fontSize: 24,
       marginTop: 10,
       fontWeight: '500',
@@ -58,7 +57,6 @@ export const styles = StyleSheet.create({
       height: 60,
     },
     buttonText: {
-      fontFamily: 'ComicNeue',
       color: '#fff',
       fontWeight: 'bold',
       marginHorizontal: 5,
@@ -125,10 +123,11 @@ export const styles = StyleSheet.create({
       backgroundColor: '#FFDAB9',
     },
     menuTitle: {
-      fontSize: 30,
+      fontSize: 20,
       fontWeight: 'bold',
       marginBottom: 20,
-      fontFamily: 'ComicNeue',
+      marginTop: 20,
+      marginRight: 10,
     },
     levelGrid: {
             flexDirection: 'row',
@@ -161,9 +160,8 @@ export const styles = StyleSheet.create({
     },
     levelText: {
       color: 'white',
-      fontSize: 20,
+      fontSize: 15,
       fontWeight: 'bold',
-      fontFamily: 'ComicNeue',
       textAlign: 'center',
       backgroundColor: 'green',
       paddingVertical: 5,
@@ -211,7 +209,6 @@ export const styles = StyleSheet.create({
       transform: [{ perspective: 1000 }],
     },
     instructionText: {
-      fontFamily: 'ComicNeue',
       fontSize: 20,
       color: '#333',
       textAlign: 'center',

@@ -5,14 +5,13 @@ import { styles } from '../app/styles/styles';
 
 type Props = {
   titleAnim: Animated.Value;
-  fontsLoaded: boolean;
 };
 
-export default function SplashScreen({ titleAnim, fontsLoaded }: Props) {
+export default function SplashScreen({ titleAnim }: Props) {
   return (
     <View style={styles.loadingContainer}>
       <Animated.View style={{ opacity: titleAnim, marginBottom: 50, alignItems: 'center' }}>
-        {fontsLoaded ? (
+       
           <Animated.Image
             source={require('../assets/images/catlogo.png')}
             style={{
@@ -27,7 +26,7 @@ export default function SplashScreen({ titleAnim, fontsLoaded }: Props) {
               }]
             }}
           />
-        ) : (
+       
           <Animated.Text
             style={[
               styles.loadingText,
@@ -45,7 +44,6 @@ export default function SplashScreen({ titleAnim, fontsLoaded }: Props) {
           >
             Loading...
           </Animated.Text>
-        )}
       </Animated.View>
       <ActivityIndicator size="large" color="orange" />
     </View>

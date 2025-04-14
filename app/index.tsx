@@ -15,6 +15,7 @@ import FarmScreen from '../screens/levels/farm/Farm';
 import { useFonts } from 'expo-font';
 import { Asset } from 'expo-asset';
 import ForestScreen from '../screens/levels/farm/Forest';
+import '../app/localization/i18next';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -29,10 +30,7 @@ export default function App() {
   // Animation state for screen transitions
   const screenOpacityAnim = useRef(new Animated.Value(1)).current; // Start fully visible
 
-  const [fontsLoaded] = useFonts({
-    'ComicNeue': require('../assets/fonts/custom.ttf'),
-    'TitleFont': require('../assets/fonts/orange.ttf'),
-  });
+
 
   useEffect(() => {
     const preloadAssets = async () => {
@@ -60,10 +58,8 @@ export default function App() {
       }
     };
 
-    if (fontsLoaded) {
-      preloadAssets();
-    }
-  }, [fontsLoaded]);
+    preloadAssets();
+  }, []);
 
   useEffect(() => {
     Animated.timing(titleAnim, {
@@ -96,7 +92,7 @@ export default function App() {
   }, [screenOpacityAnim]); // Dependency array
 
   // Updated handlers using the transition function
-  const handleSelectLevel = useCallback((level: string | null) => {
+  const handleSelectLevel = useCallback((level: string) => {
     transitionScreen(() => setSelectedLevel(level));
   }, [transitionScreen]); // Dependency array
 
@@ -104,8 +100,8 @@ export default function App() {
     transitionScreen(() => setSelectedLevel(null));
   }, [transitionScreen]); // Dependency array
 
-  if (showSplash || !fontsLoaded || !assetsReady) {
-    return <SplashScreen titleAnim={titleAnim} fontsLoaded={fontsLoaded} />;
+  if (showSplash || !assetsReady) {
+    return <SplashScreen titleAnim={titleAnim} />;
   }
 
   return (
@@ -115,22 +111,22 @@ export default function App() {
       <Animated.View style={{ flex: 1, opacity: screenOpacityAnim }}>
         {!selectedLevel ? (
           <MenuScreen
-            onSelectLevel={handleSelectLevel} // Use updated handler
+            onSelectLevel={handleSelectLevel}
             backgroundImageUri={menuBgUri}
           />
-        ) : selectedLevel === 'Farm' ? (
+        ) : selectedLevel === 'farm' ? (
           <FarmScreen
-            onBackToMenu={handleBackToMenu} // Use updated handler
+            onBackToMenu={handleBackToMenu}
             backgroundImageUri={farmBgUri}
           />
-        ) : selectedLevel === 'Forest' ? (
+        ) : selectedLevel === 'forest' ? (
           <ForestScreen
-            onBackToMenu={handleBackToMenu} // Use updated handler
+            onBackToMenu={handleBackToMenu}
             backgroundImageUri={forestBgUri}
           />
         ) : ( // Fallback remains MenuScreen
           <MenuScreen
-            onSelectLevel={handleSelectLevel} // Use updated handler
+            onSelectLevel={handleSelectLevel}
             backgroundImageUri={menuBgUri}
           />
         )}

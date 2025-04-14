@@ -1,0 +1,121 @@
+// app/localization/strings.ts
+
+export const strings = {
+    en: {
+      selectLevel: 'Select a Level',
+      farm: 'Farm',
+      forest: 'Forest',
+      ocean: 'Ocean',
+      desert: 'Desert',
+      arctic: 'Arctic',
+      insects: 'Insects',
+      locked: 'Locked',
+      tapToHear: 'Tap the animal to hear its sound!',
+      unlockLevel: 'Unlock Level',
+      unlockMessage: 'To unlock this level, you need to buy {level}.',
+      appStorePay: 'Buy now',
+      googlePlayPay: 'Buy now',
+    },
+    ru: {
+     selectLevel: 'Выберите уровень',
+     farm: 'Ферма',
+     forest: 'Лес',
+     ocean: 'Океан',
+     desert: 'Пустыня',
+     arctic: 'Арктика',
+     insects: 'Насекомые',
+     locked: 'Заблокировано',
+     tapToHear: 'Нажмите на животное, чтобы услышать его звук!',
+     unlockLevel: 'Разблокировать уровень',
+     unlockMessage: 'Чтобы разблокировать этот уровень, вам нужно купить {level}.',
+     appStorePay: 'Купить сейчас(0.99$)',
+     googlePlayPay: 'Купить сейчас(0.99$)',
+    },
+
+    es: {
+      selectLevel: 'Selecciona un Nivel',
+      farm: 'Granja',
+      forest: 'Bosque',
+      ocean: 'Oceano',
+      desert: 'Desierto',
+      arctic: 'Arctico',
+      insects: 'Insectos',
+      locked: 'Bloqueado',
+      tapToHear: 'Toca en el animal para escuchar su sonido!',
+      unlockLevel: 'Desbloquear nivel',
+      unlockMessage: 'Para desbloquear este nivel, necesitas comprar {level}.',
+      appStorePay: 'Comprar ahora',
+      googlePlayPay: 'Comprar ahora',
+    },
+
+    de: {
+      selectLevel: 'Wähle einen Level',
+      farm: 'Farm',
+      forest: 'Wald',
+      ocean: 'Ozean',
+      desert: 'Wüste',
+      arctic: 'Arktis',
+      insects: 'Insekten',
+      locked: 'Gesperrt',
+      tapToHear: 'Tippe auf das Tier, um seinen Sound zu hören!',
+      unlockLevel: 'Level freischalten',
+      unlockMessage: 'Um dieses Level zu freischalten, müssen Sie {level} kaufen.',
+      appStorePay: 'Jetzt kaufen',
+      googlePlayPay: 'Jetzt kaufen',
+    },
+
+    fr: {
+      selectLevel: 'Choisissez un Niveau',
+      farm: 'Ferme',
+      forest: 'Forêt',
+      ocean: 'Océan',
+      desert: 'Desert',
+      arctic: 'Arctique',
+      insects: 'Insectes',
+      locked: 'Bloqué',
+      tapToHear: 'Tapez sur l\'animal pour entendre son son!',
+      unlockLevel: 'Niveau débloqué',
+      unlockMessage: 'Pour débloquer ce niveau, vous devez acheter {level}.',
+      appStorePay: 'Acheter maintenant',
+      googlePlayPay: 'Acheter maintenant',
+    },
+
+    it: {
+      selectLevel: 'Scegli un Livello',
+      farm: 'Fattoria',
+      forest: 'Foresta',
+      ocean: 'Oceano',
+      desert: 'Deserto',
+      arctic: 'Artico',
+      insects: 'Insetti',
+      locked: 'Bloccato',
+      tapToHear: 'Toca l\'animale per sentire il suo suono!',
+      unlockLevel: 'Livello sbloccato',
+      unlockMessage: 'Per sbloccare questo livello, devi comprare {level}.',
+      appStorePay: 'Comprare ora',
+      googlePlayPay: 'Comprare ora',
+    },
+    tr: {
+      selectLevel: 'Bir seviye seçin',
+      farm: 'Çiftlik',
+      forest: 'Orman',
+      ocean: 'Deniz',
+      desert: 'Dağ',
+      arctic: 'Kutup',
+      insects: 'Böcek',
+      locked: 'Kilitle',
+      tapToHear: 'Hayvanın sesi için tıklayın!',
+      unlockLevel: 'Seviye kilidini aç',
+      unlockMessage: '{level} seviyesini açmak için {price} satın almalısınız.',
+      appStorePay: 'Satın al',
+      googlePlayPay: 'Satın al',
+    },
+    
+    
+ 
+            
+    
+    
+    // Add more languages here
+  };
+  
