@@ -131,25 +131,27 @@ export const styles = StyleSheet.create({
       fontFamily: 'ComicNeue',
     },
     levelGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: 20,
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            paddingHorizontal: 10, // optional
+      
+
     },
     levelButton: {
-      padding: 30,
-      margin: 10,
-      borderRadius: 15,
-      width: screenWidth * 0.35,
-      height: screenWidth * 0.35,
-      justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOpacity: 0.2,
-      shadowRadius: 5,
-      elevation: 4,
-      overflow: 'hidden', // Ensure the background image stays within bounds
-    },
+        borderRadius: 15,
+        width: '100%', // around 3 per row with spacing
+        aspectRatio: 1, // keeps it square
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 4,
+        overflow: 'hidden',
+        marginBottom: 10, // vertical spacing between rows
+      },
+      
     levelButtonBackground: {
       position: 'absolute',
       width: '100%',
@@ -168,7 +170,7 @@ export const styles = StyleSheet.create({
       paddingHorizontal: 10,
       borderRadius: 20,
       overflow: 'hidden',
-      marginTop: 5
+      marginTop: 2
     },
     backToMenuButton: {
       backgroundColor: 'orange',

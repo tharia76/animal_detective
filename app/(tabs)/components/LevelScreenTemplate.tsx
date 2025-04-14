@@ -6,7 +6,6 @@ import { useRouter } from 'expo-router';
 import SpriteAnimation from './SpriteAnimation';
 import InstructionBubble from './InstructionBubble';
 import { styles } from '../../styles/styles';
-import { Asset } from 'expo-asset';
 
 type Animal = {
   id: number;
@@ -22,65 +21,24 @@ type Animal = {
 type Props = {
   levelName: string;
   animals: Animal[];
-  backgroundImage: any;
+  backgroundImageUri: string | null;
   onBackToMenu: () => void;
 };
 
-export default function LevelScreenTemplate({ levelName, animals, backgroundImage, onBackToMenu }: Props) {
+export default function LevelScreenTemplate({ levelName, animals, backgroundImageUri, onBackToMenu }: Props) {
   const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
   const [showName, setShowName] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
   const [bgFadeAnim] = useState(new Animated.Value(0));
-  const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
   const arrowAnim = useRef(new Animated.Value(0)).current;
   const animalFadeAnim = useRef(new Animated.Value(1)).current;
   const soundRef = useRef<Audio.Sound | null>(null);
   const isSoundPlayingRef = useRef<boolean>(false);
   const router = useRouter();
 
-  const currentAnimal = useMemo(() => animals[currentAnimalIndex], [animals, currentAnimalIndex]);
-
-  // Preload background image
-  useEffect(() => {
-    const preloadImages = async () => {
-      try {
-        // Preload background image
-        await Asset.fromModule(backgroundImage).downloadAsync();
-        
-        // Preload current animal image
-        if (currentAnimal?.source) {
-          await Asset.fromModule(currentAnimal.source).downloadAsync();
-        }
-        
-        setIsBackgroundLoaded(true);
-      } catch (error) {
-        console.warn('Error preloading images:', error);
-        setIsBackgroundLoaded(true); // Continue even if preloading fails
-      }
-    };
-    
-    preloadImages();
-  }, [backgroundImage]);
-
-  // Preload animal images
-  useEffect(() => {
-    const preloadAnimalImages = async () => {
-      try {
-        // Create an array of promises for all animal images
-        const preloadPromises = animals.map(animal => 
-          Asset.fromModule(animal.source).downloadAsync()
-        );
-        
-        // Wait for all images to preload
-        await Promise.all(preloadPromises);
-      } catch (error) {
-        console.warn('Error preloading animal images:', error);
-      }
-    };
-    
-    preloadAnimalImages();
-  }, [animals]);
+  const currentAnimal = useMemo(() => animals.length > 0 ? animals[currentAnimalIndex] : null, [animals, currentAnimalIndex]);
+  const hasAnimals = animals.length > 0;
 
   useEffect(() => {
     // Initialize audio
@@ -98,13 +56,15 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
   }, []);
 
   useEffect(() => {
+    if (!hasAnimals) return;
+    
     animalFadeAnim.setValue(0);
     Animated.timing(animalFadeAnim, {
       toValue: 1,
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [currentAnimalIndex]);
+  }, [currentAnimalIndex, hasAnimals]);
 
   useEffect(() => {
     Animated.loop(
@@ -205,16 +165,18 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
   }, [playSounds]);
 
   const handleNext = useCallback(() => {
+    if (!hasAnimals) return;
     stopSound();
     setCurrentAnimalIndex((prev) => (prev + 1) % animals.length);
     setShowName(false);
-  }, [animals.length, stopSound]);
+  }, [animals.length, stopSound, hasAnimals]);
 
   const handlePrev = useCallback(() => {
+    if (!hasAnimals) return;
     stopSound();
     setCurrentAnimalIndex((prev) => (prev - 1 + animals.length) % animals.length);
     setShowName(false);
-  }, [animals.length, stopSound]);
+  }, [animals.length, stopSound, hasAnimals]);
 
   const goToHome = useCallback(() => {
     stopSound();
@@ -229,8 +191,10 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
   };
 
   const renderAnimal = () => {
-    if (currentAnimal?.type === 'sprite' && currentAnimal?.frames) {
-      if (!currentAnimal?.spriteSheetSize) return null;
+    if (!currentAnimal) return null;
+    
+    if (currentAnimal.type === 'sprite' && currentAnimal.frames) {
+      if (!currentAnimal.spriteSheetSize) return null;
       return (
         <SpriteAnimation
           frames={currentAnimal.frames}
@@ -249,10 +213,10 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
     );
   };
 
-  if (!isBackgroundLoaded) {
+  if (!backgroundImageUri) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFDAB9' }}>
+        <Text>Loading Level...</Text>
       </View>
     );
   }
@@ -260,7 +224,7 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
   return (
     <Animated.View style={{ flex: 1, opacity: bgFadeAnim }}>
       <ImageBackground
-        source={backgroundImage}
+        source={{ uri: backgroundImageUri! }}
         style={styles.container}
         imageStyle={styles.backgroundImageStyle}
         resizeMode="cover"
@@ -272,55 +236,66 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
             useNativeDriver: true,
           }).start();
         }}
-        progressiveRenderingEnabled={true}
       >
         <View style={{ flex: 1, position: 'relative' }}>
           <TouchableOpacity style={styles.backToMenuButton} onPress={goToHome}>
             <Ionicons name="home" size={24} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
-            <Ionicons
-              name={isMuted ? 'volume-mute' : 'volume-high'}
-              size={38}
-              color="green"
-            />
-          </TouchableOpacity>
+          {hasAnimals && (
+            <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
+              <Ionicons
+                name={isMuted ? 'volume-mute' : 'volume-high'}
+                size={38}
+                color="green"
+              />
+            </TouchableOpacity>
+          )}
 
-          <View style={styles.content}>
-            <View style={styles.animalCard}>
-              <TouchableOpacity onPress={toggleShowName} activeOpacity={0.8}>
-                <Animated.View style={{ opacity: animalFadeAnim }}>
-                  {renderAnimal()}
-                </Animated.View>
-              </TouchableOpacity>
-              {showName && (
-                <Text style={styles.animalName} numberOfLines={1}>
-                  {currentAnimal.name}
-                </Text>
-              )}
+          {hasAnimals && (
+            <View style={styles.content}>
+              <View style={styles.animalCard}>
+                <TouchableOpacity onPress={toggleShowName} activeOpacity={0.8}>
+                  <Animated.View style={{ opacity: animalFadeAnim }}>
+                    {renderAnimal()}
+                  </Animated.View>
+                </TouchableOpacity>
+                {showName && currentAnimal && (
+                  <Text style={styles.animalName} numberOfLines={1}>
+                    {currentAnimal.name}
+                  </Text>
+                )}
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 100 }}>
+                <TouchableOpacity style={styles.navButton} onPress={handlePrev} activeOpacity={0.7}>
+                  <Animated.View style={{ transform: [{ translateX: -5 }] }}>
+                    <Ionicons name="chevron-back" size={24} color="#fff" />
+                  </Animated.View>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.navButton} onPress={handleNext} activeOpacity={0.7}>
+                  <Animated.View style={{ transform: [{ translateX: 5 }] }}>
+                    <Ionicons name="chevron-forward" size={24} color="#fff" />
+                  </Animated.View>
+                </TouchableOpacity>
+              </View>
             </View>
+          )}
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 100 }}>
-              <TouchableOpacity style={styles.navButton} onPress={handlePrev} activeOpacity={0.7}>
-                <Animated.View style={{ transform: [{ translateX: -5 }] }}>
-                  <Ionicons name="chevron-back" size={24} color="#fff" />
-                </Animated.View>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.navButton} onPress={handleNext} activeOpacity={0.7}>
-                <Animated.View style={{ transform: [{ translateX: 5 }] }}>
-                  <Ionicons name="chevron-forward" size={24} color="#fff" />
-                </Animated.View>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {!showName && (
+          {hasAnimals && !showName && (
             <InstructionBubble
               text="Tap the animal to hear its sound!"
               arrowAnim={arrowAnim}
             />
+          )}
+          
+          {!hasAnimals && (
+            <View style={styles.content}>
+              <Text style={[styles.animalName, { fontSize: 24, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }]}>
+                No animals available for this level yet
+              </Text>
+            </View>
           )}
         </View>
       </ImageBackground>

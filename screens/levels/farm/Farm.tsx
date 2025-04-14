@@ -2,18 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
 import { animals } from '../../../app/(tabs)/data/animals';
+import { AnimalType } from '../../../app/(tabs)/data/AnimalType';
 import LevelScreenTemplate from '../../../app/(tabs)/components/LevelScreenTemplate';
 
-export default function FarmScreen({
-  onBackToMenu,
-  backgroundUri,
-}: {
-  onBackToMenu: () => void;
-  backgroundUri: string | null;
-}) {
-  const farmAnimals = animals.filter(animal => animal.animalType === 'Farm');
+// Define Props for the screen
+type FarmScreenProps = {
+    onBackToMenu: () => void;
+    backgroundImageUri: string | null; // Accept URI prop
+};
 
-  if (!backgroundUri) {
+export default function FarmScreen({ onBackToMenu, backgroundImageUri }: FarmScreenProps) {
+  const farmAnimals = animals.filter((animal: AnimalType) => animal.animalType === 'Farm');
+  const [bgReady, setBgReady] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        await Asset.fromModule(require('../../../assets/images/farm.jpg')).downloadAsync();
+      } catch (err) {
+        console.warn('Failed to preload farm image', err);
+      }
+      setBgReady(true);
+    };
+
+    load();
+  }, []);
+
+  if (!bgReady) {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="orange" />
@@ -25,8 +40,8 @@ export default function FarmScreen({
     <LevelScreenTemplate
       levelName="Farm"
       animals={farmAnimals}
-      backgroundImage={{ uri: backgroundUri }}
       onBackToMenu={onBackToMenu}
+      backgroundImageUri={backgroundImageUri}
     />
   );
 }
