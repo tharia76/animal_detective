@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFDAB9',
   },
   menuTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 20,
     fontFamily: 'ComicNeue',
@@ -373,7 +373,6 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   levelButton: {
-    backgroundColor: 'green',
     padding: 30,
     margin: 10,
     borderRadius: 15,
@@ -385,13 +384,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 4,
+    overflow: 'hidden', // Ensure the background image stays within bounds
+  },
+  levelButtonBackground: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    borderRadius: 15,
+    resizeMode: 'cover',
   },
   levelText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     fontFamily: 'ComicNeue',
     textAlign: 'center',
+    backgroundColor: 'green',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginTop: 5
   },
   backToMenuButton: {
     backgroundColor: 'orange',
@@ -866,20 +879,59 @@ export default function HomeScreen() {
   if (!selectedLevel) {
     // Show level selection menu
     return (
-      <View style={styles.menuContainer}>
-        <Text style={styles.menuTitle}>Select a Level</Text>
-        <View style={styles.levelGrid}>
-          {["Farm", "Zoo", "Ocean"].map(level => (
-            <TouchableOpacity
-              key={level}
-              style={styles.levelButton}
-              onPress={() => setSelectedLevel(level)}
-            >
-              <Text style={styles.levelText}>{level}</Text>
-            </TouchableOpacity>
-          ))}
+      <ImageBackground
+        source={require('../../assets/images/animal-detective.png')}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
+        <View style={[styles.menuContainer, { backgroundColor: 'transparent' }]}>
+          <View style={{
+            backgroundColor: 'rgba(255, 218, 185, 0.8)',
+            padding: 20,
+            borderRadius: 15,
+            width: '90%',
+            alignItems: 'center',
+          }}>
+            <Text style={styles.menuTitle}>Select a Level</Text>
+            <View style={[styles.levelGrid, { flexDirection: 'row', justifyContent: 'space-between', width: '100%' }]}>
+              {["Farm", "Wildlife", "Ocean"].map(level => (
+                <View key={level} style={{ alignItems: 'center', flex: 1, marginHorizontal: 5 }}>
+                  <TouchableOpacity
+                    style={styles.levelButton}
+                    onPress={() => level === "Farm" ? setSelectedLevel(level) : null}
+                    disabled={level !== "Farm"}
+                  >
+                    <Image 
+                      source={require('../../assets/images/farm.jpg')} 
+                      style={styles.levelButtonBackground} 
+                    />
+                    {level !== "Farm" && (
+                      <View style={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderRadius: 15,
+                      }}>
+                        <Ionicons 
+                          name="lock-closed" 
+                          size={40} 
+                          color="gray"
+                        />
+                      </View>
+                    )}
+                    <View style={{ position: 'absolute', bottom: 1, width: '100%', alignItems: 'center' }}>
+                      <Text style={styles.levelText}>{level}</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
-      </View>
+      </ImageBackground>
     );
   }
 
