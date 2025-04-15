@@ -13,7 +13,7 @@ export default function SplashScreen({ titleAnim }: Props) {
       <Animated.View style={{ opacity: titleAnim, marginBottom: 50, alignItems: 'center' }}>
        
           <Animated.Image
-            source={require('../assets/images/catlogo.png')}
+            source={require('../assets/images/game-logo.png')}
             style={{
               width: 450,
               height: 450,
@@ -42,7 +42,6 @@ export default function SplashScreen({ titleAnim }: Props) {
               }
             ]}
           >
-            Loading...
           </Animated.Text>
       </Animated.View>
       <ActivityIndicator size="large" color="orange" />

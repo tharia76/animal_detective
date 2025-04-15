@@ -36,7 +36,7 @@ export default function App() {
     const preloadAssets = async () => {
       try {
         const farm = Asset.fromModule(require('../assets/images/farm.jpg'));
-        const menu = Asset.fromModule(require('../assets/images/animal-detective.png'));
+        const menu = Asset.fromModule(require('../assets/images/menu-screen.png'));
         const forest = Asset.fromModule(require('../assets/images/forest.jpg'));
         // const ocean = Asset.fromModule(require('../assets/images/ocean.jpg'));
 

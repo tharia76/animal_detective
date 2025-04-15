@@ -348,6 +348,25 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
                 <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 15 }}>
                   Congratulations!
                 </Text>
+                <View style={{ height: 60, width: '100%', position: 'relative', marginBottom: 10 }}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Animated.View
+                      key={index}
+                      style={{
+                        position: 'absolute',
+                        left: `${20 * index}%`,
+                        width: 6,
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: ['#FF4500', '#FFD700', '#00BFFF', '#FF69B4', '#32CD32'][index % 5],
+                        transform: [
+                          { translateY: new Animated.Value(-30) },
+                          { scale: new Animated.Value(0) }
+                        ]
+                      }}
+                    />
+                  ))}
+                </View>
                 <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>
                   You've seen all the animals in this level!
                 </Text>

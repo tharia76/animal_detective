@@ -135,7 +135,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
     const loadImages = async () => {
       try {
         // Load background image
-        const bgAsset = Asset.fromModule(require('../assets/images/animal-detective.png'));
+        const bgAsset = Asset.fromModule(require('../assets/images/menu-screen.png'));
         await bgAsset.downloadAsync();
         setBgUri(bgAsset.localUri || bgAsset.uri);
         setBgLoaded(true);
@@ -216,14 +216,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
 
   return (
     <ImageBackground
-      source={backgroundImageUri ? { uri: backgroundImageUri } : require('../assets/images/animal-detective.png')}
+      source={backgroundImageUri ? { uri: backgroundImageUri } : require('../assets/images/menu-screen.png')}
       style={{ flex: 1 }}
       resizeMode="cover"
       fadeDuration={0}
     >
       <View style={[styles.menuContainer, { backgroundColor: 'transparent' }]}>
         <View style={{
-          backgroundColor: 'rgba(255, 218, 185, 0.8)',
+          backgroundColor: 'rgba(115, 194, 185, 0.6)',
           padding: 10,
           borderRadius: 15,
           width: '90%',
@@ -256,7 +256,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
                 }}
                 onPress={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <Text style={{ fontWeight: 'bold', color: 'white' }}>
+                <Text style={{ fontWeight: 'bold', color: '#612915' }}>
                   {languages.find(l => l.code === lang)?.code === 'en' ? '🇺🇸' : 
                    languages.find(l => l.code === lang)?.code === 'ru' ? '🇷🇺' : 
                    languages.find(l => l.code === lang)?.code === 'es' ? '🇪🇸' : 
