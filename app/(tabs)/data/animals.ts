@@ -24,6 +24,20 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
   import roosterData from '../../../assets/images/animals/json/rooster-0.json';
   import sheepData from '../../../assets/images/animals/json/sheep-0.json';
   import turkeyData from '../../../assets/images/animals/json/turkey-0.json';
+  import foxData from '../../../assets/images/animals/json/fox-0.json';
+  import bearData from '../../../assets/images/animals/json/bear-0.json';
+  import raccoonData from '../../../assets/images/animals/json/raccoon-0.json';
+  import squirrelData from '../../../assets/images/animals/json/squirrel-0.json';
+  import hedgehogData from '../../../assets/images/animals/json/hedgehog-0.json';
+  import owlData from '../../../assets/images/animals/json/owl-0.json';
+  import wolfData from '../../../assets/images/animals/json/wolf-0.json';
+  import deerData from '../../../assets/images/animals/json/deer-0.json';
+  import mooseData from '../../../assets/images/animals/json/moose-0.json';
+  import mouseData from '../../../assets/images/animals/json/mouse-0.json';
+  import badgerData from '../../../assets/images/animals/json/badger-0.json';
+  import beaverData from '../../../assets/images/animals/json/beaver-0.json';
+  import boarData from '../../../assets/images/animals/json/boar-0.json';
+  import batData from '../../../assets/images/animals/json/bat-0.json';
   
   
   // Load the actual PNG sprite sheet
@@ -43,6 +57,20 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
   const roosterSpriteSheet = require('../../../assets/images/animals/png/rooster-0.png');
   const sheepSpriteSheet = require('../../../assets/images/animals/png/sheep-0.png');
   const turkeySpriteSheet = require('../../../assets/images/animals/png/turkey-0.png');
+  const foxSpriteSheet = require('../../../assets/images/animals/png/fox-0.png');
+  const bearSpriteSheet = require('../../../assets/images/animals/png/bear-0.png');
+  const raccoonSpriteSheet = require('../../../assets/images/animals/png/raccoon-0.png');
+  const squirrelSpriteSheet = require('../../../assets/images/animals/png/squirrel-0.png');
+  const hedgehogSpriteSheet = require('../../../assets/images/animals/png/hedgehog-0.png');
+  const owlSpriteSheet = require('../../../assets/images/animals/png/owl-0.png');
+  const wolfSpriteSheet = require('../../../assets/images/animals/png/wolf-0.png');
+  const deerSpriteSheet = require('../../../assets/images/animals/png/deer-0.png');
+  const mooseSpriteSheet = require('../../../assets/images/animals/png/moose-0.png');
+  const mouseSpriteSheet = require('../../../assets/images/animals/png/mouse-0.png');
+  const badgerSpriteSheet = require('../../../assets/images/animals/png/badger-0.png');
+  const beaverSpriteSheet = require('../../../assets/images/animals/png/beaver-0.png');
+  const boarSpriteSheet = require('../../../assets/images/animals/png/boar-0.png');
+  const batSpriteSheet = require('../../../assets/images/animals/png/bat-0.png');
   
   // Extract the frames array and meta from JSON
   const { frames: catFrames, meta: catMeta } = catData;
@@ -61,6 +89,21 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
   const { frames: roosterFrames, meta: roosterMeta } = roosterData;
   const { frames: sheepFrames, meta: sheepMeta } = sheepData;
   const { frames: turkeyFrames, meta: turkeyMeta } = turkeyData;
+  const { frames: foxFrames, meta: foxMeta } = foxData;
+  const { frames: bearFrames, meta: bearMeta } = bearData;
+  const { frames: raccoonFrames, meta: raccoonMeta } = raccoonData;
+  const { frames: squirrelFrames, meta: squirrelMeta } = squirrelData;
+  const { frames: hedgehogFrames, meta: hedgehogMeta } = hedgehogData;
+  const { frames: owlFrames, meta: owlMeta } = owlData;
+  const { frames: wolfFrames, meta: wolfMeta } = wolfData;
+  const { frames: deerFrames, meta: deerMeta } = deerData;
+  const { frames: mooseFrames, meta: mooseMeta } = mooseData;
+  const { frames: mouseFrames, meta: mouseMeta } = mouseData;
+  const { frames: badgerFrames, meta: badgerMeta } = badgerData;
+  const { frames: beaverFrames, meta: beaverMeta } = beaverData;
+  const { frames: boarFrames, meta: boarMeta } = boarData;
+  const { frames: batFrames, meta: batMeta } = batData;
+  
   
   // Pre-define animals array at module level to avoid re-creation
   export const animals: AnimalType[] = [
@@ -239,7 +282,163 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       spriteSheetSize: turkeyMeta.size,
       sound: require('../../../assets/sounds/turkey.mp3'),
       labelSound: require('../../../assets/sounds/labels/turkey.wav')
-    }
+    },
+    {
+      id: 17,
+      name: 'Badger',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: badgerSpriteSheet,
+      frames: badgerFrames,
+      spriteSheetSize: badgerMeta.size,
+      sound: require('../../../assets/sounds/badger.mp3'),
+      labelSound: require('../../../assets/sounds/labels/badger.wav')
+    },
+    {
+      id: 18,
+      name: 'Fox',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: foxSpriteSheet,
+      frames: foxFrames,
+      spriteSheetSize: foxMeta.size,
+      sound: require('../../../assets/sounds/fox.mp3'),
+      labelSound: require('../../../assets/sounds/labels/fox.wav')
+    },
+    {
+      id: 19,
+      name: 'Bear',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: bearSpriteSheet,
+      frames: bearFrames,
+      spriteSheetSize: bearMeta.size,
+      sound: require('../../../assets/sounds/bear.mp3'),
+      labelSound: require('../../../assets/sounds/labels/bear.wav')
+    },
+    {
+      id: 20,
+      name: 'Raccoon',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: raccoonSpriteSheet,
+      frames: raccoonFrames,
+      spriteSheetSize: raccoonMeta.size,
+      sound: require('../../../assets/sounds/raccoon.mp3'),
+      labelSound: require('../../../assets/sounds/labels/raccoon.wav')
+    },
+    {
+      id: 21,
+      name: 'Squirrel',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: squirrelSpriteSheet,
+      frames: squirrelFrames,
+      spriteSheetSize: squirrelMeta.size,
+      sound: require('../../../assets/sounds/squirrel.mp3'),
+      labelSound: require('../../../assets/sounds/labels/squirrel.wav')
+    },
+    {
+      id: 22,
+      name: 'Hedgehog',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: hedgehogSpriteSheet,
+      frames: hedgehogFrames,
+      spriteSheetSize: hedgehogMeta.size,
+      sound: require('../../../assets/sounds/hedgehog.mp3'),
+      labelSound: require('../../../assets/sounds/labels/hedgehog.wav')
+    },
+    {
+      id: 23,
+      name: 'Owl',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: owlSpriteSheet,
+      frames: owlFrames,
+      spriteSheetSize: owlMeta.size,
+      sound: require('../../../assets/sounds/owl.mp3'),
+      labelSound: require('../../../assets/sounds/labels/owl.wav')
+    },
+    {
+      id: 24,
+      name: 'Wolf',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: wolfSpriteSheet,
+      frames: wolfFrames,
+      spriteSheetSize: wolfMeta.size,
+      sound: require('../../../assets/sounds/wolf.mp3'),
+      labelSound: require('../../../assets/sounds/labels/wolf.wav')
+    },
+    {
+      id: 25,
+      name: 'Deer',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: deerSpriteSheet,
+      frames: deerFrames,
+      spriteSheetSize: deerMeta.size,
+      sound: require('../../../assets/sounds/deer.mp3'),
+      labelSound: require('../../../assets/sounds/labels/deer.wav')
+    },
+    {
+      id: 26,
+      name: 'Moose',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: mooseSpriteSheet,
+      frames: mooseFrames,
+      spriteSheetSize: mooseMeta.size,
+      sound: require('../../../assets/sounds/moose.mp3'),
+      labelSound: require('../../../assets/sounds/labels/moose.wav')
+    },
+    {
+      id: 27,
+      name: 'Mouse',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: mouseSpriteSheet,
+      frames: mouseFrames,
+      spriteSheetSize: mouseMeta.size,
+      sound: require('../../../assets/sounds/mouse.mp3'),
+      labelSound: require('../../../assets/sounds/labels/mouse.wav')
+    },
+    {
+      id: 29,
+      name: 'Beaver',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: beaverSpriteSheet,
+      frames: beaverFrames,
+      spriteSheetSize: beaverMeta.size,
+      sound: require('../../../assets/sounds/beaver.mp3'),
+      labelSound: require('../../../assets/sounds/labels/beaver.wav')
+    },
+    {
+      id: 30,
+      name: 'Boar',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: boarSpriteSheet,
+      frames: boarFrames,
+      spriteSheetSize: boarMeta.size,
+      sound: require('../../../assets/sounds/boar.mp3'),
+      labelSound: require('../../../assets/sounds/labels/boar.wav')
+    },
+    {
+      id: 31,
+      name: 'Bat',
+      type: 'sprite' as const,
+      animalType: 'Forest' as const,
+      source: batSpriteSheet,
+      frames: batFrames,
+      spriteSheetSize: batMeta.size,
+      sound: require('../../../assets/sounds/bat.mp3'),
+      labelSound: require('../../../assets/sounds/labels/bat.wav')
+    },
+
+
   ];
   
   // Preload all animal images regardless of type
