@@ -326,7 +326,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
                   levelBg = require('../assets/images/farm.jpg');
                   break;
                 case 'forest':
-                  levelBg = require('../assets/images/forest.jpg');
+                  levelBg = require('../assets/images/forest-bg.jpg');
                   isLocked = false;
                   break;
                 case 'ocean':

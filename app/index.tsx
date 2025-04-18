@@ -37,7 +37,7 @@ export default function App() {
       try {
         const farm = Asset.fromModule(require('../assets/images/farm.jpg'));
         const menu = Asset.fromModule(require('../assets/images/menu-screen.png'));
-        const forest = Asset.fromModule(require('../assets/images/forest.jpg'));
+        const forest = Asset.fromModule(require('../assets/images/forest-bg.jpg'));
         // const ocean = Asset.fromModule(require('../assets/images/ocean.jpg'));
 
         await Promise.all([
