@@ -330,11 +330,11 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
               </View>
             </View>
           )}
-
-          {hasAnimals && !showName && (
+{hasAnimals && !showName && (
             <InstructionBubble
               text="Tap the animal to hear its sound!"
               arrowAnim={arrowAnim}
+              image={require('../../../assets/images/tap.png')}
             />
           )}
           
