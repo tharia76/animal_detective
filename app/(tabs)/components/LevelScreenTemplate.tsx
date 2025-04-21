@@ -33,11 +33,13 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
   const [bgFadeAnim] = useState(new Animated.Value(0));
   const arrowAnim = useRef(new Animated.Value(0)).current;
   const animalFadeAnim = useRef(new Animated.Value(1)).current;
+  const animalMoveAnim = useRef(new Animated.Value(0)).current;
   const soundRef = useRef<Audio.Sound | null>(null);
   const isSoundPlayingRef = useRef<boolean>(false);
   const router = useRouter();
   const [showCongratsModal, setShowCongratsModal] = useState(false);
   const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set([0]));
+  const [levelCompleted, setLevelCompleted] = useState(false);
 
   const currentAnimal = useMemo(() => animals.length > 0 ? animals[currentAnimalIndex] : null, [animals, currentAnimalIndex]);
   const hasAnimals = animals.length > 0;
@@ -61,6 +63,7 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
     if (!hasAnimals) return;
     
     animalFadeAnim.setValue(0);
+    animalMoveAnim.setValue(0);
     Animated.timing(animalFadeAnim, {
       toValue: 1,
       duration: 200,
@@ -164,25 +167,39 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
   const toggleShowName = useCallback(() => {
     setShowName(prev => !prev);
     playSounds();
+    
+    // Animate the animal with a small bounce effect
+    Animated.sequence([
+      Animated.timing(animalMoveAnim, {
+        toValue: -10, // Move up slightly
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(animalMoveAnim, {
+        toValue: 0, // Return to original position
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [playSounds]);
 
   const handleNext = useCallback(() => {
     if (!hasAnimals) return;
     stopSound();
-    const nextIndex = (currentAnimalIndex + 1) % animals.length;
-    setCurrentAnimalIndex(nextIndex);
+    let x = currentAnimalIndex + 1;
+    console.log('x', x);
+    setCurrentAnimalIndex(x);
     setShowName(false);
-    
-    // Add the new animal index to visited animals
-    const newVisitedAnimals = new Set(visitedAnimals);
-    newVisitedAnimals.add(nextIndex);
-    setVisitedAnimals(newVisitedAnimals);
-    
-    // Check if all animals have been visited
-    if (newVisitedAnimals.size === animals.length && animals.length > 1) {
+  }, [animals.length, stopSound, hasAnimals, currentAnimalIndex]);
+  
+  useEffect(() => {
+    console.log(`${currentAnimalIndex} === ${animals.length} ${levelCompleted}`);
+    // Check if we've seen all animals and this is the last one
+    if (currentAnimalIndex === animals.length && !levelCompleted) {
+      setLevelCompleted(true);
       setShowCongratsModal(true);
     }
-  }, [animals.length, stopSound, hasAnimals, currentAnimalIndex, visitedAnimals]);
+  }, [currentAnimalIndex, animals.length, levelCompleted]);
 
   const handlePrev = useCallback(() => {
     if (!hasAnimals) return;
@@ -195,11 +212,6 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
     const newVisitedAnimals = new Set(visitedAnimals);
     newVisitedAnimals.add(prevIndex);
     setVisitedAnimals(newVisitedAnimals);
-    
-    // Check if all animals have been visited
-    if (newVisitedAnimals.size === animals.length && animals.length > 1) {
-      setShowCongratsModal(true);
-    }
   }, [animals.length, stopSound, hasAnimals, currentAnimalIndex, visitedAnimals]);
 
   const goToHome = useCallback(() => {
@@ -213,6 +225,15 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
       stopSound().catch(error => console.warn('Error stopping sound on mute:', error));
     }
   };
+
+  const startOver = useCallback(() => {
+    setShowCongratsModal(false);
+    stopSound();
+    setCurrentAnimalIndex(0);
+    setShowName(false);
+    setLevelCompleted(false);
+    setVisitedAnimals(new Set([0]));
+  }, [stopSound]);
 
   const renderAnimal = () => {
     if (!currentAnimal) return null;
@@ -280,7 +301,10 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
             <View style={styles.content}>
               <View style={styles.animalCard}>
                 <TouchableOpacity onPress={toggleShowName} activeOpacity={0.8}>
-                  <Animated.View style={{ opacity: animalFadeAnim }}>
+                  <Animated.View style={{ 
+                    opacity: animalFadeAnim,
+                    transform: [{ translateY: animalMoveAnim }]
+                  }}>
                     {renderAnimal()}
                   </Animated.View>
                 </TouchableOpacity>
@@ -348,7 +372,90 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
                 <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 15 }}>
                   Congratulations!
                 </Text>
-                <View style={{ height: 60, width: '100%', position: 'relative', marginBottom: 10 }}>
+                {/* Confetti animation */}
+                {Array.from({ length: 30 }).map((_, index) => {
+                  const randomX = Math.random() * 300 - 150;
+                  const randomDuration = 2000 + Math.random() * 3000;
+                  const randomDelay = Math.random() * 500;
+                  const randomSize = 5 + Math.random() * 10;
+                  const randomColor = [
+                    '#FF4500', '#FFD700', '#00BFFF', '#FF69B4', '#32CD32',
+                    '#9370DB', '#FF6347', '#4682B4', '#FFA500', '#8A2BE2'
+                  ][Math.floor(Math.random() * 10)];
+                  
+                  // Create animated values outside of render
+                  // This fixes the "Rendered more hooks than during the previous render" error
+                  // by not using useEffect inside the map function
+                  const translateY = (animatedValue: Animated.Value) => {
+                    return animatedValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-50, 200],
+                    });
+                  };
+                  
+                  const translateX = (animatedValue: Animated.Value) => {
+                    return animatedValue.interpolate({
+                      inputRange: [0, 0.3, 0.6, 1],
+                      outputRange: [0, randomX * 0.3, randomX * 0.6, randomX],
+                    });
+                  };
+                  
+                  const rotate = (animatedValue: Animated.Value) => {
+                    return animatedValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', `${Math.random() * 360}deg`],
+                    });
+                  };
+                  
+                  const opacity = (animatedValue: Animated.Value) => {
+                    return animatedValue.interpolate({
+                      inputRange: [0, 0.7, 1],
+                      outputRange: [1, 0.7, 0],
+                    });
+                  };
+                  
+                  // Use a ref instead of creating a new animated value each render
+                  const animatedValueRef = useRef(new Animated.Value(0));
+                  
+                  // Start animation when the modal is shown
+                  useEffect(() => {
+                    if (showCongratsModal) {
+                      Animated.timing(animatedValueRef.current, {
+                        toValue: 1,
+                        duration: randomDuration,
+                        delay: randomDelay,
+                        useNativeDriver: true,
+                      }).start();
+                    }
+                  }, [showCongratsModal]);
+                  
+                  return (
+                    <Animated.View
+                      key={index}
+                      style={{
+                        position: 'absolute',
+                        width: randomSize,
+                        height: randomSize,
+                        backgroundColor: randomColor,
+                        borderRadius: randomSize / 2,
+                        transform: [
+                          {
+                            translateY: translateY(animatedValueRef.current)
+                          },
+                          {
+                            translateX: translateX(animatedValueRef.current)
+                          },
+                          {
+                            rotate: rotate(animatedValueRef.current)
+                          }
+                        ],
+                        opacity: opacity(animatedValueRef.current),
+                      }}
+                    />
+                  );
+                })}
+                <Image source={require('../../../assets/images/congrats.png')} style={{ width: 100, height: 100, marginBottom: 5 }} />
+                <View style={{ height: 5, width: '100%', position: 'relative', marginBottom: 5 }}>
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Animated.View
                       key={index}
@@ -367,20 +474,34 @@ export default function LevelScreenTemplate({ levelName, animals, backgroundImag
                     />
                   ))}
                 </View>
-                <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>
+                <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 15 }}>
                   You've seen all the animals in this level!
                 </Text>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: '#4CAF50',
-                    paddingVertical: 10,
-                    paddingHorizontal: 20,
-                    borderRadius: 5,
-                  }}
-                  onPress={() => setShowCongratsModal(false)}
-                >
-                  <Text style={{ color: 'white', fontSize: 16 }}>Continue</Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#4CAF50',
+                      paddingVertical: 10,
+                      paddingHorizontal: 20,
+                      borderRadius: 5,
+                      marginRight: 10,
+                    }}
+                    onPress={startOver}
+                  >
+                    <Text style={{ color: 'white', fontSize: 16 }}>Start Over</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#FF9800',
+                      paddingVertical: 10,
+                      paddingHorizontal: 20,
+                      borderRadius: 5,
+                    }}
+                    onPress={goToHome}
+                  >
+                    <Text style={{ color: 'white', fontSize: 16 }}>Return to Menu</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </Modal>
