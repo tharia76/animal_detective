@@ -6,7 +6,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 
 // Define styles outside component at module level
-export const styles = StyleSheet.create({
+export  const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: '#FFDAB9', // Peachy background color
@@ -21,16 +21,25 @@ export const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'center',
       height: screenHeight * 0.25,
+      overflow: 'visible',
     },
+    
+    // NEW wrapper that’s full width but centers its children
+    animalNameWrapper: {
+      position: 'absolute',
+      bottom: -40,      // tweak as needed
+      width: '100%',
+      alignItems: 'center',
+    },
+    
+    // Just style the Text itself; it will size to its content
     animalName: {
-      fontSize: 24,
-      marginTop: 10,
+      fontSize: 20,
       fontWeight: '500',
       backgroundColor: '#e0e0e0',
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 20, 
-      overflow: 'hidden',
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 15,
       textAlign: 'center',
       elevation: 2,
       shadowColor: '#000',
@@ -38,7 +47,10 @@ export const styles = StyleSheet.create({
       shadowOpacity: 0.2,
       shadowRadius: 1.5,
       opacity: 0.8,
+      // no position, no width here
     },
+    
+
     navButton: {
       backgroundColor: 'green',
       paddingVertical: 8,
@@ -140,7 +152,7 @@ export const styles = StyleSheet.create({
     },
     levelButton: {
         borderRadius: 15,
-        width: '100%', // around 3 per row with spacing
+        width: '70%', // Make button slightly smaller within its container
         aspectRatio: 1, // keeps it square
         justifyContent: 'center',
         alignItems: 'center',
@@ -149,7 +161,7 @@ export const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 4,
         overflow: 'hidden',
-        marginBottom: 10, // vertical spacing between rows
+        // marginBottom is handled by the parent View now
       },
       
     levelButtonBackground: {
@@ -164,12 +176,14 @@ export const styles = StyleSheet.create({
       fontSize: 15,
       fontWeight: 'bold',
       textAlign: 'center',
-      backgroundColor: 'green',
       paddingVertical: 5,
       paddingHorizontal: 10,
       borderRadius: 20,
-      overflow: 'hidden',
-      marginTop: 2
+      overflow: 'hidden', // This helps clip text, but doesn't prevent wrapping calculation
+      marginTop: 2,
+      // Note: To strictly prevent text wrapping, set the `numberOfLines={1}`
+      // prop directly on the <Text> component using this style.
+      // There is no direct 'white-space: nowrap' style property in React Native.
     },
     backToMenuButton: {
       backgroundColor: 'orange',
@@ -194,7 +208,7 @@ export const styles = StyleSheet.create({
       top: 200,
       left: 20,
       right: 20,
-      padding: 10,
+      padding: 5,
       backgroundColor: 'white',
       borderRadius: 20,
       shadowColor: '#000',
@@ -215,3 +229,5 @@ export const styles = StyleSheet.create({
       textAlign: 'center',
     },
   });
+
+  export default styles;

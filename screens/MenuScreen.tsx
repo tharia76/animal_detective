@@ -14,6 +14,22 @@ type Props = {
   backgroundImageUri: string | null;
 };
 
+// Helper function to get background color based on level theme
+const getLevelBackgroundColor = (level: string): string => {
+  switch (level) {
+    case 'farm': return 'rgba(113, 89, 43, 0.8)'; // Wheat color
+    case 'forest': return 'rgba(34, 139, 34, 0.8)'; // Forest green
+    case 'ocean': return 'rgba(0, 191, 255, 0.8)'; // Deep sky blue
+    case 'desert': return 'rgba(189, 113, 14, 0.8)'; // Tan color
+    case 'arctic': return 'rgba(137, 190, 207, 0.8)'; // Light blue
+    case 'insects': return 'rgba(69, 95, 16, 0.8)'; // Yellow green
+    case 'savannah': return 'rgba(181, 163, 25, 0.8)'; // Tan/Savannah color
+    case 'jungle': return 'rgba(0, 100, 0, 0.8)'; // Dark Green/Jungle color
+    case 'birds': return 'rgba(217, 111, 222, 0.8)'; // Sky Blue/Birds color
+    default: return 'rgba(200, 200, 200, 0.8)'; // Default grey
+  }
+};
+
 export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props) {
   const navigation = useNavigation();
 
@@ -30,15 +46,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
   });
 
   const { t, lang, setLang } = useLocalization();
-  
+
   // Set default language to English if not already set
   useEffect(() => {
     if (!lang) {
       setLang('en');
     }
   }, [lang, setLang]);
-  
-  const levels = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects'];
+
+  const levels = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
   const languages = [
     { code: 'en', name: 'English'  },
     { code: 'ru', name: 'Русский' },
@@ -75,9 +91,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
   //   const fetchProducts = async () => {
   //     try {
   //       const productIds = levels
-  //         .filter(level => level !== 'farm' && level !== 'forest')
+  //         .filter(level => level !== 'farm' && level !== 'forest') // Assuming farm and forest are free
   //         .map(level => `com.mygame.level.${level}`);
-        
+
   //       const items = await RNIap.getProducts({ skus: productIds });
   //       setProducts(items);
   //     } catch (err) {
@@ -86,7 +102,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
   //   };
 
   //   fetchProducts();
-  // }, []);
+  // }, []); // Re-run if levels array changes dynamically, though it's constant here
 
   // Listen for purchase updates
   // useEffect(() => {
@@ -97,18 +113,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
   //         // Extract level from productId (e.g., com.mygame.level.ocean -> ocean)
   //         const levelMatch = purchase.productId.match(/com\.mygame\.level\.(.+)/);
   //         const unlockedLevel = levelMatch ? levelMatch[1] : null;
-          
+
   //         // Unlock the level here (you would update your state/storage)
   //         // For example: updateUnlockedLevels(unlockedLevel);
-          
+
   //         await RNIap.finishTransaction(purchase as any); // consume item
-          
+
   //         Alert.alert(
-  //           "Purchase Successful", 
+  //           "Purchase Successful",
   //           `You've unlocked the ${t(unlockedLevel || '')} level!`,
   //           [{ text: "OK" }]
   //         );
-          
+
   //         setShowPaymentModal(false);
   //       } catch (err) {
   //         console.warn('finishTransaction error', err);
@@ -139,7 +155,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
         await bgAsset.downloadAsync();
         setBgUri(bgAsset.localUri || bgAsset.uri);
         setBgLoaded(true);
-        
+
         // Preload level images
         const farmAsset = Asset.fromModule(require('../assets/images/farm.jpg'));
         const forestAsset = Asset.fromModule(require('../assets/images/forest.jpg'));
@@ -147,16 +163,22 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
         const desertAsset = Asset.fromModule(require('../assets/images/desert.jpg'));
         const arcticAsset = Asset.fromModule(require('../assets/images/arctic.jpg'));
         const insectAsset = Asset.fromModule(require('../assets/images/insect.png'));
-        
+        const savannahAsset = Asset.fromModule(require('../assets/images/savannah.jpg')); // Assuming jpg
+        const jungleAsset = Asset.fromModule(require('../assets/images/jungle.jpg'));   // Assuming jpg
+        const birdsAsset = Asset.fromModule(require('../assets/images/birds.png'));     // Assuming jpg
+
         await Promise.all([
           farmAsset.downloadAsync(),
           forestAsset.downloadAsync(),
           oceanAsset.downloadAsync(),
           desertAsset.downloadAsync(),
           arcticAsset.downloadAsync(),
-          insectAsset.downloadAsync()
+          insectAsset.downloadAsync(),
+          savannahAsset.downloadAsync(),
+          jungleAsset.downloadAsync(),
+          birdsAsset.downloadAsync()
         ]);
-        
+
         setImagesLoaded(true);
       } catch (error) {
         console.warn('Error preloading images:', error);
@@ -221,7 +243,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
       resizeMode="cover"
       fadeDuration={0}
     >
-      <View style={[styles.menuContainer, { backgroundColor: 'transparent' }]}>
+      {/* Added marginTop to push the container down */}
+      <View style={[styles.menuContainer, { backgroundColor: 'transparent', marginTop: 60 }]}>
         <View style={{
           backgroundColor: 'rgba(115, 194, 185, 0.6)',
           padding: 10,
@@ -229,15 +252,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
           width: '90%',
           alignItems: 'center'
         }}>
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'space-between', 
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
             alignItems: 'center',
             width: '100%',
             marginBottom: 15
           }}>
             <Text style={styles.menuTitle}>{t('selectLevel')}</Text>
-            
+
             {/* Language selector moved to the right of title */}
             <View style={{ position: 'relative', zIndex: 10, width: '40%' }}>
               <TouchableOpacity
@@ -257,18 +280,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
                 onPress={() => setIsDropdownOpen(!isDropdownOpen)}
               >
                 <Text style={{ fontWeight: 'bold', color: '#612915' }}>
-                  {languages.find(l => l.code === lang)?.code === 'en' ? '🇺🇸' : 
-                   languages.find(l => l.code === lang)?.code === 'ru' ? '🇷🇺' : 
-                   languages.find(l => l.code === lang)?.code === 'es' ? '🇪🇸' : 
-                   languages.find(l => l.code === lang)?.code === 'de' ? '🇩🇪' : 
-                   languages.find(l => l.code === lang)?.code === 'fr' ? '🇫🇷' : 
-                   languages.find(l => l.code === lang)?.code === 'it' ? '🇮🇹' : 
+                  {languages.find(l => l.code === lang)?.code === 'en' ? '🇺🇸' :
+                   languages.find(l => l.code === lang)?.code === 'ru' ? '🇷🇺' :
+                   languages.find(l => l.code === lang)?.code === 'es' ? '🇪🇸' :
+                   languages.find(l => l.code === lang)?.code === 'de' ? '🇩🇪' :
+                   languages.find(l => l.code === lang)?.code === 'fr' ? '🇫🇷' :
+                   languages.find(l => l.code === lang)?.code === 'it' ? '🇮🇹' :
                    languages.find(l => l.code === lang)?.code === 'tr' ? '🇹🇷' : ''}
                    {languages.find(l => l.code === lang)?.name}
                 </Text>
                 <Text style={{ marginLeft: 5 }}>▼</Text>
               </TouchableOpacity>
-              
+
               {isDropdownOpen && (
                 <View style={{
                   position: 'absolute',
@@ -298,15 +321,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
                         setIsDropdownOpen(false);
                       }}
                     >
-                      <Text style={{ 
+                      <Text style={{
                         fontWeight: lang === language.code ? 'bold' : 'normal'
                       }}>
-                        {language.code === 'en' ? '🇺🇸 ' : 
-                         language.code === 'ru' ? '🇷🇺 ' : 
-                         language.code === 'es' ? '🇪🇸 ' : 
-                         language.code === 'de' ? '🇩🇪 ' : 
-                         language.code === 'fr' ? '🇫🇷 ' : 
-                         language.code === 'it' ? '🇮🇹 ' : 
+                        {language.code === 'en' ? '🇺🇸 ' :
+                         language.code === 'ru' ? '🇷🇺 ' :
+                         language.code === 'es' ? '🇪🇸 ' :
+                         language.code === 'de' ? '🇩🇪 ' :
+                         language.code === 'fr' ? '🇫🇷 ' :
+                         language.code === 'it' ? '🇮🇹 ' :
                          language.code === 'tr' ? '🇹🇷 ' : ''}
                         {language.name}
                       </Text>
@@ -316,19 +339,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
               )}
             </View>
           </View>
-          
+
           <View style={styles.levelGrid}>
             {levels.map((level, index) => {
               let levelBg;
-              let isLocked = false;
+              let isLocked = false; // Default to unlocked
               switch (level) {
                 case 'farm':
                   levelBg = require('../assets/images/farm.jpg');
                   break;
                 case 'forest':
-                  levelBg = require('../assets/images/forest-bg.jpg');
-                  isLocked = false;
-                  break;
+                  levelBg = require('../assets/images/forest-bg.jpg'); // Assuming forest-bg.jpg exists, or use forest.jpg
+                  break; // Farm and Forest are free
                 case 'ocean':
                   levelBg = require('../assets/images/oceann.jpg');
                   isLocked = true;
@@ -345,16 +367,43 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
                   levelBg = require('../assets/images/insect.png');
                   isLocked = true;
                   break;
+                case 'savannah':
+                  levelBg = require('../assets/images/savannah.jpg'); // Assuming jpg
+                  isLocked = true;
+                  break;
+                case 'jungle':
+                  levelBg = require('../assets/images/jungle.jpg'); // Assuming jpg
+                  isLocked = true;
+                  break;
+                case 'birds':
+                  levelBg = require('../assets/images/birds.png'); // Assuming jpg
+                  isLocked = true;
+                  break;
                 default:
-                  levelBg = require('../assets/images/farm.jpg');
+                  levelBg = require('../assets/images/farm.jpg'); // Fallback image
               }
 
+              // TODO: Replace 'isLocked = true' logic above with actual check
+              // based on user purchases or game progress if implementing IAP/unlocks
+
+              const levelBackgroundColor = getLevelBackgroundColor(level);
+              const translatedLevelName = t(level);
+              const isLongText = translatedLevelName.length > 6;
+
+              // Define the dynamic text style based on the length
+              const dynamicTextStyle = [
+                styles.levelText, // Base style (includes default fontSize: 15)
+                isLongText ? { fontSize: 11 } : {}, // Conditionally override fontSize if text is long
+              ];
+
               return (
-                <View key={level} style={{ 
-                  alignItems: 'center', 
-                  width: '30%', 
+                <View key={level} style={{
+                  alignItems: 'center',
+                  width: '30%', // Adjust width if needed for more items per row
                   marginHorizontal: '1.5%',
-                  marginBottom: 10
+                  marginBottom: 0, // Pushed down
+                  marginTop: 0,
+
                 }}>
                   <TouchableOpacity
                     style={styles.levelButton}
@@ -376,9 +425,25 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
                       </View>
                     )}
                   </TouchableOpacity>
-                  <Text style={styles.levelText}>
-                    {t(level)}
-                  </Text>
+                  {/* Wrap Text in a View with theme-based background color */}
+                  <View style={{
+                    backgroundColor: levelBackgroundColor,
+                    height: 32,               // ← force the container to always be 32px tall
+                    justifyContent: 'center', // ← vertically center the Text
+                    alignItems: 'center',     // ← horizontally center the Text
+                    borderRadius: 16,         // ← half of 32 → perfect pill
+                    paddingHorizontal: 8,     // ← still give left/right breathing room
+                    marginTop: 3,
+                    marginBottom: 10,
+                    width: '100%',
+                  }}>
+                    <Text
+                      style={dynamicTextStyle} // Apply the potentially adjusted style
+                      numberOfLines={1}
+                    >
+                      {translatedLevelName}
+                    </Text>
+                  </View>
                 </View>
               );
             })}
@@ -415,6 +480,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
               {t('unlockLevel')}
             </Text>
             <Text style={{ textAlign: 'center', marginBottom: 20 }}>
+              {/* Ensure 'unlockMessage' in strings.ts includes '{level}' placeholder */}
               {t('unlockMessage').replace('{level}', t(selectedLockedLevel || ''))}
             </Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
@@ -433,26 +499,30 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
               {Platform.OS === 'ios' ? (
                 <TouchableOpacity
                   style={{
-                    backgroundColor: '#0066CC',
+                    backgroundColor: '#0066CC', // App Store blue
                     padding: 12,
                     borderRadius: 10,
                     width: '45%',
                     alignItems: 'center'
                   }}
-                  onPress={() => requestPurchase(`com.mygame.level.${selectedLockedLevel}`)}
+                  // Ensure selectedLockedLevel is not null before constructing productId
+                  onPress={() => selectedLockedLevel && requestPurchase(`com.mygame.level.${selectedLockedLevel}`)}
+                  disabled={!selectedLockedLevel} // Disable if no level selected
                 >
                   <Text style={{ color: 'white', fontWeight: 'bold' }}>{t('appStorePay')}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
                   style={{
-                    backgroundColor: '#689F38',
+                    backgroundColor: '#689F38', // Google Play green
                     padding: 12,
                     borderRadius: 10,
                     width: '45%',
                     alignItems: 'center'
                   }}
-                  onPress={() => requestPurchase(`com.mygame.level.${selectedLockedLevel}`)}
+                  // Ensure selectedLockedLevel is not null before constructing productId
+                  onPress={() => selectedLockedLevel && requestPurchase(`com.mygame.level.${selectedLockedLevel}`)}
+                  disabled={!selectedLockedLevel} // Disable if no level selected
                 >
                   <Text style={{ color: 'white', fontWeight: 'bold' }}>{t('googlePlayPay')}</Text>
                 </TouchableOpacity>
