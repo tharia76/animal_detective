@@ -1,5 +1,5 @@
 import { View, Text, Animated, Image, ImageSourcePropType } from 'react-native';
-import { styles } from '../../styles/styles';
+import { useDynamicStyles } from '../../styles/styles';
 
 export default function InstructionBubble({
   text,
@@ -10,10 +10,13 @@ export default function InstructionBubble({
   arrowAnim: Animated.Value, // This value is already animated in a loop by the parent
   image?: ImageSourcePropType
 }) {
+  // 1️⃣ Hoist your hook: only call it once, at the top level
+  const dynamicStyles = useDynamicStyles();
+
   return (
-    <View style={[styles.instructionBubble, { zIndex: 100 }]}>
+    <View style={[dynamicStyles.instructionBubble, { zIndex: 100 }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={styles.instructionText}>{text}</Text>
+        <Text style={{ fontSize: 18, color: '#333', textAlign: 'center', marginBottom: 18, marginTop: 10, fontWeight: 'bold' }}>{text}</Text>
         {/* Conditionally render the Animated.View only if there's an image */}
         {image && (
           <Animated.View

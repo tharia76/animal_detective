@@ -17,12 +17,13 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid, Video, ResizeMode } from 'expo-av';
 import SpriteAnimation from './SpriteAnimation';
 import InstructionBubble from './InstructionBubble';
-import { styles } from '../../styles/styles';
+import { useDynamicStyles } from '../../styles/styles';
 import EndlessRoad from './EndlessRoad';
 import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
@@ -73,6 +74,9 @@ export default function LevelScreenTemplate({
   // --- Use localization hook ---
   const { t } = useLocalization();
 
+  // 1️⃣ Hoist your hook: only call it once, at the top level
+  const dynamicStyles = useDynamicStyles();
+
   const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
   const [showName, setShowName] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -93,7 +97,7 @@ export default function LevelScreenTemplate({
   const hasAnimals = animals.length > 0;
 
   const roadAnimation = useRef(new Animated.Value(0)).current;
-  const screenWidth = Dimensions.get('window').width;
+  const { width: screenW, height: screenH } = useWindowDimensions();
 
   // --- FADE LOGIC FOR BACKGROUND SWITCHING ---
   // We want to crossfade between backgrounds (image <-> moving bg) to avoid black flashes.
@@ -412,7 +416,7 @@ export default function LevelScreenTemplate({
       <Image
         key={key}
         source={currentAnimal.source}
-        style={styles.animalImage}
+        style={dynamicStyles.animalImage}
         fadeDuration={0}
         progressiveRenderingEnabled={true}
       />
@@ -461,12 +465,12 @@ export default function LevelScreenTemplate({
 
   if (!backgroundImageUri) {
     return (
-      <View style={[styles.container, { backgroundColor: 'transparent' }]}>
-        <TouchableOpacity style={[styles.backToMenuButton]} onPress={goToHome}>
+      <View style={[dynamicStyles.container, { backgroundColor: 'transparent' }]}>
+        <TouchableOpacity style={[dynamicStyles.backToMenuButton]} onPress={goToHome}>
            <Ionicons name="home" size={24} color="#fff" />
         </TouchableOpacity>
-        <View style={styles.content}>
-           <Text style={[styles.animalName, { fontSize: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 15, marginTop: 100, color: '#fff' }]}>
+        <View style={dynamicStyles.content}>
+           <Text style={[dynamicStyles.animalName, { fontSize: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 15, marginTop: 100, color: '#fff' }]}>
              {t('backgroundNotAvailable') || 'Background image not available for this level.'}
            </Text>
         </View>
@@ -476,7 +480,7 @@ export default function LevelScreenTemplate({
 
   // --- RENDER: Crossfade both backgrounds ---
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       {/* 1) FULL-SCREEN BACKGROUND SIBLINGS, BOTH MOUNTED, OPACITY ANIMATED */}
       <View style={StyleSheet.absoluteFillObject}>
         {/* Moving background (sky) */}
@@ -503,7 +507,6 @@ export default function LevelScreenTemplate({
           <ImageBackground
             source={backgroundImageUri ? { uri: backgroundImageUri } : undefined}
             style={StyleSheet.absoluteFillObject}
-            imageStyle={styles.backgroundImageStyle}
             resizeMode="cover"
             onLoadEnd={onLoadEnd}
             onError={onLoadEnd}
@@ -515,11 +518,11 @@ export default function LevelScreenTemplate({
       <View style={StyleSheet.absoluteFillObject}>
         <Animated.View style={{ flex: 1, opacity: contentFade }}>
           <View style={{ flex: 1 }}>
-            <TouchableOpacity style={styles.backToMenuButton} onPress={goToHome}>
+            <TouchableOpacity style={dynamicStyles.backToMenuButton} onPress={goToHome}>
               <Ionicons name="home" size={24} color="#fff" />
             </TouchableOpacity>
             {hasAnimals && (
-              <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
+              <TouchableOpacity style={dynamicStyles.soundButton} onPress={toggleMute}>
                 <Ionicons
                   name={isMuted ? 'volume-mute' : 'volume-high'}
                   size={38}
@@ -529,8 +532,14 @@ export default function LevelScreenTemplate({
             )}
 
           {hasAnimals && (
-            <View style={styles.content}>
-              <View style={styles.animalCard}>
+            <View style={dynamicStyles.content}>
+              <View
+                style={[
+                  dynamicStyles.animalCard,
+                  // Push animal down in horizontal (landscape) orientation
+                  screenW > screenH && { marginTop: 80 },
+                ]}
+              >
                 <TouchableOpacity onPress={toggleShowName} activeOpacity={0.8} disabled={isTransitioning}>
                   <Animated.View style={{ opacity: animalFadeAnim }}>
                     {renderAnimal()}
@@ -538,7 +547,7 @@ export default function LevelScreenTemplate({
                 </TouchableOpacity>
                 {showName && currentAnimal && (
                   <Animated.View style={[
-                    styles.animalNameWrapper,
+                    dynamicStyles.animalNameWrapper,
                     {
                       opacity: animalFadeAnim,
                       transform: [{
@@ -549,7 +558,7 @@ export default function LevelScreenTemplate({
                       }],
                     }
                   ]}>
-                    <Text style={styles.animalName}>
+                    <Text style={dynamicStyles.animalName}>
                       {currentAnimal.name}
                     </Text>
                   </Animated.View>
@@ -574,8 +583,8 @@ export default function LevelScreenTemplate({
           )}
 
           {!hasAnimals && (
-            <View style={styles.content}>
-              <Text style={[styles.animalName, { fontSize: 24, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }]}>
+            <View style={dynamicStyles.content}>
+              <Text style={[dynamicStyles.animalName, { fontSize: 24, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }]}>
                 {t('noAnimalsForLevel')}
               </Text>
             </View>
@@ -593,6 +602,8 @@ export default function LevelScreenTemplate({
   );
 }
 
+
+
 const loaderStyles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -601,4 +612,6 @@ const loaderStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
     zIndex: 10,
   },
+
+  
 });

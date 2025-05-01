@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useWindowDimensions } from 'react-native';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -19,6 +20,10 @@ export default function RootLayout() {
     'ComicNeue': require('../assets/fonts/custom.ttf'),
     'TitleFont': require('../assets/fonts/orange.ttf'),
   });
+
+  // Listen to orientation changes using useWindowDimensions
+  // This will cause a re-render on orientation change, making sure children get new dimensions
+  const window = useWindowDimensions();
 
   useEffect(() => {
     if (loaded) {
@@ -32,12 +37,12 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-       <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+      <GestureHandlerRootView style={{ flex: 1, width: window.width, height: window.height }}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
       </GestureHandlerRootView>
     </ThemeProvider>
   );

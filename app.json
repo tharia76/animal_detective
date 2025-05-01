@@ -3,7 +3,7 @@
     "name": "Animal Detective",
     "slug": "Animal Detective",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "animal-detective",
     "userInterfaceStyle": "automatic",

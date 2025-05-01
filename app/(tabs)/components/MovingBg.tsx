@@ -3,23 +3,30 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
-  Dimensions,
   Animated,
   Easing,
   Image,
+  useWindowDimensions,
 } from 'react-native';
+import { useDynamicStyles } from '../../styles/styles';
 
-const { width: screenW, height: screenH } = Dimensions.get('window');
-// SLOW IT DOWN: Increase duration to 40s per full cycle
-const SCROLL_DURATION = 20000; // 40s per full cycle
-
-export default function MovingBg({
+// 1️⃣ Hoist your hook: only call it once, at the top level
+const MovingBg = ({
   backgroundImageUri,
   movingDirection,
 }: {
   backgroundImageUri: string | null;
   movingDirection: 'left' | 'right';
-}) {
+}) => {
+  const dynamicStyles = useDynamicStyles();
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  // SLOW IT DOWN: Increase duration to 40s per full cycle
+  const SCROLL_DURATION = 20000; // 40s per full cycle
+
+  // Track orientation
+  const isPortrait = screenH >= screenW;
+
+  // Default to screen size, but update after image loads
   const [imgWidth, setImgWidth] = useState<number>(screenW);
   const [imgHeight, setImgHeight] = useState<number>(screenH);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -32,10 +39,16 @@ export default function MovingBg({
         backgroundImageUri,
         (width, height) => {
           if (mounted) {
-            // Scale image to fill screen height, keep aspect ratio
-            const scale = screenH / height;
-            setImgWidth(width * scale);
-            setImgHeight(screenH);
+            // For portrait: scale to fill height, for landscape: scale to fill width
+            if (isPortrait) {
+              const scale = screenH / height;
+              setImgWidth(width * scale);
+              setImgHeight(screenH);
+            } else {
+              const scale = screenW / width;
+              setImgWidth(screenW);
+              setImgHeight(height * scale);
+            }
           }
         },
         () => {
@@ -48,7 +61,8 @@ export default function MovingBg({
     return () => {
       mounted = false;
     };
-  }, [backgroundImageUri]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backgroundImageUri, screenH, screenW, isPortrait]);
 
   useEffect(() => {
     let isMounted = true;
@@ -112,18 +126,38 @@ export default function MovingBg({
 
   const [{ first, second }] = getTransforms();
 
+  // For landscape, center vertically if image is not as tall as screen
+  // For portrait, center horizontally if image is not as wide as screen
+  const getImageStyle = (base: any) => {
+    if (isPortrait) {
+      // Portrait: image fills height, may be wider than screen
+      return {
+        ...base,
+        top: 0,
+        left: (screenW - imgWidth) / 2, // center horizontally if needed
+        width: imgWidth + overlap,
+        height: imgHeight,
+      };
+    } else {
+      // Landscape: image fills width, may be shorter than screen
+      return {
+        ...base,
+        top: (screenH - imgHeight) / 2, // center vertically if needed
+        left: 0,
+        width: imgWidth + overlap,
+        height: imgHeight,
+      };
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container]}>
       <Animated.Image
         source={{ uri: backgroundImageUri || '' }}
         resizeMode="cover"
         style={[
-          {
+          getImageStyle({
             position: 'absolute',
-            top: 0,
-            left: 0,
-            width: imgWidth + overlap,
-            height: imgHeight,
             transform: [
               {
                 translateX: scrollX.interpolate({
@@ -133,19 +167,15 @@ export default function MovingBg({
                 }),
               },
             ],
-          },
+          }),
         ]}
       />
       <Animated.Image
         source={{ uri: backgroundImageUri || '' }}
         resizeMode="cover"
         style={[
-          {
+          getImageStyle({
             position: 'absolute',
-            top: 0,
-            left: 0,
-            width: imgWidth + overlap,
-            height: imgHeight,
             transform: [
               {
                 translateX: scrollX.interpolate({
@@ -155,19 +185,21 @@ export default function MovingBg({
                 }),
               },
             ],
-          },
+          }),
         ]}
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    width: screenW,
-    height: screenH,
+    width: '100%',
+    height: '100%',
     overflow: 'hidden',
-    backgroundColor: 'transparent', // Remove any black bg
+    backgroundColor: 'black', // Use black to avoid white flashes, but images will cover it
   },
 });
+
+export default MovingBg;

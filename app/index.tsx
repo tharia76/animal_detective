@@ -7,7 +7,7 @@ export const screenOptions = {
 };
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Animated } from 'react-native';
+import { Animated, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import MenuScreen from '../screens/MenuScreen';
 import SplashScreen from '../screens/SplashScreen';
@@ -18,6 +18,8 @@ import ForestScreen from '../screens/levels/farm/Forest';
 import './localization/i18next';
 
 export default function App() {
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const [showSplash, setShowSplash] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const titleAnim = useRef(new Animated.Value(0)).current;
@@ -34,7 +36,7 @@ export default function App() {
   });
 
   // Animation state for screen transitions
-  const screenOpacityAnim = useRef(new Animated.Value(1)).current; // Start fully visible
+  const screenOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const preloadAssets = async () => {
@@ -94,29 +96,22 @@ export default function App() {
   }, []);
 
   // Function to handle screen transitions with fade
-  const transitionScreen = useCallback((updateStateCallback: () => void) => {
-    Animated.timing(screenOpacityAnim, {
-      toValue: 0, // Fade out
-      duration: 250, // Adjust duration as needed
-      useNativeDriver: true,
-    }).start(() => {
-      updateStateCallback(); // Change the state (selectedLevel)
-      Animated.timing(screenOpacityAnim, {
-        toValue: 1, // Fade in
-        duration: 250, // Adjust duration
-        useNativeDriver: true,
-      }).start();
-    });
-  }, [screenOpacityAnim]); // Dependency array
+  const transitionScreen = useCallback((cb: () => void) => {
+    Animated.timing(screenOpacity, { toValue:0, duration:250, useNativeDriver:true })
+      .start(() => {
+        cb();
+        Animated.timing(screenOpacity, { toValue:1, duration:250, useNativeDriver:true }).start();
+      });
+  }, [screenOpacity]);
 
   // Updated handlers using the transition function
   const handleSelectLevel = useCallback((level: string) => {
     transitionScreen(() => setSelectedLevel(level));
-  }, [transitionScreen]); // Dependency array
+  }, [transitionScreen]);
 
   const handleBackToMenu = useCallback(() => {
     transitionScreen(() => setSelectedLevel(null));
-  }, [transitionScreen]); // Dependency array
+  }, [transitionScreen]);
 
   if (showSplash || !assetsReady) {
     return <SplashScreen titleAnim={titleAnim} />;
@@ -132,7 +127,7 @@ export default function App() {
     <>
       <StatusBar hidden />
       {/* Wrap the conditional rendering in an Animated.View */}
-      <Animated.View style={{ flex: 1, opacity: screenOpacityAnim }}>
+      <Animated.View style={{ flex: 1, opacity: screenOpacity }}>
         {!selectedLevel ? (
           <MenuScreen
             onSelectLevel={handleSelectLevel}

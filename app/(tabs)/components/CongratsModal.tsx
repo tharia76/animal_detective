@@ -7,7 +7,7 @@ import {
   Modal, 
   Animated 
 } from 'react-native';
-import { styles } from '../../styles/styles';
+import { useDynamicStyles } from '../../styles/styles';
 
 interface CongratsModalProps {
   showCongratsModal: boolean;
@@ -20,6 +20,9 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
   startOver, 
   goToHome 
 }) => {
+  // 1️⃣ Hoist your hook: only call it once, at the top level
+  const dynamicStyles = useDynamicStyles();
+
   // Create refs for confetti animations
   const confettiCount = 30;
   const confettiAnimRefs = useRef(
