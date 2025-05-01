@@ -157,15 +157,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
         setBgLoaded(true);
 
         // Preload level images
-        const farmAsset = Asset.fromModule(require('../assets/images/farm.png'));
-        const forestAsset = Asset.fromModule(require('../assets/images/forest.png'));
-        const oceanAsset = Asset.fromModule(require('../assets/images/oceann.jpg'));
-        const desertAsset = Asset.fromModule(require('../assets/images/desert.jpg'));
-        const arcticAsset = Asset.fromModule(require('../assets/images/arctic.jpg'));
-        const insectAsset = Asset.fromModule(require('../assets/images/insect.png'));
-        const savannahAsset = Asset.fromModule(require('../assets/images/savannah.jpg')); // Assuming jpg
-        const jungleAsset = Asset.fromModule(require('../assets/images/jungle.jpg'));   // Assuming jpg
-        const birdsAsset = Asset.fromModule(require('../assets/images/birds.png'));     // Assuming jpg
+        const farmAsset = Asset.fromModule(require('../assets/images/level-backgrounds/farm.png'));
+        const forestAsset = Asset.fromModule(require('../assets/images/level-backgrounds/forest.png'));
+        const oceanAsset = Asset.fromModule(require('../assets/images/level-backgrounds/oceann.jpg'));
+        const desertAsset = Asset.fromModule(require('../assets/images/level-backgrounds/desert.jpg'));
+        const arcticAsset = Asset.fromModule(require('../assets/images/level-backgrounds/arctic.jpg'));
+        const insectAsset = Asset.fromModule(require('../assets/images/level-backgrounds/insect.png'));
+        const savannahAsset = Asset.fromModule(require('../assets/images/level-backgrounds/savannah.jpg')); // Assuming jpg
+        const jungleAsset = Asset.fromModule(require('../assets/images/level-backgrounds/jungle.jpg'));   // Assuming jpg
+        const birdsAsset = Asset.fromModule(require('../assets/images/level-backgrounds/birds.png'));     // Assuming jpg
 
         await Promise.all([
           farmAsset.downloadAsync(),
@@ -352,41 +352,41 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
               let isLocked = false; // Default to unlocked
               switch (level) {
                 case 'farm':
-                  levelBg = require('../assets/images/farm.png');
+                  levelBg = require('../assets/images/level-backgrounds/farm.png');
                   break;
                 case 'forest':
-                  levelBg = require('../assets/images/forest.png'); // Assuming forest-bg.jpg exists, or use forest.jpg
+                  levelBg = require('../assets/images/level-backgrounds/forest.png'); // Assuming forest-bg.jpg exists, or use forest.jpg
                   break; // Farm and Forest are free
                 case 'ocean':
-                  levelBg = require('../assets/images/oceann.jpg');
+                  levelBg = require('../assets/images/level-backgrounds/oceann.jpg');
                   isLocked = true;
                   break;
                 case 'desert':
-                  levelBg = require('../assets/images/desert.jpg');
+                  levelBg = require('../assets/images/level-backgrounds/desert.jpg');
                   isLocked = true;
                   break;
                 case 'arctic':
-                  levelBg = require('../assets/images/arctic.jpg');
-                  isLocked = true;
+                    levelBg = require('../assets/images/level-backgrounds/arctic.jpg');
+                    isLocked = true;
                   break;
                 case 'insects':
-                  levelBg = require('../assets/images/insect.png');
+                  levelBg = require('../assets/images/level-backgrounds/insect.png');
                   isLocked = true;
                   break;
                 case 'savannah':
-                  levelBg = require('../assets/images/savannah.jpg'); // Assuming jpg
+                  levelBg = require('../assets/images/level-backgrounds/savannah.jpg'); // Assuming jpg
                   isLocked = true;
                   break;
                 case 'jungle':
-                  levelBg = require('../assets/images/jungle.jpg'); // Assuming jpg
+                  levelBg = require('../assets/images/level-backgrounds/jungle.jpg'); // Assuming jpg
                   isLocked = true;
                   break;
                 case 'birds':
-                  levelBg = require('../assets/images/birds.png'); // Assuming jpg
+                  levelBg = require('../assets/images/level-backgrounds/birds.png'); // Assuming jpg
                   isLocked = true;
                   break;
                 default:
-                  levelBg = require('../assets/images/farm.png'); // Fallback image
+                  levelBg = require('../assets/images/level-backgrounds/farm.png'); // Fallback image
               }
 
               // TODO: Replace 'isLocked = true' logic above with actual check

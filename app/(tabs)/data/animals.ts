@@ -2,7 +2,7 @@
 import { Asset } from 'expo-asset';
 import { AnimalType } from './AnimalType';
 
-const backgroundImage = require('../../../assets/images/farm.png');
+const backgroundImage = require('../../../assets/images/level-backgrounds/farm.png');
 Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
     console.warn('Background image preload error:', error)
   );

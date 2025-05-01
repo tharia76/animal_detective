@@ -39,12 +39,12 @@ export default function App() {
   useEffect(() => {
     const preloadAssets = async () => {
       try {
-        const farm = Asset.fromModule(require('../assets/images/farm.png'));
+        const farm = Asset.fromModule(require('../assets/images/level-backgrounds/farm.png'));
         const menu = Asset.fromModule(require('../assets/images/menu-screen.png'));
-        const forest = Asset.fromModule(require('../assets/images/forest.png'));
+        const forest = Asset.fromModule(require('../assets/images/level-backgrounds/forest.png'));
         // For moving backgrounds, you can use different images if you have them
-        const movingFarm = Asset.fromModule(require('../assets/images/farm.png'));
-        const movingForest = Asset.fromModule(require('../assets/images/forest.png'));
+        const movingFarm = Asset.fromModule(require('../assets/images/level-backgrounds/farm.png'));
+        const movingForest = Asset.fromModule(require('../assets/images/level-backgrounds/forest.png'));
         // const ocean = Asset.fromModule(require('../assets/images/ocean.jpg'));
         // const movingOcean = Asset.fromModule(require('../assets/images/ocean.jpg'));
 
