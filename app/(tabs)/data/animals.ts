@@ -2,11 +2,11 @@
 import { Asset } from 'expo-asset';
 import { AnimalType } from './AnimalType';
 
-const backgroundImage = require('../../../assets/images/farm.jpg');
-Asset.fromModule(backgroundImage).downloadAsync().catch(error => 
+const backgroundImage = require('../../../assets/images/farm.png');
+Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
     console.warn('Background image preload error:', error)
   );
-  
+
   // Load the cow animation JSON data
   import catData from '../../../assets/images/animals/json/cat-0.json';
   import chickenData from '../../../assets/images/animals/json/chicken-0.json';
@@ -38,10 +38,10 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
   import beaverData from '../../../assets/images/animals/json/beaver-0.json';
   import boarData from '../../../assets/images/animals/json/boar-0.json';
   import batData from '../../../assets/images/animals/json/bat-0.json';
-  
-  
+
+
   // Load the actual PNG sprite sheet
-  const catSpriteSheet = require('../../../assets/images/animals/png/cat-0.png');  
+  const catSpriteSheet = require('../../../assets/images/animals/png/cat-0.png');
   const chickenSpriteSheet = require('../../../assets/images/animals/png/chicken-0.png');
   const dogSpriteSheet = require('../../../assets/images/animals/png/dog-0.png');
   const donkeySpriteSheet = require('../../../assets/images/animals/png/donkey-0.png');
@@ -71,7 +71,7 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
   const beaverSpriteSheet = require('../../../assets/images/animals/png/beaver-0.png');
   const boarSpriteSheet = require('../../../assets/images/animals/png/boar-0.png');
   const batSpriteSheet = require('../../../assets/images/animals/png/bat-0.png');
-  
+
   // Extract the frames array and meta from JSON
   const { frames: catFrames, meta: catMeta } = catData;
   const { frames: chickenFrames, meta: chickenMeta } = chickenData;
@@ -103,8 +103,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
   const { frames: beaverFrames, meta: beaverMeta } = beaverData;
   const { frames: boarFrames, meta: boarMeta } = boarData;
   const { frames: batFrames, meta: batMeta } = batData;
-  
-  
+
+
   // Pre-define animals array at module level to avoid re-creation
   export const animals: AnimalType[] = [
     {
@@ -116,7 +116,9 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: catFrames,
       spriteSheetSize: catMeta.size,
       sound: require('../../../assets/sounds/cat.mp3'),
-      labelSound: require('../../../assets/sounds/labels/cat.wav')
+      labelSound: require('../../../assets/sounds/labels/cat.wav'),
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 2,
@@ -127,7 +129,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: dogFrames,
       spriteSheetSize: dogMeta.size,
       sound: require('../../../assets/sounds/dog.mp3'),
-      labelSound: require('../../../assets/sounds/labels/dog.wav')
+      labelSound: require('../../../assets/sounds/labels/dog.wav'),
+      isMoving: false,
     },
     {
       id: 3,
@@ -138,7 +141,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: chickenFrames,
       spriteSheetSize: chickenMeta.size,
       sound: require('../../../assets/sounds/chicken.mp3'),
-      labelSound: require('../../../assets/sounds/labels/chicken.wav')
+      labelSound: require('../../../assets/sounds/labels/chicken.wav'),
+      isMoving: false,
     },
     {
       id: 4,
@@ -149,7 +153,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: chickFrames,
       spriteSheetSize: chickMeta.size,
       sound: require('../../../assets/sounds/chick.mp3'),
-      labelSound: require('../../../assets/sounds/labels/chick.wav')
+      labelSound: require('../../../assets/sounds/labels/chick.wav'),
+      isMoving: false,
     },
     {
       id: 5,
@@ -160,7 +165,10 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: donkeyFrames,
       spriteSheetSize: donkeyMeta.size,
       sound: require('../../../assets/sounds/donkey.mp3'),
-      labelSound: require('../../../assets/sounds/labels/donkey.wav')
+      labelSound: require('../../../assets/sounds/labels/donkey.wav'),
+      isMoving: true,
+      movingDirection: 'left',
+
     },
     {
       id: 6,
@@ -171,7 +179,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: cowFrames,
       spriteSheetSize: cowMeta.size,
       sound: require('../../../assets/sounds/cow.mp3'),
-      labelSound: require('../../../assets/sounds/labels/cow.wav')
+      labelSound: require('../../../assets/sounds/labels/cow.wav'),
+      isMoving: false,
     },
     {
       id: 7,
@@ -182,8 +191,9 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: duckFrames,
       spriteSheetSize: duckMeta.size,
       sound: require('../../../assets/sounds/duck.mp3'),
-      labelSound: require('../../../assets/sounds/labels/duck.wav')
-    },  
+      labelSound: require('../../../assets/sounds/labels/duck.wav'),
+      isMoving: false,
+    },
     {
       id: 8,
       name: 'Goat',
@@ -193,7 +203,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: goatFrames,
       spriteSheetSize: goatMeta.size,
       sound: require('../../../assets/sounds/goat.mp3'),
-      labelSound: require('../../../assets/sounds/labels/goat.wav')
+      labelSound: require('../../../assets/sounds/labels/goat.wav'),
+      isMoving: false,
     },
     {
       id: 9,
@@ -204,7 +215,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: gooseFrames,
       spriteSheetSize: gooseMeta.size,
       sound: require('../../../assets/sounds/goose.mp3'),
-      labelSound: require('../../../assets/sounds/labels/goose.wav')
+      labelSound: require('../../../assets/sounds/labels/goose.wav'),
+      isMoving: false,
     },
     {
       id: 10,
@@ -215,7 +227,10 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: horseFrames,
       spriteSheetSize: horseMeta.size,
       sound: require('../../../assets/sounds/horse.mp3'),
-      labelSound: require('../../../assets/sounds/labels/horse.wav')
+      labelSound: require('../../../assets/sounds/labels/horse.wav'),
+      isMoving: true,
+      movingDirection: 'left',
+
     },
     {
       id: 11,
@@ -226,7 +241,10 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: llamaFrames,
       spriteSheetSize: llamaMeta.size,
       sound: require('../../../assets/sounds/llama.mp3'),
-      labelSound: require('../../../assets/sounds/labels/llama.wav')
+      labelSound: require('../../../assets/sounds/labels/llama.wav'),
+      isMoving: true,
+      movingDirection: 'right',
+
     },
     {
       id: 12,
@@ -237,7 +255,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: pigFrames,
       spriteSheetSize: pigMeta.size,
       sound: require('../../../assets/sounds/pig.mp3'),
-      labelSound: require('../../../assets/sounds/labels/pig.wav')
+      labelSound: require('../../../assets/sounds/labels/pig.wav'),
+      isMoving: false,
     },
     {
       id: 13,
@@ -248,7 +267,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: rabbitFrames,
       spriteSheetSize: rabbitMeta.size,
       sound: require('../../../assets/sounds/rabbit.mp3'),
-      labelSound: require('../../../assets/sounds/labels/rabbit.wav')
+      labelSound: require('../../../assets/sounds/labels/rabbit.wav'),
+      isMoving: false,
     },
     {
       id: 14,
@@ -259,8 +279,9 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: sheepFrames,
       spriteSheetSize: sheepMeta.size,
       sound: require('../../../assets/sounds/sheep.mp3'),
-      labelSound: require('../../../assets/sounds/labels/sheep.wav')
-    },  
+      labelSound: require('../../../assets/sounds/labels/sheep.wav'),
+      isMoving: false,
+    },
     {
       id: 15,
       name: 'Rooster',
@@ -270,7 +291,9 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: roosterFrames,
       spriteSheetSize: roosterMeta.size,
       sound: require('../../../assets/sounds/rooster.mp3'),
-      labelSound: require('../../../assets/sounds/labels/rooster.wav')
+      labelSound: require('../../../assets/sounds/labels/rooster.wav'),
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 16,
@@ -281,7 +304,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: turkeyFrames,
       spriteSheetSize: turkeyMeta.size,
       sound: require('../../../assets/sounds/turkey.mp3'),
-      labelSound: require('../../../assets/sounds/labels/turkey.wav')
+      labelSound: require('../../../assets/sounds/labels/turkey.wav'),
+      isMoving: false,
     },
     {
       id: 17,
@@ -292,7 +316,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: badgerFrames,
       spriteSheetSize: badgerMeta.size,
       sound: require('../../../assets/sounds/badger.mp3'),
-      labelSound: require('../../../assets/sounds/labels/badger.wav')
+      labelSound: require('../../../assets/sounds/labels/badger.wav'),
+      isMoving: false,
     },
     {
       id: 18,
@@ -303,7 +328,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: foxFrames,
       spriteSheetSize: foxMeta.size,
       sound: require('../../../assets/sounds/fox.mp3'),
-      labelSound: require('../../../assets/sounds/labels/fox.wav')
+      labelSound: require('../../../assets/sounds/labels/fox.wav'),
+      isMoving: false,
     },
     {
       id: 19,
@@ -314,7 +340,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: bearFrames,
       spriteSheetSize: bearMeta.size,
       sound: require('../../../assets/sounds/bear.mp3'),
-      labelSound: require('../../../assets/sounds/labels/bear.wav')
+      labelSound: require('../../../assets/sounds/labels/bear.wav'),
+      isMoving: false,
     },
     {
       id: 20,
@@ -325,7 +352,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: raccoonFrames,
       spriteSheetSize: raccoonMeta.size,
       sound: require('../../../assets/sounds/raccoon.mp3'),
-      labelSound: require('../../../assets/sounds/labels/raccoon.wav')
+      labelSound: require('../../../assets/sounds/labels/raccoon.wav'),
+      isMoving: false,
     },
     {
       id: 21,
@@ -336,7 +364,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: squirrelFrames,
       spriteSheetSize: squirrelMeta.size,
       sound: require('../../../assets/sounds/squirrel.mp3'),
-      labelSound: require('../../../assets/sounds/labels/squirrel.wav')
+      labelSound: require('../../../assets/sounds/labels/squirrel.wav'),
+      isMoving: false,
     },
     {
       id: 22,
@@ -347,7 +376,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: hedgehogFrames,
       spriteSheetSize: hedgehogMeta.size,
       sound: require('../../../assets/sounds/hedgehog.mp3'),
-      labelSound: require('../../../assets/sounds/labels/hedgehog.wav')
+      labelSound: require('../../../assets/sounds/labels/hedgehog.wav'),
+      isMoving: false,
     },
     {
       id: 23,
@@ -358,7 +388,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: owlFrames,
       spriteSheetSize: owlMeta.size,
       sound: require('../../../assets/sounds/owl.mp3'),
-      labelSound: require('../../../assets/sounds/labels/owl.wav')
+      labelSound: require('../../../assets/sounds/labels/owl.wav'),
+      isMoving: false,
     },
     {
       id: 24,
@@ -369,7 +400,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: wolfFrames,
       spriteSheetSize: wolfMeta.size,
       sound: require('../../../assets/sounds/wolf.mp3'),
-      labelSound: require('../../../assets/sounds/labels/wolf.wav')
+      labelSound: require('../../../assets/sounds/labels/wolf.wav'),
+      isMoving: false,
     },
     {
       id: 25,
@@ -380,7 +412,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: deerFrames,
       spriteSheetSize: deerMeta.size,
       sound: require('../../../assets/sounds/deer.mp3'),
-      labelSound: require('../../../assets/sounds/labels/deer.wav')
+      labelSound: require('../../../assets/sounds/labels/deer.wav'),
+      isMoving: false,
     },
     {
       id: 26,
@@ -391,7 +424,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: mooseFrames,
       spriteSheetSize: mooseMeta.size,
       sound: require('../../../assets/sounds/moose.mp3'),
-      labelSound: require('../../../assets/sounds/labels/moose.wav')
+      labelSound: require('../../../assets/sounds/labels/moose.wav'),
+      isMoving: false,
     },
     {
       id: 27,
@@ -402,7 +436,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: mouseFrames,
       spriteSheetSize: mouseMeta.size,
       sound: require('../../../assets/sounds/mouse.mp3'),
-      labelSound: require('../../../assets/sounds/labels/mouse.wav')
+      labelSound: require('../../../assets/sounds/labels/mouse.wav'),
+      isMoving: false,
     },
     {
       id: 29,
@@ -413,7 +448,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: beaverFrames,
       spriteSheetSize: beaverMeta.size,
       sound: require('../../../assets/sounds/beaver.mp3'),
-      labelSound: require('../../../assets/sounds/labels/beaver.wav')
+      labelSound: require('../../../assets/sounds/labels/beaver.wav'),
+      isMoving: false,
     },
     {
       id: 30,
@@ -424,7 +460,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: boarFrames,
       spriteSheetSize: boarMeta.size,
       sound: require('../../../assets/sounds/boar.mp3'),
-      labelSound: require('../../../assets/sounds/labels/boar.wav')
+      labelSound: require('../../../assets/sounds/labels/boar.wav'),
+      isMoving: false,
     },
     {
       id: 31,
@@ -435,16 +472,16 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       frames: batFrames,
       spriteSheetSize: batMeta.size,
       sound: require('../../../assets/sounds/bat.mp3'),
-      labelSound: require('../../../assets/sounds/labels/bat.wav')
+      labelSound: require('../../../assets/sounds/labels/bat.wav'),
+      isMoving: false,
     },
 
 
   ];
-  
+
   // Preload all animal images regardless of type
   animals.forEach(animal => {
     if (typeof animal.source === 'number') {
       Asset.fromModule(animal.source).downloadAsync();
     }
   });
-  

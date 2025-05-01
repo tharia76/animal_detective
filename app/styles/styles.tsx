@@ -7,13 +7,15 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // Define styles outside component at module level
 export  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#FFDAB9', // Peachy background color
-    },
+  container: {
+    flex: 1,
+    position: 'relative', // important for layered stacking
+    backgroundColor: 'transparent', // allow background behind to show
+  },
+  
     content: {
       flex: 1,
-      marginTop: 150,
+      marginTop: 100,
       justifyContent: 'center',
       paddingBottom: 5,
     },
@@ -22,34 +24,37 @@ export  const styles = StyleSheet.create({
       justifyContent: 'center',
       height: screenHeight * 0.25,
       overflow: 'visible',
+      marginTop: 150, // Increased from 150 to push animal down further
     },
     
     // NEW wrapper that’s full width but centers its children
     animalNameWrapper: {
       position: 'absolute',
-      bottom: -40,      // tweak as needed
+      top: -100,      // tweak as needed
       width: '100%',
       alignItems: 'center',
     },
     
     // Just style the Text itself; it will size to its content
     animalName: {
-      fontSize: 20,
-      fontWeight: '500',
-      backgroundColor: '#e0e0e0',
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 15,
+      fontSize: 32, // Increased from 20
+      marginTop: 0,
+      fontWeight: '700', // Slightly bolder for visibility
+      backgroundColor: 'yellow',
+      paddingVertical: 12, // Increased padding
+      paddingHorizontal: 24, // Increased padding
+      borderRadius: 22, // Slightly larger radius
       textAlign: 'center',
-      elevation: 2,
+      elevation: 3,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 1.5,
-      opacity: 0.8,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3,
+      opacity: 0.9,
+      borderWidth: 5,
+      borderColor: '#FFD700', // gold border for visibility
       // no position, no width here
     },
-    
 
     navButton: {
       backgroundColor: 'green',
@@ -84,11 +89,18 @@ export  const styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: '#FFDAB9', // Peachy background color for loading screen
+    },  background: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 0,
     },
     loadingText: {
       marginTop: 10,
       fontSize: 18,
       color: '#333',
+    }, foreground: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 1,
+      elevation: 1,        // Android stacking
     },
     animalLoadingContainer: {
       position: 'absolute',
@@ -127,6 +139,7 @@ export  const styles = StyleSheet.create({
       width: screenWidth * 0.5,
       height: screenHeight * 0.25,
       resizeMode: 'contain',
+      marginTop: 150, // Increased from 150 to push animal down further
     },
     menuContainer: {
       flex: 1,
@@ -205,7 +218,7 @@ export  const styles = StyleSheet.create({
     },
     instructionBubble: {
       position: 'absolute',
-      top: 200,
+      top: 100,
       left: 20,
       right: 20,
       padding: 5,
@@ -227,6 +240,54 @@ export  const styles = StyleSheet.create({
       fontSize: 20,
       color: '#333',
       textAlign: 'center',
+    },
+  });
+
+  // Road animation styles
+  const roadStyles = StyleSheet.create({
+    roadContainer: {
+      width: '100%',
+      height: 100,
+      position: 'relative',
+      overflow: 'hidden',
+      marginTop: 20,
+    },
+    roadStrip: {
+      position: 'absolute',
+      width: '200%', // Extra width for continuous animation
+      height: '100%',
+      backgroundColor: '#333',
+      zIndex: 1,
+    },
+    roadSurface: {
+      position: 'absolute',
+      width: '100%',
+      height: 60,
+      backgroundColor: '#555',
+      top: 20,
+      zIndex: 2,
+    },
+    roadSidewalk: {
+      position: 'absolute',
+      width: '100%',
+      height: 10,
+      backgroundColor: '#999',
+      top: 10,
+      zIndex: 2,
+    },
+    roadMarkingsContainer: {
+      position: 'absolute',
+      width: '100%',
+      height: 60,
+      top: 20,
+      zIndex: 3,
+    },
+    roadMarking: {
+      position: 'absolute',
+      width: 40,
+      height: 5,
+      backgroundColor: '#fff',
+      top: 27,
     },
   });
 

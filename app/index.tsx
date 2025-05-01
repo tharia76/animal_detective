@@ -15,17 +15,18 @@ import FarmScreen from '../screens/levels/farm/Farm';
 import { useFonts } from 'expo-font';
 import { Asset } from 'expo-asset';
 import ForestScreen from '../screens/levels/farm/Forest';
-import '../app/localization/i18next';
+import './localization/i18next';
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const titleAnim = useRef(new Animated.Value(0)).current;
   const [assetsReady, setAssetsReady] = useState(false);
   const [farmBgUri, setFarmBgUri] = useState<string | null>(null);
   const [menuBgUri, setMenuBgUri] = useState<string | null>(null);
   const [forestBgUri, setForestBgUri] = useState<string | null>(null);
-  const [oceanBgUri, setOceanBgUri] = useState<string | null>(null);
+  const [skyBgUri, setSkyBgUri] = useState<string | null>(null);
+  // const [oceanBgUri, setOceanBgUri] = useState<string | null>(null);
 
   // Animation state for screen transitions
   const screenOpacityAnim = useRef(new Animated.Value(1)).current; // Start fully visible
@@ -35,21 +36,24 @@ export default function App() {
   useEffect(() => {
     const preloadAssets = async () => {
       try {
-        const farm = Asset.fromModule(require('../assets/images/farm.jpg'));
+        const farm = Asset.fromModule(require('../assets/images/farm.png'));
         const menu = Asset.fromModule(require('../assets/images/menu-screen.png'));
         const forest = Asset.fromModule(require('../assets/images/forest-bg.jpg'));
+        const movingFarm = Asset.fromModule(require('../assets/images/farm.png'));
         // const ocean = Asset.fromModule(require('../assets/images/ocean.jpg'));
 
         await Promise.all([
           farm.downloadAsync(),
           menu.downloadAsync(),
           forest.downloadAsync(),
+          movingFarm.downloadAsync(),
           // ocean.downloadAsync(),
         ]);
 
         setFarmBgUri(farm.localUri || farm.uri);
         setMenuBgUri(menu.localUri || menu.uri);
         setForestBgUri(forest.localUri || forest.uri);
+        setSkyBgUri(movingFarm.localUri || movingFarm.uri);
         // setOceanBgUri(ocean.localUri || ocean.uri);
         setAssetsReady(true);
       } catch (error) {
@@ -118,6 +122,7 @@ export default function App() {
           <FarmScreen
             onBackToMenu={handleBackToMenu}
             backgroundImageUri={farmBgUri}
+            skyBackgroundImageUri={skyBgUri}
           />
         ) : selectedLevel === 'forest' ? (
           <ForestScreen

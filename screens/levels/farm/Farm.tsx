@@ -9,9 +9,10 @@ import LevelScreenTemplate from '../../../app/(tabs)/components/LevelScreenTempl
 type FarmScreenProps = {
     onBackToMenu: () => void;
     backgroundImageUri: string | null; // Accept URI prop
+    skyBackgroundImageUri: string | null;
 };
 
-export default function FarmScreen({ onBackToMenu, backgroundImageUri }: FarmScreenProps) {
+export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: FarmScreenProps) {
   const farmAnimals = animals.filter((animal: AnimalType) => animal.animalType === 'Farm');
   const [bgReady, setBgReady] = useState(false);
 
@@ -42,6 +43,7 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri }: FarmScr
       animals={farmAnimals}
       onBackToMenu={onBackToMenu}
       backgroundImageUri={backgroundImageUri}
+      skyBackgroundImageUri={skyBackgroundImageUri}
     />
   );
 }

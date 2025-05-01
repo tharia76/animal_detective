@@ -157,7 +157,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
         setBgLoaded(true);
 
         // Preload level images
-        const farmAsset = Asset.fromModule(require('../assets/images/farm.jpg'));
+        const farmAsset = Asset.fromModule(require('../assets/images/farm.png'));
         const forestAsset = Asset.fromModule(require('../assets/images/forest.jpg'));
         const oceanAsset = Asset.fromModule(require('../assets/images/oceann.jpg'));
         const desertAsset = Asset.fromModule(require('../assets/images/desert.jpg'));
@@ -236,21 +236,27 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
     }
   };
 
+  // Note: The "black fade out" during screen transitions is typically controlled
+  // by the navigator (e.g., Stack Navigator) configuration, not this specific screen component.
+  // The `fadeDuration={0}` prop on ImageBackground below prevents the background image *itself*
+  // from fading in, which is likely the desired behavior within this component.
+  // If a fade persists during navigation, check your navigator's screenOptions.
   return (
     <ImageBackground
       source={backgroundImageUri ? { uri: backgroundImageUri } : require('../assets/images/menu-screen.png')}
       style={{ flex: 1 }}
       resizeMode="cover"
-      fadeDuration={0}
+      fadeDuration={0} // Set to 0 to prevent the image source from fading in (especially on Android)
     >
       {/* Added marginTop to push the container down */}
-      <View style={[styles.menuContainer, { backgroundColor: 'transparent', marginTop: 60 }]}>
+      <View style={[styles.menuContainer, { backgroundColor: 'transparent', marginTop: 100 }]}>
         <View style={{
           backgroundColor: 'rgba(115, 194, 185, 0.6)',
           padding: 10,
           borderRadius: 15,
           width: '90%',
           alignItems: 'center'
+
         }}>
           <View style={{
             flexDirection: 'row',
@@ -346,7 +352,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
               let isLocked = false; // Default to unlocked
               switch (level) {
                 case 'farm':
-                  levelBg = require('../assets/images/farm.jpg');
+                  levelBg = require('../assets/images/farm.png');
                   break;
                 case 'forest':
                   levelBg = require('../assets/images/forest-bg.jpg'); // Assuming forest-bg.jpg exists, or use forest.jpg
@@ -380,7 +386,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
                   isLocked = true;
                   break;
                 default:
-                  levelBg = require('../assets/images/farm.jpg'); // Fallback image
+                  levelBg = require('../assets/images/farm.png'); // Fallback image
               }
 
               // TODO: Replace 'isLocked = true' logic above with actual check
@@ -455,7 +461,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
       <Modal
         visible={showPaymentModal}
         transparent={true}
-        animationType="fade"
+        animationType="fade" // This controls the modal animation, not screen transition
         onRequestClose={() => setShowPaymentModal(false)}
       >
         <View style={{

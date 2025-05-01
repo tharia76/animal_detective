@@ -19,4 +19,6 @@ export type AnimalType = {
   spriteSheetSize?: { w: number; h: number };
   sound: any;         // You can refine this further if you want
   labelSound: any;    // Same here
+  isMoving?: boolean
+  movingDirection?: 'left' | 'right'
 };
