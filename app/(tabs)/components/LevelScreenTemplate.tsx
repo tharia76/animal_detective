@@ -27,6 +27,8 @@ import EndlessRoad from './EndlessRoad';
 import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
 import MovingBg from './MovingBg';
+// --- Add localization import ---
+import { useLocalization } from '../../../hooks/useLocalization';
 
 // --- MOVING BG MAP: Map levelName to moving background asset/uri ---
 const MOVING_BG_MAP: Record<string, string | number | undefined> = {
@@ -68,6 +70,9 @@ export default function LevelScreenTemplate({
   skyBackgroundImageUri,
   onBackToMenu,
 }: Props) {
+  // --- Use localization hook ---
+  const { t } = useLocalization();
+
   const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
   const [showName, setShowName] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -462,7 +467,7 @@ export default function LevelScreenTemplate({
         </TouchableOpacity>
         <View style={styles.content}>
            <Text style={[styles.animalName, { fontSize: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 15, marginTop: 100, color: '#fff' }]}>
-             Background image not available for this level.
+             {t('backgroundNotAvailable') || 'Background image not available for this level.'}
            </Text>
         </View>
       </View>
@@ -560,7 +565,7 @@ export default function LevelScreenTemplate({
               />
               {hasAnimals && !showName && !isTransitioning && (
                 <InstructionBubble
-                  text="Tap the animal to hear its sound!"
+                  text={t('tapAnimalToHearSound')}
                   arrowAnim={arrowAnim}
                   image={require('../../../assets/images/tap.png')}
                 />
@@ -571,7 +576,7 @@ export default function LevelScreenTemplate({
           {!hasAnimals && (
             <View style={styles.content}>
               <Text style={[styles.animalName, { fontSize: 24, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }]}>
-                No animals available for this level yet
+                {t('noAnimalsForLevel')}
               </Text>
             </View>
           )}

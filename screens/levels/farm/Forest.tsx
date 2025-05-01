@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
-import { animals } from '../../../app/(tabs)/data/animals';
+import { getAnimals } from '../../../app/(tabs)/data/animals';
 import { AnimalType } from '../../../app/(tabs)/data/AnimalType';
 import LevelScreenTemplate from '../../../app/(tabs)/components/LevelScreenTemplate';
 
@@ -16,7 +16,7 @@ export default function ForestScreen({
   backgroundImageUri,
   skyBackgroundImageUri,
 }: ForestScreenProps) {
-  const forestAnimals = animals.filter((animal: AnimalType) => animal.animalType === 'Forest');
+  const forestAnimals = getAnimals().filter((animal: AnimalType) => animal.animalType === 'Forest');
   // Check if there are any forest animals available
   const [loading, setLoading] = useState(true);
 

@@ -10,7 +10,7 @@ import { useLocalization } from '../hooks/useLocalization';
 import { strings } from '../app/localization/strings';
 
 type Props = {
-  onSelectLevel: (level: string) => void;
+  onSelectLevel: (level: string, language: string) => void;
   backgroundImageUri: string | null;
 };
 
@@ -204,7 +204,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
   // Handle level selection
   const handleLevelSelect = (level: string, isLocked: boolean) => {
     if (!isLocked) {
-      onSelectLevel(level);
+      onSelectLevel(level, lang);
     } else {
       setSelectedLockedLevel(level);
       setShowPaymentModal(true);

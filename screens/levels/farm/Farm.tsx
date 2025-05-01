@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
-import { animals } from '../../../app/(tabs)/data/animals';
+import { getAnimals } from '../../../app/(tabs)/data/animals';
 import { AnimalType } from '../../../app/(tabs)/data/AnimalType';
 import LevelScreenTemplate from '../../../app/(tabs)/components/LevelScreenTemplate';
 
@@ -10,10 +10,11 @@ type FarmScreenProps = {
     onBackToMenu: () => void;
     backgroundImageUri: string | null; // Accept URI prop
     skyBackgroundImageUri: string | null;
+    
 };
 
 export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: FarmScreenProps) {
-  const farmAnimals = animals.filter((animal: AnimalType) => animal.animalType === 'Farm');
+  const farmAnimals = getAnimals().filter((animal: AnimalType) => animal.animalType === 'Farm');
   const [bgReady, setBgReady] = useState(false);
 
   useEffect(() => {
