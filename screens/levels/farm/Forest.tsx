@@ -8,11 +8,13 @@ import LevelScreenTemplate from '../../../app/(tabs)/components/LevelScreenTempl
 type ForestScreenProps = {
   onBackToMenu: () => void;
   backgroundImageUri: string | null;
+  skyBackgroundImageUri: string | null;
 };
 
 export default function ForestScreen({
   onBackToMenu,
   backgroundImageUri,
+  skyBackgroundImageUri,
 }: ForestScreenProps) {
   const forestAnimals = animals.filter((animal: AnimalType) => animal.animalType === 'Forest');
   // Check if there are any forest animals available
@@ -41,6 +43,7 @@ export default function ForestScreen({
       animals={forestAnimals}
       onBackToMenu={onBackToMenu}
       backgroundImageUri={backgroundImageUri}
+      skyBackgroundImageUri={skyBackgroundImageUri}
     />
   );
 }

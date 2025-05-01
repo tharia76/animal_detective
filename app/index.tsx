@@ -25,35 +25,49 @@ export default function App() {
   const [farmBgUri, setFarmBgUri] = useState<string | null>(null);
   const [menuBgUri, setMenuBgUri] = useState<string | null>(null);
   const [forestBgUri, setForestBgUri] = useState<string | null>(null);
-  const [skyBgUri, setSkyBgUri] = useState<string | null>(null);
-  // const [oceanBgUri, setOceanBgUri] = useState<string | null>(null);
+
+  // Store moving backgrounds for each level
+  const [movingBgUris, setMovingBgUris] = useState<Record<string, string | null>>({
+    farm: null,
+    forest: null,
+    // ocean: null,
+  });
 
   // Animation state for screen transitions
   const screenOpacityAnim = useRef(new Animated.Value(1)).current; // Start fully visible
-
-
 
   useEffect(() => {
     const preloadAssets = async () => {
       try {
         const farm = Asset.fromModule(require('../assets/images/farm.png'));
         const menu = Asset.fromModule(require('../assets/images/menu-screen.png'));
-        const forest = Asset.fromModule(require('../assets/images/forest-bg.jpg'));
+        const forest = Asset.fromModule(require('../assets/images/forest.png'));
+        // For moving backgrounds, you can use different images if you have them
         const movingFarm = Asset.fromModule(require('../assets/images/farm.png'));
+        const movingForest = Asset.fromModule(require('../assets/images/forest.png'));
         // const ocean = Asset.fromModule(require('../assets/images/ocean.jpg'));
+        // const movingOcean = Asset.fromModule(require('../assets/images/ocean.jpg'));
 
         await Promise.all([
           farm.downloadAsync(),
           menu.downloadAsync(),
           forest.downloadAsync(),
           movingFarm.downloadAsync(),
+          movingForest.downloadAsync(),
           // ocean.downloadAsync(),
+          // movingOcean.downloadAsync(),
         ]);
 
         setFarmBgUri(farm.localUri || farm.uri);
         setMenuBgUri(menu.localUri || menu.uri);
         setForestBgUri(forest.localUri || forest.uri);
-        setSkyBgUri(movingFarm.localUri || movingFarm.uri);
+
+        setMovingBgUris({
+          farm: movingFarm.localUri || movingFarm.uri,
+          forest: movingForest.localUri || movingForest.uri,
+          // ocean: movingOcean.localUri || movingOcean.uri,
+        });
+
         // setOceanBgUri(ocean.localUri || ocean.uri);
         setAssetsReady(true);
       } catch (error) {
@@ -108,6 +122,12 @@ export default function App() {
     return <SplashScreen titleAnim={titleAnim} />;
   }
 
+  // Helper to get the correct moving background for the selected level
+  const getMovingBgUri = (level: string | null) => {
+    if (!level) return null;
+    return movingBgUris[level] || null;
+  };
+
   return (
     <>
       <StatusBar hidden />
@@ -122,12 +142,13 @@ export default function App() {
           <FarmScreen
             onBackToMenu={handleBackToMenu}
             backgroundImageUri={farmBgUri}
-            skyBackgroundImageUri={skyBgUri}
+            skyBackgroundImageUri={getMovingBgUri('farm')}
           />
         ) : selectedLevel === 'forest' ? (
           <ForestScreen
             onBackToMenu={handleBackToMenu}
             backgroundImageUri={forestBgUri}
+            skyBackgroundImageUri={getMovingBgUri('forest')}
           />
         ) : ( // Fallback remains MenuScreen
           <MenuScreen

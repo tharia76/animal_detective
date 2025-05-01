@@ -158,7 +158,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
 
         // Preload level images
         const farmAsset = Asset.fromModule(require('../assets/images/farm.png'));
-        const forestAsset = Asset.fromModule(require('../assets/images/forest.jpg'));
+        const forestAsset = Asset.fromModule(require('../assets/images/forest.png'));
         const oceanAsset = Asset.fromModule(require('../assets/images/oceann.jpg'));
         const desertAsset = Asset.fromModule(require('../assets/images/desert.jpg'));
         const arcticAsset = Asset.fromModule(require('../assets/images/arctic.jpg'));
@@ -355,7 +355,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
                   levelBg = require('../assets/images/farm.png');
                   break;
                 case 'forest':
-                  levelBg = require('../assets/images/forest-bg.jpg'); // Assuming forest-bg.jpg exists, or use forest.jpg
+                  levelBg = require('../assets/images/forest.png'); // Assuming forest-bg.jpg exists, or use forest.jpg
                   break; // Farm and Forest are free
                 case 'ocean':
                   levelBg = require('../assets/images/oceann.jpg');

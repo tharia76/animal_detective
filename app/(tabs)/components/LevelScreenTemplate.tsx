@@ -28,6 +28,15 @@ import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
 import MovingBg from './MovingBg';
 
+// --- MOVING BG MAP: Map levelName to moving background asset/uri ---
+const MOVING_BG_MAP: Record<string, string | number | undefined> = {
+  // Example: 'Farm': require('../../../assets/images/sky_farm.png'),
+  // Example: 'Jungle': require('../../../assets/images/sky_jungle.png'),
+  // Example: 'Desert': require('../../../assets/images/sky_desert.png'),
+  // Add your levelName: asset/uri pairs here
+  // If you want to use a remote uri, just use a string URL
+};
+
 type Animal = {
   id: number;
   name: string;
@@ -89,6 +98,15 @@ export default function LevelScreenTemplate({
   const [wasMoving, setWasMoving] = useState(currentAnimal?.isMoving ?? false);
   const movingBgOpacity = useRef(new Animated.Value(currentAnimal?.isMoving ? 1 : 0)).current;
   const imageBgOpacity = useRef(new Animated.Value(currentAnimal?.isMoving ? 0 : 1)).current;
+
+  // --- Determine which moving background to use based on levelName ---
+  // Priority: MOVING_BG_MAP[levelName] > skyBackgroundImageUri > undefined
+  const movingBgSource = useMemo(() => {
+    if (MOVING_BG_MAP[levelName]) {
+      return MOVING_BG_MAP[levelName];
+    }
+    return skyBackgroundImageUri;
+  }, [levelName, skyBackgroundImageUri]);
 
   // When currentAnimal?.isMoving changes, crossfade the backgrounds
   useEffect(() => {
@@ -464,7 +482,10 @@ export default function LevelScreenTemplate({
             { opacity: movingBgOpacity, backgroundColor: 'transparent' }
           ]}
         >
-          <MovingBg backgroundImageUri={skyBackgroundImageUri} movingDirection={currentAnimal?.movingDirection ?? 'left'} />
+          <MovingBg
+            backgroundImageUri={movingBgSource as string | null}
+            movingDirection={currentAnimal?.movingDirection ?? 'left'}
+          />
         </Animated.View>
         {/* Static image background */}
         <Animated.View

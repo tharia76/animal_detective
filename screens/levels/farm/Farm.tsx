@@ -19,7 +19,7 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
   useEffect(() => {
     const load = async () => {
       try {
-        await Asset.fromModule(require('../../../assets/images/farm.jpg')).downloadAsync();
+        await Asset.fromModule(require('../../../assets/images/farm.png')).downloadAsync();
       } catch (err) {
         console.warn('Failed to preload farm image', err);
       }

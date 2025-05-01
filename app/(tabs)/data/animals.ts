@@ -353,7 +353,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       spriteSheetSize: raccoonMeta.size,
       sound: require('../../../assets/sounds/raccoon.mp3'),
       labelSound: require('../../../assets/sounds/labels/raccoon.wav'),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'right',
     },
     {
       id: 21,
@@ -377,7 +378,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       spriteSheetSize: hedgehogMeta.size,
       sound: require('../../../assets/sounds/hedgehog.mp3'),
       labelSound: require('../../../assets/sounds/labels/hedgehog.wav'),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'right',
     },
     {
       id: 23,
@@ -413,7 +415,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       spriteSheetSize: deerMeta.size,
       sound: require('../../../assets/sounds/deer.mp3'),
       labelSound: require('../../../assets/sounds/labels/deer.wav'),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 26,
@@ -425,7 +428,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       spriteSheetSize: mooseMeta.size,
       sound: require('../../../assets/sounds/moose.mp3'),
       labelSound: require('../../../assets/sounds/labels/moose.wav'),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 27,
@@ -437,7 +441,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       spriteSheetSize: mouseMeta.size,
       sound: require('../../../assets/sounds/mouse.mp3'),
       labelSound: require('../../../assets/sounds/labels/mouse.wav'),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 29,
@@ -449,7 +454,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       spriteSheetSize: beaverMeta.size,
       sound: require('../../../assets/sounds/beaver.mp3'),
       labelSound: require('../../../assets/sounds/labels/beaver.wav'),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 30,
@@ -461,7 +467,8 @@ Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
       spriteSheetSize: boarMeta.size,
       sound: require('../../../assets/sounds/boar.mp3'),
       labelSound: require('../../../assets/sounds/labels/boar.wav'),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 31,
