@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Image, ActivityIndicator, useWindowDimensions, StyleSheet, ImageBackground } from 'react-native';
+import { View, Image, ActivityIndicator, useWindowDimensions, StyleSheet, ImageBackground, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
 import * as RNIap from 'react-native-iap';
@@ -39,16 +39,19 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 280,
-    height: 280,
+    height: 120,
     resizeMode: 'contain',
   },
-  // Portrait: logo above language selector
+  // Portrait: logo above language selector (now column layout)
   portraitHeaderContainer: {
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 0,
     zIndex: 10000,
     width: '100%',
+    flexDirection: 'column', // changed to column for logo above language selector
+    justifyContent: 'flex-start',
+    position: 'relative',
   },
   portraitLogo: {
     width: 280,
@@ -57,9 +60,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   portraitLanguageSelector: {
-    width: '100%',
-    alignItems: 'center',
+    marginTop: 0,
     marginBottom: 10,
+    alignSelf: 'center',
+    zIndex: 10001,
   },
   tilesContainer: {
     position: 'absolute',
@@ -87,45 +91,40 @@ const styles = StyleSheet.create({
     minHeight: '100%',
   },
   // New styles for landscape layout
-  landscapeRow: {
-    flexDirection: 'row',
-    flex: 1,
-    alignItems: 'stretch', // changed from 'center' to 'stretch'
+  landscapeHeaderContainer: {
+    width: '100%',
+    alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    zIndex: 1,
-    paddingHorizontal: 48,
+    flexDirection: 'column',
+    paddingHorizontal: 32,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: 'transparent',
+    zIndex: 2,
+    position: 'relative',
   },
-  landscapeLeftCol: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start', // changed from 'center' to 'flex-start'
-    minWidth: 200,
-    maxWidth: 260,
-    height: '100%',
-  },
-  landscapeLogoContainer: {
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    width: '100%',
-    marginTop: 0, // changed from 5 to 0 to push logo to very top
+  landscapeLogo: {
+    width: 280,
+    height: 120,
+    resizeMode: 'contain',
+    marginBottom: 2,
   },
   landscapeLangContainer: {
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    width: '100%',
-    // make the language selector smaller
-    transform: [{ scale: 0.8 }],
-    marginTop: 0, // add some space below logo
+    position: 'absolute',
+    right: 16,
+    top: 8,
+    zIndex: 10001,
+    // Optionally add backgroundColor: 'rgba(255,255,255,0.2)' for visibility
   },
-  landscapeTilesCol: {
-    flex: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
+  landscapeTilesScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+    flexDirection: 'row',
+    width: '100%',
+    paddingHorizontal: 32,
+    paddingTop: 8,
+    paddingBottom: 0,
+    zIndex: 1,
   },
 });
 
@@ -158,12 +157,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
 
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
-  const numColumns = isLandscape ? 3 : 3;
+  // For landscape, only one row, so numColumns = levels.length
+  const levels = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
+  const numColumns = isLandscape ? 1 : 3;
 
   // Bounded square size calculation
-  const margin = 8;
-  const portraitSize = (width * 0.9 / numColumns) - (margin * 2);
-  const maxLandscape = height * 0.3;
+  const margin = 5;
+  const portraitSize = (width * 0.9 / 3) - (margin * 2);
+  const maxLandscape = height * 0.4;
   const itemSize = Math.min(portraitSize, maxLandscape);
 
   // Overlay heights: language selector is 50px tall at y=20, logo is 180px tall at y=80
@@ -243,7 +244,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
     );
   }
 
-  const levels = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
   const languages = [
     { code: 'en', name: 'English'  },
     { code: 'ru', name: 'Русский' },
@@ -254,7 +254,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
     { code: 'tr', name: 'Türkçe' }
   ];
 
-  // On landscape, put logo all the way to the top, language selector below, both in the left column, tiles on the right
+  // On landscape, logo centered, language selector at top right, then horizontally scrollable menu tiles in one row
   if (isLandscape) {
     return (
       <ImageBackground
@@ -262,57 +262,59 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
         style={{ flex: 1, position: 'relative' }}
         resizeMode="cover"
       >
-        <View style={styles.landscapeRow}>
-          {/* Left column: logo at very top, language selector below */}
-          <View style={styles.landscapeLeftCol}>
-            <View style={styles.landscapeLogoContainer} pointerEvents="none">
-              <Image
-                source={require('../src/assets/images/game-logo.png')}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={styles.landscapeLangContainer} pointerEvents="box-none">
-              <LanguageSelector
-                isLandscape={isLandscape}
-                t={t}
-                lang={lang}
-                languages={languages}
-                handleLanguageChange={setLang}
-              />
-            </View>
-          </View>
-          {/* Tiles on the right */}
-          <View style={styles.landscapeTilesCol}>
-            <LevelTiles
-              levels={levels}
-              numColumns={numColumns}
-              isLandscape={isLandscape}
-              itemSize={itemSize}
-              margin={margin}
-              LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
-              handleLevelSelect={handleLevelSelect}
-              styles={styles}
-              getLevelBackgroundColor={getLevelBackgroundColor}
-              t={t}
-              // Add some vertical padding to center tiles
-              ListHeaderComponent={<View style={{ height: 24 }} />}
-              ListFooterComponent={<View style={{ height: 24 }} />}
-            />
-          </View>
+        {/* Language selector at top right */}
+        <View style={styles.landscapeLangContainer}>
+          <LanguageSelector
+            isLandscape={isLandscape}
+            t={t}
+            lang={lang}
+            languages={languages}
+            handleLanguageChange={setLang}
+          />
         </View>
+        {/* Centered logo */}
+        <View style={styles.landscapeHeaderContainer}>
+          <Image
+            source={require('../src/assets/images/game-logo.png')}
+            style={styles.landscapeLogo}
+            resizeMode="contain"
+          />
+        </View>
+        {/* Horizontally scrollable menu tiles in one row */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.landscapeTilesScroll,
+            { alignItems: 'center', minHeight: itemSize + margin * 2, marginTop: 16 }
+          ]}
+        >
+          <LevelTiles
+            levels={levels}
+            numColumns={levels.length}
+            isLandscape={isLandscape}
+            itemSize={itemSize}
+            margin={margin}
+            LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
+            handleLevelSelect={handleLevelSelect}
+            styles={styles}
+            getLevelBackgroundColor={getLevelBackgroundColor}
+            t={t}
+            horizontal
+          />
+        </ScrollView>
       </ImageBackground>
     );
   }
 
-  // Portrait: logo above language selector, both at the top, then tiles below
+  // Portrait: logo at top center, language selector centered below logo, then tiles below
   return (
     <ImageBackground
       source={bgUri ? { uri: bgUri } : BG_IMAGE}
       style={{ flex: 1, position: 'relative' }}
       resizeMode="cover"
     >
-      {/* Header: logo above language selector */}
+      {/* Header: logo at top center, language selector centered below */}
       <View style={styles.portraitHeaderContainer} pointerEvents="box-none">
         <Image
           source={require('../src/assets/images/game-logo.png')}
@@ -333,7 +335,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
       <View
         style={[
           styles.tilesContainer,
-          { top: 220, flex: 1 } // 20 (marginTop) + 180 (logo) + 10 (logo marginBottom) + 10 (lang marginBottom)
+          { top: 270, flex: 1 } // 20 (marginTop) + 200 (logo) + 10 (logo marginBottom) + 40 (language selector + margin)
         ]}
       >
         <LevelTiles
