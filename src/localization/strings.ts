@@ -2,7 +2,7 @@
 
 export const strings = {
   en: {
-    selectLevel: 'Select a Level',
+    selectLevel: 'Select language',
     farm: 'Farm',
     forest: 'Forest',
     ocean: 'Ocean',
@@ -55,7 +55,7 @@ export const strings = {
     },
   },
   ru: {
-    selectLevel: 'Выберите уровень',
+    selectLevel: 'Выберите язык',
     farm: 'Ферма',
     forest: 'Лес',
     ocean: 'Океан',
@@ -108,7 +108,7 @@ export const strings = {
     },
   },
   es: {
-    selectLevel: 'Selecciona un Nivel',
+    selectLevel: 'Selecciona un idioma',
     farm: 'Granja',
     forest: 'Bosque',
     ocean: 'Oceano',
@@ -161,7 +161,7 @@ export const strings = {
     },
   },
   de: {
-    selectLevel: 'Wähle einen Level',
+    selectLevel: 'Wähle einen Sprache',
     farm: 'Farm',
     forest: 'Wald',
     ocean: 'Ozean',
@@ -214,7 +214,7 @@ export const strings = {
     },
   },
   fr: {
-    selectLevel: 'Choisissez un Niveau',
+    selectLevel: 'Choisissez un langage',
     farm: 'Ferme',
     forest: 'Forêt',
     ocean: 'Océan',
@@ -267,7 +267,7 @@ export const strings = {
     },
   },
   it: {
-    selectLevel: 'Scegli un Livello',
+    selectLevel: 'Scegli un livello',
     farm: 'Fattoria',
     forest: 'Foresta',
     ocean: 'Oceano',
@@ -320,7 +320,7 @@ export const strings = {
     },
   },
   tr: {
-    selectLevel: 'Bir seviye seçin',
+    selectLevel: 'Bir dil seçin',
     farm: 'Çiftlik',
     forest: 'Orman',
     ocean: 'Deniz',
