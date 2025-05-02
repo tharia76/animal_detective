@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
-import { getAnimals } from '../../../app/(tabs)/data/animals';
-import { AnimalType } from '../../../app/(tabs)/data/AnimalType';
-import LevelScreenTemplate from '../../../app/(tabs)/components/LevelScreenTemplate';
+import { getAnimals } from '../../../src/data/animals';
+import { AnimalType } from '../../../src/data/AnimalType';
+import LevelScreenTemplate from '../../../src/components/LevelScreenTemplate';
 
 type ForestScreenProps = {
   onBackToMenu: () => void;

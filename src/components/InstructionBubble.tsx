@@ -1,5 +1,5 @@
 import { View, Text, Animated, Image, ImageSourcePropType } from 'react-native';
-import { useDynamicStyles } from '../../styles/styles';
+import { useDynamicStyles } from '../styles/styles';
 
 export default function InstructionBubble({
   text,

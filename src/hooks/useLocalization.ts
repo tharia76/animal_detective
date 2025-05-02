@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
-import i18n from '../app/localization/i18next';
+import i18n from '../../src/localization/i18next';
 // Define return type
 type UseLocalizationReturn = {
   t: (key: string) => string;

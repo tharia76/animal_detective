@@ -7,7 +7,7 @@ import {
   Modal, 
   Animated 
 } from 'react-native';
-import { useDynamicStyles } from '../../styles/styles';
+import { useDynamicStyles } from '../styles/styles';
 
 interface CongratsModalProps {
   showCongratsModal: boolean;
@@ -127,7 +127,7 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
             })}
           </View>
 
-          <Image source={require('../../../assets/images/congrats.png')} style={{ width: 100, height: 100, marginBottom: 20, zIndex: 1 }} />
+          <Image source={require('../assets/images/congrats.png')} style={{ width: 100, height: 100, marginBottom: 20, zIndex: 1 }} />
 
           <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 25, zIndex: 1 }}>
             You've seen all the animals in this level!

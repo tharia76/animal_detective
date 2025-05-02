@@ -8,7 +8,7 @@ import {
   Image,
   useWindowDimensions,
 } from 'react-native';
-import { useDynamicStyles } from '../../styles/styles';
+import { useDynamicStyles } from '../styles/styles';
 
 // 1️⃣ Hoist your hook: only call it once, at the top level
 const MovingBg = ({

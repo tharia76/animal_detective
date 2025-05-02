@@ -20,16 +20,19 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid, Video, ResizeMode } from 'expo-av';
+import {
+  useAudioPlayer,
+  createAudioPlayer,
+} from 'expo-audio';
 import SpriteAnimation from './SpriteAnimation';
 import InstructionBubble from './InstructionBubble';
-import { useDynamicStyles } from '../../styles/styles';
+import { useDynamicStyles } from '../styles/styles';
 import EndlessRoad from './EndlessRoad';
 import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
 import MovingBg from './MovingBg';
 // --- Add localization import ---
-import { useLocalization } from '../../../hooks/useLocalization';
+import { useLocalization } from '../hooks/useLocalization';
 
 // --- MOVING BG MAP: Map levelName to moving background asset/uri ---
 const MOVING_BG_MAP: Record<string, string | number | undefined> = {
@@ -86,7 +89,7 @@ export default function LevelScreenTemplate({
   const arrowAnim = useRef(new Animated.Value(0)).current;
   const animalFadeAnim = useRef(new Animated.Value(1)).current;
   const contentFade = useRef(new Animated.Value(0)).current;
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const isSoundPlayingRef = useRef<boolean>(false);
   const confettiAnimRefs = useRef<Animated.Value[]>([]);
   const [showCongratsModal, setShowCongratsModal] = useState(false);
@@ -166,15 +169,11 @@ export default function LevelScreenTemplate({
   }, [roadAnimation]);
 
   useEffect(() => {
-    Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
-      playThroughEarpieceAndroid: false,
-      allowsRecordingIOS: false,
-      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-    }).catch(error => console.warn('Error setting audio mode:', error));
+    try {
+      // Removed AudioModule.setAudioMode call that was causing the error
+    } catch (error: any) {
+      console.warn('Error setting audio mode:', error);
+    }
   }, []);
 
   useEffect(() => {
@@ -197,9 +196,7 @@ export default function LevelScreenTemplate({
   useEffect(() => {
     return () => {
       if (soundRef.current) {
-        soundRef.current.unloadAsync().catch(error =>
-          console.warn('Error unloading sound on cleanup:', error)
-        );
+        soundRef.current.remove();
         soundRef.current = null;
         isSoundPlayingRef.current = false;
       }
@@ -209,19 +206,13 @@ export default function LevelScreenTemplate({
   const stopSound = useCallback(async (unload = false) => {
     if (soundRef.current) {
       try {
-        const status = await soundRef.current.getStatusAsync();
-        if (status.isLoaded) {
-          await soundRef.current.stopAsync();
-          if (unload) {
-            await soundRef.current.unloadAsync();
-            soundRef.current = null;
-          }
+        soundRef.current.pause();
+        if (unload) {
+          soundRef.current.remove();
+          soundRef.current = null;
         }
       } catch (error) {
-        if (error instanceof Error && error.message.includes('Player is already unloaded')) {
-        } else {
-          console.warn('Error stopping/unloading sound:', error);
-        }
+        console.warn('Error stopping/unloading sound:', error);
       } finally {
         isSoundPlayingRef.current = false;
       }
@@ -236,61 +227,44 @@ export default function LevelScreenTemplate({
 
       isSoundPlayingRef.current = true;
 
-      const { sound: animalSound } = await Audio.Sound.createAsync(
-        currentAnimal.sound,
-        { shouldPlay: true }
-      );
-      soundRef.current = animalSound;
-
-      animalSound.setOnPlaybackStatusUpdate(async (status) => {
-        if (!status.isLoaded) {
-          if (soundRef.current === animalSound) {
-             soundRef.current = null;
-             isSoundPlayingRef.current = false;
-          }
-          return;
-        }
-
+      const animalPlayer = createAudioPlayer(currentAnimal.sound);
+      soundRef.current = animalPlayer;
+      
+      animalPlayer.addListener('playbackStatusUpdate', (status: any) => {
         if (status.didJustFinish) {
-          await animalSound.unloadAsync();
-          if (soundRef.current === animalSound) soundRef.current = null;
+          animalPlayer.remove();
+          if (soundRef.current === animalPlayer) soundRef.current = null;
 
           if (!isMuted && currentAnimal?.labelSound) {
             try {
-              const { sound: labelSound } = await Audio.Sound.createAsync(
-                currentAnimal.labelSound,
-                { shouldPlay: true }
-              );
-              soundRef.current = labelSound;
-
-              labelSound.setOnPlaybackStatusUpdate((labelStatus) => {
-                 if (!labelStatus.isLoaded) {
-                    if (soundRef.current === labelSound) {
-                       soundRef.current = null;
-                       isSoundPlayingRef.current = false;
-                    }
-                    return;
-                 }
-                 if (labelStatus.didJustFinish) {
-                    labelSound.unloadAsync();
-                    if (soundRef.current === labelSound) soundRef.current = null;
-                    isSoundPlayingRef.current = false;
-                 }
+              const labelPlayer = createAudioPlayer(currentAnimal.labelSound);
+              soundRef.current = labelPlayer;
+              
+              labelPlayer.play();
+              
+              labelPlayer.addListener('playbackStatusUpdate', (labelStatus: any) => {
+                if (labelStatus.didJustFinish) {
+                  labelPlayer.remove();
+                  if (soundRef.current === labelPlayer) soundRef.current = null;
+                  isSoundPlayingRef.current = false;
+                }
               });
             } catch (labelError) {
-               console.warn('Error playing label sound:', labelError);
-               isSoundPlayingRef.current = false;
+              console.warn('Error playing label sound:', labelError);
+              isSoundPlayingRef.current = false;
             }
           } else {
             isSoundPlayingRef.current = false;
           }
         }
       });
+      
+      animalPlayer.play();
     } catch (error) {
       console.warn('Error playing sounds:', error);
       isSoundPlayingRef.current = false;
       if (soundRef.current) {
-        await soundRef.current.unloadAsync().catch(e => console.warn("Error unloading after play error", e));
+        soundRef.current.remove();
         soundRef.current = null;
       }
     }
@@ -576,7 +550,7 @@ export default function LevelScreenTemplate({
                 <InstructionBubble
                   text={t('tapAnimalToHearSound')}
                   arrowAnim={arrowAnim}
-                  image={require('../../../assets/images/tap.png')}
+                  image={require('../assets/images/tap.png')}
                 />
               )}
             </View>

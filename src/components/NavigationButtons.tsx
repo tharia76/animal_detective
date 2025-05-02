@@ -8,7 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useDynamicStyles } from '../../styles/styles';
+import { useDynamicStyles } from '../styles/styles';
 
 interface NavigationButtonsProps {
   handlePrev: () => void;

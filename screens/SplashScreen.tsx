@@ -1,7 +1,7 @@
 // SplashScreen.tsx
 import React from 'react';
 import { View, Text, ActivityIndicator, Animated } from 'react-native';
-import { useDynamicStyles } from '../app/styles/styles';
+import { useDynamicStyles } from '../src/styles/styles';
 
 type Props = {
   titleAnim: Animated.Value;
@@ -15,7 +15,7 @@ export default function SplashScreen({ titleAnim }: Props) {
     <View style={dynamicStyles.loadingContainer}>
       <Animated.View style={{ opacity: titleAnim, marginBottom: 50, alignItems: 'center' }}>
         <Animated.Image
-          source={require('../assets/images/game-logo.png')}
+          source={require('../src/assets/images/game-logo.png')}
           style={{
             width: 450,
             height: 450,

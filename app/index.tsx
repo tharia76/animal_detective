@@ -15,7 +15,7 @@ import FarmScreen from '../screens/levels/farm/Farm';
 import { useFonts } from 'expo-font';
 import { Asset } from 'expo-asset';
 import ForestScreen from '../screens/levels/farm/Forest';
-import './localization/i18next';
+import '../src/localization/i18next';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -41,14 +41,14 @@ export default function App() {
   useEffect(() => {
     const preloadAssets = async () => {
       try {
-        const farm = Asset.fromModule(require('../assets/images/level-backgrounds/farm.png'));
-        const menu = Asset.fromModule(require('../assets/images/menu-screen.png'));
-        const forest = Asset.fromModule(require('../assets/images/level-backgrounds/forest.png'));
+        const farm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
+        const menu = Asset.fromModule(require('../src/assets/images/menu-screen.png'));
+        const forest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
         // For moving backgrounds, you can use different images if you have them
-        const movingFarm = Asset.fromModule(require('../assets/images/level-backgrounds/farm.png'));
-        const movingForest = Asset.fromModule(require('../assets/images/level-backgrounds/forest.png'));
-        // const ocean = Asset.fromModule(require('../assets/images/ocean.jpg'));
-        // const movingOcean = Asset.fromModule(require('../assets/images/ocean.jpg'));
+          const movingFarm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
+        const movingForest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
+        // const ocean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
+        // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
 
         await Promise.all([
           farm.downloadAsync(),

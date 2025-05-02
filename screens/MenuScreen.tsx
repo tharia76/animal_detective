@@ -5,9 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Asset } from 'expo-asset';
 import * as RNIap from 'react-native-iap';
-import { useDynamicStyles } from '../app/styles/styles';
-import { useLocalization } from '../hooks/useLocalization';
-import { strings } from '../app/localization/strings';
+import { useDynamicStyles } from '../src/styles/styles';
+import { useLocalization } from '../src/hooks/useLocalization';
+import { strings } from '../src/localization/strings';
 
 type Props = {
   onSelectLevel: (level: string, language: string) => void;
@@ -69,10 +69,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedLockedLevel, setSelectedLockedLevel] = useState<string | null>(null);
   const [products, setProducts] = useState<RNIap.Product[]>([]);
-  const [fontsLoaded] = useFonts({
-    ComicNeue: require('../assets/fonts/custom.ttf'),
-    TitleFont: require('../assets/fonts/orange.ttf'),
-  });
+
 
   const { t, lang, setLang } = useLocalization();
   const dynamicStyles = useDynamicStyles();
@@ -107,15 +104,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
         setBgLoaded(true);
 
         // Preload level images
-        const farmAsset = Asset.fromModule(require('../assets/images/level-backgrounds/farm.png'));
-        const forestAsset = Asset.fromModule(require('../assets/images/level-backgrounds/forest.png'));
-        const oceanAsset = Asset.fromModule(require('../assets/images/level-backgrounds/oceann.jpg'));
-        const desertAsset = Asset.fromModule(require('../assets/images/level-backgrounds/desert.jpg'));
-        const arcticAsset = Asset.fromModule(require('../assets/images/level-backgrounds/arctic.jpg'));
-        const insectAsset = Asset.fromModule(require('../assets/images/level-backgrounds/insect.png'));
-        const savannahAsset = Asset.fromModule(require('../assets/images/level-backgrounds/savannah.jpg'));
-        const jungleAsset = Asset.fromModule(require('../assets/images/level-backgrounds/jungle.jpg'));
-        const birdsAsset = Asset.fromModule(require('../assets/images/level-backgrounds/birds.png'));
+        const farmAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
+        const forestAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
+        const oceanAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/oceann.jpg'));
+        const desertAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.jpg'));
+        const arcticAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.jpg'));
+        const insectAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/insect.png'));
+        const savannahAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.jpg'));
+        const jungleAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.jpg'));
+        const birdsAsset = Asset.fromModule(require('../src/assets/images/level-backgrounds/birds.png'));
 
         await Promise.all([
           farmAsset.downloadAsync(),
@@ -172,7 +169,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
     }
   }, [setLang]);
 
-  const allReady = bgLoaded && fontsLoaded && imagesLoaded;
+  const allReady = bgLoaded && imagesLoaded;
 
   if (!allReady) {
     return (
@@ -197,32 +194,32 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
   const getLevelBg = (level: string) => {
     switch (level) {
       case 'farm':
-        return require('../assets/images/level-backgrounds/farm.png');
+        return require('../src/assets/images/level-backgrounds/farm.png');
       case 'forest':
-        return require('../assets/images/level-backgrounds/forest.png');
+        return require('../src/assets/images/level-backgrounds/forest.png');
       case 'ocean':
-        return require('../assets/images/level-backgrounds/oceann.jpg');
+        return require('../src/assets/images/level-backgrounds/oceann.jpg');
       case 'desert':
-        return require('../assets/images/level-backgrounds/desert.jpg');
+        return require('../src/assets/images/level-backgrounds/desert.jpg');
       case 'arctic':
-        return require('../assets/images/level-backgrounds/arctic.jpg');
+        return require('../src/assets/images/level-backgrounds/arctic.jpg');
       case 'insects':
-        return require('../assets/images/level-backgrounds/insect.png');
+        return require('../src/assets/images/level-backgrounds/insect.png');
       case 'savannah':
-        return require('../assets/images/level-backgrounds/savannah.jpg');
+        return require('../src/assets/images/level-backgrounds/savannah.jpg');
       case 'jungle':
-        return require('../assets/images/level-backgrounds/jungle.jpg');
+        return require('../src/assets/images/level-backgrounds/jungle.jpg');
       case 'birds':
-        return require('../assets/images/level-backgrounds/birds.png');
+        return require('../src/assets/images/level-backgrounds/birds.png');
       default:
-        return require('../assets/images/level-backgrounds/farm.png');
+        return require('../src/assets/images/level-backgrounds/farm.png');
     }
   };
 
   // Logo component for both orientations, but with different style
   const Logo = () => (
     <Image
-      source={require('../assets/images/game-logo.png')}
+      source={require('../src/assets/images/game-logo.png')}
       style={
         isLandscape
           ? { width: 320, height: 220, marginTop: 0, marginBottom: 0, resizeMode: 'cover',  }
@@ -469,7 +466,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
 
   return (
     <ImageBackground
-      source={backgroundImageUri ? { uri: backgroundImageUri } : require('../assets/images/menu-screen.png')}
+      source={backgroundImageUri ? { uri: backgroundImageUri } : require('../src/assets/images/menu-screen.png')}
       style={{ flex: 1 }}
       resizeMode="cover"
       fadeDuration={0}

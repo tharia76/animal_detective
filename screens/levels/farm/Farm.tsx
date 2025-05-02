@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
-import { getAnimals } from '../../../app/(tabs)/data/animals';
-import { AnimalType } from '../../../app/(tabs)/data/AnimalType';
-import LevelScreenTemplate from '../../../app/(tabs)/components/LevelScreenTemplate';
+import { getAnimals } from '../../../src/data/animals';
+import { AnimalType } from '../../../src/data/AnimalType';
+import LevelScreenTemplate from '../../../src/components/LevelScreenTemplate';
 
 // Define Props for the screen
 type FarmScreenProps = {
@@ -20,7 +20,7 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
   useEffect(() => {
     const load = async () => {
       try {
-        await Asset.fromModule(require('../../../assets/images/level-backgrounds/farm.png')).downloadAsync();
+        await Asset.fromModule(require('../../../src/assets/images/level-backgrounds/farm.png')).downloadAsync();
       } catch (err) {
         console.warn('Failed to preload farm image', err);
       }
