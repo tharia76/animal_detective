@@ -140,7 +140,7 @@ export default function LevelTiles({
             }}
           >
             {row.map((level, colIdx) => {
-              const isLocked = level !== 'farm' && level !== 'forest';
+              const isLocked = false;
               return (
                 <TouchableOpacity
                   key={level}
