@@ -35,10 +35,8 @@ export default function LevelTiles({
   t,
   horizontal,
 }: LevelTilesProps) {
-  // In landscape, always horizontal, all tiles in one row
-  // In portrait, grid with numColumns columns
-  const isHorizontal = isLandscape ? true : !!horizontal;
-  const columns = isLandscape ? 1 : numColumns;
+  // In both portrait and landscape, use 3 columns per row
+  const columns = 3;
 
   // Helper to chunk array into rows
   function chunk<T>(arr: T[], size: number): T[][] {
@@ -49,162 +47,90 @@ export default function LevelTiles({
     return res;
   }
 
-  if (isHorizontal) {
-    // Render all tiles in a single row (landscape)
-    // Use ScrollView with horizontal, bounces={false}, and alwaysBounceHorizontal={false}
-    return (
-      <ScrollView
-        horizontal
-        bounces={false}
-        alwaysBounceHorizontal={false}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ flexDirection: 'row', flexWrap: 'nowrap' }}
-      >
-        {levels.map((level) => {
-          const isLocked = level !== 'farm' && level !== 'forest' && level !== 'ocean' && level !== 'desert' && level !== 'arctic' && level !== 'insects' && level !== 'savannah' && level !== 'jungle' && level !== 'birds';
-          return (
-            <TouchableOpacity
-              key={level}
-              onPress={() => handleLevelSelect(level, isLocked)}
-              style={{
-                width: itemSize,
-                height: itemSize,
-                margin,
-                borderRadius: 15,
-                overflow: 'hidden',
-                backgroundColor: '#fff2',
-              }}
-              activeOpacity={0.7}
-            >
-              <Image
-                source={LEVEL_BACKGROUNDS[level]}
+  // Always render as grid, 3 in a row for both portrait and landscape
+  const rows = chunk(levels, columns);
+
+  return (
+    <ScrollView
+      horizontal={false}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ flexDirection: 'column', flexGrow: 1 }}
+    >
+      {rows.map((row, rowIdx) => (
+        <View
+          key={rowIdx}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'flex-start',
+            marginBottom: margin,
+          }}
+        >
+          {row.map((level, colIdx) => {
+            // You can adjust lock logic as needed
+            const isLocked = false;
+            return (
+              <TouchableOpacity
+                key={level}
+                onPress={() => handleLevelSelect(level, isLocked)}
                 style={{
                   width: itemSize,
                   height: itemSize,
+                  marginRight: colIdx < columns - 1 ? margin : 0,
                   borderRadius: 15,
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
+                  overflow: 'hidden',
+                  backgroundColor: '#fff2',
                 }}
-                resizeMode="cover"
-              />
-              {isLocked && (
-                <View style={styles.lockOverlay}>
-                  <Ionicons name="lock-closed" size={24} color="white" />
-                </View>
-              )}
-              {/* Label fixed to the bottom of the tile */}
-              <View
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  paddingVertical: 6,
-                  paddingHorizontal: 8,
-                  backgroundColor: getLevelBackgroundColor(level),
-                  borderBottomLeftRadius: 15,
-                  borderBottomRightRadius: 15,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                activeOpacity={0.7}
               >
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: isLandscape ? 14 : 16,
-                    fontWeight: 'bold',
-                    color: 'white',
-                  }}
-                >
-                  {t(level)}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-    );
-  } else {
-    // Portrait: render as grid
-    const rows = chunk(levels, columns);
-    return (
-      <View>
-        {rows.map((row, rowIdx) => (
-          <View
-            key={rowIdx}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'flex-start',
-              marginBottom: margin,
-            }}
-          >
-            {row.map((level, colIdx) => {
-              const isLocked = false;
-              return (
-                <TouchableOpacity
-                  key={level}
-                  onPress={() => handleLevelSelect(level, isLocked)}
+                <Image
+                  source={LEVEL_BACKGROUNDS[level]}
                   style={{
                     width: itemSize,
                     height: itemSize,
-                    marginRight: colIdx < columns - 1 ? margin : 0,
                     borderRadius: 15,
-                    overflow: 'hidden',
-                    backgroundColor: '#fff2',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
                   }}
-                  activeOpacity={0.7}
+                  resizeMode="cover"
+                />
+                {isLocked && (
+                  <View style={styles.lockOverlay}>
+                    <Ionicons name="lock-closed" size={24} color="white" />
+                  </View>
+                )}
+                {/* Label fixed to the bottom of the tile */}
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    backgroundColor: getLevelBackgroundColor(level),
+                    borderBottomLeftRadius: 15,
+                    borderBottomRightRadius: 15,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
-                  <Image
-                    source={LEVEL_BACKGROUNDS[level]}
+                  <Text
+                    numberOfLines={1}
                     style={{
-                      width: itemSize,
-                      height: itemSize,
-                      borderRadius: 15,
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                    }}
-                    resizeMode="cover"
-                  />
-                  {isLocked && (
-                    <View style={styles.lockOverlay}>
-                      <Ionicons name="lock-closed" size={24} color="white" />
-                    </View>
-                  )}
-                  {/* Label fixed to the bottom of the tile */}
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      paddingVertical: 6,
-                      paddingHorizontal: 8,
-                      backgroundColor: getLevelBackgroundColor(level),
-                      borderBottomLeftRadius: 15,
-                      borderBottomRightRadius: 15,
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      fontSize: isLandscape ? 14 : 16,
+                      fontWeight: 'bold',
+                      color: 'white',
                     }}
                   >
-                    <Text
-                      numberOfLines={1}
-                      style={{
-                        fontSize: isLandscape ? 14 : 16,
-                        fontWeight: 'bold',
-                        color: 'white',
-                      }}
-                    >
-                      {t(level)}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
-      </View>
-    );
-  }
+                    {t(level)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ))}
+    </ScrollView>
+  );
 }

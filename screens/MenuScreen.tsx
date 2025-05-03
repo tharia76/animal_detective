@@ -116,15 +116,15 @@ const styles = StyleSheet.create({
     zIndex: 10001,
     // Optionally add backgroundColor: 'rgba(255,255,255,0.2)' for visibility
   },
-  landscapeTilesScroll: {
-    flexGrow: 0,
-    flexShrink: 1,
-    flexDirection: 'row',
+  landscapeTilesGrid: {
     width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 32,
     paddingTop: 8,
-    paddingBottom: 0,
+    paddingBottom: 16,
     zIndex: 1,
+    // Remove flexDirection: 'row', flexWrap: 'wrap' for FlatList
   },
 });
 
@@ -157,15 +157,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
 
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
-  // For landscape, only one row, so numColumns = levels.length
   const levels = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
-  const numColumns = isLandscape ? 1 : 3;
+
+  // For landscape, use a grid (3 columns), for portrait 3 columns
+  const numColumns = 3;
 
   // Bounded square size calculation
   const margin = 5;
   const portraitSize = (width * 0.9 / 3) - (margin * 2);
+  // For landscape, fit 3 columns, but use height for max size
   const maxLandscape = height * 0.4;
-  const itemSize = Math.min(portraitSize, maxLandscape);
+  const landscapeSize = (width * 0.65 / numColumns) - (margin * 2);
+  const itemSize = isLandscape ? landscapeSize : portraitSize;
 
   // Overlay heights: language selector is 50px tall at y=20, logo is 180px tall at y=80
   const LANG_SELECTOR_HEIGHT = 50; // approximate height of your language selector component
@@ -254,7 +257,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
     { code: 'tr', name: 'Türkçe' }
   ];
 
-  // On landscape, logo centered, language selector at top right, then horizontally scrollable menu tiles in one row
+  // On landscape, logo centered, language selector at top right, then grid of menu tiles, whole screen scrollable
   if (isLandscape) {
     return (
       <ImageBackground
@@ -262,47 +265,61 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: Props)
         style={{ flex: 1, position: 'relative' }}
         resizeMode="cover"
       >
-        {/* Language selector at top right */}
-        <View style={styles.landscapeLangContainer}>
-          <LanguageSelector
-            isLandscape={isLandscape}
-            t={t}
-            lang={lang}
-            languages={languages}
-            handleLanguageChange={setLang}
-          />
+        <View style={{ flex: 1 }}>
+          {/* Language selector at top right */}
+          <View style={styles.landscapeLangContainer}>
+            <LanguageSelector
+              isLandscape={isLandscape}
+              t={t}
+              lang={lang}
+              languages={languages}
+              handleLanguageChange={setLang}
+            />
+          </View>
+          {/* Centered logo */}
+          <View style={styles.landscapeHeaderContainer}>
+            <Image
+              source={require('../src/assets/images/game-logo.png')}
+              style={styles.landscapeLogo}
+              resizeMode="contain"
+            />
+          </View>
+          {/* Grid of menu tiles, scrollable, 3 per row, centered */}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              paddingHorizontal: 32,
+              paddingTop: 8,
+              paddingBottom: 16,
+              minHeight: itemSize + margin * 2,
+            }}
+            showsVerticalScrollIndicator={true}
+          >
+            <View
+              style={{
+                width: '100%',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <LevelTiles
+                levels={levels}
+                numColumns={numColumns}
+                isLandscape={isLandscape}
+                itemSize={itemSize}
+                margin={margin}
+                LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
+                handleLevelSelect={handleLevelSelect}
+                styles={styles}
+                getLevelBackgroundColor={getLevelBackgroundColor}
+                t={t}
+              />
+            </View>
+          </ScrollView>
         </View>
-        {/* Centered logo */}
-        <View style={styles.landscapeHeaderContainer}>
-          <Image
-            source={require('../src/assets/images/game-logo.png')}
-            style={styles.landscapeLogo}
-            resizeMode="contain"
-          />
-        </View>
-        {/* Horizontally scrollable menu tiles in one row */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.landscapeTilesScroll,
-            { alignItems: 'center', minHeight: itemSize + margin * 2, marginTop: 16 }
-          ]}
-        >
-          <LevelTiles
-            levels={levels}
-            numColumns={levels.length}
-            isLandscape={isLandscape}
-            itemSize={itemSize}
-            margin={margin}
-            LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
-            handleLevelSelect={handleLevelSelect}
-            styles={styles}
-            getLevelBackgroundColor={getLevelBackgroundColor}
-            t={t}
-            horizontal
-          />
-        </ScrollView>
       </ImageBackground>
     );
   }
