@@ -16,6 +16,7 @@ import { useFonts } from 'expo-font';
 import { Asset } from 'expo-asset';
 import ForestScreen from '../screens/levels/farm/Forest';
 import '../src/localization/i18next';
+import ArcticScreen from '../screens/levels/farm/Arctic';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -27,7 +28,7 @@ export default function App() {
   const [farmBgUri, setFarmBgUri] = useState<string | null>(null);
   const [menuBgUri, setMenuBgUri] = useState<string | null>(null);
   const [forestBgUri, setForestBgUri] = useState<string | null>(null);
-
+  const [arcticBgUri, setArcticBgUri] = useState<string | null>(null);
   // Store moving backgrounds for each level
   const [movingBgUris, setMovingBgUris] = useState<Record<string, string | null>>({
     farm: null,
@@ -45,8 +46,9 @@ export default function App() {
         const menu = Asset.fromModule(require('../src/assets/images/menu-screen.png'));
         const forest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
         // For moving backgrounds, you can use different images if you have them
-          const movingFarm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
+        const movingFarm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
         const movingForest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
+        const arctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.jpg'));
         // const ocean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
         // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
 
@@ -63,7 +65,7 @@ export default function App() {
         setFarmBgUri(farm.localUri || farm.uri);
         setMenuBgUri(menu.localUri || menu.uri);
         setForestBgUri(forest.localUri || forest.uri);
-
+        setArcticBgUri(arctic.localUri || arctic.uri);
         setMovingBgUris({
           farm: movingFarm.localUri || movingFarm.uri,
           forest: movingForest.localUri || movingForest.uri,
@@ -145,7 +147,14 @@ export default function App() {
             backgroundImageUri={forestBgUri}
             skyBackgroundImageUri={getMovingBgUri('forest')}
           />
-        ) : ( // Fallback remains MenuScreen
+        ) : selectedLevel === 'arctic' ? (
+          <ArcticScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={arcticBgUri}
+            skyBackgroundImageUri={getMovingBgUri('arctic')}
+          />
+        ) : 
+        ( // Fallback remains MenuScreen
           <MenuScreen
             onSelectLevel={handleSelectLevel}
             backgroundImageUri={menuBgUri}

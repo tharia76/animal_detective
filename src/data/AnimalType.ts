@@ -13,7 +13,7 @@ export type AnimalType = {
   id: number;
   name: string;
   type: 'sprite' | 'image';
-  animalType: 'Farm' | 'Forest' | 'Ocean';
+  animalType: 'Farm' | 'Forest' | 'Ocean' | 'Arctic' | 'Desert' | 'Insects' | 'Savannah' | 'Jungle' | 'Birds';
   source: ImageSourcePropType;
   frames?: FrameData[];
   spriteSheetSize?: { w: number; h: number };
