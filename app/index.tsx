@@ -7,7 +7,7 @@ export const screenOptions = {
 };
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Animated, useWindowDimensions } from 'react-native';
+import { Animated, useWindowDimensions, ImageBackground } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import MenuScreen from '../screens/MenuScreen';
 import SplashScreen from '../screens/SplashScreen';
@@ -152,78 +152,125 @@ export default function App() {
     return movingBgUris[level] || null;
   };
 
+  // Pick the right URI for the backdrop
+  const bgUri = selectedLevel
+    ? {
+        farm: farmBgUri,
+        forest: forestBgUri,
+        arctic: arcticBgUri,
+        ocean: oceanBgUri,
+        savannah: savannahBgUri,
+        desert: desertBgUri,
+        jungle: jungleBgUri,
+        insects: insectsBgUri,
+        birds: birdsBgUri,
+      }[selectedLevel] || null
+    : menuBgUri;
+
+  // Render the correct LevelScreen component
+  const renderLevelScreen = () => {
+    switch (selectedLevel) {
+      case 'farm':
+        return (
+          <FarmScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('farm')}
+          />
+        );
+      case 'forest':
+        return (
+          <ForestScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('forest')}
+          />
+        );
+      case 'arctic':
+        return (
+          <ArcticScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('arctic')}
+          />
+        );
+      case 'ocean':
+        return (
+          <OceanScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('ocean')}
+          />
+        );
+      case 'savannah':
+        return (
+          <SavannahScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('savannah')}
+          />
+        );
+      case 'desert':
+        return (
+          <DesertScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('desert')}
+          />
+        );
+      case 'jungle':
+        return (
+          <JungleScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('jungle')}
+          />
+        );
+      case 'insects':
+        return (
+          <InsectsScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('insects')}
+          />
+        );
+      case 'birds':
+        return (
+          <BirdsScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={bgUri}
+            skyBackgroundImageUri={getMovingBgUri('birds')}
+          />
+        );
+      default:
+        return (
+          <MenuScreen
+            onSelectLevel={handleSelectLevel}
+            backgroundImageUri={menuBgUri}
+          />
+        );
+    }
+  };
+
   return (
     <>
       <StatusBar hidden />
-      {/* Wrap the conditional rendering in an Animated.View */}
-      <Animated.View style={{ flex: 1, opacity: screenOpacity }}>
-        {!selectedLevel ? (
-          <MenuScreen
-            onSelectLevel={handleSelectLevel}
-            backgroundImageUri={menuBgUri}
-          />
-        ) : selectedLevel === 'farm' ? (
-          <FarmScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={farmBgUri}
-            skyBackgroundImageUri={getMovingBgUri('farm')}
-          />
-        ) : selectedLevel === 'forest' ? (
-          <ForestScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={forestBgUri}
-            skyBackgroundImageUri={getMovingBgUri('forest')}
-          />
-        ) : selectedLevel === 'arctic' ? (
-          <ArcticScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={arcticBgUri}
-            skyBackgroundImageUri={getMovingBgUri('arctic')}
-          />
-        ) : selectedLevel === 'ocean' ? (
-          <OceanScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={oceanBgUri}
-            skyBackgroundImageUri={getMovingBgUri('ocean')}
-          />
-        ) : selectedLevel === 'savannah' ? (
-          <SavannahScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={savannahBgUri}
-            skyBackgroundImageUri={getMovingBgUri('savannah')}
-          />
-        ) : selectedLevel === 'desert' ? (
-          <DesertScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={desertBgUri}
-            skyBackgroundImageUri={getMovingBgUri('desert')}
-          />
-        ) : selectedLevel === 'jungle' ? (
-          <JungleScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={jungleBgUri}
-            skyBackgroundImageUri={getMovingBgUri('jungle')}
-          />
-        ) : selectedLevel === 'insects' ? (
-          <InsectsScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={insectsBgUri}
-            skyBackgroundImageUri={getMovingBgUri('insects')}
-          />
-        ) : selectedLevel === 'birds' ? (
-          <BirdsScreen
-            onBackToMenu={handleBackToMenu}
-            backgroundImageUri={birdsBgUri}
-            skyBackgroundImageUri={getMovingBgUri('birds')}
-          />
-        ) :  
-        ( // Fallback remains MenuScreen
-          <MenuScreen
-            onSelectLevel={handleSelectLevel}
-            backgroundImageUri={menuBgUri}
-          />
-        )}
-      </Animated.View>
+      <ImageBackground
+        source={bgUri ? { uri: bgUri } : undefined}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
+        <Animated.View style={{ flex: 1, opacity: screenOpacity }}>
+          {selectedLevel == null ? (
+            <MenuScreen
+              onSelectLevel={handleSelectLevel}
+              backgroundImageUri={menuBgUri}
+            />
+          ) : (
+            renderLevelScreen()
+          )}
+        </Animated.View>
+      </ImageBackground>
     </>
   );
 }
