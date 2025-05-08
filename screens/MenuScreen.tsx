@@ -21,12 +21,12 @@ const menuBgSound = require('../src/assets/sounds/menu.mp3');
 const BG_IMAGE = require('../src/assets/images/menu-screen.png');
 const LEVELS = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
 const NUM_COLS = 3;
-const MARGIN = 5;
+const MARGIN = 3;
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.png'),
   forest: require('../src/assets/images/level-backgrounds/forest.png'),
-  ocean: require('../src/assets/images/level-backgrounds/oceann.jpg'),
+  ocean: require('../src/assets/images/level-backgrounds/ocean.jpg'),
   desert: require('../src/assets/images/level-backgrounds/desert.jpg'),
   arctic: require('../src/assets/images/level-backgrounds/arctic.jpg'),
   insects: require('../src/assets/images/level-backgrounds/insect.png'),
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 1,
     marginTop: 80,
-    marginLeft: 20,
+    marginLeft: 25,
     marginRight: 10,
   },
   tilesContainerLandscape: {
@@ -215,7 +215,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
             let file;
             switch (l) {
               case 'ocean':
-                file = require('../src/assets/images/level-backgrounds/oceann.jpg');
+                file = require('../src/assets/images/level-backgrounds/ocean.jpg');
                 break;
               case 'desert':
                 file = require('../src/assets/images/level-backgrounds/desert.jpg');

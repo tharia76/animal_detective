@@ -11,12 +11,18 @@ import { Animated, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import MenuScreen from '../screens/MenuScreen';
 import SplashScreen from '../screens/SplashScreen';
-import FarmScreen from '../screens/levels/farm/Farm';
+import FarmScreen from '../screens/levels/Farm';
 import { useFonts } from 'expo-font';
 import { Asset } from 'expo-asset';
-import ForestScreen from '../screens/levels/farm/Forest';
+import ForestScreen from '../screens/levels/Forest';
 import '../src/localization/i18next';
-import ArcticScreen from '../screens/levels/farm/Arctic';
+import ArcticScreen from '../screens/levels/Arctic';
+import OceanScreen from '../screens/levels/Ocean';
+import DesertScreen from '../screens/levels/Desert';
+import SavannahScreen from '../screens/levels/Savannah';
+import JungleScreen from '../screens/levels/Jungle';
+import InsectsScreen from '../screens/levels/Insects';
+import BirdsScreen from '../screens/levels/Birds';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -29,6 +35,12 @@ export default function App() {
   const [menuBgUri, setMenuBgUri] = useState<string | null>(null);
   const [forestBgUri, setForestBgUri] = useState<string | null>(null);
   const [arcticBgUri, setArcticBgUri] = useState<string | null>(null);
+  const [oceanBgUri, setOceanBgUri] = useState<string | null>(null);
+  const [savannahBgUri, setSavannahBgUri] = useState<string | null>(null);
+  const [desertBgUri, setDesertBgUri] = useState<string | null>(null);
+  const [jungleBgUri, setJungleBgUri] = useState<string | null>(null);
+  const [insectsBgUri, setInsectsBgUri] = useState<string | null>(null);
+  const [birdsBgUri, setBirdsBgUri] = useState<string | null>(null);
   // Store moving backgrounds for each level
   const [movingBgUris, setMovingBgUris] = useState<Record<string, string | null>>({
     farm: null,
@@ -49,7 +61,12 @@ export default function App() {
         const movingFarm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
         const movingForest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
         const arctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.jpg'));
-        // const ocean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
+        const ocean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.jpg'));
+        const savannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.jpg'));
+        const desert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.jpg'));
+        const jungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.jpg'));
+        const insects = Asset.fromModule(require('../src/assets/images/level-backgrounds/insect.png'));
+        const birds = Asset.fromModule(require('../src/assets/images/level-backgrounds/birds.png'));
         // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
 
         await Promise.all([
@@ -58,7 +75,12 @@ export default function App() {
           forest.downloadAsync(),
           movingFarm.downloadAsync(),
           movingForest.downloadAsync(),
-          // ocean.downloadAsync(),
+          ocean.downloadAsync(),
+          savannah.downloadAsync(),
+          desert.downloadAsync(),
+          jungle.downloadAsync(),
+          insects.downloadAsync(),
+          birds.downloadAsync(),
           // movingOcean.downloadAsync(),
         ]);
 
@@ -66,10 +88,15 @@ export default function App() {
         setMenuBgUri(menu.localUri || menu.uri);
         setForestBgUri(forest.localUri || forest.uri);
         setArcticBgUri(arctic.localUri || arctic.uri);
+        setOceanBgUri(ocean.localUri || ocean.uri);
+        setSavannahBgUri(savannah.localUri || savannah.uri);
+        setDesertBgUri(desert.localUri || desert.uri);
+        setJungleBgUri(jungle.localUri || jungle.uri);
+        setInsectsBgUri(insects.localUri || insects.uri);
+        setBirdsBgUri(birds.localUri || birds.uri);
         setMovingBgUris({
           farm: movingFarm.localUri || movingFarm.uri,
           forest: movingForest.localUri || movingForest.uri,
-          // ocean: movingOcean.localUri || movingOcean.uri,
         });
 
         // setOceanBgUri(ocean.localUri || ocean.uri);
@@ -153,7 +180,43 @@ export default function App() {
             backgroundImageUri={arcticBgUri}
             skyBackgroundImageUri={getMovingBgUri('arctic')}
           />
-        ) : 
+        ) : selectedLevel === 'ocean' ? (
+          <OceanScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={oceanBgUri}
+            skyBackgroundImageUri={getMovingBgUri('ocean')}
+          />
+        ) : selectedLevel === 'savannah' ? (
+          <SavannahScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={savannahBgUri}
+            skyBackgroundImageUri={getMovingBgUri('savannah')}
+          />
+        ) : selectedLevel === 'desert' ? (
+          <DesertScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={desertBgUri}
+            skyBackgroundImageUri={getMovingBgUri('desert')}
+          />
+        ) : selectedLevel === 'jungle' ? (
+          <JungleScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={jungleBgUri}
+            skyBackgroundImageUri={getMovingBgUri('jungle')}
+          />
+        ) : selectedLevel === 'insects' ? (
+          <InsectsScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={insectsBgUri}
+            skyBackgroundImageUri={getMovingBgUri('insects')}
+          />
+        ) : selectedLevel === 'birds' ? (
+          <BirdsScreen
+            onBackToMenu={handleBackToMenu}
+            backgroundImageUri={birdsBgUri}
+            skyBackgroundImageUri={getMovingBgUri('birds')}
+          />
+        ) :  
         ( // Fallback remains MenuScreen
           <MenuScreen
             onSelectLevel={handleSelectLevel}

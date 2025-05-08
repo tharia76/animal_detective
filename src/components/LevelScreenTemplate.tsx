@@ -34,12 +34,26 @@ import MovingBg from './MovingBg';
 // --- Add localization import ---
 import { useLocalization } from '../hooks/useLocalization';
 
+// --- BG MUSIC MAP: Map levelName to bg music asset/uri ---
+// Make sure all keys are lowercase for bulletproof matching
+const BG_MUSIC_MAP: Record<string, string | number | undefined> = {
+  farm: require('../assets/sounds/farm_bg.mp3'),
+  forest: require('../assets/sounds/forest_bg.mp3'),
+  jungle: require('../assets/sounds/jungle_bg.mp3'),
+  desert: require('../assets/sounds/desert_bg.mp3'),
+  ocean: require('../assets/sounds/ocean_bg.mp3'),
+  savannah: require('../assets/sounds/savannah_bg.mp3'),
+  arctic: require('../assets/sounds/arctic_bg.mp3'),
+  birds: require('../assets/sounds/birds_bg.mp3'),
+  insects: require('../assets/sounds/insects_bg.mp3'),
+};
+
 // --- MOVING BG MAP: Map levelName to moving background asset/uri ---
 const MOVING_BG_MAP: Record<string, string | number | undefined> = {
-  // Example: 'Farm': require('../../../assets/images/sky_farm.png'),
-  // Example: 'Jungle': require('../../../assets/images/sky_jungle.png'),
-  // Example: 'Desert': require('../../../assets/images/sky_desert.png'),
-  // Add your levelName: asset/uri pairs here
+  // Example: 'farm': require('../../../assets/images/sky_farm.png'),
+  // Example: 'jungle': require('../../../assets/images/sky_jungle.png'),
+  // Example: 'desert': require('../../../assets/images/sky_desert.png'),
+  // Add your levelName: asset/uri pairs here (all lowercase)
   // If you want to use a remote uri, just use a string URL
 };
 
@@ -62,6 +76,7 @@ type Props = {
   backgroundImageUri: string | null;
   skyBackgroundImageUri: string | null;
   onBackToMenu: () => void;
+  bgMusic?: string | number; // allow prop for override
 };
 
 const FADE_DURATION = 150;
@@ -73,6 +88,7 @@ export default function LevelScreenTemplate({
   backgroundImageUri,
   skyBackgroundImageUri,
   onBackToMenu,
+  bgMusic, // allow prop for override
 }: Props) {
   // --- Use localization hook ---
   const { t } = useLocalization();
@@ -96,6 +112,13 @@ export default function LevelScreenTemplate({
   const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set([0]));
   const [levelCompleted, setLevelCompleted] = useState(false);
 
+  // --- BG MUSIC STATE ---
+  const bgMusicRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
+  const [currentBgMusicKey, setCurrentBgMusicKey] = useState<string | undefined>(undefined);
+
+  // 1) Add at the top, alongside your other refs
+  const waitingToResumeBg = useRef(false);
+
   const currentAnimal = useMemo(() => animals.length > 0 ? animals[currentAnimalIndex] : null, [animals, currentAnimalIndex]);
   const hasAnimals = animals.length > 0;
 
@@ -114,11 +137,86 @@ export default function LevelScreenTemplate({
   // --- Determine which moving background to use based on levelName ---
   // Priority: MOVING_BG_MAP[levelName] > skyBackgroundImageUri > undefined
   const movingBgSource = useMemo(() => {
-    if (MOVING_BG_MAP[levelName]) {
-      return MOVING_BG_MAP[levelName];
+    const key = levelName.toLowerCase();
+    if (MOVING_BG_MAP[key]) {
+      return MOVING_BG_MAP[key];
     }
     return skyBackgroundImageUri;
   }, [levelName, skyBackgroundImageUri]);
+
+  // --- BG MUSIC EFFECT (only play if instruction bubble is visible) ---
+  // REWRITE: Remove all showName-related branches from this effect.
+  useEffect(() => {
+    // Always use lowercase for lookup
+    const key = levelName.trim().toLowerCase();       // e.g. "Forest" ➞ "forest"
+
+    // --- FIX: Always use require for local assets, don't coerce to string ---
+    // If bgMusic is provided as a prop, use it, else use BG_MUSIC_MAP
+    let source: string | number | undefined = undefined;
+    if (typeof bgMusic !== 'undefined') {
+      source = bgMusic;
+    } else if (BG_MUSIC_MAP.hasOwnProperty(key)) {
+      source = BG_MUSIC_MAP[key];
+    }
+
+    // Stop music if: no source or instruction bubble not visible
+    if (!source || !showInstruction) {
+      if (bgMusicRef.current) {
+        try {
+          bgMusicRef.current.pause();
+          bgMusicRef.current.remove();
+        } catch (e) {}
+        bgMusicRef.current = null;
+        setCurrentBgMusicKey(undefined);
+      }
+      return;
+    }
+
+    // If already playing the right track, just honor mute/unmute
+    // For require() assets, String(require(...)) is "[object Module]" or "[object Object]", so compare by reference
+    if (bgMusicRef.current && currentBgMusicKey && currentBgMusicKey === String(source)) {
+      if (bgMusicRef.current) {
+        isMuted ? bgMusicRef.current.pause() : bgMusicRef.current.play();
+      }
+      return;
+    }
+
+    // else swap out the old player
+    if (bgMusicRef.current) {
+      try {
+        bgMusicRef.current.pause();
+        bgMusicRef.current.remove();
+      } catch (e) {}
+      bgMusicRef.current = null;
+      setCurrentBgMusicKey(undefined);
+    }
+
+    if (!isMuted && source) {
+      try {
+        const p = createAudioPlayer(source);
+        p.loop = true;
+        p.play();
+        bgMusicRef.current = p;
+        setCurrentBgMusicKey(String(source));
+      } catch (e) {
+        bgMusicRef.current = null;
+        setCurrentBgMusicKey(undefined);
+      }
+    }
+
+    return () => {
+      if (bgMusicRef.current) {
+        try {
+          bgMusicRef.current.pause();
+          bgMusicRef.current.remove();
+        } catch (e) {}
+        bgMusicRef.current = null;
+        setCurrentBgMusicKey(undefined);
+      }
+    };
+  // Remove showName from dependencies
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelName, bgMusic, isMuted, showInstruction]);
 
   // When currentAnimal?.isMoving changes, crossfade the backgrounds
   useEffect(() => {
@@ -200,6 +298,15 @@ export default function LevelScreenTemplate({
         soundRef.current = null;
         isSoundPlayingRef.current = false;
       }
+      // Also stop bg music on unmount
+      if (bgMusicRef.current) {
+        try {
+          bgMusicRef.current.pause();
+          bgMusicRef.current.remove();
+        } catch (e) {}
+        bgMusicRef.current = null;
+        setCurrentBgMusicKey(undefined);
+      }
     };
   }, []);
 
@@ -219,46 +326,55 @@ export default function LevelScreenTemplate({
     }
   }, []);
 
+  // remove the `isSoundPlayingRef` check so it always goes through
+  // 3) in your playSounds() playbackStatusUpdate, after it finally finishes, handle waitingToResumeBg
   const playSounds = useCallback(async () => {
-    if (isMuted || !currentAnimal?.sound || isSoundPlayingRef.current) return;
+    if (isMuted || !currentAnimal?.sound) return;
 
     try {
+      // stop whatever was playing before
       await stopSound(true);
 
       isSoundPlayingRef.current = true;
 
       const animalPlayer = createAudioPlayer(currentAnimal.sound);
       soundRef.current = animalPlayer;
-      
+
       animalPlayer.addListener('playbackStatusUpdate', (status: any) => {
         if (status.didJustFinish) {
           animalPlayer.remove();
           if (soundRef.current === animalPlayer) soundRef.current = null;
 
+          // then optionally play the label sound
           if (!isMuted && currentAnimal?.labelSound) {
-            try {
-              const labelPlayer = createAudioPlayer(currentAnimal.labelSound);
-              soundRef.current = labelPlayer;
-              
-              labelPlayer.play();
-              
-              labelPlayer.addListener('playbackStatusUpdate', (labelStatus: any) => {
-                if (labelStatus.didJustFinish) {
-                  labelPlayer.remove();
-                  if (soundRef.current === labelPlayer) soundRef.current = null;
-                  isSoundPlayingRef.current = false;
+            const labelPlayer = createAudioPlayer(currentAnimal.labelSound);
+            soundRef.current = labelPlayer;
+            labelPlayer.play();
+            labelPlayer.addListener('playbackStatusUpdate', (labelStatus: any) => {
+              if (labelStatus.didJustFinish) {
+                labelPlayer.remove();
+                if (soundRef.current === labelPlayer) soundRef.current = null;
+                isSoundPlayingRef.current = false;
+
+                // If we are waiting to resume BG, do it now
+                if (waitingToResumeBg.current && !isMuted) {
+                  bgMusicRef.current?.play();
+                  waitingToResumeBg.current = false;
                 }
-              });
-            } catch (labelError) {
-              console.warn('Error playing label sound:', labelError);
-              isSoundPlayingRef.current = false;
-            }
+              }
+            });
           } else {
             isSoundPlayingRef.current = false;
+
+            // If we are waiting to resume BG, do it now
+            if (waitingToResumeBg.current && !isMuted) {
+              bgMusicRef.current?.play();
+              waitingToResumeBg.current = false;
+            }
           }
         }
       });
-      
+
       animalPlayer.play();
     } catch (error) {
       console.warn('Error playing sounds:', error);
@@ -267,13 +383,43 @@ export default function LevelScreenTemplate({
         soundRef.current.remove();
         soundRef.current = null;
       }
+      // If we are waiting to resume BG, do it now (in case of error)
+      if (waitingToResumeBg.current && !isMuted) {
+        bgMusicRef.current?.play();
+        waitingToResumeBg.current = false;
+      }
     }
-  }, [currentAnimal, isMuted, stopSound]);
+  }, [currentAnimal, isMuted, stopSound, bgMusicRef]);
 
-  const toggleShowName = useCallback(() => {
-    setShowName(prev => !prev);
-    playSounds();
-  }, [playSounds]);
+  // --- REWRITE: handleAnimalPress as the single tap handler for animal card ---
+  // 2) tweak your handleAnimalPress so it doesn’t immediately restart BG if a sound is in flight
+  const handleAnimalPress = useCallback(() => {
+    if (!showName) {
+      setShowName(true);
+
+      // 1) pause the level BG immediately
+      if (bgMusicRef.current) {
+        bgMusicRef.current.pause();
+      }
+
+      // clear any old wait flag
+      waitingToResumeBg.current = false;
+
+      // 2) kill any in‑flight animal audio, then play the new one
+      stopSound(true).then(playSounds);
+    } else {
+      setShowName(false);
+
+      // if a sound is playing, wait for it — otherwise resume immediately
+      if (soundRef.current) {
+        waitingToResumeBg.current = true;
+      } else {
+        if (!isMuted) bgMusicRef.current?.play();
+      }
+    }
+  }, [showName, isMuted, playSounds, stopSound, bgMusicRef, soundRef]);
+
+  // Remove toggleShowName entirely
 
   const handleNavigation = useCallback((direction: 'next' | 'prev') => {
     if (!hasAnimals || isTransitioning) return;
@@ -339,6 +485,15 @@ export default function LevelScreenTemplate({
 
   const goToHome = useCallback(() => {
     stopSound(false);
+    // Stop bg music when going home
+    if (bgMusicRef.current) {
+      try {
+        bgMusicRef.current.pause();
+        bgMusicRef.current.remove();
+      } catch (e) {}
+      bgMusicRef.current = null;
+      setCurrentBgMusicKey(undefined);
+    }
     onBackToMenu();
   }, [stopSound, onBackToMenu]);
 
@@ -347,6 +502,19 @@ export default function LevelScreenTemplate({
     setIsMuted(changingToMuted);
     if (changingToMuted) {
       stopSound(true).catch(error => console.warn('Error stopping sound on mute:', error));
+      // Pause bg music
+      if (bgMusicRef.current) {
+        try {
+          bgMusicRef.current.pause();
+        } catch (e) {}
+      }
+    } else {
+      // Resume bg music, but only if instruction bubble is visible
+      if (bgMusicRef.current && showInstruction) {
+        try {
+          bgMusicRef.current.play();
+        } catch (e) {}
+      }
     }
   };
 
@@ -514,7 +682,7 @@ export default function LevelScreenTemplate({
                   screenW > screenH && { marginTop: 80 },
                 ]}
               >
-                <TouchableOpacity onPress={toggleShowName} activeOpacity={0.8} disabled={isTransitioning}>
+                <TouchableOpacity onPress={handleAnimalPress} activeOpacity={0.8} disabled={isTransitioning}>
                   <Animated.View style={{ opacity: animalFadeAnim }}>
                     {renderAnimal()}
                   </Animated.View>
