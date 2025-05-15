@@ -1,49 +1,46 @@
 {
-  "expo": {
-    "name": "Animal Detective",
-    "slug": "animal-detective",
-    "version": "1.0.0",
-    "orientation": "default",
-    "icon": "./src/assets/images/icon.png",
-    "scheme": "animal-detective",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "bundleIdentifier": "com.kido.animal-detective",
-      "buildNumber": "1",
-      "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        }
+  "name": "Animal Detective",
+  "slug": "animal-detective",
+  "version": "1.0.0",
+  "orientation": "default",
+  "icon": "./src/assets/images/icon.png",
+  "scheme": "animal-detective",
+  "userInterfaceStyle": "automatic",
+  "ios": {
+    "bundleIdentifier": "com.kido.animal-detective",
+    "buildNumber": "1",
+    "infoPlist": {
+      "NSAppTransportSecurity": {
+        "NSAllowsArbitraryLoads": true
       }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./src/assets/images/icon.png",
+    }
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./src/assets/images/icon.png",
+      "backgroundColor": "#ffffff"
+    }
+  },
+  "web": {
+    "bundler": "metro",
+    "output": "static",
+    "favicon": "./src/assets/images/icon.png"
+  },
+  "plugins": [
+    "expo-router",
+    [
+      "expo-splash-screen",
+      {
+        "image": "./src/assets/images/icon.png",
+        "imageWidth": 200,
+        "resizeMode": "contain",
         "backgroundColor": "#ffffff"
       }
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./src/assets/images/icon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./src/assets/images/icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
-        }
-      ],
-      "expo-audio",
-      "expo-video"
     ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    "expo-audio",
+    "expo-video"
+  ],
+  "experiments": {
+    "typedRoutes": true
   }
 }
