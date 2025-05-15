@@ -16,6 +16,7 @@ type LevelTilesProps = {
   ListHeaderComponent?: React.ReactNode;
   ListFooterComponent?: React.ReactNode;
   horizontal?: boolean;
+  getIsLocked?: (level: string) => boolean; // Make optional
 };
 
 /**
@@ -34,6 +35,7 @@ export default function LevelTiles({
   getLevelBackgroundColor,
   t,
   horizontal,
+  getIsLocked,
 }: LevelTilesProps) {
   // In both portrait and landscape, use 3 columns per row
   const columns = 3;
@@ -49,6 +51,10 @@ export default function LevelTiles({
 
   // Always render as grid, 3 in a row for both portrait and landscape
   const rows = chunk(levels, columns);
+
+  // Use getIsLocked if provided, otherwise lock all except 'farm'
+  const safeGetIsLocked = (level: string) =>
+    typeof getIsLocked === 'function' ? getIsLocked(level) : level !== 'farm';
 
   return (
     <ScrollView
@@ -66,8 +72,7 @@ export default function LevelTiles({
           }}
         >
           {row.map((level, colIdx) => {
-            // You can adjust lock logic as needed
-            const isLocked = false;
+            const isLocked = safeGetIsLocked(level);
             return (
               <TouchableOpacity
                 key={level}
@@ -81,6 +86,8 @@ export default function LevelTiles({
                   backgroundColor: '#fff2',
                 }}
                 activeOpacity={0.7}
+                // Do NOT disable the button for locked levels, so payment dialog can open
+                // disabled={isLocked}
               >
                 <Image
                   source={LEVEL_BACKGROUNDS[level]}
