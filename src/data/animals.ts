@@ -35,9 +35,15 @@ import deerData from '../assets/images/animals/json/deer-0.json';
 import mooseData from '../assets/images/animals/json/moose-0.json';
 import mouseData from '../assets/images/animals/json/mouse-0.json';
 import badgerData from '../assets/images/animals/json/badger-0.json';
-import beaverData from '../assets/images/animals/json/beaver-0.json';
+import beaverData from '../assets/images/animals/json/beaver-0.json'; 
 import boarData from '../assets/images/animals/json/boar-0.json';
 import batData from '../assets/images/animals/json/bat-0.json';
+import whiteBearData from '../assets/images/animals/json/whitebear-0.json';
+import whiteFoxData from '../assets/images/animals/json/whitefox-0.json';
+import reindeerData from '../assets/images/animals/json/reindeer-0.json';
+import sealData from '../assets/images/animals/json/seal-0.json';
+import snowyOwlData from '../assets/images/animals/json/snowyowl-0.json';
+import penguinData from '../assets/images/animals/json/ping-0.json';
 
 // Load the actual PNG sprite sheet
 const catSpriteSheet = require('../assets/images/animals/png/cat-0.png');
@@ -70,6 +76,12 @@ const badgerSpriteSheet = require('../assets/images/animals/png/badger-0.png');
 const beaverSpriteSheet = require('../assets/images/animals/png/beaver-0.png');
 const boarSpriteSheet = require('../assets/images/animals/png/boar-0.png');
 const batSpriteSheet = require('../assets/images/animals/png/bat-0.png');
+const whiteBearSprite = require('../assets/images/animals/png/whitebear-0.png');
+const whiteFoxSprite = require('../assets/images/animals/png/whitefox-0.png');
+const reindeerSprite = require('../assets/images/animals/png/reindeer-0.png');
+const sealSprite = require('../assets/images/animals/png/seal-0.png');
+const snowyOwlSprite = require('../assets/images/animals/png/snowyowl-0.png');
+const penguinSprite = require('../assets/images/animals/png/ping-0.png');
 
 // Extract the frames array and meta from JSON
 const { frames: catFrames, meta: catMeta } = catData;
@@ -102,6 +114,12 @@ const { frames: badgerFrames, meta: badgerMeta } = badgerData;
 const { frames: beaverFrames, meta: beaverMeta } = beaverData;
 const { frames: boarFrames, meta: boarMeta } = boarData;
 const { frames: batFrames, meta: batMeta } = batData;
+const { frames: whiteBearFrames, meta: whiteBearMeta } = whiteBearData;
+const { frames: whiteFoxFrames, meta: whiteFoxMeta } = whiteFoxData;
+const { frames: reindeerFrames, meta: reindeerMeta } = reindeerData;
+const { frames: sealFrames, meta: sealMeta } = sealData;
+const { frames: snowyOwlFrames, meta: snowyOwlMeta } = snowyOwlData;
+const { frames: penguinFrames, meta: penguinMeta } = penguinData;
 
 // Use localization via a function parameter
 import { useLocalization } from '../hooks/useLocalization';
@@ -482,6 +500,78 @@ export function getAnimals(): AnimalType[] {
       sound: require('../assets/sounds/bat.mp3'),
       labelSound: require('../assets/sounds/labels/bat.wav'),
       isMoving: false,
+    },
+    {
+      id: 32,
+      name: t('animals.whitebear'),
+      type: 'sprite' as const,
+      animalType: 'Arctic' as const,
+      source: whiteBearSprite,
+      frames: whiteBearFrames,
+      spriteSheetSize: whiteBearMeta.size,
+      sound: require('../assets/sounds/cat.mp3'),
+      labelSound: require('../assets/sounds/labels/cat.wav'),
+      isMoving: true,
+    },
+    {
+      id: 33,
+      name: t('animals.whitefox'),
+      type: 'sprite' as const,
+      animalType: 'Arctic' as const,
+      source: whiteFoxSprite,
+      frames: whiteFoxFrames,
+      spriteSheetSize: whiteFoxMeta.size,
+      sound: require('../assets/sounds/cat.mp3'),
+      labelSound: require('../assets/sounds/labels/cat.wav'),
+      isMoving: true,
+    },
+    {
+      id: 34,
+      name: t('animals.reindeer'),
+      type: 'sprite' as const,
+      animalType: 'Arctic' as const,
+      source: reindeerSprite,
+      frames: reindeerFrames,
+      spriteSheetSize: reindeerMeta.size,
+      sound: require('../assets/sounds/cat.mp3'),
+      labelSound: require('../assets/sounds/labels/cat.wav'),
+      isMoving: true,
+    },
+    {
+      id: 35,
+      name: t('animals.seal'),
+      type: 'sprite' as const,
+      animalType: 'Arctic' as const,
+      source: sealSprite,
+      frames: sealFrames,
+      spriteSheetSize: sealMeta.size,
+      sound: require('../assets/sounds/cat.mp3'),
+      labelSound: require('../assets/sounds/labels/cat.wav'),
+      isMoving: false,
+    }, 
+    {
+      id: 36,
+      name: t('animals.snowyowl'),
+      type: 'sprite' as const,
+      animalType: 'Arctic' as const,
+      source: snowyOwlSprite,
+      frames: snowyOwlFrames,
+      spriteSheetSize: snowyOwlMeta.size,
+      sound: require('../assets/sounds/cat.mp3'),
+      labelSound: require('../assets/sounds/labels/cat.wav'),
+      isMoving: true,
+    },
+    {
+      id: 37,
+      name: t('animals.penguin'),
+      type: 'sprite' as const,
+      animalType: 'Arctic' as const,
+      source: penguinSprite,
+      frames: penguinFrames,
+      spriteSheetSize: penguinMeta.size,
+      sound: require('../assets/sounds/cat.mp3'),
+      labelSound: require('../assets/sounds/labels/cat.wav'),
+      isMoving: true,
     },
   ];
 
