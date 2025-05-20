@@ -44,6 +44,25 @@ import reindeerData from '../assets/images/animals/json/reindeer-0.json';
 import sealData from '../assets/images/animals/json/seal-0.json';
 import snowyOwlData from '../assets/images/animals/json/snowyowl-0.json';
 import penguinData from '../assets/images/animals/json/ping-0.json';
+import camelData from '../assets/images/animals/json/camel-0.json';
+import caracalData from '../assets/images/animals/json/caracal-0.json';
+import desertTortoiseData from '../assets/images/animals/json/dtortoise-0.json';
+import fenexFoxData from '../assets/images/animals/json/fennecfox-0.json';
+import iguanaData from '../assets/images/animals/json/iguana-0.json';
+import jackalData from '../assets/images/animals/json/jackal-0.json';
+import jerboaData from '../assets/images/animals/json/jerboa-0.json';
+import oryxData from '../assets/images/animals/json/oryx-0.json';
+import sandCatData from '../assets/images/animals/json/sandcat-0.json';
+import scorpionData from '../assets/images/animals/json/scorpion-0.json';
+import antelopeData from '../assets/images/animals/json/antelope-0.json';
+import bizonData from '../assets/images/animals/json/bizon-0.json';
+import elephantData from '../assets/images/animals/json/elephant-0.json';
+import gepardData from '../assets/images/animals/json/gepard-0.json';
+import hyenaData from '../assets/images/animals/json/hyena-0.json';
+import leonData from '../assets/images/animals/json/leon-0.json';
+import tigerData from '../assets/images/animals/json/tiger-0.json';
+import wildBoarData from '../assets/images/animals/json/wildboar-0.json';
+import zebraData from '../assets/images/animals/json/zebra-0.json';
 
 // Load the actual PNG sprite sheet
 const catSpriteSheet = require('../assets/images/animals/png/cat-0.png');
@@ -82,6 +101,25 @@ const reindeerSprite = require('../assets/images/animals/png/reindeer-0.png');
 const sealSprite = require('../assets/images/animals/png/seal-0.png');
 const snowyOwlSprite = require('../assets/images/animals/png/snowyowl-0.png');
 const penguinSprite = require('../assets/images/animals/png/ping-0.png');
+const camelSprite = require('../assets/images/animals/png/camel-0.png');
+const caracalSprite = require('../assets/images/animals/png/caracal-0.png');
+const desertTortoiseSprite = require('../assets/images/animals/png/dtortoise-0.png');
+const fenexFoxSprite = require('../assets/images/animals/png/fenncefox-0.png');
+const iguanaSprite = require('../assets/images/animals/png/iguana-0.png');
+const jackalSprite = require('../assets/images/animals/png/jackal-0.png');
+const jerboaSprite = require('../assets/images/animals/png/jerboa-0.png');
+const oryxSprite = require('../assets/images/animals/png/oryx-0.png');
+const sandCatSprite = require('../assets/images/animals/png/sandcat-0.png');
+const scorpionSprite = require('../assets/images/animals/png/scorpion-0.png');
+const antelopeSprite = require('../assets/images/animals/png/antelope-0.png');
+const bizonSprite = require('../assets/images/animals/png/bizon-0.png');
+const elephantSprite = require('../assets/images/animals/png/elephant-0.png');
+const gepardSprite = require('../assets/images/animals/png/gepard-0.png');
+const hyenaSprite = require('../assets/images/animals/png/hyena-0.png');
+const leonSprite = require('../assets/images/animals/png/leon-0.png');
+const tigerSprite = require('../assets/images/animals/png/tiger-0.png');
+const wildBoarSprite = require('../assets/images/animals/png/wildboar-0.png');
+const zebraSprite = require('../assets/images/animals/png/zebra-0.png');
 
 // Extract the frames array and meta from JSON
 const { frames: catFrames, meta: catMeta } = catData;
@@ -120,6 +158,25 @@ const { frames: reindeerFrames, meta: reindeerMeta } = reindeerData;
 const { frames: sealFrames, meta: sealMeta } = sealData;
 const { frames: snowyOwlFrames, meta: snowyOwlMeta } = snowyOwlData;
 const { frames: penguinFrames, meta: penguinMeta } = penguinData;
+const { frames: camelFrames, meta: camelMeta } = camelData;
+const { frames: caracalFrames, meta: caracalMeta } = caracalData;
+const { frames: desertTortoiseFrames, meta: desertTortoiseMeta } = desertTortoiseData;
+const { frames: fenexFoxFrames, meta: fenexFoxMeta } = fenexFoxData;
+const { frames: iguanaFrames, meta: iguanaMeta } = iguanaData;
+const { frames: jackalFrames, meta: jackalMeta } = jackalData;
+const { frames: jerboaFrames, meta: jerboaMeta } = jerboaData;
+const { frames: oryxFrames, meta: oryxMeta } = oryxData;
+const { frames: sandCatFrames, meta: sandCatMeta } = sandCatData;
+const { frames: scorpionFrames, meta: scorpionMeta } = scorpionData;
+const { frames: antelopeFrames, meta: antelopeMeta } = antelopeData;
+const { frames: bizonFrames, meta: bizonMeta } = bizonData;
+const { frames: elephantFrames, meta: elephantMeta } = elephantData;
+const { frames: gepardFrames, meta: gepardMeta } = gepardData;
+const { frames: hyenaFrames, meta: hyenaMeta } = hyenaData;
+const { frames: leonFrames, meta: leonMeta } = leonData;
+const { frames: tigerFrames, meta: tigerMeta } = tigerData;
+const { frames: wildBoarFrames, meta: wildBoarMeta } = wildBoarData;
+const { frames: zebraFrames, meta: zebraMeta } = zebraData;
 
 // Use localization via a function parameter
 import { useLocalization } from '../hooks/useLocalization';
@@ -573,6 +630,241 @@ export function getAnimals(): AnimalType[] {
       labelSound: require('../assets/sounds/labels/cat.wav'),
       isMoving: true,
     },
+     {
+    id: 38,
+    name: t('animals.camel'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: camelSprite,
+    frames: camelFrames,
+    spriteSheetSize: camelMeta.size,
+    sound: require('../assets/sounds/camel.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'left',
+  },
+  {
+    id: 39,
+    name: t('animals.caracal'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: caracalSprite,
+    frames: caracalFrames,
+    spriteSheetSize: caracalMeta.size,
+    sound: require('../assets/sounds/caracal.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'left',
+  },
+  {
+    id: 40,
+    name: t('animals.desertTortoise'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: desertTortoiseSprite,
+    frames: desertTortoiseFrames,
+    spriteSheetSize: desertTortoiseMeta.size,
+    sound: require('../assets/sounds/turt.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 41,
+    name: t('animals.fenexFox'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: fenexFoxSprite,
+    frames: fenexFoxFrames,
+    spriteSheetSize: fenexFoxMeta.size,
+    sound: require('../assets/sounds/fennecfox.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'left',
+  },
+  {
+    id: 42,
+    name: t('animals.iguana'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: iguanaSprite,
+    frames: iguanaFrames,
+    spriteSheetSize: iguanaMeta.size,
+    sound: require('../assets/sounds/iguana.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 43,
+    name: t('animals.jackal'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: jackalSprite,
+    frames: jackalFrames,
+    spriteSheetSize: jackalMeta.size,
+    sound: require('../assets/sounds/jackal.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'left',
+  },
+  {
+    id: 44,
+    name: t('animals.jerboa'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: jerboaSprite,
+    frames: jerboaFrames,
+    spriteSheetSize: jerboaMeta.size,
+    sound: require('../assets/sounds/rabbit.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 45,
+    name: t('animals.oryx'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: oryxSprite,
+    frames: oryxFrames,
+    spriteSheetSize: oryxMeta.size,
+    sound: require('../assets/sounds/oryx.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'right',
+  },
+  {
+    id: 46,
+    name: t('animals.sandCat'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: sandCatSprite,
+    frames: sandCatFrames,
+    spriteSheetSize: sandCatMeta.size,
+    sound: require('../assets/sounds/sandcat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'left',
+  },
+  {
+    id: 47,
+    name: t('animals.scorpion'),
+    type: 'sprite' as const,
+    animalType: 'Desert' as const,
+    source: scorpionSprite,
+    frames: scorpionFrames,
+    spriteSheetSize: scorpionMeta.size,
+    sound: require('../assets/sounds/scorpion.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+  id: 48,
+  name: t('animals.antelope'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: antelopeSprite,
+  frames: antelopeFrames,
+  spriteSheetSize: antelopeMeta.size,
+  sound: require('../assets/sounds/antelope.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+},
+{
+  id: 49,
+  name: t('animals.bizon'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: bizonSprite,
+  frames: bizonFrames,
+  spriteSheetSize: bizonMeta.size,
+  sound: require('../assets/sounds/bizon.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+},
+{
+  id: 50,
+  name: t('animals.elephant'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: elephantSprite,
+  frames: elephantFrames,
+  spriteSheetSize: elephantMeta.size,
+  sound: require('../assets/sounds/elephant.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+},
+{
+  id: 51,
+  name: t('animals.gepard'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: gepardSprite,
+  frames: gepardFrames,
+  spriteSheetSize: gepardMeta.size,
+  sound: require('../assets/sounds/cat.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+},
+{
+  id: 52,
+  name: t('animals.hyena'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: hyenaSprite,
+  frames: hyenaFrames,
+  spriteSheetSize: hyenaMeta.size,
+  sound: require('../assets/sounds/cat.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+},
+{
+  id: 53,
+  name: t('animals.leon'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: leonSprite,
+  frames: leonFrames,
+  spriteSheetSize: leonMeta.size,
+  sound: require('../assets/sounds/cat.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+},
+{
+  id: 54,
+  name: t('animals.tiger'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: tigerSprite,
+  frames: tigerFrames,
+  spriteSheetSize: tigerMeta.size,
+  sound: require('../assets/sounds/cat.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+},
+{
+  id: 55,
+  name: t('animals.wildboar'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: wildBoarSprite,
+  frames: wildBoarFrames,
+  spriteSheetSize: wildBoarMeta.size,
+  sound: require('../assets/sounds/cat.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+},
+{
+  id: 56,
+  name: t('animals.zebra'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const,
+  source: zebraSprite,
+  frames: zebraFrames,
+  spriteSheetSize: zebraMeta.size,
+  sound: require('../assets/sounds/cat.mp3'),
+  labelSound: require('../assets/sounds/labels/cat.wav'),
+  isMoving: true,
+}
+
   ];
 
   // Preload all animal images regardless of type

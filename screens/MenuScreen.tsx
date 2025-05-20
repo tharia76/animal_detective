@@ -625,6 +625,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   const getIsLocked = (level: string) => {
     if (level === 'farm') return false;
     if (level === 'arctic') return false;
+    if (level === 'desert') return false;
+    if (level === 'savannah') return false;
     return !unlocked;
   };
 
