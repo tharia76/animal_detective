@@ -30,7 +30,7 @@ const NUM_COLS = 3;
 const MARGIN = 3;
 
 // Apple App Store product id for unlocking all levels except Farm
-const APPLE_PRODUCT_ID = 'animaldetective.unlockall'; // Replace with your actual product id
+const APPLE_PRODUCT_ID = '6746268459'; // Replace with your actual product id
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.png'),
@@ -482,9 +482,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
     if (purchaseInProgress) return;
     setPurchaseInProgress(true);
     try {
-      await RNIap.requestPurchase({
-        skus: [APPLE_PRODUCT_ID],
-      });
+      await RNIap.requestPurchase({ sku: APPLE_PRODUCT_ID });
+
     } catch (e) {
       Alert.alert(t('Error'), t('Could not complete purchase.'));
     }
@@ -627,6 +626,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
     if (level === 'arctic') return false;
     if (level === 'desert') return false;
     if (level === 'savannah') return false;
+    if (level === 'jungle') return false;
+    if (level === 'birds') return false;
+    if (level === 'insects') return false;
+    if (level === 'forest') return false;
+    if (level === 'ocean') return false;
+
     return !unlocked;
   };
 
