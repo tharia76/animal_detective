@@ -31,6 +31,7 @@ const MARGIN = 3;
 
 // Apple App Store product id for unlocking all levels except Farm
 const APPLE_PRODUCT_ID = 'animalDetective'; // Replace with your actual product id
+Alert.alert(APPLE_PRODUCT_ID);
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.png'),
