@@ -20,7 +20,7 @@ export default function DesertScreen({ onBackToMenu, backgroundImageUri, skyBack
   useEffect(() => {
     const load = async () => {
       try {
-        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/desert.jpg')).downloadAsync();
+        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/desert.png')).downloadAsync();
       } catch (err) {
         console.warn('Failed to preload desert image', err);
       }

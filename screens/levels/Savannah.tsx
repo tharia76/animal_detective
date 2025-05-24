@@ -20,7 +20,7 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
   useEffect(() => {
     const load = async () => {
       try {
-        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/savannah.jpg')).downloadAsync();
+        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/savannah.png')).downloadAsync();
       } catch (err) {
         console.warn('Failed to preload savannah image', err);
       }

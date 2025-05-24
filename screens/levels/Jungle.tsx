@@ -20,7 +20,7 @@ export default function JungleScreen({ onBackToMenu, backgroundImageUri, skyBack
   useEffect(() => {
     const load = async () => {
       try {
-        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/jungle.jpg')).downloadAsync();
+        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/jungle.png')).downloadAsync();
       } catch (err) {
         console.warn('Failed to preload jungle image', err);
       }

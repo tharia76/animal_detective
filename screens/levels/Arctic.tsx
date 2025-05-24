@@ -20,7 +20,7 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
   useEffect(() => {
     const load = async () => {
       try {
-        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/arctic.jpg')).downloadAsync();
+        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/arctic.png')).downloadAsync();
       } catch (err) {
         console.warn('Failed to preload arctic image', err);
       }

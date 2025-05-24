@@ -37,11 +37,11 @@ const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.png'),
   forest: require('../src/assets/images/level-backgrounds/forest.png'),
   ocean: require('../src/assets/images/level-backgrounds/ocean.jpg'),
-  desert: require('../src/assets/images/level-backgrounds/desert.jpg'),
-  arctic: require('../src/assets/images/level-backgrounds/arctic.jpg'),
+  desert: require('../src/assets/images/level-backgrounds/desert.png'),
+  arctic: require('../src/assets/images/level-backgrounds/arctic.png'),
   insects: require('../src/assets/images/level-backgrounds/insect.png'),
-  savannah: require('../src/assets/images/level-backgrounds/savannah.jpg'),
-  jungle: require('../src/assets/images/level-backgrounds/jungle.jpg'),
+  savannah: require('../src/assets/images/level-backgrounds/savannah.png'),
+  jungle: require('../src/assets/images/level-backgrounds/jungle.png'),
   birds: require('../src/assets/images/level-backgrounds/birds.png'),
 };
 
@@ -329,16 +329,16 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                 file = require('../src/assets/images/level-backgrounds/ocean.jpg');
                 break;
               case 'desert':
-                file = require('../src/assets/images/level-backgrounds/desert.jpg');
+                file = require('../src/assets/images/level-backgrounds/desert.png');
                 break;
               case 'arctic':
-                file = require('../src/assets/images/level-backgrounds/arctic.jpg');
+                file = require('../src/assets/images/level-backgrounds/arctic.png');
                 break;
               case 'savannah':
-                file = require('../src/assets/images/level-backgrounds/savannah.jpg');
+                file = require('../src/assets/images/level-backgrounds/savannah.png');
                 break;
               case 'jungle':
-                file = require('../src/assets/images/level-backgrounds/jungle.jpg');
+                file = require('../src/assets/images/level-backgrounds/jungle.png');
                 break;
               case 'birds':
                 file = require('../src/assets/images/level-backgrounds/birds.png');

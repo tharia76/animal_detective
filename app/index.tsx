@@ -60,13 +60,19 @@ export default function App() {
         // For moving backgrounds, you can use different images if you have them
         const movingFarm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
         const movingForest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
-        const arctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.jpg'));
+        const movingJungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.png'));
+        const movingDesert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.png'));
+        const movingArctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.png'));
+
+        const arctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.png'));
         const ocean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.jpg'));
-        const savannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.jpg'));
-        const desert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.jpg'));
-        const jungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.jpg'));
+        const savannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.png'));
+        const desert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.png'));
+        const jungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.png'));
         const insects = Asset.fromModule(require('../src/assets/images/level-backgrounds/insect.png'));
         const birds = Asset.fromModule(require('../src/assets/images/level-backgrounds/birds.png'));
+        // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
+        const movingSavannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.png'));
         // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
 
         await Promise.all([
@@ -75,13 +81,18 @@ export default function App() {
           forest.downloadAsync(),
           movingFarm.downloadAsync(),
           movingForest.downloadAsync(),
+          movingJungle.downloadAsync(),
+          movingDesert.downloadAsync(),
           ocean.downloadAsync(),
           savannah.downloadAsync(),
           desert.downloadAsync(),
           jungle.downloadAsync(),
           insects.downloadAsync(),
           birds.downloadAsync(),
+          movingArctic.downloadAsync(),
           // movingOcean.downloadAsync(),
+          movingSavannah.downloadAsync(),
+          
         ]);
 
         setFarmBgUri(farm.localUri || farm.uri);
@@ -97,6 +108,11 @@ export default function App() {
         setMovingBgUris({
           farm: movingFarm.localUri || movingFarm.uri,
           forest: movingForest.localUri || movingForest.uri,
+          jungle: movingJungle.localUri || movingJungle.uri,
+          desert: movingDesert.localUri || movingDesert.uri,
+          arctic: movingArctic.localUri || movingArctic.uri,
+          // ocean: movingOcean.localUri || movingOcean.uri,
+          savannah: movingSavannah.localUri || movingSavannah.uri,
         });
 
         // setOceanBgUri(ocean.localUri || ocean.uri);

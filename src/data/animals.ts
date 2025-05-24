@@ -560,7 +560,7 @@ export function getAnimals(): AnimalType[] {
     },
     {
       id: 32,
-      name: t('animals.whitebear'),
+      name: t('animals.whiteBear'),
       type: 'sprite' as const,
       animalType: 'Arctic' as const,
       source: whiteBearSprite,
@@ -572,7 +572,7 @@ export function getAnimals(): AnimalType[] {
     },
     {
       id: 33,
-      name: t('animals.whitefox'),
+      name: t('animals.whiteFox'),
       type: 'sprite' as const,
       animalType: 'Arctic' as const,
       source: whiteFoxSprite,
@@ -616,7 +616,7 @@ export function getAnimals(): AnimalType[] {
       spriteSheetSize: snowyOwlMeta.size,
       sound: require('../assets/sounds/cat.mp3'),
       labelSound: require('../assets/sounds/labels/cat.wav'),
-      isMoving: true,
+      isMoving: false,
     },
     {
       id: 37,
@@ -628,7 +628,7 @@ export function getAnimals(): AnimalType[] {
       spriteSheetSize: penguinMeta.size,
       sound: require('../assets/sounds/cat.mp3'),
       labelSound: require('../assets/sounds/labels/cat.wav'),
-      isMoving: true,
+      isMoving: false,
     },
      {
     id: 38,
@@ -653,8 +653,7 @@ export function getAnimals(): AnimalType[] {
     spriteSheetSize: caracalMeta.size,
     sound: require('../assets/sounds/caracal.mp3'),
     labelSound: require('../assets/sounds/labels/cat.wav'),
-    isMoving: true,
-    movingDirection: 'left',
+    isMoving: false,
   },
   {
     id: 40,
@@ -666,11 +665,12 @@ export function getAnimals(): AnimalType[] {
     spriteSheetSize: desertTortoiseMeta.size,
     sound: require('../assets/sounds/turt.mp3'),
     labelSound: require('../assets/sounds/labels/cat.wav'),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'right',
   },
   {
     id: 41,
-    name: t('animals.fenexFox'),
+    name: t('animals.fennecFox'),
     type: 'sprite' as const,
     animalType: 'Desert' as const,
     source: fenexFoxSprite,
@@ -679,7 +679,7 @@ export function getAnimals(): AnimalType[] {
     sound: require('../assets/sounds/fennecfox.mp3'),
     labelSound: require('../assets/sounds/labels/cat.wav'),
     isMoving: true,
-    movingDirection: 'left',
+    movingDirection: 'right',
   },
   {
     id: 42,
@@ -766,11 +766,11 @@ export function getAnimals(): AnimalType[] {
   spriteSheetSize: antelopeMeta.size,
   sound: require('../assets/sounds/antelope.mp3'),
   labelSound: require('../assets/sounds/labels/cat.wav'),
-  isMoving: true,
+  isMoving: false,
 },
 {
   id: 49,
-  name: t('animals.bizon'),
+  name: t('animals.bison'),
   type: 'sprite' as const,
   animalType: 'Savannah' as const,
   source: bizonSprite,
@@ -818,7 +818,7 @@ export function getAnimals(): AnimalType[] {
 },
 {
   id: 53,
-  name: t('animals.leon'),
+  name: t('animals.lion'),
   type: 'sprite' as const,
   animalType: 'Savannah' as const,
   source: leonSprite,
@@ -826,7 +826,7 @@ export function getAnimals(): AnimalType[] {
   spriteSheetSize: leonMeta.size,
   sound: require('../assets/sounds/cat.mp3'),
   labelSound: require('../assets/sounds/labels/cat.wav'),
-  isMoving: true,
+  isMoving: false,
 },
 {
   id: 54,
@@ -839,6 +839,7 @@ export function getAnimals(): AnimalType[] {
   sound: require('../assets/sounds/cat.mp3'),
   labelSound: require('../assets/sounds/labels/cat.wav'),
   isMoving: true,
+  movingDirection: 'right',
 },
 {
   id: 55,
@@ -862,7 +863,7 @@ export function getAnimals(): AnimalType[] {
   spriteSheetSize: zebraMeta.size,
   sound: require('../assets/sounds/cat.mp3'),
   labelSound: require('../assets/sounds/labels/cat.wav'),
-  isMoving: true,
+  isMoving: false,
 }
 
   ];
