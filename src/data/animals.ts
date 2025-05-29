@@ -790,7 +790,7 @@ export function getAnimals(): AnimalType[] {
   spriteSheetSize: bizonMeta.size,
   sound: require('../assets/sounds/bizon.mp3'),
   labelSound: require('../assets/sounds/labels/cat.wav'),
-  isMoving: true,
+  isMoving: false,
 },
 {
   id: 50,
@@ -887,7 +887,7 @@ export function getAnimals(): AnimalType[] {
     spriteSheetSize: eagleMeta.size,
     sound: require('../assets/sounds/cat.mp3'),
     labelSound: require('../assets/sounds/labels/cat.wav'),
-    isMoving: true,
+    isMoving: false,
   },
   {
     id: 58,
@@ -899,7 +899,7 @@ export function getAnimals(): AnimalType[] {
     spriteSheetSize: flamingoMeta.size,
     sound: require('../assets/sounds/cat.mp3'),
     labelSound: require('../assets/sounds/labels/cat.wav'),
-    isMoving: true,
+    isMoving: false,
   },
   {
     id: 59,
@@ -912,6 +912,7 @@ export function getAnimals(): AnimalType[] {
     sound: require('../assets/sounds/cat.mp3'),
     labelSound: require('../assets/sounds/labels/cat.wav'),
     isMoving: true,
+    movingDirection: 'right',
   },
   {
     id: 60,
