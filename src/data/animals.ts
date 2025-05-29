@@ -63,6 +63,10 @@ import leonData from '../assets/images/animals/json/leon-0.json';
 import tigerData from '../assets/images/animals/json/tiger-0.json';
 import wildBoarData from '../assets/images/animals/json/wildboar-0.json';
 import zebraData from '../assets/images/animals/json/zebra-0.json';
+import eagleData from '../assets/images/animals/json/eagle-0.json';
+import flamingoData from '../assets/images/animals/json/flamingo-0.json';
+import giraffeData from '../assets/images/animals/json/giraffe-0.json';
+import rhinocerosData from '../assets/images/animals/json/rhinoceros-0.json';
 
 // Load the actual PNG sprite sheet
 const catSpriteSheet = require('../assets/images/animals/png/cat-0.png');
@@ -111,7 +115,7 @@ const jerboaSprite = require('../assets/images/animals/png/jerboa-0.png');
 const oryxSprite = require('../assets/images/animals/png/oryx-0.png');
 const sandCatSprite = require('../assets/images/animals/png/sandcat-0.png');
 const scorpionSprite = require('../assets/images/animals/png/scorpion-0.png');
-const antelopeSprite = require('../assets/images/animals/png/antelope-0.png');
+const antelopeSprite = require('../assets/images/animals/png/Antelope-0.png');
 const bizonSprite = require('../assets/images/animals/png/bizon-0.png');
 const elephantSprite = require('../assets/images/animals/png/elephant-0.png');
 const gepardSprite = require('../assets/images/animals/png/gepard-0.png');
@@ -120,6 +124,10 @@ const leonSprite = require('../assets/images/animals/png/leon-0.png');
 const tigerSprite = require('../assets/images/animals/png/tiger-0.png');
 const wildBoarSprite = require('../assets/images/animals/png/wildboar-0.png');
 const zebraSprite = require('../assets/images/animals/png/zebra-0.png');
+const eagleSprite = require('../assets/images/animals/png/eagle-0.png');
+const flamingoSprite = require('../assets/images/animals/png/flamingo-0.png');
+const giraffeSprite = require('../assets/images/animals/png/giraffe-0.png');
+const rhinocerosSprite = require('../assets/images/animals/png/rhinoceros-0.png');
 
 // Extract the frames array and meta from JSON
 const { frames: catFrames, meta: catMeta } = catData;
@@ -177,6 +185,10 @@ const { frames: leonFrames, meta: leonMeta } = leonData;
 const { frames: tigerFrames, meta: tigerMeta } = tigerData;
 const { frames: wildBoarFrames, meta: wildBoarMeta } = wildBoarData;
 const { frames: zebraFrames, meta: zebraMeta } = zebraData;
+const { frames: eagleFrames, meta: eagleMeta } = eagleData;
+const { frames: flamingoFrames, meta: flamingoMeta } = flamingoData;
+const { frames: giraffeFrames, meta: giraffeMeta } = giraffeData;
+const { frames: rhinocerosFrames, meta: rhinocerosMeta } = rhinocerosData;
 
 // Use localization via a function parameter
 import { useLocalization } from '../hooks/useLocalization';
@@ -864,8 +876,55 @@ export function getAnimals(): AnimalType[] {
   sound: require('../assets/sounds/cat.mp3'),
   labelSound: require('../assets/sounds/labels/cat.wav'),
   isMoving: false,
-}
-
+},
+ {
+    id: 57,
+    name: t('animals.eagle'),
+    type: 'sprite' as const,
+    animalType: 'Savannah' as const,
+    source: eagleSprite,
+    frames: eagleFrames,
+    spriteSheetSize: eagleMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+  },
+  {
+    id: 58,
+    name: t('animals.flamingo'),
+    type: 'sprite' as const,
+    animalType: 'Savannah' as const,
+    source: flamingoSprite,
+    frames: flamingoFrames,
+    spriteSheetSize: flamingoMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+  },
+  {
+    id: 59,
+    name: t('animals.giraffe'),
+    type: 'sprite' as const,
+    animalType: 'Savannah' as const,
+    source: giraffeSprite,
+    frames: giraffeFrames,
+    spriteSheetSize: giraffeMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+  },
+  {
+    id: 60,
+    name: t('animals.rhinoceros'),
+    type: 'sprite' as const,
+    animalType: 'Savannah' as const,
+    source: rhinocerosSprite,
+    frames: rhinocerosFrames,
+    spriteSheetSize: rhinocerosMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+  },
   ];
 
   // Preload all animal images regardless of type
