@@ -67,6 +67,18 @@ import eagleData from '../assets/images/animals/json/eagle-0.json';
 import flamingoData from '../assets/images/animals/json/flamingo-0.json';
 import giraffeData from '../assets/images/animals/json/giraffe-0.json';
 import rhinocerosData from '../assets/images/animals/json/rhinoceros-0.json';
+import antData from '../assets/images/animals/json/ant-0.json';
+import beeData from '../assets/images/animals/json/bee-0.json';
+import butterflyData from '../assets/images/animals/json/butterfly-0.json';
+import caterpillarData from '../assets/images/animals/json/caterpillar-0.json';
+import cockroachData from '../assets/images/animals/json/cockroach-0.json';
+import dragonflyData from '../assets/images/animals/json/dragonfly-0.json';
+import flyData from '../assets/images/animals/json/fly-0.json';
+import grasshopperData from '../assets/images/animals/json/grasshopper-0.json';
+import ladyBagData from '../assets/images/animals/json/ladybag-0.json';
+import mosquitoData from '../assets/images/animals/json/mosquito-0.json';
+import snailData from '../assets/images/animals/json/snail-0.json';
+import spiderData from '../assets/images/animals/json/spider-0.json';
 
 // Load the actual PNG sprite sheet
 const catSpriteSheet = require('../assets/images/animals/png/cat-0.png');
@@ -128,6 +140,18 @@ const eagleSprite = require('../assets/images/animals/png/eagle-0.png');
 const flamingoSprite = require('../assets/images/animals/png/flamingo-0.png');
 const giraffeSprite = require('../assets/images/animals/png/giraffe-0.png');
 const rhinocerosSprite = require('../assets/images/animals/png/rhinoceros-0.png');
+const antSprite = require('../assets/images/animals/png/ant-0.png');
+const beeSprite = require('../assets/images/animals/png/bee-0.png');
+const butterflySprite = require('../assets/images/animals/png/butterfly-0.png');
+const caterpillarSprite = require('../assets/images/animals/png/caterpillar-0.png');
+const cockroachSprite = require('../assets/images/animals/png/cockroach-0.png');
+const dragonflySprite = require('../assets/images/animals/png/dragonfly-0.png');
+const flySprite = require('../assets/images/animals/png/fly-0.png');
+const grasshopperSprite = require('../assets/images/animals/png/grasshopper-0.png');
+const ladyBagSprite = require('../assets/images/animals/png/ladybag-0.png');
+const mosquitoSprite = require('../assets/images/animals/png/mosquito-0.png');
+const snailSprite = require('../assets/images/animals/png/snail-0.png');
+const spiderSprite = require('../assets/images/animals/png/spider-0.png');
 
 // Extract the frames array and meta from JSON
 const { frames: catFrames, meta: catMeta } = catData;
@@ -189,6 +213,18 @@ const { frames: eagleFrames, meta: eagleMeta } = eagleData;
 const { frames: flamingoFrames, meta: flamingoMeta } = flamingoData;
 const { frames: giraffeFrames, meta: giraffeMeta } = giraffeData;
 const { frames: rhinocerosFrames, meta: rhinocerosMeta } = rhinocerosData;
+const { frames: antFrames, meta: antMeta } = antData;
+const { frames: beeFrames, meta: beeMeta } = beeData;
+const { frames: butterflyFrames, meta: butterflyMeta } = butterflyData;
+const { frames: caterpillarFrames, meta: caterpillarMeta } = caterpillarData;
+const { frames: cockroachFrames, meta: cockroachMeta } = cockroachData;
+const { frames: dragonflyFrames, meta: dragonflyMeta } = dragonflyData;
+const { frames: flyFrames, meta: flyMeta } = flyData;
+const { frames: grasshopperFrames, meta: grasshopperMeta } = grasshopperData;
+const { frames: ladyBagFrames, meta: ladyBagMeta } = ladyBagData; 
+const { frames: mosquitoFrames, meta: mosquitoMeta } = mosquitoData;
+const { frames: snailFrames, meta: snailMeta } = snailData;
+const { frames: spiderFrames, meta: spiderMeta } = spiderData;
 
 // Use localization via a function parameter
 import { useLocalization } from '../hooks/useLocalization';
@@ -925,6 +961,150 @@ export function getAnimals(): AnimalType[] {
     sound: require('../assets/sounds/cat.mp3'),
     labelSound: require('../assets/sounds/labels/cat.wav'),
     isMoving: true,
+  },
+  {
+    id: 61,
+    name: t('animals.ant'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: antSprite,
+    frames: antData.frames,
+    spriteSheetSize: antData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 62,
+    name: t('animals.bee'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: beeSprite,
+    frames: beeData.frames,
+    spriteSheetSize: beeData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 63,
+    name: t('animals.butterfly'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: butterflySprite,
+    frames: butterflyData.frames,
+    spriteSheetSize: butterflyData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 64,
+    name: t('animals.caterpillar'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: caterpillarSprite,
+    frames: caterpillarData.frames,
+    spriteSheetSize: caterpillarData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 65,
+    name: t('animals.cockroach'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: cockroachSprite,
+    frames: cockroachData.frames,
+    spriteSheetSize: cockroachData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 66,
+    name: t('animals.dragonfly'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: dragonflySprite,
+    frames: dragonflyData.frames,
+    spriteSheetSize: dragonflyData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 67,
+    name: t('animals.fly'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: flySprite,
+    frames: flyData.frames,
+    spriteSheetSize: flyData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 68,
+    name: t('animals.grasshopper'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: grasshopperSprite,
+    frames: grasshopperData.frames,
+    spriteSheetSize: grasshopperData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 69,
+    name: t('animals.ladyBag'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: ladyBagSprite,
+    frames: ladyBagData.frames,
+    spriteSheetSize: ladyBagData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 70,
+    name: t('animals.mosquito'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: mosquitoSprite,
+    frames: mosquitoData.frames,
+    spriteSheetSize: mosquitoData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 71,
+    name: t('animals.snail'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: snailSprite,
+    frames: snailData.frames,
+    spriteSheetSize: snailData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 72,
+    name: t('animals.spider'),
+    type: 'sprite' as const,
+    animalType: 'Insects' as const,
+    source: spiderSprite,
+    frames: spiderData.frames,
+    spriteSheetSize: spiderData.meta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
   },
   ];
 
