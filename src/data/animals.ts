@@ -79,6 +79,19 @@ import ladyBagData from '../assets/images/animals/json/ladybag-0.json';
 import mosquitoData from '../assets/images/animals/json/mosquito-0.json';
 import snailData from '../assets/images/animals/json/snail-0.json';
 import spiderData from '../assets/images/animals/json/spider-0.json';
+import crabData from '../assets/images/animals/json/crab-0.json';
+import dolphinData from '../assets/images/animals/json/dolphin-0.json';
+import fishData from '../assets/images/animals/json/fish-0.json';
+import jellyfishData from '../assets/images/animals/json/jellyfish-0.json';
+import lobsterData from '../assets/images/animals/json/lobster-0.json';
+import octopusData from '../assets/images/animals/json/octopus-0.json';
+import seaTurtleData from '../assets/images/animals/json/seaturtle-0.json';
+import seahorseData from '../assets/images/animals/json/seahorse-0.json';
+import sharkData from '../assets/images/animals/json/shark-0.json';
+import shrimpData from '../assets/images/animals/json/shrimp-0.json';
+import starfishData from '../assets/images/animals/json/starfish-0.json';
+import stingrayData from '../assets/images/animals/json/stringray-0.json';
+import whaleData from '../assets/images/animals/json/whale-0.json';
 
 // Load the actual PNG sprite sheet
 const catSpriteSheet = require('../assets/images/animals/png/cat-0.png');
@@ -152,6 +165,19 @@ const ladyBagSprite = require('../assets/images/animals/png/ladybag-0.png');
 const mosquitoSprite = require('../assets/images/animals/png/mosquito-0.png');
 const snailSprite = require('../assets/images/animals/png/snail-0.png');
 const spiderSprite = require('../assets/images/animals/png/spider-0.png');
+const crabSprite = require('../assets/images/animals/png/crab-0.png');
+const dolphinSprite = require('../assets/images/animals/png/dolphin-0.png');
+const fishSprite = require('../assets/images/animals/png/fish-0.png');
+const jellyfishSprite = require('../assets/images/animals/png/jellyfish-0.png');
+const lobsterSprite = require('../assets/images/animals/png/lobster-0.png');
+const octopusSprite = require('../assets/images/animals/png/octopus-0.png');
+const seaTurtleSprite = require('../assets/images/animals/png/seaturtle-0.png');
+const seahorseSprite = require('../assets/images/animals/png/seahorse-0.png');
+const sharkSprite = require('../assets/images/animals/png/shark-0.png');
+const shrimpSprite = require('../assets/images/animals/png/shrimp-0.png');
+const starfishSprite = require('../assets/images/animals/png/starfish-0.png');
+const stingraySprite = require('../assets/images/animals/png/stringray-0.png');
+const whaleSprite = require('../assets/images/animals/png/whale-0.png');
 
 // Extract the frames array and meta from JSON
 const { frames: catFrames, meta: catMeta } = catData;
@@ -225,6 +251,19 @@ const { frames: ladyBagFrames, meta: ladyBagMeta } = ladyBagData;
 const { frames: mosquitoFrames, meta: mosquitoMeta } = mosquitoData;
 const { frames: snailFrames, meta: snailMeta } = snailData;
 const { frames: spiderFrames, meta: spiderMeta } = spiderData;
+const { frames: crabFrames, meta: crabMeta } = crabData;
+const { frames: dolphinFrames, meta: dolphinMeta } = dolphinData;
+const { frames: fishFrames, meta: fishMeta } = fishData;
+const { frames: jellyfishFrames, meta: jellyfishMeta } = jellyfishData;
+const { frames: lobsterFrames, meta: lobsterMeta } = lobsterData;
+const { frames: octopusFrames, meta: octopusMeta } = octopusData;
+const { frames: seaTurtleFrames, meta: seaTurtleMeta } = seaTurtleData;
+const { frames: seahorseFrames, meta: seahorseMeta } = seahorseData;
+const { frames: sharkFrames, meta: sharkMeta } = sharkData;
+const { frames: shrimpFrames, meta: shrimpMeta } = shrimpData;
+const { frames: starfishFrames, meta: starfishMeta } = starfishData;
+const { frames: stingrayFrames, meta: stingrayMeta } = stingrayData;
+const { frames: whaleFrames, meta: whaleMeta } = whaleData;
 
 // Use localization via a function parameter
 import { useLocalization } from '../hooks/useLocalization';
@@ -1105,6 +1144,168 @@ export function getAnimals(): AnimalType[] {
     sound: require('../assets/sounds/cat.mp3'),
     labelSound: require('../assets/sounds/labels/cat.wav'),
     isMoving: false,
+  },
+  {
+    id: 73,
+    name: t('animals.crab'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: crabSprite,
+    frames: crabFrames,
+    spriteSheetSize: crabMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 74,
+    name: t('animals.dolphin'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: dolphinSprite,
+    frames: dolphinFrames,
+    spriteSheetSize: dolphinMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'right',
+  },
+  {
+    id: 75,
+    name: t('animals.fish'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: fishSprite,
+    frames: fishFrames,
+    spriteSheetSize: fishMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'left',
+  },
+  {
+    id: 76,
+    name: t('animals.jellyfish'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: jellyfishSprite,
+    frames: jellyfishFrames,
+    spriteSheetSize: jellyfishMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 77,
+    name: t('animals.lobster'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: lobsterSprite,
+    frames: lobsterFrames,
+    spriteSheetSize: lobsterMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 78,
+    name: t('animals.octopus'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: octopusSprite,
+    frames: octopusFrames,
+    spriteSheetSize: octopusMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 79,
+    name: t('animals.seaTurtle'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: seaTurtleSprite,
+    frames: seaTurtleFrames,
+    spriteSheetSize: seaTurtleMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'right',
+  },
+  {
+    id: 80,
+    name: t('animals.seahorse'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: seahorseSprite,
+    frames: seahorseFrames,
+    spriteSheetSize: seahorseMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 81,
+    name: t('animals.shark'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: sharkSprite,
+    frames: sharkFrames,
+    spriteSheetSize: sharkMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'left',
+  },
+  {
+    id: 82,
+    name: t('animals.shrimp'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: shrimpSprite,
+    frames: shrimpFrames,
+    spriteSheetSize: shrimpMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 83,
+    name: t('animals.starfish'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: starfishSprite,
+    frames: starfishFrames,
+    spriteSheetSize: starfishMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 84,
+    name: t('animals.stingray'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: stingraySprite,
+    frames: stingrayFrames,
+    spriteSheetSize: stingrayMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'left',
+  },
+  {
+    id: 85,
+    name: t('animals.whale'),
+    type: 'sprite' as const,
+    animalType: 'Ocean' as const,
+    source: whaleSprite,
+    frames: whaleFrames,
+    spriteSheetSize: whaleMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: true,
+    movingDirection: 'right',
   },
   ];
 

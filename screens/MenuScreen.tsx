@@ -631,7 +631,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
     if (level === 'birds') return false;
     if (level === 'insects') return false;
     if (level === 'forest') return false;
-    if (level === 'ocean') return true;
+    if (level === 'ocean') return false;
 
     return !unlocked;
   };
