@@ -92,6 +92,18 @@ import shrimpData from '../assets/images/animals/json/shrimp-0.json';
 import starfishData from '../assets/images/animals/json/starfish-0.json';
 import stingrayData from '../assets/images/animals/json/stringray-0.json';
 import whaleData from '../assets/images/animals/json/whale-0.json';
+import canaryData from '../assets/images/animals/json/canary-0.json';
+import doveData from '../assets/images/animals/json/dove-0.json';
+import parrotData from '../assets/images/animals/json/parrot-0.json';
+import pelicanData from '../assets/images/animals/json/pelican-0.json';
+import ravenData from '../assets/images/animals/json/raven-0.json';
+import seagullData from '../assets/images/animals/json/seagull-0.json';
+import sparrowData from '../assets/images/animals/json/sparrow-0.json';
+import storkData from '../assets/images/animals/json/stork-0.json';
+import swanData from '../assets/images/animals/json/swan-0.json';
+import toucanData from '../assets/images/animals/json/toucan-0.json';
+import woodpeckerData from '../assets/images/animals/json/woodpecker-0.json';
+
 
 // Load the actual PNG sprite sheet
 const catSpriteSheet = require('../assets/images/animals/png/cat-0.png');
@@ -178,6 +190,18 @@ const shrimpSprite = require('../assets/images/animals/png/shrimp-0.png');
 const starfishSprite = require('../assets/images/animals/png/starfish-0.png');
 const stingraySprite = require('../assets/images/animals/png/stringray-0.png');
 const whaleSprite = require('../assets/images/animals/png/whale-0.png');
+const canarySprite = require('../assets/images/animals/png/canary-0.png');
+const doveSprite = require('../assets/images/animals/png/dove-0.png');
+const parrotSprite = require('../assets/images/animals/png/parrot-0.png');
+const pelicanSprite = require('../assets/images/animals/png/pelican-0.png');
+const ravenSprite = require('../assets/images/animals/png/raven-0.png');
+const seagullSprite = require('../assets/images/animals/png/seagull-0.png');
+const sparrowSprite = require('../assets/images/animals/png/sparrow-0.png');
+const storkSprite = require('../assets/images/animals/png/stork-0.png');
+const swanSprite = require('../assets/images/animals/png/swan-0.png');
+const toucanSprite = require('../assets/images/animals/png/toucan-0.png');
+const woodpeckerSprite = require('../assets/images/animals/png/woodpecker-0.png');
+
 
 // Extract the frames array and meta from JSON
 const { frames: catFrames, meta: catMeta } = catData;
@@ -264,6 +288,18 @@ const { frames: shrimpFrames, meta: shrimpMeta } = shrimpData;
 const { frames: starfishFrames, meta: starfishMeta } = starfishData;
 const { frames: stingrayFrames, meta: stingrayMeta } = stingrayData;
 const { frames: whaleFrames, meta: whaleMeta } = whaleData;
+const { frames: canaryFrames, meta: canaryMeta } = canaryData;
+const { frames: doveFrames, meta: doveMeta } = doveData;
+const { frames: parrotFrames, meta: parrotMeta } = parrotData;
+const { frames: pelicanFrames, meta: pelicanMeta } = pelicanData;
+const { frames: ravenFrames, meta: ravenMeta } = ravenData;
+const { frames: seagullFrames, meta: seagullMeta } = seagullData;
+const { frames: sparrowFrames, meta: sparrowMeta } = sparrowData;
+const { frames: storkFrames, meta: storkMeta } = storkData;
+const { frames: swanFrames, meta: swanMeta } = swanData;
+const { frames: toucanFrames, meta: toucanMeta } = toucanData;
+const { frames: woodpeckerFrames, meta: woodpeckerMeta } = woodpeckerData;
+
 
 // Use localization via a function parameter
 import { useLocalization } from '../hooks/useLocalization';
@@ -1306,6 +1342,138 @@ export function getAnimals(): AnimalType[] {
     labelSound: require('../assets/sounds/labels/cat.wav'),
     isMoving: true,
     movingDirection: 'right',
+  },
+   {
+    id: 86,
+    name: t('animals.canary'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: canarySprite,
+    frames: canaryFrames,
+    spriteSheetSize: canaryMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 87,
+    name: t('animals.dove'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: doveSprite,
+    frames: doveFrames,
+    spriteSheetSize: doveMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 88,
+    name: t('animals.parrot'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: parrotSprite,
+    frames: parrotFrames,
+    spriteSheetSize: parrotMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 89,
+    name: t('animals.pelican'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: pelicanSprite,
+    frames: pelicanFrames,
+    spriteSheetSize: pelicanMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 90,
+    name: t('animals.raven'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: ravenSprite,
+    frames: ravenFrames,
+    spriteSheetSize: ravenMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 91,
+    name: t('animals.seagull'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: seagullSprite,
+    frames: seagullFrames,
+    spriteSheetSize: seagullMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 92,
+    name: t('animals.sparrow'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: sparrowSprite,
+    frames: sparrowFrames,
+    spriteSheetSize: sparrowMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 93,
+    name: t('animals.stork'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: storkSprite,
+    frames: storkFrames,
+    spriteSheetSize: storkMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 94,
+    name: t('animals.swan'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: swanSprite,
+    frames: swanFrames,
+    spriteSheetSize: swanMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 95,
+    name: t('animals.toucan'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: toucanSprite,
+    frames: toucanFrames,
+    spriteSheetSize: toucanMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
+  },
+  {
+    id: 96,
+    name: t('animals.woodpecker'),
+    type: 'sprite' as const,
+    animalType: 'Birds' as const,
+    source: woodpeckerSprite,
+    frames: woodpeckerFrames,
+    spriteSheetSize: woodpeckerMeta.size,
+    sound: require('../assets/sounds/cat.mp3'),
+    labelSound: require('../assets/sounds/labels/cat.wav'),
+    isMoving: false,
   },
   ];
 
