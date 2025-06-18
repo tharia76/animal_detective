@@ -440,7 +440,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
         });
       } catch (e) {
         setIapInitialized(true);
-        Alert.alert(t('Error'), t('Could not connect to App Store.'));
+        // Alert.alert(t('Error'), t('Could not connect to App Store.'));
       }
     }
 
@@ -473,7 +473,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
         Alert.alert(t('No Purchases'), t('No previous purchases found.'));
       }
     } catch (e) {
-      Alert.alert(t('Error'), t('Could not restore purchases.'));
+      // Alert.alert(t('Error'), t('Could not restore purchases.'));
     }
     setPurchaseInProgress(false);
   }, [t]);
@@ -486,7 +486,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
       await RNIap.requestPurchase({ sku: APPLE_PRODUCT_ID });
 
     } catch (e) {
-      Alert.alert(t('Error'), t('Could not complete purchase.'));
+      // Alert.alert(t('Error'), t('Could not complete purchase.'));
     }
     setPurchaseInProgress(false);
   }, [purchaseInProgress, t]);
