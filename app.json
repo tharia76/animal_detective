@@ -9,6 +9,7 @@
   "ios": {
     "bundleIdentifier": "com.kido.animal-detective",
     "buildNumber": "1",
+    "supportsTablet": true,
     "infoPlist": {
       "NSAppTransportSecurity": {
         "NSAllowsArbitraryLoads": true
