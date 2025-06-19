@@ -36,7 +36,7 @@ Alert.alert(APPLE_PRODUCT_ID);
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.png'),
   forest: require('../src/assets/images/level-backgrounds/forest.png'),
-  ocean: require('../src/assets/images/level-backgrounds/ocean.jpg'),
+  ocean: require('../src/assets/images/level-backgrounds/ocean.png'),
   desert: require('../src/assets/images/level-backgrounds/desert.png'),
   arctic: require('../src/assets/images/level-backgrounds/arctic.png'),
   insects: require('../src/assets/images/level-backgrounds/insect.png'),
@@ -326,7 +326,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
             let file;
             switch (l) {
               case 'ocean':
-                file = require('../src/assets/images/level-backgrounds/ocean.jpg');
+                file = require('../src/assets/images/level-backgrounds/ocean.png');
                 break;
               case 'desert':
                 file = require('../src/assets/images/level-backgrounds/desert.png');

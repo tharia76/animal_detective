@@ -20,7 +20,7 @@ export default function OceanScreen({ onBackToMenu, backgroundImageUri, skyBackg
   useEffect(() => {
     const load = async () => {
       try {
-        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/ocean.jpg')).downloadAsync();
+        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/ocean.png')).downloadAsync();
       } catch (err) {
         console.warn('Failed to preload ocean image', err);
       }

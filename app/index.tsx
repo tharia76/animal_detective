@@ -63,9 +63,9 @@ export default function App() {
         const movingJungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.png'));
         const movingDesert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.png'));
         const movingArctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.png'));
-
+        const movingOcean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.png'));
         const arctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.png'));
-        const ocean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.jpg'));
+        const ocean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.png'));
         const savannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.png'));
         const desert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.png'));
         const jungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.png'));
@@ -111,7 +111,7 @@ export default function App() {
           jungle: movingJungle.localUri || movingJungle.uri,
           desert: movingDesert.localUri || movingDesert.uri,
           arctic: movingArctic.localUri || movingArctic.uri,
-          // ocean: movingOcean.localUri || movingOcean.uri,
+          ocean: movingOcean.localUri || movingOcean.uri,
           savannah: movingSavannah.localUri || movingSavannah.uri,
         });
 
