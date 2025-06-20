@@ -392,7 +392,7 @@ export default function LevelScreenTemplate({
   }, [currentAnimal, isMuted, stopSound, bgMusicRef]);
 
   // --- REWRITE: handleAnimalPress as the single tap handler for animal card ---
-  // 2) tweak your handleAnimalPress so it doesn’t immediately restart BG if a sound is in flight
+  // 2) tweak your handleAnimalPress so it doesn't immediately restart BG if a sound is in flight
   const handleAnimalPress = useCallback(() => {
     if (!showName) {
       setShowName(true);
@@ -682,7 +682,7 @@ export default function LevelScreenTemplate({
                   screenW > screenH && { marginTop: 80 },
                 ]}
               >
-                <TouchableOpacity onPress={handleAnimalPress} activeOpacity={0.8} disabled={isTransitioning}>
+                <TouchableOpacity onPress={handleAnimalPress} activeOpacity={1.0} disabled={isTransitioning}>
                   <Animated.View style={{ opacity: animalFadeAnim }}>
                     {renderAnimal()}
                   </Animated.View>
