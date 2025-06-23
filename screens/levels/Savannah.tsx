@@ -4,6 +4,7 @@ import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
+import { useLocalization } from '../../src/hooks/useLocalization';
 
 // Define Props for the screen
 type SavannahScreenProps = {
@@ -14,7 +15,8 @@ type SavannahScreenProps = {
 };
 
 export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: SavannahScreenProps) {
-  const savannahAnimals = getAnimals().filter((animal: AnimalType) => animal.animalType === 'Savannah');
+  const { lang } = useLocalization();
+  const savannahAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Savannah');
   const [bgReady, setBgReady] = useState(false);
 
   useEffect(() => {

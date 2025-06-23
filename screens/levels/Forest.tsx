@@ -4,6 +4,7 @@ import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
+import { useLocalization } from '../../src/hooks/useLocalization';
 
 // Define Props for the screen
 type ForestScreenProps = {
@@ -14,7 +15,8 @@ type ForestScreenProps = {
 };
 
 export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: ForestScreenProps) {
-  const forestAnimals = getAnimals().filter((animal: AnimalType) => animal.animalType === 'Forest');
+  const { lang } = useLocalization();
+  const forestAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Forest');
   const [bgReady, setBgReady] = useState(false);
 
   useEffect(() => {

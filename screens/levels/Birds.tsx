@@ -4,6 +4,7 @@ import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
+import { useLocalization } from '../../src/hooks/useLocalization';
 
 // Define Props for the screen
 type BirdsScreenProps = {
@@ -14,7 +15,8 @@ type BirdsScreenProps = {
 };
 
 export default function BirdsScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: BirdsScreenProps) {
-  const birdsAnimals = getAnimals().filter((animal: AnimalType) => animal.animalType === 'Birds');
+  const { lang } = useLocalization();
+  const birdsAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Birds');
   const [bgReady, setBgReady] = useState(false);
 
   useEffect(() => {

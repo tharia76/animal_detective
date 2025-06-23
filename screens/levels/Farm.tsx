@@ -4,6 +4,7 @@ import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
+import { useLocalization } from '../../src/hooks/useLocalization';
 
 // Define Props for the screen
 type FarmScreenProps = {
@@ -14,7 +15,8 @@ type FarmScreenProps = {
 };
 
 export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: FarmScreenProps) {
-  const farmAnimals = getAnimals().filter((animal: AnimalType) => animal.animalType === 'Farm');
+  const { lang } = useLocalization();
+  const farmAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Farm');
   const [bgReady, setBgReady] = useState(false);
 
   useEffect(() => {

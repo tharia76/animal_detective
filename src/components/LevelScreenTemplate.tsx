@@ -27,7 +27,6 @@ import {
 import SpriteAnimation from './SpriteAnimation';
 import InstructionBubble from './InstructionBubble';
 import { useDynamicStyles } from '../styles/styles';
-import EndlessRoad from './EndlessRoad';
 import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
 import MovingBg from './MovingBg';
@@ -37,15 +36,15 @@ import { useLocalization } from '../hooks/useLocalization';
 // --- BG MUSIC MAP: Map levelName to bg music asset/uri ---
 // Make sure all keys are lowercase for bulletproof matching
 const BG_MUSIC_MAP: Record<string, string | number | undefined> = {
-  farm: require('../assets/sounds/farm_bg.mp3'),
-  forest: require('../assets/sounds/forest_bg.mp3'),
-  jungle: require('../assets/sounds/jungle_bg.mp3'),
-  desert: require('../assets/sounds/desert_bg.mp3'),
-  ocean: require('../assets/sounds/ocean_bg.mp3'),
-  savannah: require('../assets/sounds/savannah_bg.mp3'),
-  arctic: require('../assets/sounds/arctic_bg.mp3'),
-  birds: require('../assets/sounds/birds_bg.mp3'),
-  insects: require('../assets/sounds/insects_bg.mp3'),
+  farm: require('../assets/sounds/background_sounds/farm_bg.mp3'),
+  forest: require('../assets/sounds/background_sounds/forest_bg.mp3'),
+  jungle: require('../assets/sounds/background_sounds/jungle_bg.mp3'),
+  desert: require('../assets/sounds/background_sounds/desert_bg.mp3'),
+  ocean: require('../assets/sounds/background_sounds/ocean_bg.mp3'),
+  savannah: require('../assets/sounds/background_sounds/savannah_bg.mp3'),
+  arctic: require('../assets/sounds/background_sounds/arctic_bg.mp3'),
+  birds: require('../assets/sounds/background_sounds/birds_bg.mp3'),
+  insects: require('../assets/sounds/background_sounds/insects_bg.mp3'),
 };
 
 // --- MOVING BG MAP: Map levelName to moving background asset/uri ---

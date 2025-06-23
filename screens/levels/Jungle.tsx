@@ -4,6 +4,7 @@ import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
+import { useLocalization } from '../../src/hooks/useLocalization';
 
 // Define Props for the screen
 type JungleScreenProps = {
@@ -14,7 +15,8 @@ type JungleScreenProps = {
 };
 
 export default function JungleScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: JungleScreenProps) {
-  const jungleAnimals = getAnimals().filter((animal: AnimalType) => animal.animalType === 'Jungle');
+  const { lang } = useLocalization();
+  const jungleAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Jungle');
   const [bgReady, setBgReady] = useState(false);
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
+import { useLocalization } from '../../src/hooks/useLocalization';
 
 // Define Props for the screen
 type OceanScreenProps = {
@@ -14,7 +15,8 @@ type OceanScreenProps = {
 };
 
 export default function OceanScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: OceanScreenProps) {
-  const oceanAnimals = getAnimals().filter((animal: AnimalType) => animal.animalType === 'Ocean');
+  const { lang } = useLocalization();
+  const oceanAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Ocean');
   const [bgReady, setBgReady] = useState(false);
 
   useEffect(() => {

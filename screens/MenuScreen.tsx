@@ -23,7 +23,7 @@ import { useLocalization } from '../src/hooks/useLocalization';
 import LanguageSelector from '../src/components/LanguageSelector';
 import LevelTiles from '../src/components/LevelTiles';
 
-const menuBgSound = require('../src/assets/sounds/menu.mp3');
+const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
 const BG_IMAGE = require('../src/assets/images/menu-screen.png');
 const LEVELS = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
 const NUM_COLS = 3;
