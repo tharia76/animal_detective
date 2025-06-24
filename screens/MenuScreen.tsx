@@ -27,11 +27,10 @@ const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
 const BG_IMAGE = require('../src/assets/images/menu-screen.png');
 const LEVELS = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
 const NUM_COLS = 3;
-const MARGIN = 3;
+const MARGIN = 8;
 
 // Apple App Store product id for unlocking all levels except Farm
 const APPLE_PRODUCT_ID = 'animalDetective'; // Replace with your actual product id
-Alert.alert(APPLE_PRODUCT_ID);
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.png'),
@@ -102,8 +101,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 1,
     marginTop: 80,
-    marginLeft: 25,
-    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   tilesContainerLandscape: {
     width: '100%',
@@ -153,30 +153,55 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     zIndex: 1,
   },
+  unlockButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    gap: 16,
+  },
   unlockButton: {
-    backgroundColor: '#ffb300',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginTop: 16,
-    alignSelf: 'center',
-    minWidth: 180,
+    backgroundColor: '#ff6b35',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    flex: 1,
+    maxWidth: 180,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: '#ff8c5a',
   },
   unlockButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
+    fontWeight: '800',
+    fontSize: 14,
     textAlign: 'center',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   restoreButton: {
-    marginTop: 8,
-    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: '#007aff',
+    flex: 1,
+    maxWidth: 140,
   },
   restoreButtonText: {
     color: '#007aff',
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '600',
     textAlign: 'center',
-    textDecorationLine: 'underline',
   },
   modalOverlay: {
     flex: 1,
@@ -212,27 +237,44 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalUnlockButton: {
-    backgroundColor: '#ffb300',
-    paddingHorizontal: 22,
-    paddingVertical: 12,
-    borderRadius: 20,
-    marginBottom: 10,
-    minWidth: 180,
+    backgroundColor: '#ff6b35',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 25,
+    marginBottom: 12,
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: '#ff8c5a',
   },
   modalUnlockButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
+    fontWeight: '800',
+    fontSize: 16,
     textAlign: 'center',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   modalRestoreButton: {
-    marginBottom: 10,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(0,122,255,0.1)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#007aff',
   },
   modalRestoreButtonText: {
     color: '#007aff',
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '600',
     textAlign: 'center',
-    textDecorationLine: 'underline',
   },
   modalCloseButton: {
     marginTop: 6,
@@ -518,7 +560,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   const renderUnlockButtons = () => {
     if (unlocked || Platform.OS !== 'ios') return null;
     return (
-      <>
+      <View style={styles.unlockButtonsContainer}>
         <TouchableOpacity
           style={styles.unlockButton}
           onPress={handleUnlock}
@@ -535,7 +577,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
         >
           <Text style={styles.restoreButtonText}>{t('Restore Purchases')}</Text>
         </TouchableOpacity>
-      </>
+      </View>
     );
   };
 
@@ -671,7 +713,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
             contentContainerStyle={{
               flexGrow: 1,
               alignItems: 'center',
-              justifyContent: 'flex-start',
+              justifyContent: 'center',
               paddingHorizontal: 32,
               paddingTop: 8,
               paddingBottom: 16,
@@ -686,6 +728,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                 justifyContent: 'center',
               }}
             >
+              {renderUnlockButtons()}
               <LevelTiles
                 levels={LEVELS}
                 numColumns={NUM_COLS}
@@ -699,7 +742,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                 t={t}
                 getIsLocked={getIsLocked}
               />
-              {renderUnlockButtons()}
             </View>
           </ScrollView>
           {renderUnlockModal()}
@@ -739,9 +781,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
       <View
         style={[
           styles.tilesContainer,
-          { top: 270, flex: 1 }
+          { top: 230, flex: 1 }
         ]}
       >
+        {renderUnlockButtons()}
         <LevelTiles
           levels={LEVELS}
           numColumns={NUM_COLS}
@@ -755,7 +798,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
           t={t}
           getIsLocked={getIsLocked}
         />
-        {renderUnlockButtons()}
       </View>
       {renderUnlockModal()}
     </ImageBackground>

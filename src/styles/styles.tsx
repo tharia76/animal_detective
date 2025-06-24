@@ -53,7 +53,7 @@ export function useDynamicStyles() {
           borderColor: '#FFD700',
         },
         navButton: {
-          backgroundColor: 'green',
+          backgroundColor: 'blue',
           paddingVertical: 8,
           paddingHorizontal: 15,
           borderRadius: 20,
