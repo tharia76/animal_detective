@@ -70,5 +70,17 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>UIInterfaceOrientationChangesDisabled</key>
+    <false/>
+    <key>UISupportsOrientationChanges</key>
+    <true/>
+    <key>UISupportsRotationGestures</key>
+    <true/>
+    <key>MTKViewDisplaySyncEnabled</key>
+    <true/>
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
+    <key>UISceneConfigurationName</key>
+    <string>Default Configuration</string>
   </dict>
 </plist>

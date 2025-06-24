@@ -29,28 +29,29 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const leftAnim = useSharedValue(0);
   const rightAnim = useSharedValue(0);
 
-  // Get orientation
+  // Get orientation and dimensions
   const { width, height } = useWindowDimensions();
   const isPortrait = height >= width;
+  const isLandscape = width > height;
   const dynamicStyles = useDynamicStyles();
 
   useEffect(() => {
     leftAnim.value = withRepeat(
       withSequence(
-        withTiming(-8, { duration: 250 }),
-        withTiming(0, { duration: 250 }),
-        withTiming(-8, { duration: 250 }),
-        withTiming(0, { duration: 250 })
+        withTiming(-6, { duration: 300 }),
+        withTiming(0, { duration: 300 }),
+        withTiming(-6, { duration: 300 }),
+        withTiming(0, { duration: 300 })
       ),
       -1,
       false
     );
     rightAnim.value = withRepeat(
       withSequence(
-        withTiming(8, { duration: 250 }),
-        withTiming(0, { duration: 250 }),
-        withTiming(8, { duration: 250 }),
-        withTiming(0, { duration: 250 })
+        withTiming(6, { duration: 300 }),
+        withTiming(0, { duration: 300 }),
+        withTiming(6, { duration: 300 }),
+        withTiming(0, { duration: 300 })
       ),
       -1,
       false
@@ -65,100 +66,65 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     transform: [{ translateX: rightAnim.value }],
   }));
 
-  // Layout for portrait: row, for landscape: column, and adjust alignment
-  const containerStyle = isPortrait
-    ? {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-        marginTop: 20,
-        gap: 200, // bring buttons closer together (React Native 0.71+)
-      }
-    : {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-        marginTop: 20,
-        gap: 300, // bring buttons closer together
-      };
-
-  // navButton style, now using StyleSheet for consistency and easier override
+  // Responsive navigation button style
   const navButtonStyle = [
     styles.navButton,
-    { backgroundColor: bgColor }
+    { 
+      backgroundColor: bgColor,
+      width: isLandscape ? 50 : 60,
+      height: isLandscape ? 50 : 60,
+    }
   ];
 
+  // Responsive icon size
+  const iconSize = isLandscape ? 28 : 34;
+
+  // Container style optimized for both orientations
+  const containerStyle: ViewStyle = {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: isLandscape ? 20 : 30,
+    left: isLandscape ? '20%' : '10%',
+    right: isLandscape ? '20%' : '10%',
+    paddingHorizontal: isLandscape ? 20 : 40,
+    zIndex: 10,
+  };
+
   return (
-    <View style={containerStyle as ViewStyle}>
-      {isPortrait ? (
-        <>
-          {/* Left arrow on the left in portrait */}
-          <TouchableOpacity
-            onPress={handlePrev}
-            activeOpacity={0.7}
-            disabled={isTransitioning || currentAnimalIndex === 0}
-            style={navButtonStyle}
-          >
-            <Animated.View style={leftArrowStyle}>
-              <Ionicons
-                name="arrow-back"
-                size={34}
-                color={isTransitioning || currentAnimalIndex === 0 ? 'rgba(0,0,0,0.5)' : 'black'}
-              />
-            </Animated.View>
-          </TouchableOpacity>
-          {/* Right arrow on the right in portrait */}
-          <TouchableOpacity
-            onPress={handleNext}
-            activeOpacity={0.7}
-            disabled={isTransitioning}
-            style={navButtonStyle}
-          >
-            <Animated.View style={rightArrowStyle}>
-              <Ionicons
-                name="arrow-forward"
-                size={34}
-                color={isTransitioning ? 'rgba(0,0,0,0.5)' : 'black'}
-              />
-            </Animated.View>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          {/* Left arrow on the left in landscape */}
-          <TouchableOpacity
-            onPress={handlePrev}
-            activeOpacity={0.7}
-            disabled={isTransitioning || currentAnimalIndex === 0}
-            style={navButtonStyle}
-          >
-            <Animated.View style={leftArrowStyle}>
-              <Ionicons
-                name="arrow-back"
-                size={34}
-                color={isTransitioning || currentAnimalIndex === 0 ? 'rgba(0,0,0,0.5)' : 'black'}
-              />
-            </Animated.View>
-          </TouchableOpacity>
-          {/* Right arrow on the right in landscape */}
-          <TouchableOpacity
-            onPress={handleNext}
-            activeOpacity={0.7}
-            disabled={isTransitioning}
-            style={navButtonStyle}
-          >
-            <Animated.View style={rightArrowStyle}>
-              <Ionicons
-                name="arrow-forward"
-                size={34}
-                color={isTransitioning ? 'rgba(0,0,0,0.5)' : 'black'}
-              />
-            </Animated.View>
-          </TouchableOpacity>
-        </>
-      )}
+    <View style={containerStyle}>
+      {/* Left arrow button */}
+      <TouchableOpacity
+        onPress={handlePrev}
+        activeOpacity={0.7}
+        disabled={isTransitioning || currentAnimalIndex === 0}
+        style={navButtonStyle}
+      >
+        <Animated.View style={leftArrowStyle}>
+          <Ionicons
+            name="arrow-back"
+            size={iconSize}
+            color={isTransitioning || currentAnimalIndex === 0 ? 'rgba(0,0,0,0.4)' : 'black'}
+          />
+        </Animated.View>
+      </TouchableOpacity>
+
+      {/* Right arrow button */}
+      <TouchableOpacity
+        onPress={handleNext}
+        activeOpacity={0.7}
+        disabled={isTransitioning}
+        style={navButtonStyle}
+      >
+        <Animated.View style={rightArrowStyle}>
+          <Ionicons
+            name="arrow-forward"
+            size={iconSize}
+            color={isTransitioning ? 'rgba(0,0,0,0.4)' : 'black'}
+          />
+        </Animated.View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -166,12 +132,13 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 const styles = StyleSheet.create({
   navButton: {
     borderRadius: 30,
-    width: 60,
-    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 10,
-    marginVertical: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
 });
 

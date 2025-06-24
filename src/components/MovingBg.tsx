@@ -35,34 +35,34 @@ const MovingBg = ({
   useEffect(() => {
     let mounted = true;
     if (backgroundImageUri) {
-      Image.getSize(
-        backgroundImageUri,
-        (width, height) => {
-          if (mounted) {
-            // For portrait: scale to fill height, for landscape: scale to fill width
-            if (isPortrait) {
-              const scale = screenH / height;
-              setImgWidth(width * scale);
-              setImgHeight(screenH);
-            } else {
-              const scale = screenW / width;
-              setImgWidth(screenW);
-              setImgHeight(height * scale);
+              Image.getSize(
+          backgroundImageUri,
+          (width, height) => {
+            if (mounted) {
+              // For portrait: scale to fill height, for landscape: scale to fill width
+              if (isPortrait) {
+                const scale = screenH / height;
+                setImgWidth(width * scale);
+                setImgHeight(screenH);
+              } else {
+                const scale = screenW / width;
+                setImgWidth(screenW);
+                setImgHeight(height * scale);
+              }
             }
+          },
+          () => {
+            // fallback to screen size
+            setImgWidth(screenW);
+            setImgHeight(screenH);
           }
-        },
-        () => {
-          // fallback to screen size
-          setImgWidth(screenW);
-          setImgHeight(screenH);
-        }
-      );
+        );
     }
     return () => {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [backgroundImageUri, screenH, screenW, isPortrait]);
+      }, [backgroundImageUri, screenH, screenW, isPortrait]);
 
   useEffect(() => {
     let isMounted = true;

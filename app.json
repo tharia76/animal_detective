@@ -6,14 +6,31 @@
   "icon": "./src/assets/images/icon.png",
   "scheme": "animal-detective",
   "userInterfaceStyle": "automatic",
+  "splash": {
+    "image": "./src/assets/images/icon.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#ffffff"
+  },
   "ios": {
     "bundleIdentifier": "com.kido.animal-detective",
     "buildNumber": "1",
     "supportsTablet": true,
+    "requireFullScreen": false,
     "infoPlist": {
       "NSAppTransportSecurity": {
         "NSAllowsArbitraryLoads": true
-      }
+      },
+      "UISupportedInterfaceOrientations": [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationPortraitUpsideDown",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight"
+      ],
+      "UIInterfaceOrientationChangesDisabled": false,
+      "UISupportsOrientationChanges": true,
+      "UISupportsRotationGestures": true,
+      "MTKViewDisplaySyncEnabled": true,
+      "UIApplicationSupportsIndirectInputEvents": true
     }
   },
   "android": {
@@ -27,7 +44,8 @@
       "android.permission.RECORD_AUDIO",
       "android.permission.MODIFY_AUDIO_SETTINGS"
     ],
-    "package": "com.kido.animaldetective"
+    "package": "com.kido.animaldetective",
+    "screenOrientation": "user"
   },
   "web": {
     "bundler": "metro",

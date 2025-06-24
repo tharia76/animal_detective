@@ -32,6 +32,9 @@ import CongratsModal from './CongratsModal';
 import MovingBg from './MovingBg';
 // --- Add localization import ---
 import { useLocalization } from '../hooks/useLocalization';
+// --- Add smooth rotation hook ---
+import { useSmoothRotation } from '../hooks/useSmoothRotation';
+import ReanimatedView from 'react-native-reanimated';
 
 // --- BG MUSIC MAP: Map levelName to bg music asset/uri ---
 // Make sure all keys are lowercase for bulletproof matching
@@ -94,6 +97,13 @@ export default function LevelScreenTemplate({
 
   // 1️⃣ Hoist your hook: only call it once, at the top level
   const dynamicStyles = useDynamicStyles();
+  
+  // --- Use smooth rotation for iOS-like behavior ---
+  const { animatedStyle, stableDimensions } = useSmoothRotation({
+    damping: 25,
+    stiffness: 350,
+    mass: 0.7,
+  });
 
   const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
   const [showName, setShowName] = useState(false);
@@ -621,7 +631,7 @@ export default function LevelScreenTemplate({
 
   // --- RENDER: Crossfade both backgrounds ---
   return (
-    <View style={dynamicStyles.container}>
+    <ReanimatedView.View style={[dynamicStyles.container, animatedStyle]}>
       {/* 1) FULL-SCREEN BACKGROUND SIBLINGS, BOTH MOUNTED, OPACITY ANIMATED */}
       <View style={StyleSheet.absoluteFillObject}>
         {/* Moving background (sky) */}
@@ -674,13 +684,7 @@ export default function LevelScreenTemplate({
 
           {hasAnimals && (
             <View style={dynamicStyles.content}>
-              <View
-                style={[
-                  dynamicStyles.animalCard,
-                  // Push animal down in horizontal (landscape) orientation
-                  screenW > screenH && { marginTop: 80 },
-                ]}
-              >
+              <View style={dynamicStyles.animalCard}>
                 <TouchableOpacity onPress={handleAnimalPress} activeOpacity={1.0} disabled={isTransitioning}>
                   <Animated.View style={{ opacity: animalFadeAnim }}>
                     {renderAnimal()}
@@ -738,12 +742,10 @@ export default function LevelScreenTemplate({
          />
         </View>
       </Animated.View>
-    </View>
-    </View>
+      </View>
+    </ReanimatedView.View>
   );
 }
-
-
 
 const loaderStyles = StyleSheet.create({
   overlay: {

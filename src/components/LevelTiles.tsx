@@ -244,6 +244,27 @@ export default function LevelTiles({
 }: LevelTilesProps) {
   // In both portrait and landscape, use 3 columns per row
   const columns = 3;
+  
+  // Stabilize layout during rapid dimension changes
+  const stableItemSize = useRef(itemSize);
+  const stabilityTimer = useRef<NodeJS.Timeout | null>(null);
+  
+  // Only update stable size if itemSize has been consistent for a short period
+  useEffect(() => {
+    if (stabilityTimer.current) {
+      clearTimeout(stabilityTimer.current);
+    }
+    
+    stabilityTimer.current = setTimeout(() => {
+      stableItemSize.current = itemSize;
+    }, 100);
+    
+    return () => {
+      if (stabilityTimer.current) {
+        clearTimeout(stabilityTimer.current);
+      }
+    };
+  }, [itemSize]);
 
   // Helper to chunk array into rows
   function chunk<T>(arr: T[], size: number): T[][] {
@@ -282,7 +303,7 @@ export default function LevelTiles({
               <AnimatedTile
                 key={level}
                 level={level}
-                itemSize={itemSize}
+                itemSize={stableItemSize.current}
                 margin={margin}
                 colIdx={colIdx}
                 columns={columns}
