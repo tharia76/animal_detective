@@ -1,19 +1,92 @@
-import { useWindowDimensions, StyleSheet } from 'react-native';
+import { useWindowDimensions, StyleSheet, Platform, Dimensions } from 'react-native';
 import { useMemo } from 'react';
+import {
+  isTablet,
+  isSmallPhone,
+  isLargePhone,
+  getScaleFactor,
+  getResponsiveSpacing,
+  getResponsiveFontSize,
+  getResponsiveIconSize,
+  getResponsivePadding,
+  getResponsiveMargin,
+  isPortrait,
+  isLandscape,
+  getSafeAreaTop,
+  getSafeAreaBottom,
+} from '../utils/responsive';
+
+// Device detection and responsive scaling
+// const { width: screenW, height: screenH } = Dimensions.get('window');
+
+// Device type detection
+// const isTabletDevice = isTablet();
+
+// const isPhone = () => {
+//   return !isTablet();
+// };
+
+// const isSmallPhoneDevice = isSmallPhone();
+// const isLargePhoneDevice = isLargePhone();
+
+// Responsive scaling functions
+// const getScaleFactor = (width: number, height: number): number => {
+//   const baseWidth = 375; // iPhone base width
+//   const baseHeight = 667; // iPhone base height
+  
+//   if (isTablet()) {
+//     // Tablet scaling
+//     const tabletBaseWidth = 768;
+//     const tabletBaseHeight = 1024;
+//     const widthScale = width / tabletBaseWidth;
+//     const heightScale = height / tabletBaseHeight;
+//     return Math.min(widthScale, heightScale, 1.5); // Cap at 1.5x for tablets
+//   } else {
+//     // Phone scaling
+//     const widthScale = width / baseWidth;
+//     const heightScale = height / baseHeight;
+//     const scale = Math.min(widthScale, heightScale);
+    
+//     if (isSmallPhone()) {
+//       return Math.max(scale, 0.8); // Minimum 0.8x for small phones
+//     } else if (isLargePhone()) {
+//       return Math.min(scale, 1.2); // Maximum 1.2x for large phones
+//     }
+//     return scale;
+//   }
+// };
+
+// const getResponsiveSpacing = (baseSpacing: number, scaleFactor: number): number => {
+//   return Math.round(baseSpacing * scaleFactor);
+// };
+
+// const getResponsiveFontSize = (baseSize: number, scaleFactor: number): number => {
+//   const scaledSize = baseSize * scaleFactor;
+//   // Ensure minimum and maximum font sizes
+//   return Math.max(Math.min(scaledSize, baseSize * 1.5), baseSize * 0.7);
+// };
+
+// const getResponsiveIconSize = (baseSize: number, scaleFactor: number): number => {
+//   return Math.round(baseSize * scaleFactor);
+// };
 
 export function useDynamicStyles() {
   const { width: screenW, height: screenH } = useWindowDimensions();
-  const isPortrait = screenH >= screenW;
-  const isLandscape = screenW > screenH;
+  const isLandscapeMode = screenW > screenH;
+  const isTabletDevice = isTablet();
+  const isSmallPhoneDevice = isSmallPhone();
+  const isLargePhoneDevice = isLargePhone();
+  
+  const scaleFactor = getScaleFactor(screenW, screenH);
 
   return useMemo(() => {
-    // Base styles that work for both orientations
+    // Base styles that work for landscape orientation
     const baseStyles = {
       container: {
         flex: 1,
         position: 'relative' as const,
         backgroundColor: 'transparent',
-        padding: 20,
+        padding: getResponsivePadding(20, scaleFactor),
       },
       loadingContainer: {
         flex: 1,
@@ -49,21 +122,21 @@ export function useDynamicStyles() {
         backgroundColor: '#73c2b9',
       },
       menuTitle: {
-        fontSize: 20,
+        fontSize: getResponsiveFontSize(20, scaleFactor),
         fontWeight: 'bold' as const,
-        marginBottom: 20,
-        marginTop: 20,
-        marginRight: 10,
+        marginBottom: getResponsiveMargin(20, scaleFactor),
+        marginTop: getResponsiveMargin(20, scaleFactor),
+        marginRight: getResponsiveMargin(10, scaleFactor),
         color: '#612915',
       },
       animalName: {
-        fontSize: isLandscape ? 28 : 32,
+        fontSize: getResponsiveFontSize(28, scaleFactor),
         marginTop: 0,
         fontWeight: '700' as const,
         backgroundColor: 'yellow',
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 22,
+        paddingVertical: getResponsivePadding(12, scaleFactor),
+        paddingHorizontal: getResponsivePadding(24, scaleFactor),
+        borderRadius: getResponsiveSpacing(22, scaleFactor),
         textAlign: 'center' as const,
         elevation: 3,
         shadowColor: '#000',
@@ -75,333 +148,171 @@ export function useDynamicStyles() {
         borderColor: '#FFD700',
       },
       loadingText: {
-        marginTop: 10,
-        fontSize: 18,
+        marginTop: getResponsiveMargin(10, scaleFactor),
+        fontSize: getResponsiveFontSize(18, scaleFactor),
         color: '#333',
       },
     };
 
-    if (isPortrait) {
-      // Portrait styles
-      return StyleSheet.create({
-        ...baseStyles,
-        content: {
-          flex: 1,
-          marginTop: 100,
-          justifyContent: 'center',
-          paddingBottom: 5,
-        },
-        animalCard: {
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: screenH * 0.25,
-          overflow: 'visible',
-          marginTop: 150,
-        },
-        animalNameWrapper: {
-          position: 'absolute',
-          top: -100,
-          width: '100%',
-          alignItems: 'center',
-        },
-        navButton: {
-          backgroundColor: 'blue',
-          paddingVertical: 8,
-          paddingHorizontal: 15,
-          borderRadius: 20,
-          marginHorizontal: 20,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          elevation: 2,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.2,
-          shadowRadius: 2,
-          width: 100,
-          height: 60,
-        },
-        buttonText: {
-          color: '#fff',
-          fontWeight: 'bold',
-          marginHorizontal: 5,
-          marginTop: 40,
-          marginLeft: 10,
-          marginRight: 10,
-          marginBottom: 10,
-          height: 20,
-          width: 20,
-        },
-        animalLoadingContainer: {
-          position: 'absolute',
-          justifyContent: 'center',
-          alignItems: 'center',
-          width: screenW * 0.5,
-          height: screenH * 0.25,
-        },
-        soundButton: {
-          position: 'absolute',
-          top: 100,
-          right: 20,
-          backgroundColor: 'rgba(220, 173, 30, 0.7)',
-          borderRadius: 25,
-          padding: 10,
-          zIndex: 10,
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 3,
-        },
-        animalImage: {
-          width: screenW * 0.8,
-          height: screenH * 0.3,
-          resizeMode: 'contain',
-          marginTop: 150,
-        },
-        levelGrid: {
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-          paddingHorizontal: 10,
-        },
-        levelButton: {
-          borderRadius: 15,
-          width: '70%',
-          aspectRatio: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          shadowColor: '#000',
-          shadowOpacity: 0.2,
-          shadowRadius: 5,
-          elevation: 4,
-          overflow: 'hidden',
-        },
-        levelButtonBackground: {
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          borderRadius: 15,
-          resizeMode: 'cover',
-        },
-        levelText: {
-          color: 'white',
-          fontSize: 15,
-          fontWeight: 'bold',
-          textAlign: 'center',
-          paddingVertical: 5,
-          paddingHorizontal: 10,
-          borderRadius: 20,
-          overflow: 'hidden',
-          marginTop: 2,
-        },
-        backToMenuButton: {
-          backgroundColor: 'orange',
-          paddingVertical: 12,
-          paddingHorizontal: 20,
-          borderRadius: 25,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          elevation: 3,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 3,
-          position: 'absolute',
-          top: 50,
-          left: 20,
-          zIndex: 10,
-        },
-        instructionBubble: {
-          position: 'absolute',
-          left: 20,
-          right: 20,
-          top: 100,
-          paddingVertical: 16,
-          paddingHorizontal: 22,
-          backgroundColor: 'white',
-          borderRadius: 20,
-          shadowColor: '#000',
-          shadowOpacity: 0.18,
-          shadowRadius: 6,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 6,
-          zIndex: 20,
-          marginBottom: 18,
-          borderWidth: 2,
-          borderColor: '#e0e0e0',
-        },
-        instructionText: {
-          fontSize: 20,
-          color: '#333',
-          textAlign: 'center',
-          marginBottom: 18,
-          marginTop: 10,
-          fontWeight: 'bold',
-        },
-      });
-    } else {
-      // Landscape styles - improved and more responsive
-      return StyleSheet.create({
-        ...baseStyles,
-        container: {
-          flex: 1,
-          backgroundColor: 'transparent',
-          padding: 15, // Reduced padding for landscape
-        },
-        content: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingTop: 20,
-          paddingBottom: 20,
-        },
-        animalCard: {
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          height: screenH * 0.6, // More responsive height
-          marginTop: Math.max(20, screenH * 0.1), // Dynamic margin
-        },
-        animalNameWrapper: {
-          position: 'absolute',
-          top: -Math.max(60, screenH * 0.15), // Dynamic positioning
-          width: '100%',
-          alignItems: 'center',
-        },
-        animalImage: {
-          width: Math.min(screenW * 0.4, screenH * 0.8), // Better aspect ratio
-          height: screenH * 0.6,
-          resizeMode: 'contain',
-          marginTop: 0,
-        },
-        animalLoadingContainer: {
-          width: Math.min(screenW * 0.4, screenH * 0.8),
-          height: screenH * 0.6,
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
-        soundButton: {
-          position: 'absolute',
-          top: 15,
-          right: 15,
-          backgroundColor: 'rgba(220, 173, 30, 0.7)',
-          borderRadius: 25,
-          padding: 10,
-          zIndex: 10,
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 3,
-        },
-        backToMenuButton: {
-          backgroundColor: 'orange',
-          paddingVertical: 10,
-          paddingHorizontal: 16,
-          borderRadius: 25,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          elevation: 3,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 3,
-          position: 'absolute',
-          top: 15,
-          left: 15,
-          zIndex: 10,
-        },
-        levelGrid: {
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-around',
-          width: '100%',
-          paddingHorizontal: 20,
-        },
-        levelButton: {
-          width: Math.min(screenW * 0.25, 120), // Max width constraint
-          aspectRatio: 1,
-          borderRadius: 15,
-          overflow: 'hidden',
-          justifyContent: 'center',
-          alignItems: 'center',
-          shadowColor: '#000',
-          shadowOpacity: 0.2,
-          shadowRadius: 5,
-          elevation: 4,
-          margin: 5,
-        },
-        levelButtonBackground: {
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          borderRadius: 15,
-          resizeMode: 'cover',
-        },
-        levelText: {
-          color: 'white',
-          fontSize: 12,
-          fontWeight: 'bold',
-          textAlign: 'center',
-          paddingVertical: 4,
-          paddingHorizontal: 8,
-          borderRadius: 15,
-          overflow: 'hidden',
-        },
-        navButton: {
-          backgroundColor: 'blue',
-          paddingVertical: 6,
-          paddingHorizontal: 12,
-          borderRadius: 20,
-          marginHorizontal: 15,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          elevation: 2,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.2,
-          shadowRadius: 2,
-          width: 80,
-          height: 50,
-        },
-        buttonText: {
-          color: '#fff',
-          fontWeight: 'bold',
-          fontSize: 14,
-        },
-        instructionBubble: {
-          position: 'absolute',
-          top: 20,
-          left: '15%',
-          right: '15%',
-          paddingVertical: 12,
-          paddingHorizontal: 18,
-          backgroundColor: 'white',
-          borderRadius: 16,
-          shadowColor: '#000',
-          shadowOpacity: 0.18,
-          shadowRadius: 6,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 6,
-          zIndex: 20,
-          borderWidth: 2,
-          borderColor: '#e0e0e0',
-          marginBottom: 18,
-        },
-        instructionText: {
-          fontSize: 16,
-          color: '#333',
-          textAlign: 'center',
-          marginBottom: 10,
-          marginTop: 5,
-          fontWeight: 'bold',
-        },
-      });
-    }
-  }, [screenW, screenH, isPortrait, isLandscape]);
+    // Landscape-only styles
+    return StyleSheet.create({
+      ...baseStyles,
+      container: {
+        flex: 1,
+        backgroundColor: 'transparent',
+        padding: getResponsiveSpacing(15, scaleFactor),
+      },
+      content: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: getResponsiveSpacing(20, scaleFactor),
+        paddingBottom: getResponsiveSpacing(20, scaleFactor),
+      },
+      animalCard: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: screenH * (isTabletDevice ? 0.7 : 0.6),
+        marginTop: Math.max(getResponsiveSpacing(70, scaleFactor), screenH * 0.1) + 100,
+      },
+      animalNameWrapper: {
+        position: 'absolute',
+        top: -Math.max(getResponsiveSpacing(60, scaleFactor), screenH * 0.15),
+        width: '100%',
+        alignItems: 'center',
+      },
+      animalImage: {
+        width: Math.min(screenW * (isTabletDevice ? 0.3 : 0.4), screenH * 0.8),
+        height: screenH * (isTabletDevice ? 0.7 : 0.6),
+        resizeMode: 'contain',
+        marginTop: 0,
+      },
+      animalLoadingContainer: {
+        width: Math.min(screenW * (isTabletDevice ? 0.3 : 0.4), screenH * 0.8),
+        height: screenH * (isTabletDevice ? 0.7 : 0.6),
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      soundButton: {
+        position: 'absolute',
+        top: getResponsiveSpacing(65, scaleFactor),
+        right: getResponsiveSpacing(15, scaleFactor),
+        backgroundColor: 'rgba(220, 173, 30, 0.7)',
+        borderRadius: getResponsiveSpacing(25, scaleFactor),
+        padding: getResponsiveSpacing(10, scaleFactor),
+        zIndex: 10,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+      },
+      backToMenuButton: {
+        backgroundColor: 'orange',
+        paddingVertical: getResponsiveSpacing(10, scaleFactor),
+        paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
+        borderRadius: getResponsiveSpacing(25, scaleFactor),
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        position: 'absolute',
+        top: getResponsiveSpacing(65, scaleFactor),
+        left: getResponsiveSpacing(15, scaleFactor),
+        zIndex: 10,
+      },
+      levelGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-around',
+        width: '100%',
+        paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
+      },
+      levelButton: {
+        width: Math.min(screenW * (isTabletDevice ? 0.15 : 0.25), getResponsiveSpacing(120, scaleFactor)),
+        aspectRatio: 1,
+        borderRadius: getResponsiveSpacing(15, scaleFactor),
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 4,
+        margin: getResponsiveSpacing(5, scaleFactor),
+      },
+      levelButtonBackground: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        borderRadius: getResponsiveSpacing(15, scaleFactor),
+        resizeMode: 'cover',
+      },
+      levelText: {
+        color: 'white',
+        fontSize: getResponsiveFontSize(12, scaleFactor),
+        fontWeight: 'bold',
+        textAlign: 'center',
+        paddingVertical: getResponsiveSpacing(4, scaleFactor),
+        paddingHorizontal: getResponsiveSpacing(8, scaleFactor),
+        borderRadius: getResponsiveSpacing(15, scaleFactor),
+        overflow: 'hidden',
+      },
+      navButton: {
+        backgroundColor: 'blue',
+        paddingVertical: getResponsiveSpacing(6, scaleFactor),
+        paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
+        borderRadius: getResponsiveSpacing(20, scaleFactor),
+        marginHorizontal: getResponsiveSpacing(15, scaleFactor),
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        width: getResponsiveSpacing(80, scaleFactor),
+        height: getResponsiveSpacing(50, scaleFactor),
+      },
+      buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: getResponsiveFontSize(14, scaleFactor),
+      },
+      instructionBubble: {
+        position: 'absolute',
+        top: getResponsiveSpacing(70, scaleFactor),
+        left: '15%',
+        right: '15%',
+        paddingVertical: getResponsiveSpacing(12, scaleFactor),
+        paddingHorizontal: getResponsiveSpacing(18, scaleFactor),
+        backgroundColor: 'white',
+        borderRadius: getResponsiveSpacing(16, scaleFactor),
+        shadowColor: '#000',
+        shadowOpacity: 0.18,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 6,
+        zIndex: 20,
+        borderWidth: 2,
+        borderColor: '#e0e0e0',
+        marginBottom: getResponsiveSpacing(18, scaleFactor),
+      },
+      instructionText: {
+        fontSize: getResponsiveFontSize(16, scaleFactor),
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: getResponsiveSpacing(10, scaleFactor),
+        marginTop: getResponsiveSpacing(5, scaleFactor),
+        fontWeight: 'bold',
+      },
+    });
+  }, [screenW, screenH, isLandscapeMode, isTabletDevice, isSmallPhoneDevice, isLargePhoneDevice, scaleFactor]);
 }
 

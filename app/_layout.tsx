@@ -15,6 +15,7 @@ import Animated, {
   interpolate,
   Extrapolate
 } from 'react-native-reanimated';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,6 +32,37 @@ export default function RootLayout() {
   
   // Smooth orientation transition animation
   const orientationProgress = useSharedValue(0);
+  
+  // Lock orientation to landscape from the very beginning
+  useEffect(() => {
+    const lockOrientation = async () => {
+      try {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+        console.log('Root layout: Orientation locked to landscape');
+      } catch (error) {
+        console.warn('Root layout: Orientation lock failed:', error);
+      }
+    };
+    lockOrientation();
+    
+    // Also set up periodic checks in root layout
+    const interval = setInterval(async () => {
+      try {
+        const currentOrientation = await ScreenOrientation.getOrientationAsync();
+        if (currentOrientation === 1 || currentOrientation === 2) {
+          console.log('Root layout: Re-locking to landscape...');
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        }
+      } catch (error) {
+        console.warn('Root layout: Periodic orientation check failed:', error);
+      }
+    }, 1000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
   
   useEffect(() => {
     // Trigger smooth transition animation on dimension change

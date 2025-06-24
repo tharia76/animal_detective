@@ -429,16 +429,54 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
     return () => clearTimeout(timer);
   }, [width, height, isLandscape]);
 
-  // Allow all orientations
+  // Lock to landscape orientation only
   useEffect(() => {
     const setupOrientation = async () => {
       try {
-        await ScreenOrientation.unlockAsync();
+        // Force lock to landscape immediately - try multiple approaches
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+        
+        // Also try to prevent any other orientations
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
+        
+        console.log('Orientation locked to landscape');
       } catch (error) {
-        console.warn('Orientation unlock failed:', error);
+        console.warn('Orientation lock failed:', error);
       }
     };
     setupOrientation();
+    
+    // Set up a listener to re-lock if orientation changes
+    const subscription = ScreenOrientation.addOrientationChangeListener((event) => {
+      console.log('Orientation changed to:', event.orientationInfo.orientation);
+      // Check if it's not landscape (1 = portrait, 2 = portrait upside down, 3 = landscape left, 4 = landscape right)
+      if (event.orientationInfo.orientation === 1 || event.orientationInfo.orientation === 2) {
+        // Re-lock to landscape if user somehow gets to portrait
+        console.log('Re-locking to landscape...');
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      }
+    });
+    
+    // Also check orientation more frequently to ensure it stays locked
+    const interval = setInterval(async () => {
+      try {
+        const currentOrientation = await ScreenOrientation.getOrientationAsync();
+        console.log('Current orientation:', currentOrientation);
+        // 1 = portrait, 2 = portrait upside down, 3 = landscape left, 4 = landscape right
+        if (currentOrientation === 1 || currentOrientation === 2) {
+          console.log('Periodic check: Re-locking to landscape...');
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        }
+      } catch (error) {
+        console.warn('Periodic orientation check failed:', error);
+      }
+    }, 500); // Check every 500ms instead of 1000ms
+    
+    return () => {
+      subscription?.remove();
+      clearInterval(interval);
+    };
   }, []);
 
   // Keep playerRef in sync with player
@@ -790,7 +828,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   
   // Calculate responsive tile size with min/max constraints
   const currentNumColumns = getResponsiveColumns(currentWidth, currentIsLandscape);
-  const availableWidth = currentIsLandscape ? currentWidth * 0.65 : currentWidth * 0.9;
+  const availableWidth = currentWidth * 0.65;
   const calculatedSize = (availableWidth / currentNumColumns) - (RESPONSIVE_MARGIN * 2);
   const itemSize = Math.max(MIN_TILE_SIZE, Math.min(MAX_TILE_SIZE, calculatedSize));
 
@@ -819,94 +857,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
     return !unlocked;
   };
 
-  if (currentIsLandscape) {
-    return (
-      <View style={{
-        flex: 1, 
-        backgroundColor: '#87CEEB',
-        width: '100%',
-        height: '100%'
-      }}>
-        <ImageBackground
-          key={`landscape-${currentWidth}x${currentHeight}`}
-          source={
-            backgroundImageUri
-              ? { uri: backgroundImageUri }
-              : bgUri
-              ? { uri: bgUri }
-              : BG_IMAGE
-          }
-          style={{ 
-            flex: 1, 
-            backgroundColor: 'transparent',
-            width: '100%',
-            height: '100%'
-          }}
-          resizeMode="cover"
-        >
-          <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-            <View style={responsiveStyles.landscapeLangContainer}>
-              <LanguageSelector
-                isLandscape={currentIsLandscape}
-                t={t}
-                lang={lang}
-                languages={languages}
-                handleLanguageChange={setLang}
-              />
-            </View>
-            <View style={responsiveStyles.landscapeHeaderContainer}>
-              <Image
-                source={require('../src/assets/images/game-logo.png')}
-                style={responsiveStyles.landscapeLogo}
-                resizeMode="contain"
-              />
-            </View>
-            <ScrollView
-              style={{ flex: 1, backgroundColor: 'transparent' }}
-              contentContainerStyle={{
-                flexGrow: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: 32,
-                paddingTop: 8,
-                paddingBottom: 16,
-                minHeight: currentHeight * 0.6,
-                backgroundColor: 'transparent',
-              }}
-              showsVerticalScrollIndicator={true}
-            >
-              <View
-                style={{
-                  width: '100%',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'transparent',
-                }}
-              >
-                {renderUnlockButtons()}
-                <LevelTiles
-                  key={`landscape-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
-                  levels={LEVELS}
-                  numColumns={currentNumColumns}
-                  isLandscape={currentIsLandscape}
-                  itemSize={itemSize}
-                  margin={RESPONSIVE_MARGIN}
-                  LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
-                  handleLevelSelect={(level: string) => handleSelect(level, getIsLocked(level))}
-                  styles={responsiveStyles}
-                  getLevelBackgroundColor={getLevelBackgroundColor}
-                  t={t}
-                  getIsLocked={getIsLocked}
-                />
-              </View>
-            </ScrollView>
-            {renderUnlockModal()}
-          </View>
-        </ImageBackground>
-      </View>
-    );
-  }
-
   return (
     <View style={{
       flex: 1, 
@@ -915,7 +865,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
       height: '100%'
     }}>
       <ImageBackground
-        key={`portrait-${currentWidth}x${currentHeight}`}
+        key={`landscape-${currentWidth}x${currentHeight}`}
         source={
           backgroundImageUri
             ? { uri: backgroundImageUri }
@@ -931,13 +881,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
         }}
         resizeMode="cover"
       >
-        <View style={[responsiveStyles.portraitHeaderContainer, { backgroundColor: 'transparent' }]} pointerEvents="box-none">
-          <Image
-            source={require('../src/assets/images/game-logo.png')}
-            style={responsiveStyles.portraitLogo}
-            resizeMode="contain"
-          />
-          <View style={responsiveStyles.portraitLanguageSelector}>
+        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+          <View style={responsiveStyles.landscapeLangContainer}>
             <LanguageSelector
               isLandscape={currentIsLandscape}
               t={t}
@@ -946,25 +891,54 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
               handleLanguageChange={setLang}
             />
           </View>
+          <View style={responsiveStyles.landscapeHeaderContainer}>
+            <Image
+              source={require('../src/assets/images/game-logo.png')}
+              style={responsiveStyles.landscapeLogo}
+              resizeMode="contain"
+            />
+          </View>
+          <ScrollView
+            style={{ flex: 1, backgroundColor: 'transparent' }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 32,
+              paddingTop: 8,
+              paddingBottom: 16,
+              minHeight: currentHeight * 0.6,
+              backgroundColor: 'transparent',
+            }}
+            showsVerticalScrollIndicator={true}
+          >
+            <View
+              style={{
+                width: '100%',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'transparent',
+              }}
+            >
+              {renderUnlockButtons()}
+              <LevelTiles
+                key={`landscape-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
+                levels={LEVELS}
+                numColumns={currentNumColumns}
+                isLandscape={currentIsLandscape}
+                itemSize={itemSize}
+                margin={RESPONSIVE_MARGIN}
+                LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
+                handleLevelSelect={(level: string) => handleSelect(level, getIsLocked(level))}
+                styles={responsiveStyles}
+                getLevelBackgroundColor={getLevelBackgroundColor}
+                t={t}
+                getIsLocked={getIsLocked}
+              />
+            </View>
+          </ScrollView>
+          {renderUnlockModal()}
         </View>
-        <View style={[responsiveStyles.tilesContainer, { backgroundColor: 'transparent' }]}>
-          {renderUnlockButtons()}
-          <LevelTiles
-            key={`portrait-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
-            levels={LEVELS}
-            numColumns={currentNumColumns}
-            isLandscape={currentIsLandscape}
-            itemSize={itemSize}
-            margin={RESPONSIVE_MARGIN}
-            LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
-            handleLevelSelect={(level: string) => handleSelect(level, getIsLocked(level))}
-            styles={responsiveStyles}
-            getLevelBackgroundColor={getLevelBackgroundColor}
-            t={t}
-            getIsLocked={getIsLocked}
-          />
-        </View>
-        {renderUnlockModal()}
       </ImageBackground>
     </View>
   );

@@ -18,6 +18,34 @@ interface NavigationButtonsProps {
   bgColor: string;
 }
 
+// Device detection functions
+const isTablet = () => {
+  const { width, height } = require('react-native').Dimensions.get('window');
+  const aspectRatio = height / width;
+  return aspectRatio <= 1.6;
+};
+
+const getScaleFactor = (width: number, height: number): number => {
+  const baseWidth = 375;
+  const baseHeight = 667;
+  
+  if (isTablet()) {
+    const tabletBaseWidth = 768;
+    const tabletBaseHeight = 1024;
+    const widthScale = width / tabletBaseWidth;
+    const heightScale = height / tabletBaseHeight;
+    return Math.min(widthScale, heightScale, 1.5);
+  } else {
+    const widthScale = width / baseWidth;
+    const heightScale = height / baseHeight;
+    return Math.min(widthScale, heightScale);
+  }
+};
+
+const getResponsiveSpacing = (baseSpacing: number, scaleFactor: number): number => {
+  return Math.round(baseSpacing * scaleFactor);
+};
+
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   handlePrev,
   handleNext,
@@ -31,9 +59,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 
   // Get orientation and dimensions
   const { width, height } = useWindowDimensions();
-  const isPortrait = height >= width;
   const isLandscape = width > height;
+  const isTabletDevice = isTablet();
   const dynamicStyles = useDynamicStyles();
+  const scaleFactor = getScaleFactor(width, height);
 
   useEffect(() => {
     leftAnim.value = withRepeat(
@@ -71,24 +100,25 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     styles.navButton,
     { 
       backgroundColor: bgColor,
-      width: isLandscape ? 50 : 60,
-      height: isLandscape ? 50 : 60,
+      width: getResponsiveSpacing(50, scaleFactor),
+      height: getResponsiveSpacing(50, scaleFactor),
+      borderRadius: getResponsiveSpacing(30, scaleFactor),
     }
   ];
 
   // Responsive icon size
-  const iconSize = isLandscape ? 28 : 34;
+  const iconSize = getResponsiveSpacing(28, scaleFactor);
 
-  // Container style optimized for both orientations
+  // Container style optimized for landscape orientation
   const containerStyle: ViewStyle = {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     position: 'absolute',
-    bottom: isLandscape ? 20 : 30,
-    left: isLandscape ? '20%' : '10%',
-    right: isLandscape ? '20%' : '10%',
-    paddingHorizontal: isLandscape ? 20 : 40,
+    bottom: getResponsiveSpacing(120, scaleFactor),
+    left: '20%',
+    right: '20%',
+    paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
     zIndex: 10,
   };
 
