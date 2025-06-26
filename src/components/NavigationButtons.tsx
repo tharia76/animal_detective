@@ -8,6 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useDynamicStyles } from '../styles/styles';
 
 interface NavigationButtonsProps {
@@ -95,19 +96,18 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     transform: [{ translateX: rightAnim.value }],
   }));
 
-  // Responsive navigation button style
+  // Responsive navigation button style - made bigger
   const navButtonStyle = [
     styles.navButton,
     { 
-      backgroundColor: bgColor,
-      width: getResponsiveSpacing(50, scaleFactor),
-      height: getResponsiveSpacing(50, scaleFactor),
-      borderRadius: getResponsiveSpacing(30, scaleFactor),
+      width: getResponsiveSpacing(120, scaleFactor), // Increased from 80
+      height: getResponsiveSpacing(120, scaleFactor), // Increased from 80
+      borderRadius: getResponsiveSpacing(60, scaleFactor), // Increased from 40
     }
   ];
 
-  // Responsive icon size
-  const iconSize = getResponsiveSpacing(28, scaleFactor);
+  // Responsive icon size - made bigger
+  const iconSize = getResponsiveSpacing(65, scaleFactor); // Increased from 45
 
   // Container style optimized for landscape orientation
   const containerStyle: ViewStyle = {
@@ -122,6 +122,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     zIndex: 10,
   };
 
+  // Gradient colors for the buttons
+  const leftGradientColors = ['#FF6B6B', '#4ECDC4', '#45B7D1'] as const; // Red to teal to blue
+  const rightGradientColors = ['#A8E6CF', '#FFD93D', '#FF6B6B'] as const; // Green to yellow to red
+
   return (
     <View style={containerStyle}>
       {/* Left arrow button */}
@@ -131,13 +135,20 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         disabled={isTransitioning || currentAnimalIndex === 0}
         style={navButtonStyle}
       >
-        <Animated.View style={leftArrowStyle}>
-          <Ionicons
-            name="arrow-back"
-            size={iconSize}
-            color={isTransitioning || currentAnimalIndex === 0 ? 'rgba(0,0,0,0.4)' : 'black'}
-          />
-        </Animated.View>
+        <LinearGradient
+          colors={isTransitioning || currentAnimalIndex === 0 ? ['#ccc', '#999'] : leftGradientColors}
+          style={styles.gradientBackground}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Animated.View style={leftArrowStyle}>
+            <Ionicons
+              name="arrow-back"
+              size={iconSize}
+              color={isTransitioning || currentAnimalIndex === 0 ? 'rgba(0,0,0,0.4)' : 'white'}
+            />
+          </Animated.View>
+        </LinearGradient>
       </TouchableOpacity>
 
       {/* Right arrow button */}
@@ -147,13 +158,20 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         disabled={isTransitioning}
         style={navButtonStyle}
       >
-        <Animated.View style={rightArrowStyle}>
-          <Ionicons
-            name="arrow-forward"
-            size={iconSize}
-            color={isTransitioning ? 'rgba(0,0,0,0.4)' : 'black'}
-          />
-        </Animated.View>
+        <LinearGradient
+          colors={isTransitioning ? ['#ccc', '#999'] : rightGradientColors}
+          style={styles.gradientBackground}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Animated.View style={rightArrowStyle}>
+            <Ionicons
+              name="arrow-forward"
+              size={iconSize}
+              color={isTransitioning ? 'rgba(0,0,0,0.4)' : 'white'}
+            />
+          </Animated.View>
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -161,14 +179,22 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 
 const styles = StyleSheet.create({
   navButton: {
-    borderRadius: 30,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 3,
+    elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    overflow: 'hidden',
+  },
+  gradientBackground: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 60,
   },
 });
 

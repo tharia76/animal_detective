@@ -30,11 +30,17 @@ import { useDynamicStyles } from '../styles/styles';
 import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
 import MovingBg from './MovingBg';
+import AnimatedBubbles from './AnimatedBubbles';
+import AnimatedSand from './AnimatedSand';
+import AnimatedSnow from './AnimatedSnow';
+import AnimatedFireflies from './AnimatedFireflies';
+import AnimatedLeaves from './AnimatedLeaves';
 // --- Add localization import ---
 import { useLocalization } from '../hooks/useLocalization';
 // --- Add smooth rotation hook ---
 import { useSmoothRotation } from '../hooks/useSmoothRotation';
 import ReanimatedView from 'react-native-reanimated';
+import { getResponsiveSpacing, getScaleFactor } from '../utils/responsive';
 
 // --- BG MUSIC MAP: Map levelName to bg music asset/uri ---
 // Make sure all keys are lowercase for bulletproof matching
@@ -436,6 +442,7 @@ export default function LevelScreenTemplate({
     setIsTransitioning(true);
     stopSound(true);
 
+    // Use a single animation for smoother transitions
     Animated.timing(animalFadeAnim, {
       toValue: 0,
       duration: FADE_DURATION,
@@ -463,7 +470,8 @@ export default function LevelScreenTemplate({
       setCurrentAnimalIndex(newIndex);
       setShowName(false);
 
-      requestAnimationFrame(() => {
+      // Use a small delay to ensure state updates are processed
+      setTimeout(() => {
         Animated.timing(animalFadeAnim, {
           toValue: 1,
           duration: FADE_DURATION,
@@ -471,7 +479,7 @@ export default function LevelScreenTemplate({
         }).start(() => {
           setIsTransitioning(false);
         });
-      });
+      }, 16); // One frame delay
     });
   }, [
       hasAnimals,
@@ -537,7 +545,8 @@ export default function LevelScreenTemplate({
     setLevelCompleted(false);
     setVisitedAnimals(new Set([0]));
 
-    requestAnimationFrame(() => {
+    // Use a small delay to ensure state updates are processed
+    setTimeout(() => {
         Animated.timing(animalFadeAnim, {
             toValue: 1,
             duration: FADE_DURATION,
@@ -545,7 +554,7 @@ export default function LevelScreenTemplate({
         }).start(() => {
             setIsTransitioning(false);
         });
-    });
+    }, 16); // One frame delay
 
   }, [stopSound, animalFadeAnim]);
 
@@ -560,6 +569,7 @@ export default function LevelScreenTemplate({
           frames={currentAnimal.frames}
           source={currentAnimal.source}
           spriteSheetSize={currentAnimal.spriteSheetSize}
+          style={dynamicStyles.animalImage}
         />
       );
     }
@@ -682,9 +692,37 @@ export default function LevelScreenTemplate({
               </TouchableOpacity>
             )}
 
+            {/* Ocean bubbles - only show for ocean level */}
+            {levelName.toLowerCase() === 'ocean' && showInstruction && <AnimatedBubbles />}
+
+            {/* Desert sand - only show for desert level */}
+            {levelName.toLowerCase() === 'desert' && showInstruction && (() => {
+              console.log('Desert level detected, rendering AnimatedSand');
+              return <AnimatedSand />;
+            })()}
+
+            {/* Arctic snow - only show for arctic level */}
+            {levelName.toLowerCase() === 'arctic' && showInstruction && <AnimatedSnow />}
+
+            {/* Forest fireflies - only show for forest level */}
+            {levelName.toLowerCase() === 'forest' && showInstruction && <AnimatedFireflies />}
+
+            {/* Forest leaves - only show for forest level */}
+            {levelName.toLowerCase() === 'forest' && showInstruction && <AnimatedLeaves />}
+
           {hasAnimals && (
             <View style={dynamicStyles.content}>
-              <View style={dynamicStyles.animalCard}>
+              <View style={[
+                dynamicStyles.animalCard,
+                // Add extra margin for arctic level to move animals down
+                levelName.toLowerCase() === 'arctic' && {
+                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 260, // 260px more than default
+                },
+                // Add extra margin for forest level to move animals down
+                levelName.toLowerCase() === 'forest' && {
+                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 300, // 300px more than default
+                }
+              ]}>
                 <TouchableOpacity onPress={handleAnimalPress} activeOpacity={1.0} disabled={isTransitioning}>
                   <Animated.View style={{ opacity: animalFadeAnim }}>
                     {renderAnimal()}

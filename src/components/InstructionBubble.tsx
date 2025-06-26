@@ -1,6 +1,7 @@
 import { View, Text, Animated, Image, ImageSourcePropType, useWindowDimensions } from 'react-native';
 import { useDynamicStyles } from '../styles/styles';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Device detection and responsive scaling functions
 const isTablet = () => {
@@ -49,39 +50,118 @@ export default function InstructionBubble({
   const { width, height } = useWindowDimensions();
   const scaleFactor = getScaleFactor(width, height);
 
+  // Animation values
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  // Cute gradient colors
+  const gradientColors = ['#FFB6C1', '#FFC0CB', '#FFE4E1'] as const; // Pink to light pink to misty rose
+
+  // Set up animations
+  useEffect(() => {
+    // Gentle pulsing animation
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    // Floating animation
+    const floatAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    pulseAnimation.start();
+    floatAnimation.start();
+
+    return () => {
+      pulseAnimation.stop();
+      floatAnimation.stop();
+    };
+  }, [pulseAnim, floatAnim]);
+
+  // Animated styles
+  const animatedContainerStyle = {
+    transform: [
+      { scale: pulseAnim },
+      {
+        translateY: floatAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -8], // Float up and down by 8 pixels
+        }),
+      },
+    ],
+  };
+
   return (
-    <View style={[dynamicStyles.instructionBubble, { zIndex: 100 }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ 
-          fontSize: getResponsiveFontSize(18, scaleFactor), 
-          color: '#333', 
-          textAlign: 'center', 
-          marginBottom: getResponsiveSpacing(18, scaleFactor), 
-          marginTop: getResponsiveSpacing(10, scaleFactor), 
-          fontWeight: 'bold' 
-        }}>
-          {text}
-        </Text>
-        {/* Conditionally render the Animated.View only if there's an image */}
-        {image && (
-          <Animated.View
-            style={{
-              marginLeft: getResponsiveSpacing(5, scaleFactor), // Keep margin
-              // The transform uses the continuously looping arrowAnim value from the parent
-              transform: [{ translateY: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }],
-            }}
-          >
-            <Image
-              source={image}
-              style={{ 
-                width: getResponsiveSpacing(40, scaleFactor), 
-                height: getResponsiveSpacing(40, scaleFactor) 
-              }} // Define image size here
-              resizeMode="contain"
-            />
-          </Animated.View>
-        )}
-      </View>
-    </View>
+    <Animated.View 
+      style={[
+        dynamicStyles.instructionBubble, 
+        { zIndex: 100 },
+        animatedContainerStyle,
+      ]}
+    >
+      <LinearGradient
+        colors={gradientColors}
+        style={dynamicStyles.instructionBubbleGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ 
+            fontSize: getResponsiveFontSize(18, scaleFactor), 
+            color: '#8B4513', // Saddle brown for cute contrast
+            textAlign: 'center', 
+            marginBottom: getResponsiveSpacing(18, scaleFactor), 
+            marginTop: getResponsiveSpacing(10, scaleFactor), 
+            fontWeight: 'bold',
+            textShadowColor: 'rgba(255, 255, 255, 0.8)',
+            textShadowOffset: { width: 1, height: 1 },
+            textShadowRadius: 2,
+          }}>
+            {text}
+          </Text>
+          {/* Conditionally render the Animated.View only if there's an image */}
+          {image && (
+            <Animated.View
+              style={{
+                marginLeft: getResponsiveSpacing(5, scaleFactor), // Keep margin
+                // The transform uses the continuously looping arrowAnim value from the parent
+                transform: [{ translateY: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }],
+              }}
+            >
+              <Image
+                source={image}
+                style={{ 
+                  width: getResponsiveSpacing(45, scaleFactor), // Made slightly bigger
+                  height: getResponsiveSpacing(45, scaleFactor), // Made slightly bigger
+                }} // Define image size here
+                resizeMode="contain"
+              />
+            </Animated.View>
+          )}
+        </View>
+      </LinearGradient>
+    </Animated.View>
   );
 }

@@ -870,7 +870,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: whiteBearMeta.size,
       sound: require('../assets/sounds/animal_sounds/bear.mp3'),
       labelSound: getLabelSound('white_bear', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 33,
@@ -882,7 +883,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: whiteFoxMeta.size,
       sound: require('../assets/sounds/animal_sounds/fox.mp3'),
       labelSound: getLabelSound('white_fox', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 34,
@@ -894,7 +896,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: reindeerMeta.size,
       sound: require('../assets/sounds/animal_sounds/deer.mp3'),
       labelSound: getLabelSound('reindeer', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 35,
