@@ -440,12 +440,41 @@ const getLabelSound = (animalName: string, language: string) => {
       'starfish': require('../assets/sounds/labels/ru/ru_starfish.mp3'),
       'stingray': require('../assets/sounds/labels/ru/ru_stingray.mp3'),
       'stork': require('../assets/sounds/labels/ru/ru_stork.mp3'),
+      'tiger': require('../assets/sounds/labels/ru/ru_tiger.mp3'),
+      'zebra': require('../assets/sounds/labels/ru/ru_zebra.mp3'),
+      'giraffe': require('../assets/sounds/labels/ru/ru_giraffe.mp3'),
+      'dove': require('../assets/sounds/labels/ru/ru_dove.mp3'),
+      'pelican': require('../assets/sounds/labels/ru/ru_pelican.mp3'),
+      'swan': require('../assets/sounds/labels/ru/ru_swan.mp3'),
+      'toucan': require('../assets/sounds/labels/ru/ru_toucan.mp3'),
+      'woodpecker': require('../assets/sounds/labels/ru/ru_woodpecker.mp3'),
+      'anteater': require('../assets/sounds/labels/ru/ru_anteater.mp3'),
+      'capybara': require('../assets/sounds/labels/ru/ru_capybara.mp3'),
+      'chameleon': require('../assets/sounds/labels/ru/ru_chameleon.mp3'),
+      'chimpanzee': require('../assets/sounds/labels/ru/ru_chimpanzee.mp3'),     
+      'crocodile': require('../assets/sounds/labels/ru/ru_crocodile.mp3'), 
+      'frog': require('../assets/sounds/labels/ru/ru_frog.mp3'),       
+      'gorilla': require('../assets/sounds/labels/ru/ru_gorilla.mp3'),   
+      'hippopotamus': require('../assets/sounds/labels/ru/ru_hippopotamus.mp3'),  
+      'jaguar': require('../assets/sounds/labels/ru/ru_jaguar.mp3'),     
+      'lemur': require('../assets/sounds/labels/ru/ru_lemur.mp3'), 
+      'lizard': require('../assets/sounds/labels/ru/ru_lizard.mp3'),       
+      'orangutan': require('../assets/sounds/labels/ru/ru_orangutan.mp3'),      
+      'sloth': require('../assets/sounds/labels/ru/ru_sloth.mp3'),            
+      'snake': require('../assets/sounds/labels/ru/ru_snake.mp3'),       
+      'turtle': require('../assets/sounds/labels/ru/ru_turtle.mp3'),   
+    
+      
+      
       // Special mappings for animals that have different names in Russian
       'white_bear': require('../assets/sounds/labels/ru/ru_polar_bear.mp3'),
       'white_fox': require('../assets/sounds/labels/ru/ru_arctic_fox.mp3'),
       'snow_owl': require('../assets/sounds/labels/ru/ru_snowy_owl.mp3'),
       'cheetah': require('../assets/sounds/labels/ru/ru_cheetah.mp3'),
-      'wild_boar': require('../assets/sounds/labels/ru/ru_boar.mp3'),
+      'wild_boar': require('../assets/sounds/labels/ru/ru_wildboar.mp3'),
+      'asianElephant': require('../assets/sounds/labels/ru/ru_asianElephant.mp3'),
+      'engalTiger': require('../assets/sounds/labels/ru/ru_bengalTiger.mp3'),
+      'blackPanther': require('../assets/sounds/labels/ru/ru_blackPanther.mp3'),
     };
     return russianLabels[animalName] || russianLabels['cat']; // Fallback to cat sound if not found
   } else {
