@@ -20,6 +20,9 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+// Lock orientation immediately at app startup
+ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
@@ -37,30 +40,29 @@ export default function RootLayout() {
   useEffect(() => {
     const lockOrientation = async () => {
       try {
+        // Force landscape orientation and keep it locked
         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
         console.log('Root layout: Orientation locked to landscape');
       } catch (error) {
         console.warn('Root layout: Orientation lock failed:', error);
       }
     };
+    
+    // Lock immediately
     lockOrientation();
     
-    // Also set up periodic checks in root layout
-    const interval = setInterval(async () => {
-      try {
-        const currentOrientation = await ScreenOrientation.getOrientationAsync();
-        if (currentOrientation === 1 || currentOrientation === 2) {
-          console.log('Root layout: Re-locking to landscape...');
-          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-        }
-      } catch (error) {
-        console.warn('Root layout: Periodic orientation check failed:', error);
+    // Set up a listener to re-lock if orientation changes
+    const subscription = ScreenOrientation.addOrientationChangeListener((event) => {
+      console.log('Orientation changed to:', event.orientationInfo.orientation);
+      // If it's not landscape, force it back
+      if (event.orientationInfo.orientation !== ScreenOrientation.Orientation.LANDSCAPE_LEFT && 
+          event.orientationInfo.orientation !== ScreenOrientation.Orientation.LANDSCAPE_RIGHT) {
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
       }
-    }, 1000);
+    });
     
     return () => {
-      clearInterval(interval);
+      subscription?.remove();
     };
   }, []);
   

@@ -24,6 +24,7 @@ import {
   useAudioPlayer,
   createAudioPlayer,
 } from 'expo-audio';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import SpriteAnimation from './SpriteAnimation';
 import InstructionBubble from './InstructionBubble';
 import { useDynamicStyles } from '../styles/styles';
@@ -139,6 +140,32 @@ export default function LevelScreenTemplate({
 
   const roadAnimation = useRef(new Animated.Value(0)).current;
   const { width: screenW, height: screenH } = useWindowDimensions();
+
+  // Lock orientation to landscape
+  useEffect(() => {
+    const lockOrientation = async () => {
+      try {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        console.log('LevelScreen: Orientation locked to landscape');
+      } catch (error) {
+        console.warn('LevelScreen: Orientation lock failed:', error);
+      }
+    };
+    
+    lockOrientation();
+    
+    // Set up listener to re-lock if orientation changes
+    const subscription = ScreenOrientation.addOrientationChangeListener((event) => {
+      if (event.orientationInfo.orientation !== ScreenOrientation.Orientation.LANDSCAPE_LEFT && 
+          event.orientationInfo.orientation !== ScreenOrientation.Orientation.LANDSCAPE_RIGHT) {
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      }
+    });
+    
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
 
   // --- FADE LOGIC FOR BACKGROUND SWITCHING ---
   // We want to crossfade between backgrounds (image <-> moving bg) to avoid black flashes.
@@ -409,22 +436,27 @@ export default function LevelScreenTemplate({
   // --- REWRITE: handleAnimalPress as the single tap handler for animal card ---
   // 2) tweak your handleAnimalPress so it doesn't immediately restart BG if a sound is in flight
   const handleAnimalPress = useCallback(() => {
+    console.log('Animal pressed! isTransitioning:', isTransitioning, 'showName:', showName, 'currentAnimal:', currentAnimal?.name);
+    
+    if (isTransitioning) {
+      console.log('Blocked by transition');
+      return;
+    }
+    
     if (!showName) {
+      console.log('Setting showName to true');
       setShowName(true);
-
       // 1) pause the level BG immediately
       if (bgMusicRef.current) {
         bgMusicRef.current.pause();
       }
-
       // clear any old wait flag
       waitingToResumeBg.current = false;
-
       // 2) kill any in‑flight animal audio, then play the new one
       stopSound(true).then(playSounds);
     } else {
+      console.log('Setting showName to false');
       setShowName(false);
-
       // if a sound is playing, wait for it — otherwise resume immediately
       if (soundRef.current) {
         waitingToResumeBg.current = true;
@@ -432,7 +464,7 @@ export default function LevelScreenTemplate({
         if (!isMuted) bgMusicRef.current?.play();
       }
     }
-  }, [showName, isMuted, playSounds, stopSound, bgMusicRef, soundRef]);
+  }, [showName, isMuted, playSounds, stopSound, bgMusicRef, soundRef, isTransitioning]);
 
   // Remove toggleShowName entirely
 
@@ -649,7 +681,11 @@ export default function LevelScreenTemplate({
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFillObject,
-            { opacity: movingBgOpacity, backgroundColor: 'transparent' }
+            { opacity: movingBgOpacity, backgroundColor: 'transparent' },
+            // Move forest moving background up
+            levelName.toLowerCase() === 'forest' && {
+              top: -100, // Move moving background up by 100px
+            }
           ]}
         >
           <MovingBg
@@ -667,7 +703,13 @@ export default function LevelScreenTemplate({
         >
           <ImageBackground
             source={backgroundImageUri ? { uri: backgroundImageUri } : undefined}
-            style={StyleSheet.absoluteFillObject}
+            style={[
+              StyleSheet.absoluteFillObject,
+              // Move forest background up
+              levelName.toLowerCase() === 'forest' && {
+                top: -100, // Move background up by 100px
+              }
+            ]}
             resizeMode="cover"
             onLoadEnd={onLoadEnd}
             onError={onLoadEnd}
@@ -712,40 +754,50 @@ export default function LevelScreenTemplate({
 
           {hasAnimals && (
             <View style={dynamicStyles.content}>
+              <TouchableOpacity 
+                onPress={handleAnimalPress} 
+                activeOpacity={1.0} 
+                disabled={isTransitioning}
+                delayPressIn={0}
+                delayPressOut={0}
+                style={StyleSheet.absoluteFillObject}
+              />
+              
               <View style={[
                 dynamicStyles.animalCard,
                 // Add extra margin for arctic level to move animals down
                 levelName.toLowerCase() === 'arctic' && {
                   marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 260, // 260px more than default
                 },
-                // Add extra margin for forest level to move animals down
+                // Move animals down for forest level
                 levelName.toLowerCase() === 'forest' && {
-                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 300, // 300px more than default
+                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 70, // 70px down from default
                 }
               ]}>
-                <TouchableOpacity onPress={handleAnimalPress} activeOpacity={1.0} disabled={isTransitioning}>
-                  <Animated.View style={{ opacity: animalFadeAnim }}>
-                    {renderAnimal()}
-                  </Animated.View>
-                </TouchableOpacity>
-                {showName && currentAnimal && (
-                  <Animated.View style={[
-                    dynamicStyles.animalNameWrapper,
-                    {
-                      opacity: animalFadeAnim,
-                      transform: [{
-                        translateY: animalFadeAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [10, 0],
-                        }),
-                      }],
-                    }
-                  ]}>
-                    <Text style={dynamicStyles.animalName}>
-                      {currentAnimal.name}
-                    </Text>
-                  </Animated.View>
-                )}
+                <Animated.View style={{ opacity: animalFadeAnim, alignItems: 'center', justifyContent: 'center' }}>
+                  {renderAnimal()}
+                </Animated.View>
+                {showName && currentAnimal && (() => {
+                  console.log('Rendering animal name:', currentAnimal.name, 'showName:', showName);
+                  return (
+                    <Animated.View style={[
+                      dynamicStyles.animalNameWrapper,
+                      {
+                        opacity: animalFadeAnim,
+                        transform: [{
+                          translateY: animalFadeAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [10, 0],
+                          }),
+                        }],
+                      }
+                    ]}>
+                      <Text style={dynamicStyles.animalName}>
+                        {currentAnimal.name}
+                      </Text>
+                    </Animated.View>
+                  );
+                })()}
               </View>
 
               <NavigationButtons

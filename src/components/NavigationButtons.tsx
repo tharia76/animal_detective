@@ -22,8 +22,9 @@ interface NavigationButtonsProps {
 // Device detection functions
 const isTablet = () => {
   const { width, height } = require('react-native').Dimensions.get('window');
-  const aspectRatio = height / width;
-  return aspectRatio <= 1.6;
+  const minDimension = Math.min(width, height);
+  const maxDimension = Math.max(width, height);
+  return minDimension >= 768 || maxDimension >= 1024;
 };
 
 const getScaleFactor = (width: number, height: number): number => {
@@ -96,18 +97,18 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     transform: [{ translateX: rightAnim.value }],
   }));
 
-  // Responsive navigation button style - made bigger
+  // Responsive navigation button style - bigger on phones
   const navButtonStyle = [
     styles.navButton,
     { 
-      width: getResponsiveSpacing(120, scaleFactor), // Increased from 80
-      height: getResponsiveSpacing(120, scaleFactor), // Increased from 80
-      borderRadius: getResponsiveSpacing(60, scaleFactor), // Increased from 40
+      width: getResponsiveSpacing(isTabletDevice ? 120 : 140, scaleFactor), // Bigger on phones
+      height: getResponsiveSpacing(isTabletDevice ? 120 : 140, scaleFactor), // Bigger on phones
+      borderRadius: getResponsiveSpacing(isTabletDevice ? 60 : 70, scaleFactor),
     }
   ];
 
-  // Responsive icon size - made bigger
-  const iconSize = getResponsiveSpacing(65, scaleFactor); // Increased from 45
+  // Responsive icon size - bigger on phones
+  const iconSize = getResponsiveSpacing(isTabletDevice ? 65 : 75, scaleFactor); // Bigger icons on phones
 
   // Container style optimized for landscape orientation
   const containerStyle: ViewStyle = {

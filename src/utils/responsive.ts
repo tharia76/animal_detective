@@ -5,8 +5,13 @@ const { width: screenW, height: screenH } = Dimensions.get('window');
 // Device detection functions
 export const isTablet = (): boolean => {
   const { width, height } = Dimensions.get('window');
-  const aspectRatio = height / width;
-  return aspectRatio <= 1.6;
+  const minDimension = Math.min(width, height);
+  const maxDimension = Math.max(width, height);
+  
+  // iPad detection based on actual screen sizes
+  // iPad mini: 768x1024, iPad: 768x1024, iPad Pro: 834x1194, 1024x1366
+  // iPhone max sizes are around 430x932 for iPhone 14 Pro Max
+  return minDimension >= 768 || maxDimension >= 1024;
 };
 
 export const isPhone = (): boolean => {

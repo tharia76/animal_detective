@@ -433,49 +433,30 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   useEffect(() => {
     const setupOrientation = async () => {
       try {
-        // Force lock to landscape immediately - try multiple approaches
+        // Simple, consistent landscape lock
         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
-        
-        // Also try to prevent any other orientations
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
-        
-        console.log('Orientation locked to landscape');
+        console.log('MenuScreen: Orientation locked to landscape');
       } catch (error) {
-        console.warn('Orientation lock failed:', error);
+        console.warn('MenuScreen: Orientation lock failed:', error);
       }
     };
+    
+    // Lock immediately
     setupOrientation();
     
     // Set up a listener to re-lock if orientation changes
     const subscription = ScreenOrientation.addOrientationChangeListener((event) => {
-      console.log('Orientation changed to:', event.orientationInfo.orientation);
-      // Check if it's not landscape (1 = portrait, 2 = portrait upside down, 3 = landscape left, 4 = landscape right)
-      if (event.orientationInfo.orientation === 1 || event.orientationInfo.orientation === 2) {
-        // Re-lock to landscape if user somehow gets to portrait
-        console.log('Re-locking to landscape...');
+      console.log('MenuScreen: Orientation changed to:', event.orientationInfo.orientation);
+      // If it's not landscape, force it back
+      if (event.orientationInfo.orientation !== ScreenOrientation.Orientation.LANDSCAPE_LEFT && 
+          event.orientationInfo.orientation !== ScreenOrientation.Orientation.LANDSCAPE_RIGHT) {
+        console.log('MenuScreen: Re-locking to landscape...');
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
       }
     });
     
-    // Also check orientation more frequently to ensure it stays locked
-    const interval = setInterval(async () => {
-      try {
-        const currentOrientation = await ScreenOrientation.getOrientationAsync();
-        console.log('Current orientation:', currentOrientation);
-        // 1 = portrait, 2 = portrait upside down, 3 = landscape left, 4 = landscape right
-        if (currentOrientation === 1 || currentOrientation === 2) {
-          console.log('Periodic check: Re-locking to landscape...');
-          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-        }
-      } catch (error) {
-        console.warn('Periodic orientation check failed:', error);
-      }
-    }, 500); // Check every 500ms instead of 1000ms
-    
     return () => {
       subscription?.remove();
-      clearInterval(interval);
     };
   }, []);
 

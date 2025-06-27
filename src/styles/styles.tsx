@@ -76,7 +76,6 @@ export function useDynamicStyles() {
   const isTabletDevice = isTablet();
   const isSmallPhoneDevice = isSmallPhone();
   const isLargePhoneDevice = isLargePhone();
-  
   const scaleFactor = getScaleFactor(screenW, screenH);
 
   return useMemo(() => {
@@ -174,7 +173,7 @@ export function useDynamicStyles() {
         justifyContent: 'center',
         width: '100%',
         height: screenH * (isTabletDevice ? 0.7 : 0.6),
-        marginTop: Math.max(getResponsiveSpacing(70, scaleFactor), screenH * 0.1) + 100,
+        marginTop: Math.max(getResponsiveSpacing(70, scaleFactor), screenH * 0.1) + 100 - (isTabletDevice ? 0 : 50),
       },
       animalNameWrapper: {
         position: 'absolute',
@@ -183,11 +182,11 @@ export function useDynamicStyles() {
         alignItems: 'center',
       },
       animalImage: {
-        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.9), screenH * 0.99),
-        height: screenH * (isTabletDevice ? 0.98 : 0.95),
+        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.7), screenH * 0.99),
+        height: screenH * (isTabletDevice ? 0.98 : 0.85),
         resizeMode: 'contain',
         marginTop: 0,
-        transform: [{ scale: 1.5 }],
+        transform: [{ scale: isTabletDevice ? 1.8 : 1.0 }],
       },
       animalLoadingContainer: {
         width: Math.min(screenW * (isTabletDevice ? 0.3 : 0.4), screenH * 0.8),
@@ -200,8 +199,8 @@ export function useDynamicStyles() {
         top: getResponsiveSpacing(65, scaleFactor),
         right: getResponsiveSpacing(15, scaleFactor),
         backgroundColor: 'rgba(220, 173, 30, 0.7)',
-        borderRadius: getResponsiveSpacing(25, scaleFactor),
-        padding: getResponsiveSpacing(10, scaleFactor),
+        borderRadius: getResponsiveSpacing(isTabletDevice ? 25 : 30, scaleFactor),
+        padding: getResponsiveSpacing(isTabletDevice ? 10 : 15, scaleFactor),
         zIndex: 10,
         elevation: 5,
         shadowColor: '#000',
@@ -211,9 +210,9 @@ export function useDynamicStyles() {
       },
       backToMenuButton: {
         backgroundColor: 'orange',
-        paddingVertical: getResponsiveSpacing(10, scaleFactor),
-        paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
-        borderRadius: getResponsiveSpacing(25, scaleFactor),
+        paddingVertical: getResponsiveSpacing(isTabletDevice ? 10 : 15, scaleFactor),
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 16 : 20, scaleFactor),
+        borderRadius: getResponsiveSpacing(isTabletDevice ? 25 : 30, scaleFactor),
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
