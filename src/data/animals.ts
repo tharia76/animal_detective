@@ -103,6 +103,25 @@ import storkData from '../assets/images/animals/json/stork-0.json';
 import swanData from '../assets/images/animals/json/swan-0.json';
 import toucanData from '../assets/images/animals/json/toucan-0.json';
 import woodpeckerData from '../assets/images/animals/json/woodpecker-0.json';
+import antEaterData from '../assets/images/animals/json/anteater-0.json';
+import asianElephantData from '../assets/images/animals/json/aelephant-0.json';
+import bengalTigerData from '../assets/images/animals/json/btiger-0.json';
+import blackPantherData from '../assets/images/animals/json/panther-0.json';
+import capybaraData from '../assets/images/animals/json/capybara-0.json';
+import chameleonData from '../assets/images/animals/json/chameleon-0.json';
+import chimpanzeeData from '../assets/images/animals/json/chimpanzee-0.json';
+import crocodileData from '../assets/images/animals/json/crocodile-0.json';
+import frogData from '../assets/images/animals/json/frog-0.json';
+import gorillaData from '../assets/images/animals/json/gorilla-0.json';
+import hippopotamusData from '../assets/images/animals/json/hippopotamus-0.json';
+import jaguarData from '../assets/images/animals/json/jaguar-0.json';
+import lemurData from '../assets/images/animals/json/lemur-0.json';
+import lizardData from '../assets/images/animals/json/lizard-0.json';
+import orangutanData from '../assets/images/animals/json/orangutan-0.json';
+import slothData from '../assets/images/animals/json/sloth-0.json';
+import snakeData from '../assets/images/animals/json/snake-0.json';
+import turtleData from '../assets/images/animals/json/turtle-0.json';
+
 
 
 // Load the actual PNG sprite sheet
@@ -201,6 +220,24 @@ const storkSprite = require('../assets/images/animals/png/stork-0.png');
 const swanSprite = require('../assets/images/animals/png/swan-0.png');
 const toucanSprite = require('../assets/images/animals/png/toucan-0.png');
 const woodpeckerSprite = require('../assets/images/animals/png/woodpecker-0.png');
+const antEaterSprite = require('../assets/images/animals/png/anteater-0.png');
+const asianElephantSprite = require('../assets/images/animals/png/aelephant-0.png');
+const bengalTigerSprite = require('../assets/images/animals/png/btiger-0.png');
+const blackPantherSprite = require('../assets/images/animals/png/panther-0.png');
+const capybaraSprite = require('../assets/images/animals/png/capybara-0.png');
+const chameleonSprite = require('../assets/images/animals/png/chameleon-0.png');
+const chimpanzeeSprite = require('../assets/images/animals/png/chimpanzee-0.png');
+const crocodileSprite = require('../assets/images/animals/png/crocodile-0.png');
+const frogSprite = require('../assets/images/animals/png/frog-0.png');
+const gorillaSprite = require('../assets/images/animals/png/gorilla-0.png');
+const hippopotamusSprite = require('../assets/images/animals/png/hippopotamus-0.png');
+const jaguarSprite = require('../assets/images/animals/png/jaguar-0.png');
+const lemurSprite = require('../assets/images/animals/png/lemur-0.png');
+const lizardSprite = require('../assets/images/animals/png/lizard-0.png');
+const orangutanSprite = require('../assets/images/animals/png/orangutan-0.png');
+const slothSprite = require('../assets/images/animals/png/sloth-0.png');
+const snakeSprite = require('../assets/images/animals/png/snake-0.png');
+const turtleSprite = require('../assets/images/animals/png/turtle-0.png');
 
 
 // Extract the frames array and meta from JSON
@@ -299,6 +336,24 @@ const { frames: storkFrames, meta: storkMeta } = storkData;
 const { frames: swanFrames, meta: swanMeta } = swanData;
 const { frames: toucanFrames, meta: toucanMeta } = toucanData;
 const { frames: woodpeckerFrames, meta: woodpeckerMeta } = woodpeckerData;
+const { frames: antEaterFrames, meta: antEaterMeta } = antEaterData;
+const { frames: asianElephantFrames, meta: asianElephantMeta } = asianElephantData;
+const { frames: bengalTigerFrames, meta: bengalTigerMeta } = bengalTigerData;
+const { frames: blackPantherFrames, meta: blackPantherMeta } = blackPantherData;
+const { frames: capybaraFrames, meta: capybaraMeta } = capybaraData;
+const { frames: chameleonFrames, meta: chameleonMeta } = chameleonData;
+const { frames: chimpanzeeFrames, meta: chimpanzeeMeta } = chimpanzeeData;
+const { frames: crocodileFrames, meta: crocodileMeta } = crocodileData;
+const { frames: frogFrames, meta: frogMeta } = frogData;
+const { frames: gorillaFrames, meta: gorillaMeta } = gorillaData;
+const { frames: hippopotamusFrames, meta: hippopotamusMeta } = hippopotamusData;
+const { frames: jaguarFrames, meta: jaguarMeta } = jaguarData;
+const { frames: lemurFrames, meta: lemurMeta } = lemurData;
+const { frames: lizardFrames, meta: lizardMeta } = lizardData;
+const { frames: orangutanFrames, meta: orangutanMeta } = orangutanData;
+const { frames: slothFrames, meta: slothMeta } = slothData;
+const { frames: snakeFrames, meta: snakeMeta } = snakeData;
+const { frames: turtleFrames, meta: turtleMeta } = turtleData;
 
 
 // Use localization via a function parameter
@@ -1155,7 +1210,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       id: 56,
       name: t('animals.eagle'),
       type: 'sprite' as const,
-      animalType: 'Jungle' as const,
+      animalType: 'Savannah' as const,
       source: eagleSprite,
       frames: eagleFrames,
       spriteSheetSize: eagleMeta.size,
@@ -1167,7 +1222,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       id: 57,
       name: t('animals.flamingo'),
       type: 'sprite' as const,
-      animalType: 'Jungle' as const,
+      animalType: 'Savannah' as const,
       source: flamingoSprite,
       frames: flamingoFrames,
       spriteSheetSize: flamingoMeta.size,
@@ -1179,7 +1234,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       id: 58,
       name: t('animals.giraffe'),
       type: 'sprite' as const,
-      animalType: 'Jungle' as const,
+      animalType: 'Savannah' as const,
       source: giraffeSprite,
       frames: giraffeFrames,
       spriteSheetSize: giraffeMeta.size,
@@ -1191,7 +1246,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       id: 59,
       name: t('animals.rhinoceros'),
       type: 'sprite' as const,
-      animalType: 'Jungle' as const,
+      animalType: 'Savannah' as const,
       source: rhinocerosSprite,
       frames: rhinocerosFrames,
       spriteSheetSize: rhinocerosMeta.size,
@@ -1637,6 +1692,343 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       labelSound: getLabelSound('woodpecker', language),
       isMoving: false,
     },
+        {
+      id: 97,
+      name: t('animals.chicken'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: chickenSpriteSheet,
+      frames: chickenFrames,
+      spriteSheetSize: chickenMeta.size,
+      sound: require('../assets/sounds/animal_sounds/chicken.mp3'),
+      labelSound: getLabelSound('chicken', language),
+      isMoving: false,
+    },
+    {
+      id: 98,
+      name: t('animals.chick'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: chickSpriteSheet,
+      frames: chickFrames,
+      spriteSheetSize: chickMeta.size,
+      sound: require('../assets/sounds/animal_sounds/chick.mp3'),
+      labelSound: getLabelSound('chick', language),
+      isMoving: false,
+    },
+	    {
+      id: 99,
+      name: t('animals.duck'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: duckSpriteSheet,
+      frames: duckFrames,
+      spriteSheetSize: duckMeta.size,
+      sound: require('../assets/sounds/animal_sounds/duck.mp3'),
+      labelSound: getLabelSound('duck', language),
+      isMoving: false,
+    },
+	    {
+      id: 100,
+      name: t('animals.goose'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: gooseSpriteSheet,
+      frames: gooseFrames,
+      spriteSheetSize: gooseMeta.size,
+      sound: require('../assets/sounds/animal_sounds/goose.mp3'),
+      labelSound: getLabelSound('goose', language),
+      isMoving: false,
+    },
+	    {
+      id: 101,
+      name: t('animals.rooster'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: roosterSpriteSheet,
+      frames: roosterFrames,
+      spriteSheetSize: roosterMeta.size,
+      sound: require('../assets/sounds/animal_sounds/rooster.mp3'),
+      labelSound: getLabelSound('rooster', language),
+      isMoving: true,
+      movingDirection: 'left',
+    },
+	    {
+      id: 102,
+      name: t('animals.turkey'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: turkeySpriteSheet,
+      frames: turkeyFrames,
+      spriteSheetSize: turkeyMeta.size,
+      sound: require('../assets/sounds/animal_sounds/turkey.mp3'),
+      labelSound: getLabelSound('turkey', language),
+      isMoving: false,
+    },
+	    {
+      id: 103,
+      name: t('animals.owl'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: owlSpriteSheet,
+      frames: owlFrames,
+      spriteSheetSize: owlMeta.size,
+      sound: require('../assets/sounds/animal_sounds/owl.mp3'),
+      labelSound: getLabelSound('owl', language),
+      isMoving: false,
+    },
+	    {
+      id: 104,
+      name: t('animals.penguin'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: penguinSprite,
+      frames: penguinFrames,
+      spriteSheetSize: penguinMeta.size,
+      sound: require('../assets/sounds/animal_sounds/duck.mp3'),
+      labelSound: getLabelSound('penguin', language),
+      isMoving: false,
+    },
+	    {
+      id: 105,
+      name: t('animals.eagle'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: eagleSprite,
+      frames: eagleFrames,
+      spriteSheetSize: eagleMeta.size,
+      sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+      labelSound: getLabelSound('eagle', language),
+      isMoving: false,
+    },
+	    {
+      id: 106,
+      name: t('animals.flamingo'),
+      type: 'sprite' as const,
+      animalType: 'Birds' as const,
+      source: flamingoSprite,
+      frames: flamingoFrames,
+      spriteSheetSize: flamingoMeta.size,
+      sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+      labelSound: getLabelSound('flamingo', language),
+      isMoving: false,
+    },
+    {
+    id: 107,
+    name: t('animals.antEater'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: antEaterSprite,
+    frames: antEaterFrames,
+    spriteSheetSize: antEaterMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('antEater', language),
+    isMoving: false,
+  },
+  {
+    id: 108,
+    name: t('animals.asianElephant'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: asianElephantSprite,
+    frames: asianElephantFrames,
+    spriteSheetSize: asianElephantMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('asianElephant', language),
+    isMoving: false,
+  },
+  {
+    id: 109,
+    name: t('animals.bengalTiger'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: bengalTigerSprite,
+    frames: bengalTigerFrames,
+    spriteSheetSize: bengalTigerMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('bengalTiger', language),
+    isMoving: false,
+  },
+  {
+    id: 110,
+    name: t('animals.blackPanther'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: blackPantherSprite,
+    frames: blackPantherFrames,
+    spriteSheetSize: blackPantherMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('blackPanther', language),
+    isMoving: false,
+  },
+  {
+    id: 111,
+    name: t('animals.capybara'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: capybaraSprite,
+    frames: capybaraFrames,
+    spriteSheetSize: capybaraMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('capybara', language),
+    isMoving: false,
+  },
+  {
+    id: 112,
+    name: t('animals.chameleon'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: chameleonSprite,
+    frames: chameleonFrames,
+    spriteSheetSize: chameleonMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('chameleon', language),
+    isMoving: false,
+  },
+  {
+    id: 113,
+    name: t('animals.chimpanzee'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: chimpanzeeSprite,
+    frames: chimpanzeeFrames,
+    spriteSheetSize: chimpanzeeMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('chimpanzee', language),
+    isMoving: false,
+  },
+  {
+    id: 114,
+    name: t('animals.crocodile'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: crocodileSprite,
+    frames: crocodileFrames,
+    spriteSheetSize: crocodileMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('crocodile', language),
+    isMoving: false,
+  },
+  {
+    id: 115,
+    name: t('animals.frog'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: frogSprite,
+    frames: frogFrames,
+    spriteSheetSize: frogMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('frog', language),
+    isMoving: false,
+  },
+  {
+    id: 116,
+    name: t('animals.gorilla'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: gorillaSprite,
+    frames: gorillaFrames,
+    spriteSheetSize: gorillaMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('gorilla', language),
+    isMoving: false,
+  },
+  {
+    id: 117,
+    name: t('animals.hippopotamus'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: hippopotamusSprite,
+    frames: hippopotamusFrames,
+    spriteSheetSize: hippopotamusMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('hippopotamus', language),
+    isMoving: false,
+  },
+  {
+    id: 118,
+    name: t('animals.jaguar'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: jaguarSprite,
+    frames: jaguarFrames,
+    spriteSheetSize: jaguarMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('jaguar', language),
+    isMoving: false,
+  },
+  {
+    id: 119,
+    name: t('animals.lemur'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: lemurSprite,
+    frames: lemurFrames,
+    spriteSheetSize: lemurMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('lemur', language),
+    isMoving: false,
+  },
+  {
+    id: 120,
+    name: t('animals.lizard'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: lizardSprite,
+    frames: lizardFrames,
+    spriteSheetSize: lizardMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('lizard', language),
+    isMoving: false,
+  },
+  {
+    id: 121,
+    name: t('animals.orangutan'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: orangutanSprite,
+    frames: orangutanFrames,
+    spriteSheetSize: orangutanMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('orangutan', language),
+    isMoving: false,
+  },
+  {
+    id: 122,
+    name: t('animals.sloth'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: slothSprite,
+    frames: slothFrames,
+    spriteSheetSize: slothMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('sloth', language),
+    isMoving: false,
+  },
+  {
+    id: 123,
+    name: t('animals.snake'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: snakeSprite,
+    frames: snakeFrames,
+    spriteSheetSize: snakeMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('snake', language),
+    isMoving: false,
+  },
+  {
+    id: 124,
+    name: t('animals.turtle'),
+    type: 'sprite' as const,
+    animalType: 'Jungle' as const,
+    source: turtleSprite,
+    frames: turtleFrames,
+    spriteSheetSize: turtleMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('turtle', language),
+    isMoving: false,
+  }
   ];
 
   // Preload all animal images regardless of type

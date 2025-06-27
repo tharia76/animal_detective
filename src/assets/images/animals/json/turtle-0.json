@@ -1,7 +1,7 @@
 {"frames": [
 
 {
-	"filename": "jerboa_00000.png",
+	"filename": "turt_00000.png",
 	"frame": {"x":0,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -9,7 +9,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00001.png",
+	"filename": "turt_00001.png",
 	"frame": {"x":0,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -17,7 +17,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00002.png",
+	"filename": "turt_00002.png",
 	"frame": {"x":0,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -25,7 +25,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00003.png",
+	"filename": "turt_00003.png",
 	"frame": {"x":0,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -33,7 +33,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00004.png",
+	"filename": "turt_00004.png",
 	"frame": {"x":0,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -41,7 +41,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00005.png",
+	"filename": "turt_00005.png",
 	"frame": {"x":0,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -49,7 +49,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00006.png",
+	"filename": "turt_00006.png",
 	"frame": {"x":0,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -57,7 +57,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00007.png",
+	"filename": "turt_00007.png",
 	"frame": {"x":0,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -65,7 +65,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00008.png",
+	"filename": "turt_00008.png",
 	"frame": {"x":250,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -73,7 +73,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00009.png",
+	"filename": "turt_00009.png",
 	"frame": {"x":250,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -81,7 +81,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00010.png",
+	"filename": "turt_00010.png",
 	"frame": {"x":250,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -89,7 +89,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00011.png",
+	"filename": "turt_00011.png",
 	"frame": {"x":250,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -97,7 +97,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00012.png",
+	"filename": "turt_00012.png",
 	"frame": {"x":250,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -105,7 +105,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00013.png",
+	"filename": "turt_00013.png",
 	"frame": {"x":250,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -113,7 +113,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00014.png",
+	"filename": "turt_00014.png",
 	"frame": {"x":250,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -121,7 +121,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00015.png",
+	"filename": "turt_00015.png",
 	"frame": {"x":250,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -129,7 +129,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00016.png",
+	"filename": "turt_00016.png",
 	"frame": {"x":500,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -137,7 +137,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00017.png",
+	"filename": "turt_00017.png",
 	"frame": {"x":500,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -145,7 +145,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00018.png",
+	"filename": "turt_00018.png",
 	"frame": {"x":500,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -153,7 +153,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00019.png",
+	"filename": "turt_00019.png",
 	"frame": {"x":500,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -161,7 +161,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00020.png",
+	"filename": "turt_00020.png",
 	"frame": {"x":500,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -169,7 +169,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00021.png",
+	"filename": "turt_00021.png",
 	"frame": {"x":500,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -177,7 +177,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00022.png",
+	"filename": "turt_00022.png",
 	"frame": {"x":500,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -185,7 +185,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00023.png",
+	"filename": "turt_00023.png",
 	"frame": {"x":500,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -193,7 +193,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00024.png",
+	"filename": "turt_00024.png",
 	"frame": {"x":750,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -201,7 +201,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00025.png",
+	"filename": "turt_00025.png",
 	"frame": {"x":750,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -209,7 +209,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00026.png",
+	"filename": "turt_00026.png",
 	"frame": {"x":750,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -217,7 +217,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00027.png",
+	"filename": "turt_00027.png",
 	"frame": {"x":750,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -225,7 +225,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00028.png",
+	"filename": "turt_00028.png",
 	"frame": {"x":750,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -233,7 +233,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00029.png",
+	"filename": "turt_00029.png",
 	"frame": {"x":750,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -241,7 +241,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00030.png",
+	"filename": "turt_00030.png",
 	"frame": {"x":750,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -249,7 +249,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00031.png",
+	"filename": "turt_00031.png",
 	"frame": {"x":750,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -257,7 +257,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00032.png",
+	"filename": "turt_00032.png",
 	"frame": {"x":1000,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -265,7 +265,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00033.png",
+	"filename": "turt_00033.png",
 	"frame": {"x":1000,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -273,7 +273,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00034.png",
+	"filename": "turt_00034.png",
 	"frame": {"x":1000,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -281,7 +281,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00035.png",
+	"filename": "turt_00035.png",
 	"frame": {"x":1000,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -289,7 +289,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00036.png",
+	"filename": "turt_00036.png",
 	"frame": {"x":1000,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -297,7 +297,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00037.png",
+	"filename": "turt_00037.png",
 	"frame": {"x":1000,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -305,7 +305,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00038.png",
+	"filename": "turt_00038.png",
 	"frame": {"x":1000,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -313,7 +313,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00039.png",
+	"filename": "turt_00039.png",
 	"frame": {"x":1000,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -321,7 +321,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00040.png",
+	"filename": "turt_00040.png",
 	"frame": {"x":1250,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -329,7 +329,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00041.png",
+	"filename": "turt_00041.png",
 	"frame": {"x":1250,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -337,7 +337,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00042.png",
+	"filename": "turt_00042.png",
 	"frame": {"x":1250,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -345,7 +345,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00043.png",
+	"filename": "turt_00043.png",
 	"frame": {"x":1250,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -353,24 +353,8 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "jerboa_00044.png",
+	"filename": "turt_00044.png",
 	"frame": {"x":1250,"y":1000,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "jerboa_00045.png",
-	"frame": {"x":1250,"y":1250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "jerboa_00046.png",
-	"frame": {"x":1250,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
@@ -379,10 +363,10 @@
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
-	"image": "jerboa-0.png",
+	"image": "turtle-0.png",
 	"format": "RGBA8888",
 	"size": {"w":1500,"h":2000},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:71260cd9228acbda385f425769ea13df:bdb4eb4d11b526110c47e3a79825bf3f:266bc555db4a064bba4506f3ef1d7c44$"
+	"smartupdate": "$TexturePacker:SmartUpdate:22e246a06286a0946ac97b8db26ccf37:5923e1871b4fc98cc7969756e4c4c953:25e8b543cb95cae4736a448e87e113b1$"
 }
 }
