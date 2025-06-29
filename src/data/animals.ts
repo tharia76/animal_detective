@@ -932,7 +932,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: foxMeta.size,
       sound: require('../assets/sounds/animal_sounds/fox.mp3'),
       labelSound: getLabelSound('fox', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 19,
@@ -944,7 +945,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: bearMeta.size,
       sound: require('../assets/sounds/animal_sounds/bear.mp3'),
       labelSound: getLabelSound('bear', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'right',
     },
     {
       id: 20,
@@ -1170,7 +1172,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: camelMeta.size,
       sound: require('../assets/sounds/animal_sounds/camel.mp3'),
       labelSound: getLabelSound('camel', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 39,
@@ -1182,7 +1185,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: desertTortoiseMeta.size,
       sound: require('../assets/sounds/animal_sounds/turt.mp3'),
       labelSound: getLabelSound('desert_tortoise', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'right',
     },
     {
       id: 40,
@@ -1194,7 +1198,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: fenexFoxMeta.size,
       sound: require('../assets/sounds/animal_sounds/fennecfox.mp3'),
       labelSound: getLabelSound('fennec_fox', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'right',
     },
     {
       id: 41,
@@ -1218,7 +1223,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: jackalMeta.size,
       sound: require('../assets/sounds/animal_sounds/jackal.mp3'),
       labelSound: getLabelSound('jackal', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 43,
@@ -1230,7 +1236,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: jerboaMeta.size,
       sound: require('../assets/sounds/animal_sounds/mouse.mp3'),
       labelSound: getLabelSound('jerboa', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 44,
@@ -1242,7 +1249,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: oryxMeta.size,
       sound: require('../assets/sounds/animal_sounds/oryx.mp3'),
       labelSound: getLabelSound('oryx', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'right',
     },
     {
       id: 45,
@@ -1254,7 +1262,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: sandCatMeta.size,
       sound: require('../assets/sounds/animal_sounds/sandcat.mp3'),
       labelSound: getLabelSound('sand_cat', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 46,
@@ -1290,7 +1299,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: bizonMeta.size,
       sound: require('../assets/sounds/animal_sounds/bizon.mp3'),
       labelSound: getLabelSound('bison', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 49,
@@ -1302,7 +1312,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: elephantMeta.size,
       sound: require('../assets/sounds/animal_sounds/elephant.mp3'),
       labelSound: getLabelSound('elephant', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 50,
@@ -1314,7 +1325,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: gepardMeta.size,
       sound: require('../assets/sounds/animal_sounds/cat.mp3'),
       labelSound: getLabelSound('cheetah', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 51,
@@ -1326,7 +1338,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: hyenaMeta.size,
       sound: require('../assets/sounds/animal_sounds/cat.mp3'),
       labelSound: getLabelSound('hyena', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 52,
@@ -1350,7 +1363,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: tigerMeta.size,
       sound: require('../assets/sounds/animal_sounds/cat.mp3'),
       labelSound: getLabelSound('tiger', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'right',
     },
     {
       id: 54,
@@ -1362,7 +1376,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: wildBoarMeta.size,
       sound: require('../assets/sounds/animal_sounds/boar.mp3'),
       labelSound: getLabelSound('wild_boar', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 55,
@@ -1410,7 +1425,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: giraffeMeta.size,
       sound: require('../assets/sounds/animal_sounds/cat.mp3'),
       labelSound: getLabelSound('giraffe', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'right',
     },
     {
       id: 59,
@@ -1422,7 +1438,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: rhinocerosMeta.size,
       sound: require('../assets/sounds/animal_sounds/cat.mp3'),
       labelSound: getLabelSound('rhinoceros', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 60,
@@ -1591,7 +1608,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       sound: require('../assets/sounds/animal_sounds/cat.mp3'),
       labelSound: getLabelSound('dolphin', language),
       isMoving: true,
-      movingDirection: 'left',
+      movingDirection: 'right',
     },
     {
       id: 74,
@@ -1653,7 +1670,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       sound: require('../assets/sounds/animal_sounds/turt.mp3'),
       labelSound: getLabelSound('sea_turtle', language),
       isMoving: true,
-      movingDirection: 'left',
+      movingDirection: 'right',
     },
     {
       id: 79,
@@ -1993,7 +2010,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: antEaterMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('antEater', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'left',
   },
   {
     id: 108,
@@ -2005,7 +2023,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: asianElephantMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('asianElephant', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'right',
   },
   {
     id: 109,
@@ -2017,7 +2036,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: bengalTigerMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('bengalTiger', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'left',
   },
   {
     id: 110,
@@ -2029,7 +2049,9 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: blackPantherMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('blackPanther', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'left',
+
   },
   {
     id: 111,
@@ -2041,7 +2063,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: capybaraMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('capybara', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'left',
   },
   {
     id: 112,
@@ -2077,7 +2100,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: crocodileMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('crocodile', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'left',
   },
   {
     id: 115,
@@ -2101,7 +2125,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: gorillaMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('gorilla', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'left',
   },
   {
     id: 117,
@@ -2113,7 +2138,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: hippopotamusMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('hippopotamus', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'left',
   },
   {
     id: 118,
@@ -2125,7 +2151,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     spriteSheetSize: jaguarMeta.size,
     sound: require('../assets/sounds/animal_sounds/cat.mp3'),
     labelSound: getLabelSound('jaguar', language),
-    isMoving: false,
+    isMoving: true,
+    movingDirection: 'left',
   },
   {
     id: 119,

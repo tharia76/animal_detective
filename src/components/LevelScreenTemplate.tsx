@@ -131,9 +131,33 @@ export default function LevelScreenTemplate({
   // --- BG MUSIC STATE ---
   const bgMusicRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const [currentBgMusicKey, setCurrentBgMusicKey] = useState<string | undefined>(undefined);
+  
+  // Audio ducking constants
+  const NORMAL_BG_VOLUME = 1.0;
+  const DUCKED_BG_VOLUME = 0.2;
 
-  // 1) Add at the top, alongside your other refs
-  const waitingToResumeBg = useRef(false);
+  // Helper functions for audio ducking
+  const duckBackgroundMusic = useCallback(() => {
+    if (bgMusicRef.current && !isMuted) {
+      try {
+        bgMusicRef.current.volume = DUCKED_BG_VOLUME;
+        console.log('Background music ducked to', DUCKED_BG_VOLUME);
+      } catch (error) {
+        console.warn('Error ducking background music:', error);
+      }
+    }
+  }, [isMuted, DUCKED_BG_VOLUME]);
+
+  const restoreBackgroundMusic = useCallback(() => {
+    if (bgMusicRef.current && !isMuted) {
+      try {
+        bgMusicRef.current.volume = NORMAL_BG_VOLUME;
+        console.log('Background music restored to', NORMAL_BG_VOLUME);
+      } catch (error) {
+        console.warn('Error restoring background music:', error);
+      }
+    }
+  }, [isMuted, NORMAL_BG_VOLUME]);
 
   const currentAnimal = useMemo(() => {
     if (animals.length > 0 && currentAnimalIndex >= 0 && currentAnimalIndex < animals.length) {
@@ -194,7 +218,12 @@ export default function LevelScreenTemplate({
     // For require() assets, String(require(...)) is "[object Module]" or "[object Object]", so compare by reference
     if (bgMusicRef.current && currentBgMusicKey && currentBgMusicKey === String(source)) {
       if (bgMusicRef.current) {
-        isMuted ? bgMusicRef.current.pause() : bgMusicRef.current.play();
+        if (isMuted) {
+          bgMusicRef.current.pause();
+        } else {
+          bgMusicRef.current.volume = NORMAL_BG_VOLUME; // Ensure volume is at normal level
+          bgMusicRef.current.play();
+        }
       }
       return;
     }
@@ -213,6 +242,7 @@ export default function LevelScreenTemplate({
       try {
         const p = createAudioPlayer(source);
         p.loop = true;
+        p.volume = NORMAL_BG_VOLUME; // Set initial volume
         p.play();
         bgMusicRef.current = p;
         setCurrentBgMusicKey(String(source));
@@ -345,7 +375,7 @@ export default function LevelScreenTemplate({
   }, []);
 
   // remove the `isSoundPlayingRef` check so it always goes through
-  // 3) in your playSounds() playbackStatusUpdate, after it finally finishes, handle waitingToResumeBg
+  // 3) in your playSounds() playbackStatusUpdate, after it finally finishes, restore background music volume
   const playSounds = useCallback(async () => {
     if (isMuted || !currentAnimal?.sound) return;
 
@@ -370,6 +400,9 @@ export default function LevelScreenTemplate({
         return;
       }
 
+      // Duck the background music volume instead of pausing
+      duckBackgroundMusic();
+
       isSoundPlayingRef.current = true;
 
       const animalPlayer = createAudioPlayer(currentAnimal.sound);
@@ -391,21 +424,15 @@ export default function LevelScreenTemplate({
                 if (soundRef.current === labelPlayer) soundRef.current = null;
                 isSoundPlayingRef.current = false;
 
-                // If we are waiting to resume BG, do it now
-                if (waitingToResumeBg.current && !isMuted) {
-                  bgMusicRef.current?.play();
-                  waitingToResumeBg.current = false;
-                }
+                // Restore background music volume instead of resuming playback
+                restoreBackgroundMusic();
               }
             });
           } else {
             isSoundPlayingRef.current = false;
 
-            // If we are waiting to resume BG, do it now
-            if (waitingToResumeBg.current && !isMuted) {
-              bgMusicRef.current?.play();
-              waitingToResumeBg.current = false;
-            }
+            // Restore background music volume instead of resuming playback
+            restoreBackgroundMusic();
           }
         }
       });
@@ -418,16 +445,13 @@ export default function LevelScreenTemplate({
         soundRef.current.remove();
         soundRef.current = null;
       }
-      // If we are waiting to resume BG, do it now (in case of error)
-      if (waitingToResumeBg.current && !isMuted) {
-        bgMusicRef.current?.play();
-        waitingToResumeBg.current = false;
-      }
+      // Restore background music volume in case of error
+      restoreBackgroundMusic();
     }
-  }, [currentAnimal, isMuted, stopSound, bgMusicRef, isTransitioning]);
+  }, [currentAnimal, isMuted, stopSound, isTransitioning, duckBackgroundMusic, restoreBackgroundMusic]);
 
   // --- REWRITE: handleAnimalPress as the single tap handler for animal card ---
-  // 2) tweak your handleAnimalPress so it doesn't immediately restart BG if a sound is in flight
+  // 2) tweak your handleAnimalPress to use volume ducking instead of pause/resume
   const handleAnimalPress = useCallback(() => {
     console.log('Animal pressed! isTransitioning:', isTransitioning, 'showName:', showName, 'currentAnimal:', currentAnimal?.name);
     
@@ -439,13 +463,8 @@ export default function LevelScreenTemplate({
     if (!showName) {
       console.log('Setting showName to true and playing sounds');
       setShowName(true);
-      // 1) pause the level BG immediately
-      if (bgMusicRef.current) {
-        bgMusicRef.current.pause();
-      }
-      // clear any old wait flag
-      waitingToResumeBg.current = false;
-      // 2) kill any in‑flight animal audio, then play the new one
+      // Background music ducking will be handled in playSounds()
+      // kill any in‑flight animal audio, then play the new one
       stopSound(true).then(() => {
         // Force play sounds even if muted is checked, for better UX
         playSounds();
@@ -453,14 +472,13 @@ export default function LevelScreenTemplate({
     } else {
       console.log('Setting showName to false');
       setShowName(false);
-      // if a sound is playing, wait for it — otherwise resume immediately
-      if (soundRef.current) {
-        waitingToResumeBg.current = true;
-      } else {
-        if (!isMuted) bgMusicRef.current?.play();
+      // If no sound is currently playing, restore background music volume immediately
+      if (!soundRef.current) {
+        restoreBackgroundMusic();
       }
+      // If sound is playing, volume will be restored when sound finishes
     }
-  }, [showName, isMuted, playSounds, stopSound, bgMusicRef, soundRef, isTransitioning, currentAnimal]);
+  }, [showName, playSounds, stopSound, restoreBackgroundMusic, isTransitioning, currentAnimal]);
 
   // Remove toggleShowName entirely
 
@@ -587,6 +605,7 @@ export default function LevelScreenTemplate({
       // Resume bg music, but only if instruction bubble is visible
       if (bgMusicRef.current && showInstruction) {
         try {
+          bgMusicRef.current.volume = NORMAL_BG_VOLUME; // Ensure volume is restored when unmuting
           bgMusicRef.current.play();
         } catch (e) {}
       }
