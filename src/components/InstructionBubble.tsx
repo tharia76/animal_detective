@@ -4,8 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 
 // Device detection and responsive scaling functions
-const isTablet = () => {
-  const { width, height } = require('react-native').Dimensions.get('window');
+const isTablet = (width: number, height: number) => {
   const aspectRatio = height / width;
   return aspectRatio <= 1.6;
 };
@@ -14,7 +13,7 @@ const getScaleFactor = (width: number, height: number): number => {
   const baseWidth = 375;
   const baseHeight = 667;
   
-  if (isTablet()) {
+  if (isTablet(width, height)) {
     const tabletBaseWidth = 768;
     const tabletBaseHeight = 1024;
     const widthScale = width / tabletBaseWidth;
@@ -49,13 +48,14 @@ export default function InstructionBubble({
   const dynamicStyles = useDynamicStyles();
   const { width, height } = useWindowDimensions();
   const scaleFactor = getScaleFactor(width, height);
+  const isLandscape = width > height;
 
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const floatAnim = useRef(new Animated.Value(0)).current;
 
-  // Cute gradient colors
-  const gradientColors = ['#FFB6C1', '#FFC0CB', '#FFE4E1'] as const; // Pink to light pink to misty rose
+  // Orange gradient colors
+  const gradientColors = ['#FF8C00', '#FFA500', '#FFE4B5'] as const; // Dark orange to orange to moccasin
 
   // Set up animations
   useEffect(() => {
@@ -123,21 +123,28 @@ export default function InstructionBubble({
     >
       <LinearGradient
         colors={gradientColors}
-        style={dynamicStyles.instructionBubbleGradient}
+        style={[
+          dynamicStyles.instructionBubbleGradient,
+          {
+            paddingVertical: getResponsiveSpacing(12, scaleFactor),
+            paddingHorizontal: getResponsiveSpacing(18, scaleFactor),
+          }
+        ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
           <Text style={{ 
-            fontSize: getResponsiveFontSize(18, scaleFactor), 
-            color: '#8B4513', // Saddle brown for cute contrast
+            fontSize: getResponsiveFontSize(isLandscape ? 18 : 14, scaleFactor), // Smaller text in portrait
+            color: '#FFFFFF', // White text for better contrast on orange
             textAlign: 'center', 
-            marginBottom: getResponsiveSpacing(18, scaleFactor), 
-            marginTop: getResponsiveSpacing(10, scaleFactor), 
+            marginBottom: getResponsiveSpacing(isLandscape ? 18 : 12, scaleFactor), 
+            marginTop: getResponsiveSpacing(isLandscape ? 10 : 8, scaleFactor), 
             fontWeight: 'bold',
-            textShadowColor: 'rgba(255, 255, 255, 0.8)',
+            textShadowColor: 'rgba(0, 0, 0, 0.5)', // Dark shadow for better readability on orange
             textShadowOffset: { width: 1, height: 1 },
             textShadowRadius: 2,
+            flex: 1,
           }}>
             {text}
           </Text>

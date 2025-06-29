@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, useWindowDimensions, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -20,8 +20,7 @@ interface NavigationButtonsProps {
 }
 
 // Device detection functions
-const isTablet = () => {
-  const { width, height } = require('react-native').Dimensions.get('window');
+const isTablet = (width: number, height: number) => {
   const minDimension = Math.min(width, height);
   const maxDimension = Math.max(width, height);
   return minDimension >= 768 || maxDimension >= 1024;
@@ -31,7 +30,7 @@ const getScaleFactor = (width: number, height: number): number => {
   const baseWidth = 375;
   const baseHeight = 667;
   
-  if (isTablet()) {
+  if (isTablet(width, height)) {
     const tabletBaseWidth = 768;
     const tabletBaseHeight = 1024;
     const widthScale = width / tabletBaseWidth;
@@ -53,41 +52,49 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   handleNext,
   isTransitioning,
   currentAnimalIndex,
-  bgColor
+  bgColor,
 }) => {
   // Animate the arrows with a subtle left-right wiggle
   const leftAnim = useSharedValue(0);
   const rightAnim = useSharedValue(0);
+  
+  // Add throttling to prevent rapid taps
+  const lastTapTime = useRef(0);
+  const TAP_THROTTLE_MS = 300; // Prevent taps closer than 300ms
 
   // Get orientation and dimensions
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
-  const isTabletDevice = isTablet();
+  const isTabletDevice = isTablet(width, height);
   const dynamicStyles = useDynamicStyles();
   const scaleFactor = getScaleFactor(width, height);
 
   useEffect(() => {
+    // Reduce animation complexity on phones to prevent memory issues
+    const animationDuration = isTabletDevice ? 300 : 400;
+    const animationScale = isTabletDevice ? 6 : 4; // Smaller movement on phones
+    
     leftAnim.value = withRepeat(
       withSequence(
-        withTiming(-6, { duration: 300 }),
-        withTiming(0, { duration: 300 }),
-        withTiming(-6, { duration: 300 }),
-        withTiming(0, { duration: 300 })
+        withTiming(-animationScale, { duration: animationDuration }),
+        withTiming(0, { duration: animationDuration }),
+        withTiming(-animationScale, { duration: animationDuration }),
+        withTiming(0, { duration: animationDuration })
       ),
       -1,
       false
     );
     rightAnim.value = withRepeat(
       withSequence(
-        withTiming(6, { duration: 300 }),
-        withTiming(0, { duration: 300 }),
-        withTiming(6, { duration: 300 }),
-        withTiming(0, { duration: 300 })
+        withTiming(animationScale, { duration: animationDuration }),
+        withTiming(0, { duration: animationDuration }),
+        withTiming(animationScale, { duration: animationDuration }),
+        withTiming(0, { duration: animationDuration })
       ),
       -1,
       false
     );
-  }, [leftAnim, rightAnim]);
+  }, [leftAnim, rightAnim, isTabletDevice]);
 
   const leftArrowStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: leftAnim.value }],
@@ -97,29 +104,40 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     transform: [{ translateX: rightAnim.value }],
   }));
 
-  // Responsive navigation button style - bigger on phones
+  // Responsive navigation button style - much smaller in mobile portrait
+  const baseButtonSize = isTabletDevice 
+    ? 120 
+    : (isLandscape ? 140 : 80); // Much smaller buttons in mobile portrait
+  const baseIconSize = isTabletDevice 
+    ? 65 
+    : (isLandscape ? 75 : 35); // Much smaller icons in mobile portrait
+  
+  // Add safety bounds to prevent excessive scaling
+  const safeScaleFactor = Math.max(0.5, Math.min(scaleFactor, 2.0));
+  const minButtonSize = isLandscape ? 60 : 45; // Smaller minimum for portrait
+  const minIconSize = isLandscape ? 30 : 20; // Smaller minimum for portrait
+  const buttonSize = Math.max(minButtonSize, Math.min(200, getResponsiveSpacing(baseButtonSize, safeScaleFactor)));
+  const iconSize = Math.max(minIconSize, Math.min(100, getResponsiveSpacing(baseIconSize, safeScaleFactor)));
+
   const navButtonStyle = [
     styles.navButton,
     { 
-      width: getResponsiveSpacing(isTabletDevice ? 120 : 140, scaleFactor), // Bigger on phones
-      height: getResponsiveSpacing(isTabletDevice ? 120 : 140, scaleFactor), // Bigger on phones
-      borderRadius: getResponsiveSpacing(isTabletDevice ? 60 : 70, scaleFactor),
+      width: buttonSize,
+      height: buttonSize,
+      borderRadius: buttonSize / 2,
     }
   ];
 
-  // Responsive icon size - bigger on phones
-  const iconSize = getResponsiveSpacing(isTabletDevice ? 65 : 75, scaleFactor); // Bigger icons on phones
-
-  // Container style optimized for landscape orientation
+        // Container style optimized for current orientation
   const containerStyle: ViewStyle = {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     position: 'absolute',
-    bottom: getResponsiveSpacing(120, scaleFactor),
-    left: '20%',
-    right: '20%',
-    paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
+    bottom: getResponsiveSpacing(isLandscape ? 120 : 80, scaleFactor), // Higher in portrait
+    left: '10%', // Spread buttons further apart
+    right: '10%', // Spread buttons further apart
+    paddingHorizontal: getResponsiveSpacing(30, scaleFactor), // More padding for extra spacing
     zIndex: 10,
   };
 
@@ -127,11 +145,40 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const leftGradientColors = ['#FF6B6B', '#4ECDC4', '#45B7D1'] as const; // Red to teal to blue
   const rightGradientColors = ['#A8E6CF', '#FFD93D', '#FF6B6B'] as const; // Green to yellow to red
 
+  // Add touch event handlers with logging
+  const handlePrevPress = () => {
+    try {
+      const now = Date.now();
+      if (now - lastTapTime.current < TAP_THROTTLE_MS) {
+        return;
+      }
+      lastTapTime.current = now;
+      
+      handlePrev();
+    } catch (error) {
+      console.error('NavigationButtons: handlePrevPress error:', error);
+    }
+  };
+
+  const handleNextPress = () => {
+    try {
+      const now = Date.now();
+      if (now - lastTapTime.current < TAP_THROTTLE_MS) {
+        return;
+      }
+      lastTapTime.current = now;
+      
+      handleNext();
+    } catch (error) {
+      console.error('NavigationButtons: handleNextPress error:', error);
+    }
+  };
+
   return (
     <View style={containerStyle}>
       {/* Left arrow button */}
       <TouchableOpacity
-        onPress={handlePrev}
+        onPress={handlePrevPress}
         activeOpacity={0.7}
         disabled={isTransitioning || currentAnimalIndex === 0}
         style={navButtonStyle}
@@ -154,7 +201,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 
       {/* Right arrow button */}
       <TouchableOpacity
-        onPress={handleNext}
+        onPress={handleNextPress}
         activeOpacity={0.7}
         disabled={isTransitioning}
         style={navButtonStyle}

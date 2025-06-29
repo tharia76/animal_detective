@@ -79,7 +79,7 @@ export function useDynamicStyles() {
   const scaleFactor = getScaleFactor(screenW, screenH);
 
   return useMemo(() => {
-    // Base styles that work for landscape orientation
+    // Base styles that work for all orientations
     const baseStyles = {
       container: {
         flex: 1,
@@ -153,7 +153,7 @@ export function useDynamicStyles() {
       },
     };
 
-    // Landscape-only styles
+    // Dynamic styles for all orientations
     return StyleSheet.create({
       ...baseStyles,
       container: {
@@ -172,7 +172,7 @@ export function useDynamicStyles() {
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        height: screenH * (isTabletDevice ? 0.7 : 0.6),
+        height: screenH * (isTabletDevice ? 0.7 : (isLandscapeMode ? 0.6 : 0.5)), // Smaller height in mobile portrait
         marginTop: Math.max(getResponsiveSpacing(70, scaleFactor), screenH * 0.1) + 100 - (isTabletDevice ? 0 : 50),
       },
       animalNameWrapper: {
@@ -186,7 +186,11 @@ export function useDynamicStyles() {
         height: screenH * (isTabletDevice ? 0.98 : 0.85),
         resizeMode: 'contain',
         marginTop: 0,
-        transform: [{ scale: isTabletDevice ? 1.8 : 1.0 }],
+        transform: [{ 
+          scale: isTabletDevice 
+            ? 1.8 
+            : (isLandscapeMode ? 1.0 : 0.7) // Smaller scale for mobile portrait
+        }],
       },
       animalLoadingContainer: {
         width: Math.min(screenW * (isTabletDevice ? 0.3 : 0.4), screenH * 0.8),
@@ -287,27 +291,26 @@ export function useDynamicStyles() {
       },
       instructionBubble: {
         position: 'absolute',
-        top: getResponsiveSpacing(70, scaleFactor),
+        top: isLandscapeMode 
+          ? getResponsiveSpacing(70, scaleFactor) 
+          : getResponsiveSpacing(200, scaleFactor), // Lower position in mobile portrait
         left: '15%',
         right: '15%',
-        paddingVertical: getResponsiveSpacing(12, scaleFactor),
-        paddingHorizontal: getResponsiveSpacing(18, scaleFactor),
-        backgroundColor: 'white',
+        backgroundColor: 'transparent',
         borderRadius: getResponsiveSpacing(25, scaleFactor),
-        shadowColor: '#FF69B4',
+        shadowColor: '#FF8C00',
         shadowOpacity: 0.25,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 3 },
         elevation: 8,
         zIndex: 20,
         borderWidth: 3,
-        borderColor: '#FFB6C1',
+        borderColor: '#FFA500',
         marginBottom: getResponsiveSpacing(18, scaleFactor),
         overflow: 'hidden',
       },
       instructionBubbleGradient: {
-        width: '100%',
-        height: '100%',
+        flex: 1,
         borderRadius: getResponsiveSpacing(25, scaleFactor),
         justifyContent: 'center',
         alignItems: 'center',

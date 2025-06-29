@@ -18,7 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
 import * as RNIap from 'react-native-iap';
 import { useAudioPlayer } from 'expo-audio';
-import * as ScreenOrientation from 'expo-screen-orientation';
+
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -37,9 +37,11 @@ const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
 const BG_IMAGE = require('../src/assets/images/menu-screen.png');
 const LEVELS = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
 
-// Responsive constants
-const MIN_TILE_SIZE = 80;
-const MAX_TILE_SIZE = 160;
+// Responsive tile size constants for different orientations
+const MIN_TILE_SIZE_LANDSCAPE = 80;
+const MAX_TILE_SIZE_LANDSCAPE = 160;
+const MIN_TILE_SIZE_PORTRAIT = 100;  // Slightly bigger minimum for portrait
+const MAX_TILE_SIZE_PORTRAIT = 140; // Slightly bigger maximum for portrait
 const RESPONSIVE_MARGIN = 6;
 
 // Apple App Store product id for unlocking all levels except Farm
@@ -75,13 +77,13 @@ const getLevelBackgroundColor = (level: string): string => {
 // Responsive helper functions
 const getResponsiveColumns = (width: number, isLandscape: boolean): number => {
   if (isLandscape) {
-    if (width >= 1024) return 5; // Large tablets
-    if (width >= 768) return 4;  // Standard tablets
+    if (width >= 1024) return 4; // Large tablets
+    if (width >= 768) return 3;  // Standard tablets
     return 3; // Small tablets/phones
   } else {
-    if (width >= 500) return 4; // Large phones in portrait
-    if (width >= 400) return 3; // Standard phones
-    return 2; // Small phones
+    if (width >= 600) return 4; // Large phones/small tablets in portrait - more columns for smaller tiles
+    if (width >= 400) return 3; // Standard phones - more columns for smaller tiles
+    return 3; // Small phones - more columns for smaller tiles
   }
 };
 
@@ -116,23 +118,31 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
     },
     portraitHeaderContainer: {
       alignItems: 'center',
-      marginTop: getResponsiveSpacing(20, scaleFactor),
-      marginBottom: 0,
+      justifyContent: 'center',
+      marginTop: getResponsiveSpacing(15, scaleFactor),
+      marginBottom: getResponsiveSpacing(15, scaleFactor),
       zIndex: 10000,
       width: '100%',
       flexDirection: 'column',
-      justifyContent: 'flex-start',
       position: 'relative',
-      paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      paddingHorizontal: getResponsiveSpacing(25, scaleFactor),
+      paddingVertical: getResponsiveSpacing(20, scaleFactor),
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
       borderRadius: getResponsiveSpacing(25, scaleFactor),
-      marginHorizontal: getResponsiveSpacing(10, scaleFactor),
+      marginHorizontal: 'auto',
+      alignSelf: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 5,
     },
     portraitLogo: {
-      width: Math.min(getResponsiveSpacing(280, scaleFactor), width * 0.7),
-      height: Math.min(getResponsiveSpacing(200, scaleFactor), height * 0.25),
+      width: Math.min(getResponsiveSpacing(320, scaleFactor), width * 0.8),
+      height: Math.min(getResponsiveSpacing(140, scaleFactor), height * 0.18),
       resizeMode: 'contain',
-      marginBottom: getResponsiveSpacing(10, scaleFactor),
+      marginBottom: getResponsiveSpacing(20, scaleFactor),
+      alignSelf: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
@@ -141,16 +151,20 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
     },
     portraitLanguageSelector: {
       marginTop: 0,
-      marginBottom: getResponsiveSpacing(10, scaleFactor),
+      marginBottom: 0,
       alignSelf: 'center',
       zIndex: 10001,
+      width: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     tilesContainer: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'flex-start',
       paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
-      paddingTop: getResponsiveSpacing(20, scaleFactor),
+      paddingTop: getResponsiveSpacing(10, scaleFactor),
+      paddingBottom: getResponsiveSpacing(20, scaleFactor),
     },
     tilesContainerLandscape: {
       width: '100%',
@@ -166,6 +180,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
     scrollContent: {
       flexGrow: 1,
       minHeight: '100%',
+      paddingBottom: getResponsiveSpacing(20, scaleFactor),
     },
     landscapeHeaderContainer: {
       width: '100%',
@@ -428,37 +443,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
     }, 100);
     return () => clearTimeout(timer);
   }, [width, height, isLandscape]);
-
-  // Lock to landscape orientation only
-  useEffect(() => {
-    const setupOrientation = async () => {
-      try {
-        // Simple, consistent landscape lock
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-        console.log('MenuScreen: Orientation locked to landscape');
-      } catch (error) {
-        console.warn('MenuScreen: Orientation lock failed:', error);
-      }
-    };
-    
-    // Lock immediately
-    setupOrientation();
-    
-    // Set up a listener to re-lock if orientation changes
-    const subscription = ScreenOrientation.addOrientationChangeListener((event) => {
-      console.log('MenuScreen: Orientation changed to:', event.orientationInfo.orientation);
-      // If it's not landscape, force it back
-      if (event.orientationInfo.orientation !== ScreenOrientation.Orientation.LANDSCAPE_LEFT && 
-          event.orientationInfo.orientation !== ScreenOrientation.Orientation.LANDSCAPE_RIGHT) {
-        console.log('MenuScreen: Re-locking to landscape...');
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-      }
-    });
-    
-    return () => {
-      subscription?.remove();
-    };
-  }, []);
 
   // Keep playerRef in sync with player
   useEffect(() => {
@@ -809,9 +793,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   
   // Calculate responsive tile size with min/max constraints
   const currentNumColumns = getResponsiveColumns(currentWidth, currentIsLandscape);
-  const availableWidth = currentWidth * 0.65;
+  const availableWidth = currentIsLandscape 
+    ? currentWidth * 0.75  // More space in landscape
+    : currentWidth * 0.70; // Less space in portrait for smaller tiles
   const calculatedSize = (availableWidth / currentNumColumns) - (RESPONSIVE_MARGIN * 2);
-  const itemSize = Math.max(MIN_TILE_SIZE, Math.min(MAX_TILE_SIZE, calculatedSize));
+  
+  // Use different tile size constraints based on orientation
+  const minTileSize = currentIsLandscape ? MIN_TILE_SIZE_LANDSCAPE : MIN_TILE_SIZE_PORTRAIT;
+  const maxTileSize = currentIsLandscape ? MAX_TILE_SIZE_LANDSCAPE : MAX_TILE_SIZE_PORTRAIT;
+  const itemSize = Math.max(minTileSize, Math.min(maxTileSize, calculatedSize));
 
   const languages = [
     { code: 'en', name: 'English' },
@@ -846,7 +836,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
       height: '100%'
     }}>
       <ImageBackground
-        key={`landscape-${currentWidth}x${currentHeight}`}
+        key={`${currentIsLandscape ? 'landscape' : 'portrait'}-${currentWidth}x${currentHeight}`}
         source={
           backgroundImageUri
             ? { uri: backgroundImageUri }
@@ -863,61 +853,112 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
         resizeMode="cover"
       >
         <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-          <View style={responsiveStyles.landscapeLangContainer}>
-            <LanguageSelector
-              isLandscape={currentIsLandscape}
-              t={t}
-              lang={lang}
-              languages={languages}
-              handleLanguageChange={setLang}
-            />
-          </View>
-          <View style={responsiveStyles.landscapeHeaderContainer}>
-            <Image
-              source={require('../src/assets/images/game-logo.png')}
-              style={responsiveStyles.landscapeLogo}
-              resizeMode="contain"
-            />
-          </View>
-          <ScrollView
-            style={{ flex: 1, backgroundColor: 'transparent' }}
-            contentContainerStyle={{
-              flexGrow: 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingHorizontal: 32,
-              paddingTop: 8,
-              paddingBottom: 16,
-              minHeight: currentHeight * 0.6,
-              backgroundColor: 'transparent',
-            }}
-            showsVerticalScrollIndicator={true}
-          >
-            <View
-              style={{
-                width: '100%',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'transparent',
-              }}
-            >
-              {renderUnlockButtons()}
-              <LevelTiles
-                key={`landscape-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
-                levels={LEVELS}
-                numColumns={currentNumColumns}
-                isLandscape={currentIsLandscape}
-                itemSize={itemSize}
-                margin={RESPONSIVE_MARGIN}
-                LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
-                handleLevelSelect={(level: string) => handleSelect(level, getIsLocked(level))}
-                styles={responsiveStyles}
-                getLevelBackgroundColor={getLevelBackgroundColor}
-                t={t}
-                getIsLocked={getIsLocked}
-              />
-            </View>
-          </ScrollView>
+          {currentIsLandscape ? (
+            // LANDSCAPE LAYOUT
+            <>
+              <View style={responsiveStyles.landscapeLangContainer}>
+                <LanguageSelector
+                  isLandscape={currentIsLandscape}
+                  t={t}
+                  lang={lang}
+                  languages={languages}
+                  handleLanguageChange={setLang}
+                />
+              </View>
+              <View style={responsiveStyles.landscapeHeaderContainer}>
+                <Image
+                  source={require('../src/assets/images/game-logo.png')}
+                  style={responsiveStyles.landscapeLogo}
+                  resizeMode="contain"
+                />
+              </View>
+              <ScrollView
+                style={{ flex: 1, backgroundColor: 'transparent' }}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: getResponsiveSpacing(32, scaleFactor),
+                  paddingTop: getResponsiveSpacing(8, scaleFactor),
+                  paddingBottom: getResponsiveSpacing(16, scaleFactor),
+                  minHeight: currentHeight * 0.6,
+                  backgroundColor: 'transparent',
+                }}
+                showsVerticalScrollIndicator={false}
+              >
+                <View
+                  style={{
+                    width: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  {renderUnlockButtons()}
+                  <LevelTiles
+                    key={`landscape-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
+                    levels={LEVELS}
+                    numColumns={currentNumColumns}
+                    isLandscape={currentIsLandscape}
+                    itemSize={itemSize}
+                    margin={RESPONSIVE_MARGIN}
+                    LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
+                    handleLevelSelect={(level: string) => handleSelect(level, getIsLocked(level))}
+                    styles={responsiveStyles}
+                    getLevelBackgroundColor={getLevelBackgroundColor}
+                    t={t}
+                    getIsLocked={getIsLocked}
+                  />
+                </View>
+              </ScrollView>
+            </>
+          ) : (
+            // PORTRAIT LAYOUT
+            <>
+              <ScrollView
+                style={responsiveStyles.scrollView}
+                contentContainerStyle={responsiveStyles.scrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {/* Header with logo and language selector */}
+                <View style={responsiveStyles.portraitHeaderContainer}>
+                  <Image
+                    source={require('../src/assets/images/game-logo.png')}
+                    style={responsiveStyles.portraitLogo}
+                    resizeMode="contain"
+                  />
+                  <View style={responsiveStyles.portraitLanguageSelector}>
+                    <LanguageSelector
+                      isLandscape={currentIsLandscape}
+                      t={t}
+                      lang={lang}
+                      languages={languages}
+                      handleLanguageChange={setLang}
+                    />
+                  </View>
+                </View>
+
+                {/* Tiles container */}
+                <View style={responsiveStyles.tilesContainer}>
+                  {renderUnlockButtons()}
+                  <LevelTiles
+                    key={`portrait-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
+                    levels={LEVELS}
+                    numColumns={currentNumColumns}
+                    isLandscape={currentIsLandscape}
+                    itemSize={itemSize}
+                    margin={RESPONSIVE_MARGIN}
+                    LEVEL_BACKGROUNDS={LEVEL_BACKGROUNDS}
+                    handleLevelSelect={(level: string) => handleSelect(level, getIsLocked(level))}
+                    styles={responsiveStyles}
+                    getLevelBackgroundColor={getLevelBackgroundColor}
+                    t={t}
+                    getIsLocked={getIsLocked}
+                  />
+                </View>
+              </ScrollView>
+            </>
+          )}
           {renderUnlockModal()}
         </View>
       </ImageBackground>

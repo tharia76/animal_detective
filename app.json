@@ -2,7 +2,7 @@
   "name": "Animal Detective",
   "slug": "animal-detective",
   "version": "1.0.0",
-  "orientation": "landscape",
+  "orientation": "default",
   "icon": "./src/assets/images/icon.png",
   "scheme": "animal-detective",
   "userInterfaceStyle": "automatic",
@@ -21,12 +21,11 @@
         "NSAllowsArbitraryLoads": true
       },
       "UISupportedInterfaceOrientations": [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationPortraitUpsideDown",
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight"
       ],
-      "UIInterfaceOrientationChangesDisabled": true,
-      "UISupportsOrientationChanges": false,
-      "UISupportsRotationGestures": false,
       "MTKViewDisplaySyncEnabled": true,
       "UIApplicationSupportsIndirectInputEvents": true
     }
@@ -42,8 +41,7 @@
       "android.permission.RECORD_AUDIO",
       "android.permission.MODIFY_AUDIO_SETTINGS"
     ],
-    "package": "com.kido.animaldetective",
-    "screenOrientation": "landscape"
+    "package": "com.kido.animaldetective"
   },
   "web": {
     "bundler": "metro",

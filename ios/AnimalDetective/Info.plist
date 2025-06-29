@@ -61,6 +61,8 @@
     <string>UIStatusBarStyleDefault</string>
     <key>UISupportedInterfaceOrientations</key>
     <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationPortraitUpsideDown</string>
       <string>UIInterfaceOrientationLandscapeLeft</string>
       <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
@@ -68,12 +70,7 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
-    <key>UIInterfaceOrientationChangesDisabled</key>
-    <true/>
-    <key>UISupportsOrientationChanges</key>
-    <false/>
-    <key>UISupportsRotationGestures</key>
-    <false/>
+
     <key>MTKViewDisplaySyncEnabled</key>
     <true/>
     <key>UIApplicationSupportsIndirectInputEvents</key>
