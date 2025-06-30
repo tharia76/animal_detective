@@ -182,6 +182,7 @@ export function useDynamicStyles() {
         alignItems: 'center',
       },
       animalImage: {
+<<<<<<< Updated upstream
         width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.7), screenH * 0.99),
         height: screenH * (isTabletDevice ? 0.98 : 0.85),
         resizeMode: 'contain',
@@ -191,6 +192,13 @@ export function useDynamicStyles() {
             ? 1.8 
             : (isLandscapeMode ? 1.0 : 0.7) // Smaller scale for mobile portrait
         }],
+=======
+        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.35), screenH * 0.99),
+        height: screenH * (isTabletDevice ? 0.98 : 0.45),
+        resizeMode: 'contain',
+        marginTop: 0,
+        transform: [{ scale: isTabletDevice ? 1.5 : 1.0 }],
+>>>>>>> Stashed changes
       },
       animalLoadingContainer: {
         width: Math.min(screenW * (isTabletDevice ? 0.3 : 0.4), screenH * 0.8),

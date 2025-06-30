@@ -21,7 +21,7 @@ type SpriteProps = {
   frameDuration?: number;
 };
 
-const DEFAULT_FRAME_DURATION = 100;
+const DEFAULT_FRAME_DURATION = Platform.OS === 'android' ? 150 : 100;
 
 export default function SpriteAnimation({
   frames,
@@ -33,6 +33,7 @@ export default function SpriteAnimation({
   const frameIndex = useRef(0);
   const requestRef = useRef<number | undefined>(undefined);
   const previousTimeRef = useRef<number | undefined>(undefined);
+  const isMountedRef = useRef(true);
   
   // Use Animated values for smooth transforms
   const translateX = useRef(new Animated.Value(0)).current;
@@ -41,76 +42,99 @@ export default function SpriteAnimation({
   // Calculate max dimensions for the container view based on frame sizes
   const { w: maxW, h: maxH } = useMemo(() => {
     if (!frames || frames.length === 0) return { w: 0, h: 0 };
-    return frames.reduce(
-      (acc, f) => ({
-        w: Math.max(acc.w, f.frame.w),
-        h: Math.max(acc.h, f.frame.h),
-      }),
-      { w: 0, h: 0 }
-    );
+    try {
+      return frames.reduce(
+        (acc, f) => ({
+          w: Math.max(acc.w, f.frame.w),
+          h: Math.max(acc.h, f.frame.h),
+        }),
+        { w: 0, h: 0 }
+      );
+    } catch (error) {
+      console.warn('Error calculating sprite dimensions:', error);
+      return { w: 0, h: 0 };
+    }
   }, [frames]);
 
   // Animation loop using requestAnimationFrame for smoother timing
   const animate = useCallback((time: number) => {
-    if (!requestRef.current || !frames || frames.length === 0) return;
+    if (!requestRef.current || !frames || frames.length === 0 || !isMountedRef.current) return;
 
-    if (previousTimeRef.current === undefined) {
-      previousTimeRef.current = time;
-    }
-    const deltaTime = time - previousTimeRef.current;
+    try {
+      if (previousTimeRef.current === undefined) {
+        previousTimeRef.current = time;
+      }
+      const deltaTime = time - previousTimeRef.current;
 
-    if (deltaTime >= frameDuration) {
-      const framesToAdvance = Math.floor(deltaTime / frameDuration);
-      previousTimeRef.current = time - (deltaTime % frameDuration);
+      if (deltaTime >= frameDuration) {
+        const framesToAdvance = Math.floor(deltaTime / frameDuration);
+        previousTimeRef.current = time - (deltaTime % frameDuration);
 
-      frameIndex.current = (frameIndex.current + framesToAdvance) % frames.length;
-      const currentFrame = frames[frameIndex.current];
+        frameIndex.current = (frameIndex.current + framesToAdvance) % frames.length;
+        const currentFrame = frames[frameIndex.current];
 
-      if (currentFrame) {
-        const { x, y } = currentFrame.frame;
-        
-        // Use Animated.timing for smooth frame transitions
-        Animated.parallel([
-          Animated.timing(translateX, {
-            toValue: -x,
-            duration: 0, // Instant change for sprite frames
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateY, {
-            toValue: -y,
-            duration: 0, // Instant change for sprite frames
-            useNativeDriver: true,
-          }),
-        ]).start();
+        if (currentFrame && currentFrame.frame) {
+          const { x, y } = currentFrame.frame;
+          
+          // Use Animated.timing for smooth frame transitions
+          Animated.parallel([
+            Animated.timing(translateX, {
+              toValue: -x,
+              duration: 0, // Instant change for sprite frames
+              useNativeDriver: true,
+            }),
+            Animated.timing(translateY, {
+              toValue: -y,
+              duration: 0, // Instant change for sprite frames
+              useNativeDriver: true,
+            }),
+          ]).start();
+        }
+      }
+
+      requestRef.current = requestAnimationFrame(animate);
+    } catch (error) {
+      console.warn('Error in sprite animation loop:', error);
+      // Stop animation on error to prevent crashes
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+        requestRef.current = undefined;
       }
     }
-
-    requestRef.current = requestAnimationFrame(animate);
   }, [frames, frameDuration, translateX, translateY]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     frameIndex.current = 0;
     previousTimeRef.current = undefined;
 
     if (frames && frames.length > 0) {
-      const { x: initX, y: initY } = frames[0].frame;
-      
-      // Set initial position
-      translateX.setValue(-initX);
-      translateY.setValue(-initY);
+      try {
+        const { x: initX, y: initY } = frames[0].frame;
+        
+        // Set initial position
+        translateX.setValue(-initX);
+        translateY.setValue(-initY);
 
-      // Start the animation loop
-      requestRef.current = requestAnimationFrame(animate);
+        // Start the animation loop
+        requestRef.current = requestAnimationFrame(animate);
+      } catch (error) {
+        console.warn('Error initializing sprite animation:', error);
+      }
     } else {
       translateX.setValue(0);
       translateY.setValue(0);
     }
 
     return () => {
+      isMountedRef.current = false;
       if (requestRef.current) {
         cancelAnimationFrame(requestRef.current);
         requestRef.current = undefined;
       }
+      // Reset animated values
+      translateX.setValue(0);
+      translateY.setValue(0);
     };
   }, [frames, animate, translateX, translateY]);
 
@@ -145,6 +169,9 @@ export default function SpriteAnimation({
           }}
           resizeMode="cover"
           fadeDuration={0}
+          onError={(error) => {
+            console.warn('Sprite image loading error:', error);
+          }}
         />
       </View>
     </View>

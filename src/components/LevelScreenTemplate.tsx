@@ -30,6 +30,7 @@ import InstructionBubble from './InstructionBubble';
 import { useDynamicStyles } from '../styles/styles';
 import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
+import SimpleMobileModal from './SimpleMobileModal';
 import MovingBg from './MovingBg';
 import AnimatedBubbles from './AnimatedBubbles';
 import AnimatedSand from './AnimatedSand';
@@ -125,8 +126,8 @@ export default function LevelScreenTemplate({
   const isSoundPlayingRef = useRef<boolean>(false);
   const confettiAnimRefs = useRef<Animated.Value[]>([]);
   const [showCongratsModal, setShowCongratsModal] = useState(false);
-  const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set([0]));
   const [levelCompleted, setLevelCompleted] = useState(false);
+  const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set([0]));
 
   // --- BG MUSIC STATE ---
   const bgMusicRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
@@ -494,7 +495,15 @@ export default function LevelScreenTemplate({
     }
 
     setIsTransitioning(true);
-    stopSound(true);
+    
+    // Simple sound stop without async
+    if (soundRef.current) {
+      try {
+        soundRef.current.pause();
+        soundRef.current.remove();
+      } catch (e) {}
+      soundRef.current = null;
+    }
 
     // Use a single animation for smoother transitions
     Animated.timing(animalFadeAnim, {
@@ -515,8 +524,24 @@ export default function LevelScreenTemplate({
         
         if (newIndex >= animals.length && !levelCompleted) {
           setLevelCompleted(true);
-          setShowCongratsModal(true);
-          setIsTransitioning(false);
+          
+          // Stop background music before showing modal
+          if (bgMusicRef.current) {
+            try {
+              bgMusicRef.current.pause();
+              bgMusicRef.current.remove();
+            } catch (e) {
+              console.warn('Error stopping bg music:', e);
+            }
+            bgMusicRef.current = null;
+          }
+          
+          // Add a delay before showing modal to ensure cleanup
+          setTimeout(() => {
+            setShowCongratsModal(true);
+            setIsTransitioning(false);
+          }, 300);
+          
           return;
         }
         
@@ -560,7 +585,6 @@ export default function LevelScreenTemplate({
   }, [
       hasAnimals,
       isTransitioning,
-      stopSound,
       animalFadeAnim,
       currentAnimalIndex,
       animals.length,
@@ -577,7 +601,15 @@ export default function LevelScreenTemplate({
   }, [handleNavigation]);
 
   const goToHome = useCallback(() => {
-    stopSound(false);
+    // Simple sound stop
+    if (soundRef.current) {
+      try {
+        soundRef.current.pause();
+        soundRef.current.remove();
+      } catch (e) {}
+      soundRef.current = null;
+    }
+    
     // Stop bg music when going home
     if (bgMusicRef.current) {
       try {
@@ -588,7 +620,7 @@ export default function LevelScreenTemplate({
       setCurrentBgMusicKey(undefined);
     }
     onBackToMenu();
-  }, [stopSound, onBackToMenu]);
+  }, [onBackToMenu]);
 
   const toggleMute = () => {
     const changingToMuted = !isMuted;
@@ -614,7 +646,16 @@ export default function LevelScreenTemplate({
 
   const startOver = useCallback(() => {
     setShowCongratsModal(false);
-    stopSound(true);
+    
+    // Simple sound stop
+    if (soundRef.current) {
+      try {
+        soundRef.current.pause();
+        soundRef.current.remove();
+      } catch (e) {}
+      soundRef.current = null;
+    }
+    
     setIsTransitioning(true);
     animalFadeAnim.setValue(0);
     setCurrentAnimalIndex(0);
@@ -633,54 +674,51 @@ export default function LevelScreenTemplate({
         });
     }, 16); // One frame delay
 
-  }, [stopSound, animalFadeAnim]);
+  }, [animalFadeAnim]);
 
   const renderAnimal = () => {
     if (!currentAnimal) return null;
     const key = `${currentAnimal.id}-${currentAnimal.name}`;
 
-    if (currentAnimal.type === 'sprite' && currentAnimal.frames && currentAnimal.spriteSheetSize) {
+    try {
+      if (currentAnimal.type === 'sprite' && currentAnimal.frames && currentAnimal.spriteSheetSize) {
+        return (
+          <SpriteAnimation
+            key={key}
+            frames={currentAnimal.frames}
+            source={currentAnimal.source}
+            spriteSheetSize={currentAnimal.spriteSheetSize}
+            style={dynamicStyles.animalImage}
+          />
+        );
+      }
       return (
-        <SpriteAnimation
+        <Image
           key={key}
-          frames={currentAnimal.frames}
           source={currentAnimal.source}
-          spriteSheetSize={currentAnimal.spriteSheetSize}
           style={dynamicStyles.animalImage}
+          fadeDuration={0}
+          progressiveRenderingEnabled={true}
+          onError={(error) => {
+            console.warn('Animal image loading error:', error);
+          }}
         />
       );
+    } catch (error) {
+      console.warn('Error rendering animal:', error);
+      return (
+        <View style={[dynamicStyles.animalImage, { backgroundColor: 'rgba(255, 0, 0, 0.3)', justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ color: 'red', fontSize: 16 }}>Error loading animal</Text>
+        </View>
+      );
     }
-    return (
-      <Image
-        key={key}
-        source={currentAnimal.source}
-        style={dynamicStyles.animalImage}
-        fadeDuration={0}
-        progressiveRenderingEnabled={true}
-      />
-    );
   };
 
   useEffect(() => {
-    confettiAnimRefs.current = Array.from({ length: 30 }).map(() => new Animated.Value(0));
+    // Reduce confetti count for better performance on mobile
+    const confettiCount = Platform.OS === 'android' ? 15 : 20;
+    confettiAnimRefs.current = Array.from({ length: confettiCount }).map(() => new Animated.Value(0));
   }, []);
-
-  useEffect(() => {
-    if (showCongratsModal) {
-      confettiAnimRefs.current.forEach((anim, index) => {
-        anim.setValue(0);
-        const randomDuration = 2000 + Math.random() * 3000;
-        const randomDelay = Math.random() * 500;
-
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: randomDuration,
-          delay: randomDelay,
-          useNativeDriver: true,
-        }).start();
-      });
-    }
-  }, [showCongratsModal]);
 
   const onLoadEnd = useCallback(() => {
     setBgLoading(false);
@@ -700,6 +738,34 @@ export default function LevelScreenTemplate({
       }).start();
     }
   }, [currentAnimal?.isMoving, contentFade]);
+
+  // Cleanup function for animations and sounds
+  const cleanup = useCallback(() => {
+    // Stop sounds
+    if (soundRef.current) {
+      try {
+        soundRef.current.pause();
+        soundRef.current.remove();
+      } catch (e) {}
+      soundRef.current = null;
+    }
+    
+    // Stop background music
+    if (bgMusicRef.current) {
+      try {
+        bgMusicRef.current.pause();
+        bgMusicRef.current.remove();
+      } catch (e) {}
+      bgMusicRef.current = null;
+    }
+  }, []);
+
+  // Cleanup on unmount only
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
 
   if (!backgroundImageUri) {
     return (
@@ -788,19 +854,19 @@ export default function LevelScreenTemplate({
             )}
 
             {/* Ocean bubbles - only show for ocean level */}
-            {levelName.toLowerCase() === 'ocean' && showInstruction && <AnimatedBubbles />}
+            {levelName.toLowerCase() === 'ocean' && showInstruction && !showCongratsModal && <AnimatedBubbles />}
 
             {/* Desert sand - only show for desert level */}
             {levelName.toLowerCase() === 'desert' && showInstruction && <AnimatedSand />}
 
             {/* Arctic snow - only show for arctic level */}
-            {levelName.toLowerCase() === 'arctic' && showInstruction && <AnimatedSnow />}
+            {levelName.toLowerCase() === 'arctic' && showInstruction && !showCongratsModal && <AnimatedSnow />}
 
             {/* Forest fireflies - only show for forest level */}
-            {levelName.toLowerCase() === 'forest' && showInstruction && <AnimatedFireflies />}
+            {levelName.toLowerCase() === 'forest' && showInstruction && !showCongratsModal && <AnimatedFireflies />}
 
             {/* Forest leaves - only show for forest level */}
-            {levelName.toLowerCase() === 'forest' && showInstruction && <AnimatedLeaves />}
+            {levelName.toLowerCase() === 'forest' && showInstruction && !showCongratsModal && <AnimatedLeaves />}
 
           {hasAnimals && (
             <View style={dynamicStyles.content}>
@@ -883,15 +949,26 @@ export default function LevelScreenTemplate({
               </Text>
             </View>
           )}
-
-         <CongratsModal
-          showCongratsModal={showCongratsModal}
-          startOver={startOver}
-          goToHome={goToHome}
-         />
         </View>
       </Animated.View>
       </View>
+
+      {/* Congratulations Modal */}
+      {showCongratsModal && (Platform.OS === 'ios' || Platform.OS === 'android') && (
+        <SimpleMobileModal 
+          visible={showCongratsModal} 
+          onStartOver={startOver} 
+          onGoHome={goToHome} 
+        />
+      )}
+      
+      {showCongratsModal && Platform.OS === 'web' && (
+        <CongratsModal 
+          showCongratsModal={showCongratsModal} 
+          startOver={startOver} 
+          goToHome={goToHome} 
+        />
+      )}
     </ReanimatedView.View>
   );
 }
