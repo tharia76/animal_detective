@@ -135,7 +135,7 @@ export default function InstructionBubble({
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
           <Text style={{ 
-            fontSize: getResponsiveFontSize(isLandscape ? 18 : 14, scaleFactor), // Smaller text in portrait
+            fontSize: getResponsiveFontSize(isLandscape ? 22 : 18, scaleFactor), // Bigger text - increased from 18/14 to 22/18
             color: '#FFFFFF', // White text for better contrast on orange
             textAlign: 'center', 
             marginBottom: getResponsiveSpacing(isLandscape ? 18 : 12, scaleFactor), 
@@ -160,8 +160,8 @@ export default function InstructionBubble({
               <Image
                 source={image}
                 style={{ 
-                  width: getResponsiveSpacing(45, scaleFactor), // Made slightly bigger
-                  height: getResponsiveSpacing(45, scaleFactor), // Made slightly bigger
+                  width: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 50 : 65), // Ensure minimum size on phones
+                  height: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 50 : 65), // Ensure minimum size on phones
                 }} // Define image size here
                 resizeMode="contain"
               />

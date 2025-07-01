@@ -14,12 +14,19 @@ import { useDynamicStyles } from '../styles/styles';
 const MovingBg = ({
   backgroundImageUri,
   movingDirection,
+  containerHeight,
+  containerWidth,
 }: {
   backgroundImageUri: string | null;
   movingDirection: 'left' | 'right';
+  containerHeight?: number;
+  containerWidth?: number;
 }) => {
   const dynamicStyles = useDynamicStyles();
   const { width: screenW, height: screenH } = useWindowDimensions();
+  // Use containerHeight/Width if provided, otherwise use screen dimensions
+  const effectiveHeight = containerHeight || screenH;
+  const effectiveWidth = containerWidth || screenW;
   // SLOW IT DOWN: Increase duration to 40s per full cycle
   const SCROLL_DURATION = 20000; // 40s per full cycle
 
@@ -41,20 +48,20 @@ const MovingBg = ({
             if (mounted) {
               // For portrait: scale to fill height, for landscape: scale to fill width
               if (isPortrait) {
-                const scale = screenH / height;
+                const scale = effectiveHeight / height;
                 setImgWidth(width * scale);
-                setImgHeight(screenH);
+                setImgHeight(effectiveHeight);
               } else {
-                const scale = screenW / width;
-                setImgWidth(screenW);
+                const scale = effectiveWidth / width;
+                setImgWidth(effectiveWidth);
                 setImgHeight(height * scale);
               }
             }
           },
           () => {
             // fallback to screen size
-            setImgWidth(screenW);
-            setImgHeight(screenH);
+            setImgWidth(effectiveWidth);
+            setImgHeight(effectiveHeight);
           }
         );
     }
@@ -62,7 +69,7 @@ const MovingBg = ({
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [backgroundImageUri, screenH, screenW, isPortrait]);
+      }, [backgroundImageUri, effectiveHeight, effectiveWidth, screenW, isPortrait]);
 
   useEffect(() => {
     let isMounted = true;
@@ -142,7 +149,7 @@ const MovingBg = ({
       // Landscape: image fills width, may be shorter than screen
       return {
         ...base,
-        top: (screenH - imgHeight) / 2, // center vertically if needed
+        top: containerHeight ? 0 : (effectiveHeight - imgHeight) / 2, // If custom height, start at top; otherwise center
         left: 0,
         width: imgWidth + overlap,
         height: imgHeight,
@@ -198,7 +205,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     overflow: 'hidden',
-    backgroundColor: 'black', // Use black to avoid white flashes, but images will cover it
+    backgroundColor: 'transparent', // Changed from black to transparent
   },
 });
 

@@ -129,13 +129,13 @@ export function useDynamicStyles() {
         color: '#612915',
       },
       animalName: {
-        fontSize: getResponsiveFontSize(28, scaleFactor),
+        fontSize: getResponsiveFontSize(36, scaleFactor), // Increased from 28 to 36
         marginTop: 0,
         fontWeight: '700' as const,
         backgroundColor: 'yellow',
-        paddingVertical: getResponsivePadding(12, scaleFactor),
-        paddingHorizontal: getResponsivePadding(24, scaleFactor),
-        borderRadius: getResponsiveSpacing(22, scaleFactor),
+        paddingVertical: getResponsivePadding(16, scaleFactor), // Increased padding from 12 to 16
+        paddingHorizontal: getResponsivePadding(32, scaleFactor), // Increased padding from 24 to 32
+        borderRadius: getResponsiveSpacing(28, scaleFactor), // Increased from 22 to 28
         textAlign: 'center' as const,
         elevation: 3,
         shadowColor: '#000',
@@ -172,33 +172,27 @@ export function useDynamicStyles() {
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        height: screenH * (isTabletDevice ? 0.7 : (isLandscapeMode ? 0.6 : 0.5)), // Smaller height in mobile portrait
+        height: screenH * (isTabletDevice ? 0.7 : (isLandscapeMode ? 0.65 : 0.55)), // Increased height for phones - landscape from 0.6 to 0.65, portrait from 0.5 to 0.55
         marginTop: Math.max(getResponsiveSpacing(70, scaleFactor), screenH * 0.1) + 100 - (isTabletDevice ? 0 : 50),
       },
       animalNameWrapper: {
         position: 'absolute',
-        top: -Math.max(getResponsiveSpacing(60, scaleFactor), screenH * 0.15),
+        top: isTabletDevice 
+           ? -Math.max(getResponsiveSpacing(30, scaleFactor), screenH * 0.08) // Move further up on iPad
+          : -Math.max(getResponsiveSpacing(60, scaleFactor), screenH * 0.15), // Keep above on phones
         width: '100%',
         alignItems: 'center',
       },
       animalImage: {
-<<<<<<< Updated upstream
-        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.7), screenH * 0.99),
-        height: screenH * (isTabletDevice ? 0.98 : 0.85),
+        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.85), screenH * 0.99), // Increased width on phones from 0.7 to 0.85
+        height: screenH * (isTabletDevice ? 0.98 : 0.9), // Increased height on phones from 0.85 to 0.9
         resizeMode: 'contain',
         marginTop: 0,
         transform: [{ 
           scale: isTabletDevice 
             ? 1.8 
-            : (isLandscapeMode ? 1.0 : 0.7) // Smaller scale for mobile portrait
+            : (isLandscapeMode ? 1.1 : 0.9) // Increased scale - landscape from 1.0 to 1.1, portrait from 0.7 to 0.9
         }],
-=======
-        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.35), screenH * 0.99),
-        height: screenH * (isTabletDevice ? 0.98 : 0.45),
-        resizeMode: 'contain',
-        marginTop: 0,
-        transform: [{ scale: isTabletDevice ? 1.5 : 1.0 }],
->>>>>>> Stashed changes
       },
       animalLoadingContainer: {
         width: Math.min(screenW * (isTabletDevice ? 0.3 : 0.4), screenH * 0.8),
@@ -208,11 +202,12 @@ export function useDynamicStyles() {
       },
       soundButton: {
         position: 'absolute',
-        top: getResponsiveSpacing(65, scaleFactor),
-        right: getResponsiveSpacing(15, scaleFactor),
+        top: getResponsiveSpacing(isTabletDevice ? 150 : 180, scaleFactor), // More gap on phones (180 vs 150)
+        right: getResponsiveSpacing(45, scaleFactor), // Moved to right side
         backgroundColor: 'rgba(220, 173, 30, 0.7)',
-        borderRadius: getResponsiveSpacing(isTabletDevice ? 25 : 30, scaleFactor),
-        padding: getResponsiveSpacing(isTabletDevice ? 10 : 15, scaleFactor),
+        borderRadius: getResponsiveSpacing(isTabletDevice ? 30 : 35, scaleFactor), // Match home button border radius
+        paddingVertical: getResponsiveSpacing(isTabletDevice ? 15 : 20, scaleFactor), // Match home button padding
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 22 : 28, scaleFactor), // Match home button padding
         zIndex: 10,
         elevation: 5,
         shadowColor: '#000',
@@ -222,9 +217,9 @@ export function useDynamicStyles() {
       },
       backToMenuButton: {
         backgroundColor: 'orange',
-        paddingVertical: getResponsiveSpacing(isTabletDevice ? 10 : 15, scaleFactor),
-        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 16 : 20, scaleFactor),
-        borderRadius: getResponsiveSpacing(isTabletDevice ? 25 : 30, scaleFactor),
+        paddingVertical: getResponsiveSpacing(isTabletDevice ? 15 : 20, scaleFactor), // Made bigger - increased from 10/15 to 15/20
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 22 : 28, scaleFactor), // Made bigger - increased from 16/20 to 22/28
+        borderRadius: getResponsiveSpacing(isTabletDevice ? 30 : 35, scaleFactor), // Increased border radius to match bigger button
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -235,7 +230,7 @@ export function useDynamicStyles() {
         shadowRadius: 3,
         position: 'absolute',
         top: getResponsiveSpacing(65, scaleFactor),
-        left: getResponsiveSpacing(15, scaleFactor),
+        right: getResponsiveSpacing(45, scaleFactor), // Moved to right side
         zIndex: 10,
       },
       levelGrid: {

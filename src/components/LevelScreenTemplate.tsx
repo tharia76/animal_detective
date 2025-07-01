@@ -30,7 +30,6 @@ import InstructionBubble from './InstructionBubble';
 import { useDynamicStyles } from '../styles/styles';
 import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
-import SimpleMobileModal from './SimpleMobileModal';
 import MovingBg from './MovingBg';
 import AnimatedBubbles from './AnimatedBubbles';
 import AnimatedSand from './AnimatedSand';
@@ -126,8 +125,57 @@ export default function LevelScreenTemplate({
   const isSoundPlayingRef = useRef<boolean>(false);
   const confettiAnimRefs = useRef<Animated.Value[]>([]);
   const [showCongratsModal, setShowCongratsModal] = useState(false);
-  const [levelCompleted, setLevelCompleted] = useState(false);
   const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set([0]));
+  const [levelCompleted, setLevelCompleted] = useState(false);
+  
+  // Glow animation values
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const nameScaleAnim = useRef(new Animated.Value(0)).current;
+  const glowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  // Continuous glow animation while name is showing
+  useEffect(() => {
+    if (showName) {
+      // Start continuous glow loop
+      const glowLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowAnim, {
+            toValue: 0.1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+        { iterations: -1 } // Infinite loop
+      );
+      
+      glowLoopRef.current = glowLoop;
+      glowLoop.start();
+    } else {
+      // Stop glow loop and reset
+      if (glowLoopRef.current) {
+        glowLoopRef.current.stop();
+        glowLoopRef.current = null;
+      }
+      Animated.timing(glowAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+
+    // Cleanup function
+    return () => {
+      if (glowLoopRef.current) {
+        glowLoopRef.current.stop();
+        glowLoopRef.current = null;
+      }
+    };
+  }, [showName, glowAnim]);
 
   // --- BG MUSIC STATE ---
   const bgMusicRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
@@ -181,11 +229,18 @@ export default function LevelScreenTemplate({
   // Priority: MOVING_BG_MAP[levelName] > skyBackgroundImageUri > undefined
   const movingBgSource = useMemo(() => {
     const key = levelName.toLowerCase();
+    console.log('Moving bg debug:', {
+      levelName,
+      key,
+      hasMappedBg: !!MOVING_BG_MAP[key],
+      skyBackgroundImageUri,
+      currentAnimalIsMoving: currentAnimal?.isMoving
+    });
     if (MOVING_BG_MAP[key]) {
       return MOVING_BG_MAP[key];
     }
     return skyBackgroundImageUri;
-  }, [levelName, skyBackgroundImageUri]);
+  }, [levelName, skyBackgroundImageUri, currentAnimal?.isMoving]);
 
   // --- BG MUSIC EFFECT (only play if instruction bubble is visible) ---
   // REWRITE: Remove all showName-related branches from this effect.
@@ -461,9 +516,27 @@ export default function LevelScreenTemplate({
       return;
     }
     
+    // Glow animation will be handled by useEffect based on showName state
+    
     if (!showName) {
       console.log('Setting showName to true and playing sounds');
       setShowName(true);
+      
+      // Start name scale animation
+      Animated.sequence([
+        Animated.timing(nameScaleAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(nameScaleAnim, {
+          toValue: 1.1,
+          tension: 100,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      
       // Background music ducking will be handled in playSounds()
       // kill any in‑flight animal audio, then play the new one
       stopSound(true).then(() => {
@@ -473,13 +546,21 @@ export default function LevelScreenTemplate({
     } else {
       console.log('Setting showName to false');
       setShowName(false);
+      
+      // Reset name scale animation
+      Animated.timing(nameScaleAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+      
       // If no sound is currently playing, restore background music volume immediately
       if (!soundRef.current) {
         restoreBackgroundMusic();
       }
       // If sound is playing, volume will be restored when sound finishes
     }
-  }, [showName, playSounds, stopSound, restoreBackgroundMusic, isTransitioning, currentAnimal]);
+  }, [showName, playSounds, stopSound, restoreBackgroundMusic, isTransitioning, currentAnimal, glowAnim, nameScaleAnim]);
 
   // Remove toggleShowName entirely
 
@@ -495,15 +576,7 @@ export default function LevelScreenTemplate({
     }
 
     setIsTransitioning(true);
-    
-    // Simple sound stop without async
-    if (soundRef.current) {
-      try {
-        soundRef.current.pause();
-        soundRef.current.remove();
-      } catch (e) {}
-      soundRef.current = null;
-    }
+    stopSound(true);
 
     // Use a single animation for smoother transitions
     Animated.timing(animalFadeAnim, {
@@ -524,24 +597,8 @@ export default function LevelScreenTemplate({
         
         if (newIndex >= animals.length && !levelCompleted) {
           setLevelCompleted(true);
-          
-          // Stop background music before showing modal
-          if (bgMusicRef.current) {
-            try {
-              bgMusicRef.current.pause();
-              bgMusicRef.current.remove();
-            } catch (e) {
-              console.warn('Error stopping bg music:', e);
-            }
-            bgMusicRef.current = null;
-          }
-          
-          // Add a delay before showing modal to ensure cleanup
-          setTimeout(() => {
-            setShowCongratsModal(true);
-            setIsTransitioning(false);
-          }, 300);
-          
+          setShowCongratsModal(true);
+          setIsTransitioning(false);
           return;
         }
         
@@ -585,6 +642,7 @@ export default function LevelScreenTemplate({
   }, [
       hasAnimals,
       isTransitioning,
+      stopSound,
       animalFadeAnim,
       currentAnimalIndex,
       animals.length,
@@ -601,15 +659,7 @@ export default function LevelScreenTemplate({
   }, [handleNavigation]);
 
   const goToHome = useCallback(() => {
-    // Simple sound stop
-    if (soundRef.current) {
-      try {
-        soundRef.current.pause();
-        soundRef.current.remove();
-      } catch (e) {}
-      soundRef.current = null;
-    }
-    
+    stopSound(false);
     // Stop bg music when going home
     if (bgMusicRef.current) {
       try {
@@ -620,7 +670,7 @@ export default function LevelScreenTemplate({
       setCurrentBgMusicKey(undefined);
     }
     onBackToMenu();
-  }, [onBackToMenu]);
+  }, [stopSound, onBackToMenu]);
 
   const toggleMute = () => {
     const changingToMuted = !isMuted;
@@ -646,16 +696,7 @@ export default function LevelScreenTemplate({
 
   const startOver = useCallback(() => {
     setShowCongratsModal(false);
-    
-    // Simple sound stop
-    if (soundRef.current) {
-      try {
-        soundRef.current.pause();
-        soundRef.current.remove();
-      } catch (e) {}
-      soundRef.current = null;
-    }
-    
+    stopSound(true);
     setIsTransitioning(true);
     animalFadeAnim.setValue(0);
     setCurrentAnimalIndex(0);
@@ -674,51 +715,63 @@ export default function LevelScreenTemplate({
         });
     }, 16); // One frame delay
 
-  }, [animalFadeAnim]);
+  }, [stopSound, animalFadeAnim]);
 
   const renderAnimal = () => {
     if (!currentAnimal) return null;
     const key = `${currentAnimal.id}-${currentAnimal.name}`;
+    const isPhone = Math.min(screenW, screenH) < 768;
 
-    try {
-      if (currentAnimal.type === 'sprite' && currentAnimal.frames && currentAnimal.spriteSheetSize) {
-        return (
-          <SpriteAnimation
-            key={key}
-            frames={currentAnimal.frames}
-            source={currentAnimal.source}
-            spriteSheetSize={currentAnimal.spriteSheetSize}
-            style={dynamicStyles.animalImage}
-          />
-        );
-      }
+    const animalComponent = currentAnimal.type === 'sprite' && currentAnimal.frames && currentAnimal.spriteSheetSize ? (
+      <SpriteAnimation
+        key={key}
+        frames={currentAnimal.frames}
+        source={currentAnimal.source}
+        spriteSheetSize={currentAnimal.spriteSheetSize}
+        style={dynamicStyles.animalImage}
+      />
+    ) : (
+      <Image
+        key={key}
+        source={currentAnimal.source}
+        style={dynamicStyles.animalImage}
+        fadeDuration={0}
+        progressiveRenderingEnabled={true}
+      />
+    );
+
+    // Wrap in a View with pointerEvents: 'none' for phones
+    if (isPhone) {
       return (
-        <Image
-          key={key}
-          source={currentAnimal.source}
-          style={dynamicStyles.animalImage}
-          fadeDuration={0}
-          progressiveRenderingEnabled={true}
-          onError={(error) => {
-            console.warn('Animal image loading error:', error);
-          }}
-        />
-      );
-    } catch (error) {
-      console.warn('Error rendering animal:', error);
-      return (
-        <View style={[dynamicStyles.animalImage, { backgroundColor: 'rgba(255, 0, 0, 0.3)', justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={{ color: 'red', fontSize: 16 }}>Error loading animal</Text>
+        <View pointerEvents="none" style={{ alignItems: 'center', justifyContent: 'center' }}>
+          {animalComponent}
         </View>
       );
     }
+
+    return animalComponent;
   };
 
   useEffect(() => {
-    // Reduce confetti count for better performance on mobile
-    const confettiCount = Platform.OS === 'android' ? 15 : 20;
-    confettiAnimRefs.current = Array.from({ length: confettiCount }).map(() => new Animated.Value(0));
+    confettiAnimRefs.current = Array.from({ length: 30 }).map(() => new Animated.Value(0));
   }, []);
+
+  useEffect(() => {
+    if (showCongratsModal) {
+      confettiAnimRefs.current.forEach((anim, index) => {
+        anim.setValue(0);
+        const randomDuration = 2000 + Math.random() * 3000;
+        const randomDelay = Math.random() * 500;
+
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: randomDuration,
+          delay: randomDelay,
+          useNativeDriver: true,
+        }).start();
+      });
+    }
+  }, [showCongratsModal]);
 
   const onLoadEnd = useCallback(() => {
     setBgLoading(false);
@@ -739,33 +792,89 @@ export default function LevelScreenTemplate({
     }
   }, [currentAnimal?.isMoving, contentFade]);
 
-  // Cleanup function for animations and sounds
-  const cleanup = useCallback(() => {
-    // Stop sounds
-    if (soundRef.current) {
-      try {
-        soundRef.current.pause();
-        soundRef.current.remove();
-      } catch (e) {}
-      soundRef.current = null;
+  // Compute the marginTop for animals based on level and device
+  const getAnimalMarginTop = () => {
+    const baseMargin = Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1);
+    
+    console.log('getAnimalMarginTop debug:', {
+      levelName: levelName.toLowerCase(),
+      screenW,
+      screenH,
+      isLandscape,
+      platform: Platform.OS,
+      baseMargin
+    });
+    
+        // Birds level specific logic
+    if (levelName.toLowerCase() === 'birds') {
+      // iPad landscape gets 400px offset (check this first)
+      if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
+        console.log('Birds on iPad landscape: returning baseMargin + 400', baseMargin + 400);
+        return baseMargin + 200; // Increased from 200 to 400 to move birds down on iPad
+      }
+      // Phones get negative offset to move animals UP
+      // Check smaller dimension to detect phones even in landscape
+      const smallerDimension = Math.min(screenW, screenH);
+      if ((Platform.OS === 'ios' || Platform.OS === 'android') && smallerDimension < 900) {
+        console.log('Birds on phone: returning baseMargin - 100', baseMargin - 100);
+        return baseMargin + 50; // Move UP by 100px from base
+      }
+      // Default birds offset
+      console.log('Birds default: returning baseMargin + 100', baseMargin + 100);
+      return baseMargin + 300;
     }
     
-    // Stop background music
-    if (bgMusicRef.current) {
-      try {
-        bgMusicRef.current.pause();
-        bgMusicRef.current.remove();
-      } catch (e) {}
-      bgMusicRef.current = null;
+    // Arctic level
+    if (levelName.toLowerCase() === 'arctic') {
+      let arcticMargin = baseMargin + 100;
+      // iPad landscape: move animals down by 300px
+      if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
+        arcticMargin += 300; // Increased from 200 to 300 (additional 100px down)
+      }
+      return arcticMargin;
     }
-  }, []);
-
-  // Cleanup on unmount only
-  useEffect(() => {
-    return () => {
-      cleanup();
-    };
-  }, [cleanup]);
+    
+    // Farm level in mobile portrait
+    if (levelName.toLowerCase() === 'farm' && !isLandscape) {
+      return baseMargin + 150;
+    }
+    
+    // Jungle level
+    if (levelName.toLowerCase() === 'jungle') {
+      if (!isLandscape) {
+        return baseMargin + 350; // portrait
+      }
+      if (isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android')) {
+        let jungleMargin = baseMargin + 50; // mobile landscape
+        // iPad landscape: move animals down by additional 100px
+        if (screenW >= 900 && Platform.OS === 'ios') {
+          jungleMargin += 200;
+        }
+        return jungleMargin;
+      }
+    }
+    
+    // Forest level
+    if (levelName.toLowerCase() === 'forest') {
+      let forestMargin = baseMargin + 50; // Original forest positioning for all devices
+      
+      // iPad landscape gets additional positioning adjustment
+      if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
+        forestMargin += 150; // Reduced from 300 to 150 to push animals up by 150px
+      }
+      
+      return forestMargin;
+    }
+    
+    let finalMargin = baseMargin; // default
+    
+    // iPad landscape: move all animals down by 200px
+    if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
+      finalMargin += 300; // Increased from 200 to 300 (additional 100px down)
+    }
+    
+    return finalMargin;
+  };
 
   if (!backgroundImageUri) {
     return (
@@ -786,54 +895,298 @@ export default function LevelScreenTemplate({
   return (
     <ReanimatedView.View style={[dynamicStyles.container, animatedStyle]}>
       {/* 1) FULL-SCREEN BACKGROUND SIBLINGS, BOTH MOUNTED, OPACITY ANIMATED */}
-      <View style={StyleSheet.absoluteFillObject}>
-        {/* Moving background (sky) */}
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFillObject,
-            { opacity: movingBgOpacity, backgroundColor: 'transparent' },
-            // Move forest moving background up
-            levelName.toLowerCase() === 'forest' && {
-              top: -100, // Move moving background up by 100px
-            },
-            // Move jungle moving background up in mobile portrait
-            levelName.toLowerCase() === 'jungle' && !isLandscape && {
-              top: -150, // Move moving background up by 150px in portrait
-            }
-          ]}
-        >
-          <MovingBg
-            backgroundImageUri={movingBgSource as string | null}
-            movingDirection={currentAnimal?.movingDirection ?? 'left'}
-          />
-        </Animated.View>
-        {/* Static image background */}
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFillObject,
-            { opacity: imageBgOpacity, backgroundColor: 'transparent' }
-          ]}
-        >
-          <ImageBackground
-            source={backgroundImageUri ? { uri: backgroundImageUri } : undefined}
+      <View style={[StyleSheet.absoluteFillObject, {
+        backgroundColor: levelName.toLowerCase() === 'forest' ? '#1a3d1a' : 
+                        levelName.toLowerCase() === 'arctic' ? '#e6f2ff' :
+                        levelName.toLowerCase() === 'birds' ? '#87CEEB' :
+                        levelName.toLowerCase() === 'jungle' ? '#1a3d1a' :
+                        levelName.toLowerCase() === 'savannah' ? '#f4e4bc' :
+                        levelName.toLowerCase() === 'ocean' ? '#006994' :
+                        levelName.toLowerCase() === 'desert' ? '#f4e4bc' :
+                        levelName.toLowerCase() === 'farm' ? '#87CEEB' :
+                        '#000'
+      }]}>
+        <View style={StyleSheet.absoluteFillObject}>
+          {/* Moving background (sky) */}
+          <Animated.View
+            pointerEvents="none"
             style={[
               StyleSheet.absoluteFillObject,
-              // Move forest background up
-              levelName.toLowerCase() === 'forest' && {
-                top: -100, // Move background up by 100px
+              { opacity: movingBgOpacity, backgroundColor: 'transparent' },
+              // Base style adjustments
+              {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
               },
-              // Move jungle background up in mobile portrait
+              // Increase height on iPad landscape
+              isLandscape && screenW >= 768 && Platform.OS === 'ios' && {
+                height: screenH * 1.2, // Reduce from 1.5 to 1.2 to match better
+                bottom: undefined, // Remove bottom constraint to allow height to work
+                top: screenH * 0.1, // Push down by 10% of screen height
+              },
+              // Move forest moving background up
+   
+              // Move forest moving background up more on mobile landscape
+              // don't move
+              // Move jungle moving background up in mobile portrait
               levelName.toLowerCase() === 'jungle' && !isLandscape && {
-                top: -200, // Move background up by 150px in portrait
+                top: -400, // Move moving background up by 400px in portrait
+                height: screenH + 400, // Extend height to cover the gap
+              },
+              // Move jungle moving background up more on screens < 900 in portrait
+              levelName.toLowerCase() === 'jungle' && !isLandscape && screenW < 900 && {
+                top: -600, // Move moving background up by 600px on smaller screens in portrait
+                height: screenH + 600, // Extend height to cover the gap
+              },
+              // Move birds moving background up in mobile landscape
+              levelName.toLowerCase() === 'birds' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
+                top: -200, // Move moving background up by 200px in landscape on mobile
+                height: screenH + 200, // Extend height to cover the gap
+              },
+
+              // Move savannah moving background up on mobile
+              levelName.toLowerCase() === 'savannah' && (Platform.OS === 'ios' || Platform.OS === 'android') && {
+                top: -150, // Move moving background up by 150px on mobile (increased by 50px)
+                height: screenH + 150, // Extend height to cover the gap
+              },
+              // Move forest moving background up in landscape
+              levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
+                top: -50, // Move moving background up by 50px in landscape on mobile
+                height: screenH + 200, // Extend height to cover the gap
+              },
+              // Move forest moving background up more on phone landscape
+              levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                top: -200, // Move moving background up by 150px in landscape on phones
+                height: screenH + 200, // Extend height to cover the gap
+              },
+              // Move farm moving background up
+              levelName.toLowerCase() === 'farm' && {
+                top: -200, // Move moving background up by 200px
+                height: screenH + 200, // Extend height to cover the gap
+              },
+              // Move farm moving background up more on phones
+              levelName.toLowerCase() === 'farm' && Math.min(screenW, screenH) < 768 && {
+                top: -350, // Move moving background up by 350px on phones
+                height: screenH + 350, // Extend height to cover the gap
+              },
+              // Move ocean moving background up
+              levelName.toLowerCase() === 'ocean' && {
+                top: -200, // Move moving background up by 200px
+                height: screenH + 200, // Extend height to cover the gap
+              },
+              // Move ocean moving background up more on phones
+              levelName.toLowerCase() === 'ocean' && Math.min(screenW, screenH) < 768 && {
+                top: -350, // Move moving background up by 350px on phones
+                height: screenH + 350, // Extend height to cover the gap
+              },
+              // Move desert moving background up
+              levelName.toLowerCase() === 'desert' && {
+                top: -200, // Move moving background up by 200px
+                height: screenH + 200, // Extend height to cover the gap
+              },
+              // Move desert moving background up more on phones
+              levelName.toLowerCase() === 'desert' && Math.min(screenW, screenH) < 768 && {
+                top: -350, // Move moving background up by 350px on phones
+                height: screenH + 350, // Extend height to cover the gap
+              },
+              // Move arctic moving background up
+              levelName.toLowerCase() === 'arctic' && {
+                top: -450, // Move moving background up by 350px (increased a bit more)50
+                height: screenH + 350, // Extend height to cover the gap
+              },
+              // Move arctic moving background up more on phones
+              levelName.toLowerCase() === 'arctic' && Math.min(screenW, screenH) < 768 && {
+                top: -500, // Move moving background up by 500px on phones (increased a bit more)
+                height: screenH + 500, // Extend height to cover the gap
+              },
+              // Move savannah moving background up
+              levelName.toLowerCase() === 'savannah' && {
+                top: -250, // Move moving background up by 250px (increased by 50px)
+                height: screenH + 250, // Extend height to cover the gap
+              },
+              // Move savannah moving background up more on phones
+              levelName.toLowerCase() === 'savannah' && Math.min(screenW, screenH) < 900 && {
+                top: -400, // Move moving background up by 400px on phones (increased by 50px)
+                height: screenH + 400, // Extend height to cover the gap
+              },
+                              // Move jungle moving background up
+                levelName.toLowerCase() === 'jungle' && {
+                  top: -400, // Move moving background up by 400px (pushed down from -600px)
+                  height: screenH + 400, // Extend height to cover the gap
+                },
+             
+                levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
+                  top: -450, // Move moving background up by 400px (pushed down from -600px)
+                  height: screenH + 650, // Extend height to cover the gap
+                },
+                // Move jungle moving background up more on screens < 900 in landscape
+                levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && screenW < 900 && {
+                  top: -520, // Move moving background up by 300px on smaller screens in landscape
+                  height: screenH + 650, // Extend height to cover the gap
+                },
+
+
+              // Move insects moving background up
+              levelName.toLowerCase() === 'insects' && {
+                top: -350, // Move moving background up by 350px
+                height: screenH + 350, // Extend height to cover the gap
+              },
+              // Move insects moving background up more on phones
+              levelName.toLowerCase() === 'insects' && Math.min(screenW, screenH) < 768 && {
+                top: -500, // Move moving background up by 500px on phones
+                height: screenH + 500, // Extend height to cover the gap
               }
             ]}
-            resizeMode="cover"
-            onLoadEnd={onLoadEnd}
-            onError={onLoadEnd}
-          />
-        </Animated.View>
+          >
+            <MovingBg
+              backgroundImageUri={movingBgSource as string | null}
+              movingDirection={currentAnimal?.movingDirection ?? 'left'}
+              containerHeight={isLandscape && screenW >= 768 && Platform.OS === 'ios' ? screenH * 1.3 : undefined}
+              containerWidth={isLandscape && screenW >= 768 && Platform.OS === 'ios' ? screenW * 1.2 : undefined}
+            />
+          </Animated.View>
+          {/* Static image background */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              { opacity: imageBgOpacity, backgroundColor: 'transparent' }
+            ]}
+          >
+            <ImageBackground
+              source={backgroundImageUri ? { uri: backgroundImageUri } : undefined}
+              style={[
+                StyleSheet.absoluteFillObject,
+                // Base style adjustments
+                {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                },
+                // Increase height on iPad landscape
+                isLandscape && screenW >= 768 && Platform.OS === 'ios' && {
+                  height: screenH * 1.2, // Reduce from 1.5 to 1.2 to match better
+                  bottom: undefined, // Remove bottom constraint to allow height to work
+                  top: screenH * 0.1, // Push down by 10% of screen height
+                },
+                // Move jungle background up in mobile portrait
+                levelName.toLowerCase() === 'jungle' && !isLandscape && {
+                  top: -400, // Move background up by 400px in portrait (pushed down)
+                  height: screenH + 400, // Extend height to cover the gap
+                },
+                // Move jungle background up in mobile landscape
+                levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
+                  top: -400, // Move background up by 400px in landscape on mobile
+                  height: screenH + 400, // Extend height to cover the gap
+                },
+                // Move birds background up in mobile landscape
+                levelName.toLowerCase() === 'birds' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
+                  top: -200, // Move background up by 200px in landscape on mobile
+                  height: screenH + 200, // Extend height to cover the gap
+                },
+
+                // Move savannah background up on mobile
+                levelName.toLowerCase() === 'savannah' && (Platform.OS === 'ios' || Platform.OS === 'android') && {
+                  top: -150, // Move background up by 150px on mobile (increased by 50px)
+                  height: screenH + 150, // Extend height to cover the gap
+                },
+                // Move forest background up in landscape
+                levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
+                  top: -50, // Move background up by 50px in landscape on mobile
+                  height: screenH + 200, // Extend height to cover the gap
+                },
+                // Move forest background up more on phone landscape
+                levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                  top: -200, // Move background up by 200px in landscape on phones
+                  height: screenH + 200, // Extend height to cover the gap
+                },
+                // Move farm background up
+                levelName.toLowerCase() === 'farm' && {
+                  top: -200, // Move background up by 200px
+                  height: screenH + 200, // Extend height to cover the gap
+                },
+                // Move farm background up more on phones
+                levelName.toLowerCase() === 'farm' && Math.min(screenW, screenH) < 768 && {
+                  top: -350, // Move background up by 350px on phones
+                  height: screenH + 350, // Extend height to cover the gap
+                },
+                // Move ocean background up
+                levelName.toLowerCase() === 'ocean' && {
+                  top: -200, // Move background up by 200px
+                  height: screenH + 200, // Extend height to cover the gap
+                },
+                // Move ocean background up more on phones
+                levelName.toLowerCase() === 'ocean' && Math.min(screenW, screenH) < 768 && {
+                  top: -350, // Move background up by 350px on phones
+                  height: screenH + 350, // Extend height to cover the gap
+                },
+                // Move desert background up
+                levelName.toLowerCase() === 'desert' && {
+                  top: -200, // Move background up by 200px
+                  height: screenH + 200, // Extend height to cover the gap
+                },
+                // Move desert background up more on phones
+                levelName.toLowerCase() === 'desert' && Math.min(screenW, screenH) < 768 && {
+                  top: -350, // Move background up by 350px on phones
+                  height: screenH + 350, // Extend height to cover the gap
+                },
+                // Move arctic background up
+                levelName.toLowerCase() === 'arctic' && {
+                  top: -350, // Move background up by 350px (increased a bit more)
+                  height: screenH + 350, // Extend height to cover the gap
+                },
+                // Move arctic background up more on phones
+                levelName.toLowerCase() === 'arctic' && Math.min(screenW, screenH) < 768 && {
+                  top: -500, // Move background up by 500px on phones (increased a bit more)
+                  height: screenH + 500, // Extend height to cover the gap
+                },
+                // Move savannah background up
+                levelName.toLowerCase() === 'savannah' && {
+                  top: -250, // Move background up by 250px (increased by 50px)
+                  height: screenH + 250, // Extend height to cover the gap
+                },
+                // Move savannah background up more on phones
+                levelName.toLowerCase() === 'savannah' && Math.min(screenW, screenH) < 768 && {
+                  top: -400, // Move background up by 400px on phones (increased by 50px)
+                  height: screenH + 400, // Extend height to cover the gap
+                },
+                // Move jungle background up
+                levelName.toLowerCase() === 'jungle' && {
+                  top: -400, // Move background up by 400px
+                  height: screenH + 400, // Extend height to cover the gap
+                },
+                // Move jungle background up more on screens < 900
+                levelName.toLowerCase() === 'jungle' && screenW < 900 && {
+                  top: -600, // Move background up by 600px on smaller screens
+                  height: screenH + 600, // Extend height to cover the gap
+                },
+                // Move jungle background up more on screens < 900 in landscape
+                levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && screenW < 900 && {
+                  top: -300, // Move background up by 300px on smaller screens in landscape
+                  height: screenH + 300, // Extend height to cover the gap
+                },
+                // Move insects background up
+                levelName.toLowerCase() === 'insects' && {
+                  top: -350, // Move background up by 350px
+                  height: screenH + 350, // Extend height to cover the gap
+                },
+                // Move insects background up more on phones
+                levelName.toLowerCase() === 'insects' && Math.min(screenW, screenH) < 768 && {
+                  top: -500, // Move background up by 500px on phones
+                  height: screenH + 500, // Extend height to cover the gap
+                }
+              ]}
+              resizeMode="cover"
+              onLoadEnd={onLoadEnd}
+              onError={onLoadEnd}
+            />
+          </Animated.View>
+        </View>
       </View>
 
       {/* 2) FULL-SCREEN FOREGROUND SIBLING */}
@@ -841,7 +1194,7 @@ export default function LevelScreenTemplate({
         <Animated.View style={{ flex: 1, opacity: contentFade }}>
           <View style={{ flex: 1 }}>
             <TouchableOpacity style={dynamicStyles.backToMenuButton} onPress={goToHome}>
-              <Ionicons name="home" size={24} color="#fff" />
+              <Ionicons name="home" size={30} color="#fff" />
             </TouchableOpacity>
             {hasAnimals && (
               <TouchableOpacity style={dynamicStyles.soundButton} onPress={toggleMute}>
@@ -854,72 +1207,158 @@ export default function LevelScreenTemplate({
             )}
 
             {/* Ocean bubbles - only show for ocean level */}
-            {levelName.toLowerCase() === 'ocean' && showInstruction && !showCongratsModal && <AnimatedBubbles />}
+            {levelName.toLowerCase() === 'ocean' && showInstruction && <AnimatedBubbles />}
 
             {/* Desert sand - only show for desert level */}
             {levelName.toLowerCase() === 'desert' && showInstruction && <AnimatedSand />}
 
             {/* Arctic snow - only show for arctic level */}
-            {levelName.toLowerCase() === 'arctic' && showInstruction && !showCongratsModal && <AnimatedSnow />}
+            {levelName.toLowerCase() === 'arctic' && showInstruction && <AnimatedSnow />}
 
             {/* Forest fireflies - only show for forest level */}
-            {levelName.toLowerCase() === 'forest' && showInstruction && !showCongratsModal && <AnimatedFireflies />}
+            {levelName.toLowerCase() === 'forest' && showInstruction && <AnimatedFireflies />}
 
             {/* Forest leaves - only show for forest level */}
-            {levelName.toLowerCase() === 'forest' && showInstruction && !showCongratsModal && <AnimatedLeaves />}
+            {levelName.toLowerCase() === 'forest' && showInstruction && <AnimatedLeaves />}
 
-          {hasAnimals && (
+                                  {hasAnimals && (
             <View style={dynamicStyles.content}>
-              <View style={[
+                            <View style={[
                 dynamicStyles.animalCard,
-                // Add extra margin for arctic level to move animals down
-                levelName.toLowerCase() === 'arctic' && {
-                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 260, // 260px more than default
-                },
-                // Move animals down for forest level
-                levelName.toLowerCase() === 'forest' && {
-                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + (isLandscape ? 70 : 220), // 70px in landscape, 220px in portrait
-                },
-                // Move animals down for farm level in mobile portrait
-                levelName.toLowerCase() === 'farm' && !isLandscape && {
-                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 150, // 150px down from default in portrait
-                },
-                // Move animals down for jungle level in mobile portrait
-                levelName.toLowerCase() === 'jungle' && !isLandscape && {
-                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 350, // 350px down from default in portrait
-                },
-                // Move animals down for birds level
-                levelName.toLowerCase() === 'birds' && {
-                  marginTop: Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1) + 100, // 100px down from default
+                {
+                  marginTop: getAnimalMarginTop()
                 }
               ]}>
-                <TouchableOpacity 
-                  onPress={handleAnimalPress} 
-                  activeOpacity={0.8} 
-                  disabled={isTransitioning}
-                  style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Animated.View style={{ opacity: animalFadeAnim, alignItems: 'center', justifyContent: 'center' }}>
+                {/* Large invisible touch area for phones */}
+                {Math.min(screenW, screenH) < 768 && (
+                  <TouchableOpacity 
+                    onPress={handleAnimalPress} 
+                    activeOpacity={0.0} 
+                    disabled={isTransitioning}
+                                          style={{
+                        position: 'absolute',
+                        top: '10%', // Start 20% from top
+                        left: '25%', // Start 25% from left - more centered
+                        right: '25%', // End 25% from right - more centered  
+                                                  bottom: '1%', // End 40% from bottom - much smaller area to avoid arrows
+                          backgroundColor: 'transparent',
+                        zIndex: 999, // Much higher z-index to be above everything
+                      }}
+                  />
+                )}
+                
+                {/* Touchable animal for tablets */}
+                {Math.min(screenW, screenH) >= 768 ? (
+                  <TouchableOpacity 
+                    onPress={handleAnimalPress} 
+                    activeOpacity={0.8} 
+                    disabled={isTransitioning}
+                    style={{ alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Animated.View style={{ 
+                      opacity: animalFadeAnim, 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      transform: [{
+                        scale: glowAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [1, 1.08],
+                        }),
+                      }],
+                      shadowColor: '#FFD700',
+                      shadowOpacity: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1.0],
+                      }),
+                      shadowRadius: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 35],
+                      }),
+                      elevation: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 20],
+                      }),
+                    }}>
+                      {renderAnimal()}
+                    </Animated.View>
+                  </TouchableOpacity>
+                ) : (
+                  /* Non-touchable animal display for phones (touch handled by invisible layer above) */
+                  <Animated.View 
+                    style={{ 
+                      opacity: animalFadeAnim, 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      zIndex: -1, // Ensure this is behind the invisible layer
+                      transform: [{
+                        scale: glowAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [1, 1.08],
+                        }),
+                      }],
+                      shadowColor: '#FFD700',
+                      shadowOpacity: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1.0],
+                      }),
+                      shadowRadius: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 35],
+                      }),
+                      elevation: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 20],
+                      }),
+                    }}
+                    pointerEvents="none" // Prevent this from blocking touch events
+                  >
                     {renderAnimal()}
                   </Animated.View>
-                </TouchableOpacity>
+                )}
                 {showName && currentAnimal && (() => {
                   return (
                     <Animated.View style={[
                       dynamicStyles.animalNameWrapper,
                       {
                         opacity: animalFadeAnim,
-                        transform: [{
-                          translateY: animalFadeAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [10, 0],
-                          }),
-                        }],
+                        transform: [
+                          {
+                            translateY: animalFadeAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [10, 0],
+                            }),
+                          },
+                          {
+                            scale: nameScaleAnim.interpolate({
+                              inputRange: [0, 1, 1.1],
+                              outputRange: [0.8, 1, 1.1],
+                            }),
+                          },
+                        ],
                       }
                     ]}>
-                      <Text style={dynamicStyles.animalName}>
+                      <Animated.Text style={[
+                        dynamicStyles.animalName,
+                        {
+                          transform: [{
+                            scale: nameScaleAnim.interpolate({
+                              inputRange: [0, 1, 1.1],
+                              outputRange: [0.9, 1, 1.05],
+                            }),
+                          }],
+                          shadowColor: '#000',
+                          shadowOpacity: nameScaleAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.25, 0.5],
+                          }),
+                          shadowRadius: nameScaleAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [3, 8],
+                          }),
+                        }
+                      ]}>
                         {currentAnimal?.name}
-                      </Text>
+                      </Animated.Text>
                     </Animated.View>
                   );
                 })()}
@@ -949,26 +1388,15 @@ export default function LevelScreenTemplate({
               </Text>
             </View>
           )}
+
+         <CongratsModal
+          showCongratsModal={showCongratsModal}
+          startOver={startOver}
+          goToHome={goToHome}
+         />
         </View>
       </Animated.View>
       </View>
-
-      {/* Congratulations Modal */}
-      {showCongratsModal && (Platform.OS === 'ios' || Platform.OS === 'android') && (
-        <SimpleMobileModal 
-          visible={showCongratsModal} 
-          onStartOver={startOver} 
-          onGoHome={goToHome} 
-        />
-      )}
-      
-      {showCongratsModal && Platform.OS === 'web' && (
-        <CongratsModal 
-          showCongratsModal={showCongratsModal} 
-          startOver={startOver} 
-          goToHome={goToHome} 
-        />
-      )}
     </ReanimatedView.View>
   );
 }
