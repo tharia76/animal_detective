@@ -407,6 +407,46 @@
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
 	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "croco_00051.png",
+	"frame": {"x":1500,"y":750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "croco_00052.png",
+	"frame": {"x":1500,"y":1000,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "croco_00053.png",
+	"frame": {"x":1500,"y":1250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "croco_00054.png",
+	"frame": {"x":1500,"y":1500,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "croco_00055.png",
+	"frame": {"x":1500,"y":1750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
 }],
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
@@ -415,6 +455,6 @@
 	"format": "RGBA8888",
 	"size": {"w":1750,"h":2000},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:7b0a0fe73bc187bdb3c7a9f73f46211e:a580201e8b4c7b6175529eba36a7a9a1:ce8736b2c889c772b103724f23091473$"
+	"smartupdate": "$TexturePacker:SmartUpdate:338167de408c3c9ec4481aa5089bc120:79c6b26a4342e164317b3485f8c4af71:ce8736b2c889c772b103724f23091473$"
 }
 }

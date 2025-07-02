@@ -121,6 +121,16 @@ import orangutanData from '../assets/images/animals/json/orangutan-0.json';
 import slothData from '../assets/images/animals/json/sloth-0.json';
 import snakeData from '../assets/images/animals/json/snake-0.json';
 import turtleData from '../assets/images/animals/json/turtle-0.json';
+import otterData from '../assets/images/animals/json/otter-0.json';
+import pandaData from '../assets/images/animals/json/panda-0.json';
+import skunkData from '../assets/images/animals/json/skunk-0.json';
+import walrusData from '../assets/images/animals/json/walrus-0.json';
+import meerkatData from '../assets/images/animals/json/meerkat-0.json';
+import ostrichData from '../assets/images/animals/json/ostrich-0.json';
+import mantisData from '../assets/images/animals/json/mantis-0.json';
+import wormData from '../assets/images/animals/json/worm-0.json';
+import koalaData from '../assets/images/animals/json/koala-0.json';
+
 
 
 
@@ -238,6 +248,17 @@ const orangutanSprite = require('../assets/images/animals/png/orangutan-0.png');
 const slothSprite = require('../assets/images/animals/png/sloth-0.png');
 const snakeSprite = require('../assets/images/animals/png/snake-0.png');
 const turtleSprite = require('../assets/images/animals/png/turtle-0.png');
+const otterSprite = require('../assets/images/animals/png/otter-0.png');
+const pandaSprite = require('../assets/images/animals/png/panda-0.png');
+const skunkSprite = require('../assets/images/animals/png/skunk-0.png');
+const walrusSprite = require('../assets/images/animals/png/walrus-0.png');
+const meerkatSprite = require('../assets/images/animals/png/meerkat-0.png');
+const ostrichSprite = require('../assets/images/animals/png/ostrich-0.png');
+const mantisSprite = require('../assets/images/animals/png/mantis-0.png');
+const wormSprite = require('../assets/images/animals/png/worm-0.png');
+const koalaSprite = require('../assets/images/animals/png/koala-0.png');
+
+
 
 
 // Extract the frames array and meta from JSON
@@ -354,6 +375,16 @@ const { frames: orangutanFrames, meta: orangutanMeta } = orangutanData;
 const { frames: slothFrames, meta: slothMeta } = slothData;
 const { frames: snakeFrames, meta: snakeMeta } = snakeData;
 const { frames: turtleFrames, meta: turtleMeta } = turtleData;
+const { frames: otterFrames, meta: otterMeta } = otterData;
+const { frames: pandaFrames, meta: pandaMeta } = pandaData;
+const { frames: skunkFrames, meta: skunkMeta } = skunkData;
+const { frames: walrusFrames, meta: walrusMeta } = walrusData;
+const { frames: meerkatFrames, meta: meerkatMeta } = meerkatData;
+const { frames: ostrichFrames, meta: ostrichMeta } = ostrichData;
+const { frames: mantisFrames, meta: mantisMeta } = mantisData;
+const { frames: wormFrames, meta: wormMeta } = wormData;
+const { frames: koalaFrames, meta: koalaMeta } = koalaData;
+
 
 
 // Use localization via a function parameter
@@ -859,7 +890,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: pigMeta.size,
       sound: require('../assets/sounds/animal_sounds/pig.mp3'),
       labelSound: getLabelSound('pig', language),
-      isMoving: false,
+      isMoving: true,
+      movingDirection: 'left',
     },
     {
       id: 13,
@@ -1037,6 +1069,31 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       movingDirection: 'left',
     },
     {
+    id: 200, // убедись, что ID уникален и не конфликтует с другими
+    name: t('animals.otter'),
+    type: 'sprite' as const,
+    animalType: 'Forest' as const, // можно поменять на другой тип, если выдра у тебя относится, например, к воде
+    source: otterSprite,
+    frames: otterFrames,
+    spriteSheetSize: otterMeta.size,
+    sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+    labelSound: getLabelSound('otter', language),
+    isMoving: false,
+},
+{
+  id: 201, // проверь, чтобы не конфликтовал с другими
+  name: t('animals.skunk'),
+  type: 'sprite' as const,
+  animalType: 'Forest' as const, 
+  source: skunkSprite,
+  frames: skunkFrames,
+  spriteSheetSize: skunkMeta.size,
+  sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+  labelSound: getLabelSound('skunk', language),
+  isMoving: true,
+  movingDirection: 'left',
+},
+    {
       id: 27,
       name: t('animals.mouse'),
       type: 'sprite' as const,
@@ -1163,6 +1220,18 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       isMoving: false,
     },
     {
+  id: 202, 
+  name: t('animals.walrus'),
+  type: 'sprite' as const,
+  animalType: 'Arctic' as const, 
+  source: walrusSprite,
+  frames: walrusFrames,
+  spriteSheetSize: walrusMeta.size,
+  sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+  labelSound: getLabelSound('walrus', language),
+  isMoving: false,
+},
+    {
       id: 38,
       name: t('animals.camel'),
       type: 'sprite' as const,
@@ -1240,6 +1309,19 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       movingDirection: 'left',
     },
     {
+  id: 203, 
+  name: t('animals.meerkat'),
+  type: 'sprite' as const,
+  animalType: 'Desert' as const, 
+  source: meerkatSprite,
+  frames: meerkatFrames,
+  spriteSheetSize: meerkatMeta.size,
+  sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+  labelSound: getLabelSound('meerkat', language),
+  isMoving: true,
+  movingDirection: 'right',
+},
+    {
       id: 44,
       name: t('animals.oryx'),
       type: 'sprite' as const,
@@ -1299,8 +1381,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: bizonMeta.size,
       sound: require('../assets/sounds/animal_sounds/bizon.mp3'),
       labelSound: getLabelSound('bison', language),
-      isMoving: true,
-      movingDirection: 'left',
+      isMoving: false,
     },
     {
       id: 49,
@@ -1428,6 +1509,19 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       isMoving: true,
       movingDirection: 'right',
     },
+    {
+  id: 204, 
+  name: t('animals.ostrich'),
+  type: 'sprite' as const,
+  animalType: 'Savannah' as const, 
+  source: ostrichSprite,
+  frames: ostrichFrames,
+  spriteSheetSize: ostrichMeta.size,
+  sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+  labelSound: getLabelSound('ostrich', language),
+  isMoving: true,
+  movingDirection: 'left',
+},
     {
       id: 59,
       name: t('animals.rhinoceros'),
@@ -1561,6 +1655,30 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       labelSound: getLabelSound('mosquito', language),
       isMoving: false,
     },
+    {
+  id: 205, 
+  name: t('animals.mantis'),
+  type: 'sprite' as const,
+  animalType: 'Insects' as const, 
+  source: mantisSprite,
+  frames: mantisFrames,
+  spriteSheetSize: mantisMeta.size,
+  sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+  labelSound: getLabelSound('mantis', language),
+  isMoving: false,
+},
+{
+  id: 206, 
+  name: t('animals.worm'),
+  type: 'sprite' as const,
+  animalType: 'Insects' as const, 
+  source: wormSprite,
+  frames: wormFrames,
+  spriteSheetSize: wormMeta.size,
+  sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+  labelSound: getLabelSound('worm', language),
+  isMoving: false,
+},
     {
       id: 70,
       name: t('animals.snail'),
@@ -2001,6 +2119,18 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       isMoving: false,
     },
     {
+  id: 27, // выбери следующий свободный ID
+  name: t('animals.panda'),
+  type: 'sprite' as const,
+  animalType: 'Jungle' as const, 
+  source: pandaSprite,
+  frames: pandaFrames,
+  spriteSheetSize: pandaMeta.size,
+  sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+  labelSound: getLabelSound('panda', language),
+  isMoving: false,
+},
+    {
     id: 107,
     name: t('animals.antEater'),
     type: 'sprite' as const,
@@ -2202,6 +2332,18 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
     labelSound: getLabelSound('sloth', language),
     isMoving: false,
   },
+  {
+  id: 207, 
+  name: t('animals.koala'),
+  type: 'sprite' as const,
+  animalType: 'Jungle' as const, 
+  source: koalaSprite,
+  frames: koalaFrames,
+  spriteSheetSize: koalaMeta.size,
+  sound: require('../assets/sounds/animal_sounds/cat.mp3'),
+  labelSound: getLabelSound('koala', language),
+  isMoving: false,
+},
   {
     id: 123,
     name: t('animals.snake'),

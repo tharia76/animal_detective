@@ -1,7 +1,7 @@
 {"frames": [
 
 {
-	"filename": "flamingo_00000.png",
+	"filename": "fl_00000.png",
 	"frame": {"x":0,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -9,55 +9,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00001.png",
-	"frame": {"x":250,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00002.png",
-	"frame": {"x":500,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00003.png",
-	"frame": {"x":750,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00004.png",
-	"frame": {"x":1000,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00005.png",
-	"frame": {"x":1250,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00006.png",
-	"frame": {"x":1500,"y":0,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00007.png",
+	"filename": "fl_00001.png",
 	"frame": {"x":0,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -65,7 +17,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00008.png",
+	"filename": "fl_00002.png",
 	"frame": {"x":0,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -73,7 +25,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00009.png",
+	"filename": "fl_00003.png",
 	"frame": {"x":0,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -81,7 +33,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00010.png",
+	"filename": "fl_00004.png",
 	"frame": {"x":0,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -89,7 +41,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00011.png",
+	"filename": "fl_00005.png",
 	"frame": {"x":0,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -97,7 +49,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00012.png",
+	"filename": "fl_00006.png",
 	"frame": {"x":0,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -105,7 +57,23 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00013.png",
+	"filename": "fl_00007.png",
+	"frame": {"x":0,"y":1750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00008.png",
+	"frame": {"x":250,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00009.png",
 	"frame": {"x":250,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -113,47 +81,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00014.png",
-	"frame": {"x":500,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00015.png",
-	"frame": {"x":750,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00016.png",
-	"frame": {"x":1000,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00017.png",
-	"frame": {"x":1250,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00018.png",
-	"frame": {"x":1500,"y":250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00019.png",
+	"filename": "fl_00010.png",
 	"frame": {"x":250,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -161,7 +89,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00020.png",
+	"filename": "fl_00011.png",
 	"frame": {"x":250,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -169,7 +97,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00021.png",
+	"filename": "fl_00012.png",
 	"frame": {"x":250,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -177,7 +105,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00022.png",
+	"filename": "fl_00013.png",
 	"frame": {"x":250,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -185,7 +113,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00023.png",
+	"filename": "fl_00014.png",
 	"frame": {"x":250,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -193,7 +121,31 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00024.png",
+	"filename": "fl_00015.png",
+	"frame": {"x":250,"y":1750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00016.png",
+	"frame": {"x":500,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00017.png",
+	"frame": {"x":500,"y":250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00018.png",
 	"frame": {"x":500,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -201,39 +153,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00025.png",
-	"frame": {"x":750,"y":500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00026.png",
-	"frame": {"x":1000,"y":500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00027.png",
-	"frame": {"x":1250,"y":500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00028.png",
-	"frame": {"x":1500,"y":500,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00029.png",
+	"filename": "fl_00019.png",
 	"frame": {"x":500,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -241,7 +161,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00030.png",
+	"filename": "fl_00020.png",
 	"frame": {"x":500,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -249,7 +169,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00031.png",
+	"filename": "fl_00021.png",
 	"frame": {"x":500,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -257,7 +177,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00032.png",
+	"filename": "fl_00022.png",
 	"frame": {"x":500,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -265,7 +185,39 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00033.png",
+	"filename": "fl_00023.png",
+	"frame": {"x":500,"y":1750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00024.png",
+	"frame": {"x":750,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00025.png",
+	"frame": {"x":750,"y":250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00026.png",
+	"frame": {"x":750,"y":500,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00027.png",
 	"frame": {"x":750,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -273,31 +225,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00034.png",
-	"frame": {"x":1000,"y":750,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00035.png",
-	"frame": {"x":1250,"y":750,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00036.png",
-	"frame": {"x":1500,"y":750,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00037.png",
+	"filename": "fl_00028.png",
 	"frame": {"x":750,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -305,7 +233,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00038.png",
+	"filename": "fl_00029.png",
 	"frame": {"x":750,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -313,7 +241,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00039.png",
+	"filename": "fl_00030.png",
 	"frame": {"x":750,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -321,7 +249,47 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00040.png",
+	"filename": "fl_00031.png",
+	"frame": {"x":750,"y":1750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00032.png",
+	"frame": {"x":1000,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00033.png",
+	"frame": {"x":1000,"y":250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00034.png",
+	"frame": {"x":1000,"y":500,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00035.png",
+	"frame": {"x":1000,"y":750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00036.png",
 	"frame": {"x":1000,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -329,23 +297,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00041.png",
-	"frame": {"x":1250,"y":1000,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00042.png",
-	"frame": {"x":1500,"y":1000,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00043.png",
+	"filename": "fl_00037.png",
 	"frame": {"x":1000,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -353,7 +305,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00044.png",
+	"filename": "fl_00038.png",
 	"frame": {"x":1000,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -361,7 +313,55 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00045.png",
+	"filename": "fl_00039.png",
+	"frame": {"x":1000,"y":1750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00040.png",
+	"frame": {"x":1250,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00041.png",
+	"frame": {"x":1250,"y":250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00042.png",
+	"frame": {"x":1250,"y":500,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00043.png",
+	"frame": {"x":1250,"y":750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00044.png",
+	"frame": {"x":1250,"y":1000,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00045.png",
 	"frame": {"x":1250,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -369,15 +369,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00046.png",
-	"frame": {"x":1500,"y":1250,"w":250,"h":250},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
-	"sourceSize": {"w":250,"h":250}
-},
-{
-	"filename": "flamingo_00047.png",
+	"filename": "fl_00046.png",
 	"frame": {"x":1250,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -385,8 +377,72 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "flamingo_00048.png",
+	"filename": "fl_00047.png",
+	"frame": {"x":1250,"y":1750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00048.png",
+	"frame": {"x":1500,"y":0,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00049.png",
+	"frame": {"x":1500,"y":250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00050.png",
+	"frame": {"x":1500,"y":500,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00051.png",
+	"frame": {"x":1500,"y":750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00052.png",
+	"frame": {"x":1500,"y":1000,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00053.png",
+	"frame": {"x":1500,"y":1250,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00054.png",
 	"frame": {"x":1500,"y":1500,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "fl_00055.png",
+	"frame": {"x":1500,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
@@ -397,8 +453,8 @@
 	"version": "1.0",
 	"image": "flamingo-0.png",
 	"format": "RGBA8888",
-	"size": {"w":1750,"h":1750},
+	"size": {"w":1750,"h":2000},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:680dd544537b68e67c2bcff60f753a6c:b1fc2640f0dd72a1781f24f9d4daa97c:1c5b153bf8fe5c0bbee7110360dd2031$"
+	"smartupdate": "$TexturePacker:SmartUpdate:2f5c17cc6ff944bae99fc424e389a292:ab2d860143718ab85d29aa56b0d8dce8:1c5b153bf8fe5c0bbee7110360dd2031$"
 }
 }

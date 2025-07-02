@@ -439,6 +439,14 @@
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
 	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "pig_00055.png",
+	"frame": {"x":1500,"y":1750,"w":250,"h":250},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":250,"h":250},
+	"sourceSize": {"w":250,"h":250}
 }],
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
@@ -447,6 +455,6 @@
 	"format": "RGBA8888",
 	"size": {"w":1750,"h":2000},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:abc0ba07b96b8a29eea1aee7c6a200b0:46ed3fb0ac705e2107b8fec54308c1fb:fbf0b209c301dc303ce7eb9bf1ae00b6$"
+	"smartupdate": "$TexturePacker:SmartUpdate:51370b64a7c1386f2ccd6bfe3f4b37ea:185328fe39590196d141ecd6ac91996b:fbf0b209c301dc303ce7eb9bf1ae00b6$"
 }
 }

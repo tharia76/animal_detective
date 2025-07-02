@@ -1,7 +1,7 @@
 {"frames": [
 
 {
-	"filename": "lizard_00000.png",
+	"filename": "skunk_00000.png",
 	"frame": {"x":0,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -9,7 +9,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00001.png",
+	"filename": "skunk_00001.png",
 	"frame": {"x":0,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -17,7 +17,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00002.png",
+	"filename": "skunk_00002.png",
 	"frame": {"x":0,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -25,7 +25,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00003.png",
+	"filename": "skunk_00003.png",
 	"frame": {"x":0,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -33,7 +33,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00004.png",
+	"filename": "skunk_00004.png",
 	"frame": {"x":0,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -41,7 +41,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00005.png",
+	"filename": "skunk_00005.png",
 	"frame": {"x":0,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -49,7 +49,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00006.png",
+	"filename": "skunk_00006.png",
 	"frame": {"x":0,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -57,7 +57,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00007.png",
+	"filename": "skunk_00007.png",
 	"frame": {"x":0,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -65,7 +65,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00008.png",
+	"filename": "skunk_00008.png",
 	"frame": {"x":250,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -73,7 +73,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00009.png",
+	"filename": "skunk_00009.png",
 	"frame": {"x":250,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -81,7 +81,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00010.png",
+	"filename": "skunk_00010.png",
 	"frame": {"x":250,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -89,7 +89,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00011.png",
+	"filename": "skunk_00011.png",
 	"frame": {"x":250,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -97,7 +97,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00012.png",
+	"filename": "skunk_00012.png",
 	"frame": {"x":250,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -105,7 +105,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00013.png",
+	"filename": "skunk_00013.png",
 	"frame": {"x":250,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -113,7 +113,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00014.png",
+	"filename": "skunk_00014.png",
 	"frame": {"x":250,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -121,7 +121,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00015.png",
+	"filename": "skunk_00015.png",
 	"frame": {"x":250,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -129,7 +129,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00016.png",
+	"filename": "skunk_00016.png",
 	"frame": {"x":500,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -137,7 +137,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00017.png",
+	"filename": "skunk_00017.png",
 	"frame": {"x":500,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -145,7 +145,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00018.png",
+	"filename": "skunk_00018.png",
 	"frame": {"x":500,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -153,7 +153,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00019.png",
+	"filename": "skunk_00019.png",
 	"frame": {"x":500,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -161,7 +161,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00020.png",
+	"filename": "skunk_00020.png",
 	"frame": {"x":500,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -169,7 +169,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00021.png",
+	"filename": "skunk_00021.png",
 	"frame": {"x":500,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -177,7 +177,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00022.png",
+	"filename": "skunk_00022.png",
 	"frame": {"x":500,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -185,7 +185,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00023.png",
+	"filename": "skunk_00023.png",
 	"frame": {"x":500,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -193,7 +193,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00024.png",
+	"filename": "skunk_00024.png",
 	"frame": {"x":750,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -201,7 +201,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00025.png",
+	"filename": "skunk_00025.png",
 	"frame": {"x":750,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -209,7 +209,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00026.png",
+	"filename": "skunk_00026.png",
 	"frame": {"x":750,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -217,7 +217,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00027.png",
+	"filename": "skunk_00027.png",
 	"frame": {"x":750,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -225,7 +225,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00028.png",
+	"filename": "skunk_00028.png",
 	"frame": {"x":750,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -233,7 +233,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00029.png",
+	"filename": "skunk_00029.png",
 	"frame": {"x":750,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -241,7 +241,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00030.png",
+	"filename": "skunk_00030.png",
 	"frame": {"x":750,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -249,7 +249,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00031.png",
+	"filename": "skunk_00031.png",
 	"frame": {"x":750,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -257,7 +257,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00032.png",
+	"filename": "skunk_00032.png",
 	"frame": {"x":1000,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -265,7 +265,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00033.png",
+	"filename": "skunk_00033.png",
 	"frame": {"x":1000,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -273,7 +273,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00034.png",
+	"filename": "skunk_00034.png",
 	"frame": {"x":1000,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -281,7 +281,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00035.png",
+	"filename": "skunk_00035.png",
 	"frame": {"x":1000,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -289,7 +289,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00036.png",
+	"filename": "skunk_00036.png",
 	"frame": {"x":1000,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -297,7 +297,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00037.png",
+	"filename": "skunk_00037.png",
 	"frame": {"x":1000,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -305,7 +305,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00038.png",
+	"filename": "skunk_00038.png",
 	"frame": {"x":1000,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -313,7 +313,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00039.png",
+	"filename": "skunk_00039.png",
 	"frame": {"x":1000,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -321,7 +321,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00040.png",
+	"filename": "skunk_00040.png",
 	"frame": {"x":1250,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -329,7 +329,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00041.png",
+	"filename": "skunk_00041.png",
 	"frame": {"x":1250,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -337,7 +337,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00042.png",
+	"filename": "skunk_00042.png",
 	"frame": {"x":1250,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -345,7 +345,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00043.png",
+	"filename": "skunk_00043.png",
 	"frame": {"x":1250,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -353,7 +353,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00044.png",
+	"filename": "skunk_00044.png",
 	"frame": {"x":1250,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -361,7 +361,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00045.png",
+	"filename": "skunk_00045.png",
 	"frame": {"x":1250,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -369,7 +369,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00046.png",
+	"filename": "skunk_00046.png",
 	"frame": {"x":1250,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -377,7 +377,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00047.png",
+	"filename": "skunk_00047.png",
 	"frame": {"x":1250,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -385,7 +385,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00048.png",
+	"filename": "skunk_00048.png",
 	"frame": {"x":1500,"y":0,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -393,7 +393,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00049.png",
+	"filename": "skunk_00049.png",
 	"frame": {"x":1500,"y":250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -401,7 +401,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00050.png",
+	"filename": "skunk_00050.png",
 	"frame": {"x":1500,"y":500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -409,7 +409,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00051.png",
+	"filename": "skunk_00051.png",
 	"frame": {"x":1500,"y":750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -417,7 +417,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00052.png",
+	"filename": "skunk_00052.png",
 	"frame": {"x":1500,"y":1000,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -425,7 +425,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00053.png",
+	"filename": "skunk_00053.png",
 	"frame": {"x":1500,"y":1250,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -433,7 +433,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00054.png",
+	"filename": "skunk_00054.png",
 	"frame": {"x":1500,"y":1500,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -441,7 +441,7 @@
 	"sourceSize": {"w":250,"h":250}
 },
 {
-	"filename": "lizard_00055.png",
+	"filename": "skunk_00055.png",
 	"frame": {"x":1500,"y":1750,"w":250,"h":250},
 	"rotated": false,
 	"trimmed": false,
@@ -451,10 +451,10 @@
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
-	"image": "lizard-0.png",
+	"image": "skunk-0.png",
 	"format": "RGBA8888",
 	"size": {"w":1750,"h":2000},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:60ca6987e94285be82bbc46b79f70245:a60585942bdb72e82d717273b53cf5e0:2de07098695ae6cd813a85fc112310e3$"
+	"smartupdate": "$TexturePacker:SmartUpdate:781829dcc2476bdf3d588250c15c4e63:fe8eae34d0812e5b95d1e6f229a7f493:cb14c9729d5d90e3d9dafb669f9633b5$"
 }
 }
