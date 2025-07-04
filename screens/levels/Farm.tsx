@@ -190,6 +190,7 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
+          contentFit="cover" // ← ✅ Правильное свойство!
         />
         
         {/* Level title overlay */}
