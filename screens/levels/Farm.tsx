@@ -38,7 +38,7 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
   const cursorOpacity = useRef(new Animated.Value(1)).current;
   
   // Video player setup
-  const player = useVideoPlayer(require('../../src/assets/videos/farm-vid.mp4'), player => {
+  const player = useVideoPlayer(require('../../src/assets/intro_videos/farm-vid1.mp4'), player => {
     player.loop = false;
     player.muted = false;
   });
@@ -76,65 +76,74 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
       titleScale.setValue(1);
       titleOpacity.setValue(1);
       titleGlow.setValue(0);
-             setDisplayedText('');
-       setShowCursor(true);
+      setDisplayedText('');
+      setShowCursor(true);
 
-       // Start cursor blinking animation
-       const cursorBlink = Animated.loop(
-         Animated.sequence([
-           Animated.timing(cursorOpacity, {
-             toValue: 0,
-             duration: 500,
-             useNativeDriver: true,
-           }),
-           Animated.timing(cursorOpacity, {
-             toValue: 1,
-             duration: 500,
-             useNativeDriver: true,
-           }),
-         ]),
-         { iterations: -1 }
-       );
-       cursorBlink.start();
+      // Start cursor blinking animation
+      const cursorBlink = Animated.loop(
+        Animated.sequence([
+          Animated.timing(cursorOpacity, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(cursorOpacity, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]),
+        { iterations: -1 }
+      );
+      cursorBlink.start();
 
-       // Start typewriter effect
-       let currentIndex = 0;
-       const typeInterval = setInterval(() => {
-         if (currentIndex <= fullText.length) {
-           setDisplayedText(fullText.slice(0, currentIndex));
-           currentIndex++;
-         } else {
-           // Typing complete
-           clearInterval(typeInterval);
-           setShowCursor(false);
-           cursorBlink.stop();
-           
-           // Start glow effect after typing is done
-           setTimeout(() => {
-             Animated.loop(
-               Animated.sequence([
-                 Animated.timing(titleGlow, {
-                   toValue: 1,
-                   duration: 1500,
-                   useNativeDriver: true,
-                 }),
-                 Animated.timing(titleGlow, {
-                   toValue: 0,
-                   duration: 1500,
-                   useNativeDriver: true,
-                 }),
-               ]),
-               { iterations: -1 }
-             ).start();
-           }, 500);
-         }
-       }, 150); // Type one character every 150ms for better readability
+      // Start typewriter effect
+      let currentIndex = 0;
+      const typeInterval = setInterval(() => {
+        if (currentIndex <= fullText.length) {
+          setDisplayedText(fullText.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          // Typing complete
+          clearInterval(typeInterval);
+          setShowCursor(false);
+          cursorBlink.stop();
+          
+          // Start glow effect after typing is done
+          setTimeout(() => {
+            const glowAnimation = Animated.loop(
+              Animated.sequence([
+                Animated.timing(titleGlow, {
+                  toValue: 1,
+                  duration: 1500,
+                  useNativeDriver: true,
+                }),
+                Animated.timing(titleGlow, {
+                  toValue: 0,
+                  duration: 1500,
+                  useNativeDriver: true,
+                }),
+              ]),
+              { iterations: 2 } // Only glow 2 times (6 seconds total)
+            );
+            
+            glowAnimation.start(() => {
+              // After glow effect, fade out the title
+              Animated.timing(titleOpacity, {
+                toValue: 0,
+                duration: 1000,
+                useNativeDriver: true,
+              }).start();
+            });
+          }, 500);
+        }
+      }, 150); // Type one character every 150ms for better readability
 
-       // Cleanup function
-       return () => {
-         clearInterval(typeInterval);
-         cursorBlink.stop();
-       };
+      // Cleanup function
+      return () => {
+        clearInterval(typeInterval);
+        cursorBlink.stop();
+      };
     }
   }, [showVideo, isLandscape]);
 
@@ -190,7 +199,7 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
-          contentFit="cover" // ← ✅ Правильное свойство!
+          contentFit="cover"
         />
         
         {/* Level title overlay */}
