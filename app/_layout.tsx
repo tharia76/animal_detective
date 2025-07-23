@@ -1,6 +1,7 @@
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useEffect } from 'react';
 import 'react-native-reanimated';
 import { useColorScheme } from '../src/hooks/useColorScheme';
@@ -72,6 +73,28 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // Simple landscape lock for all devices
+  useEffect(() => {
+    const lockOrientation = async () => {
+      try {
+        console.log('Locking orientation to landscape');
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        console.log('Orientation locked to landscape');
+      } catch (error) {
+        console.warn('Failed to lock orientation:', error);
+      }
+    };
+
+    lockOrientation();
+
+    // Cleanup function
+    return () => {
+      ScreenOrientation.unlockAsync().catch((error) => {
+        console.warn('Failed to unlock orientation:', error);
+      });
+    };
+  }, []);
 
   if (!loaded) {
     return null;

@@ -2,7 +2,7 @@
   "name": "Animal Detective",
   "slug": "animal-detective",
   "version": "1.0.0",
-  "orientation": "default",
+  "orientation": "landscape",
   "icon": "./src/assets/images/icon.png",
   "scheme": "animal-detective",
   "userInterfaceStyle": "automatic",
@@ -15,17 +15,22 @@
     "bundleIdentifier": "com.kido.animal-detective",
     "buildNumber": "1",
     "supportsTablet": true,
-    "requireFullScreen": false,
+    "requireFullScreen": true,
     "infoPlist": {
       "NSAppTransportSecurity": {
         "NSAllowsArbitraryLoads": true
       },
       "UISupportedInterfaceOrientations": [
-        "UIInterfaceOrientationPortrait",
-        "UIInterfaceOrientationPortraitUpsideDown",
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight"
       ],
+      "UISupportedInterfaceOrientations~ipad": [
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight"
+      ],
+      "UIRequiresFullScreen~ipad": true,
+      "UIInterfaceOrientation~ipad": "UIInterfaceOrientationLandscapeLeft",
+      "UIViewControllerBasedStatusBarAppearance~ipad": false,
       "MTKViewDisplaySyncEnabled": true,
       "UIApplicationSupportsIndirectInputEvents": true
     }
@@ -49,6 +54,8 @@
     "favicon": "./src/assets/images/icon.png"
   },
   "plugins": [
+    "./plugins/withForceLandscape",
+    "./plugins/withiOSLandscapeOnly",
     "expo-router",
     [
       "expo-splash-screen",
@@ -60,7 +67,15 @@
       }
     ],
     "expo-audio",
-    "expo-video"
+    "expo-video",
+    "expo-localization",
+    "expo-web-browser",
+    [
+      "expo-screen-orientation",
+      {
+        "initialOrientation": "LANDSCAPE"
+      }
+    ]
   ],
   "experiments": {
     "typedRoutes": true

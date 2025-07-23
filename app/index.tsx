@@ -7,8 +7,9 @@ export const screenOptions = {
 };
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Animated, useWindowDimensions, ImageBackground } from 'react-native';
+import { Animated, useWindowDimensions, ImageBackground, View, ActivityIndicator, Platform, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import MenuScreen from '../screens/MenuScreen';
 import SplashScreen from '../screens/SplashScreen';
 import FarmScreen from '../screens/levels/Farm';
@@ -31,6 +32,36 @@ export default function App() {
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const titleAnim = useRef(new Animated.Value(0)).current;
   const [assetsReady, setAssetsReady] = useState(false);
+  
+  // Force landscape on mount - especially for iPad
+  useEffect(() => {
+    const forceOrientation = async () => {
+      try {
+        // Check if we're on iPad
+        const screen = Dimensions.get('screen');
+        const isTablet = Platform.OS === 'ios' && (screen.width >= 768 || screen.height >= 768);
+        
+        if (isTablet) {
+          console.log('iPad detected in App component - forcing landscape');
+          // For iPad, try multiple approaches
+          await ScreenOrientation.unlockAsync();
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+          
+          // Also try to set the orientation directly
+          const currentOrientation = await ScreenOrientation.getOrientationAsync();
+          if (currentOrientation !== ScreenOrientation.Orientation.LANDSCAPE_LEFT && 
+              currentOrientation !== ScreenOrientation.Orientation.LANDSCAPE_RIGHT) {
+            // Force a specific landscape orientation
+            await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to force orientation in App:', error);
+      }
+    };
+    
+    forceOrientation();
+  }, []);
   const [farmBgUri, setFarmBgUri] = useState<string | null>(null);
   const [menuBgUri, setMenuBgUri] = useState<string | null>(null);
   const [forestBgUri, setForestBgUri] = useState<string | null>(null);
@@ -278,10 +309,16 @@ export default function App() {
       >
         <Animated.View style={{ flex: 1, opacity: screenOpacity }}>
           {selectedLevel == null ? (
-            <MenuScreen
-              onSelectLevel={handleSelectLevel}
-              backgroundImageUri={menuBgUri}
-            />
+            assetsReady ? (
+              <MenuScreen
+                onSelectLevel={handleSelectLevel}
+                backgroundImageUri={menuBgUri}
+              />
+            ) : (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#87CEEB' }}>
+                <ActivityIndicator size="large" color="orange" />
+              </View>
+            )
           ) : (
             renderLevelScreen()
           )}

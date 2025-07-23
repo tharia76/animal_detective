@@ -21,6 +21,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     transparent={true}
     animationType="fade"
     onRequestClose={() => setShowPaymentModal(false)}
+    supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
   >
     <View style={{
       flex: 1,

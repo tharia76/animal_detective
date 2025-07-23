@@ -30,6 +30,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useDynamicStyles } from '../src/styles/styles';
 import { useLocalization } from '../src/hooks/useLocalization';
+import { useForceOrientation } from '../src/hooks/useForceOrientation';
 import LanguageSelector from '../src/components/LanguageSelector';
 import LevelTiles from '../src/components/LevelTiles';
 
@@ -406,8 +407,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   const navigation = useNavigation();
   const { t, lang, setLang } = useLocalization();
   const dynStyles = useDynamicStyles();
-  const { width, height } = useWindowDimensions();
-  const isLandscape = width > height;
+  const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
 
   // Calculate responsive values
   const scaleFactor = getScaleFactor(width, height);
@@ -721,6 +721,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
         animationType="fade"
         transparent
         onRequestClose={() => setShowUnlockModal(false)}
+        supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
       >
         <View style={responsiveStyles.modalOverlay}>
           <View style={responsiveStyles.modalContent}>
@@ -786,10 +787,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
     );
   }
 
-  // sizing logic - Use current dimensions directly
+  // sizing logic - Force landscape dimensions
   const currentWidth = width;
   const currentHeight = height;
-  const currentIsLandscape = isLandscape;
+  const currentIsLandscape = true; // Always force landscape layout
   
   // Calculate responsive tile size with min/max constraints
   const currentNumColumns = getResponsiveColumns(currentWidth, currentIsLandscape);

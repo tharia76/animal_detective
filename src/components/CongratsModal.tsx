@@ -351,7 +351,7 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
       transparent={true}
       animationType="fade"
       onRequestClose={() => { /* Prevent accidental close */ }}
-      supportedOrientations={['portrait', 'portrait-upside-down', 'landscape', 'landscape-left', 'landscape-right']}
+      supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
       presentationStyle="overFullScreen"
     >
       <View style={{

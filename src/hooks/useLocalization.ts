@@ -14,13 +14,13 @@ type UseLocalizationReturn = {
 const LANGUAGE_KEY = 'appLanguage';
 
 export const useLocalization = (): UseLocalizationReturn => {
-  const [lang, setLanguage] = useState(Localization.locale.split('-')[0]);
+  const [lang, setLanguage] = useState((Localization.getLocales()[0]?.languageCode || 'en'));
 
   useEffect(() => {
     const loadLanguage = async () => {
       try {
         const savedLang = await AsyncStorage.getItem(LANGUAGE_KEY);
-        const fallbackLang = Localization.locale.split('-')[0] || 'en';
+        const fallbackLang = Localization.getLocales()[0]?.languageCode || 'en';
         const initialLang = savedLang || fallbackLang;
 
         await i18n.changeLanguage(initialLang);

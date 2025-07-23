@@ -67,4 +67,22 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
     return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif
   }
+
+  // Force landscape orientation
+  public override func application(
+    _ application: UIApplication,
+    supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
+    return [.landscapeLeft, .landscapeRight]
+  }
+  
+  // Prevent autorotation to portrait
+  public override var shouldAutorotate: Bool {
+    return false
+  }
+  
+  // Force initial orientation
+  public override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+    return .landscapeLeft
+  }
 }
