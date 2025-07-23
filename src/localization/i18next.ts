@@ -11,10 +11,6 @@ i18n
     resources: {
       en: { translation: strings.en },
       ru: { translation: strings.ru },
-      es: { translation: strings.es },
-      de: { translation: strings.de },
-      fr: { translation: strings.fr },
-      it: { translation: strings.it },
       tr: { translation: strings.tr },
     },
     lng: 'en',

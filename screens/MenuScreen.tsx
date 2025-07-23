@@ -698,7 +698,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
           disabled={purchaseInProgress}
         >
           <Text style={responsiveStyles.unlockButtonText}>
-             {t('Unlock All Levels')} ({unlockPrice})
+             {t('unlockAllLevels')} ({unlockPrice})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -706,7 +706,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
           onPress={handleRestore}
           disabled={purchaseInProgress}
         >
-          <Text style={responsiveStyles.restoreButtonText}> {t('Restore Purchases')} </Text>
+          <Text style={responsiveStyles.restoreButtonText}> {t('restorePurchases')} </Text>
         </TouchableOpacity>
       </View>
     );
@@ -724,10 +724,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
       >
         <View style={responsiveStyles.modalOverlay}>
           <View style={responsiveStyles.modalContent}>
-            <Text style={responsiveStyles.modalTitle}>🔓 {t('Unlock All Levels')} 🔓</Text>
-            <Text style={responsiveStyles.modalText}>
-              🐾 {t('This level is locked. Unlock all levels to play!')} 🐾
-            </Text>
+            <Text style={responsiveStyles.modalTitle}>🔓 {t('unlockAllLevelsToPlay')} 🔓</Text>
+                          <Text style={responsiveStyles.modalText}>
+                🐾 {t('thisLevelIsLocked')} 🐾
+              </Text>
             {Platform.OS === 'ios' && !unlocked && (
               <>
                 <TouchableOpacity
@@ -739,7 +739,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                   disabled={purchaseInProgress}
                 >
                   <Text style={responsiveStyles.modalUnlockButtonText}>
-                    ✨ {t('Unlock All Levels')} ({unlockPrice}) ✨
+                    ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -750,7 +750,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                   }}
                   disabled={purchaseInProgress}
                 >
-                  <Text style={responsiveStyles.modalRestoreButtonText}>🔄 {t('Restore Purchases')} 🔄</Text>
+                  <Text style={responsiveStyles.modalRestoreButtonText}>🔄 {t('restorePurchases')} 🔄</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -758,7 +758,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
               style={responsiveStyles.modalCloseButton}
               onPress={() => setShowUnlockModal(false)}
             >
-              <Text style={responsiveStyles.modalCloseButtonText}>❌ {t('Close')} ❌</Text>
+              <Text style={responsiveStyles.modalCloseButtonText}>❌ {t('close')} ❌</Text>
             </Pressable>
           </View>
         </View>
@@ -806,10 +806,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'ru', name: 'Русский' },
-    { code: 'es', name: 'Español' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'fr', name: 'Français' },
-    { code: 'it', name: 'Italiano' },
     { code: 'tr', name: 'Türkçe' },
   ];
 

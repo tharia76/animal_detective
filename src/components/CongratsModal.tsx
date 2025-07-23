@@ -13,6 +13,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDynamicStyles } from '../styles/styles';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalization } from '../hooks/useLocalization';
+import { createAudioPlayer } from 'expo-audio';
 
 interface CongratsModalProps {
   showCongratsModal: boolean;
@@ -30,12 +32,16 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
   const { width: screenW, height: screenH } = useWindowDimensions();
   const isLandscape = screenW > screenH;
   const isMobile = Math.min(screenW, screenH) < 768;
+  const { t } = useLocalization();
 
   // Create refs for animations
   const modalScale = useRef(new Animated.Value(0)).current;
   const titleBounce = useRef(new Animated.Value(0)).current;
   const buttonBounce1 = useRef(new Animated.Value(0)).current;
   const buttonBounce2 = useRef(new Animated.Value(0)).current;
+
+  // Create ref for yay sound
+  const yaySoundRef = useRef<any>(null);
 
   // Balloon system
   const [balloons, setBalloons] = useState<Array<{
@@ -165,6 +171,21 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
     setBalloons(prev => 
       prev.map(balloon => {
         if (balloon.id === balloonId && !balloon.isPopping) {
+          // Play balloon pop sound
+          try {
+            const popPlayer = createAudioPlayer(require('../assets/sounds/other/balloon-pop.mp3'));
+            popPlayer.play();
+            
+            // Clean up sound when it finishes
+            popPlayer.addListener('playbackStatusUpdate', (status: any) => {
+              if (status.didJustFinish) {
+                popPlayer.remove();
+              }
+            });
+          } catch (error) {
+            console.warn('Error playing balloon pop sound:', error);
+          }
+
           // Start pop animation
           Animated.timing(balloon.popAnimValue, {
             toValue: 1,
@@ -225,6 +246,25 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
   // Start animations when modal is shown
   useEffect(() => {
     if (showCongratsModal) {
+      // Play yay sound when modal opens
+      try {
+        const yayPlayer = createAudioPlayer(require('../assets/sounds/other/yay.mp3'));
+        yaySoundRef.current = yayPlayer;
+        yayPlayer.play();
+        
+        // Clean up sound when it finishes
+        yayPlayer.addListener('playbackStatusUpdate', (status: any) => {
+          if (status.didJustFinish) {
+            yayPlayer.remove();
+            if (yaySoundRef.current === yayPlayer) {
+              yaySoundRef.current = null;
+            }
+          }
+        });
+      } catch (error) {
+        console.warn('Error playing yay sound:', error);
+      }
+
       // Modal entrance animation
       Animated.spring(modalScale, {
         toValue: 1,
@@ -276,8 +316,34 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
       
       // Clear balloons
       setBalloons([]);
+      
+      // Stop and clean up yay sound
+      if (yaySoundRef.current) {
+        try {
+          yaySoundRef.current.pause();
+          yaySoundRef.current.remove();
+          yaySoundRef.current = null;
+        } catch (error) {
+          console.warn('Error stopping yay sound:', error);
+        }
+      }
     }
   }, [showCongratsModal, modalScale, titleBounce, buttonBounce1, buttonBounce2]);
+
+  // Cleanup sound on component unmount
+  useEffect(() => {
+    return () => {
+      if (yaySoundRef.current) {
+        try {
+          yaySoundRef.current.pause();
+          yaySoundRef.current.remove();
+          yaySoundRef.current = null;
+        } catch (error) {
+          console.warn('Error cleaning up yay sound on unmount:', error);
+        }
+      }
+    };
+  }, []);
 
   return (
     <Modal
@@ -435,7 +501,7 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                     textShadowOffset: { width: 1, height: 1 },
                     textShadowRadius: 3,
                   }}>
-                    Congratulations!
+                    {t('congratulations')}
                   </Text>
                 </Animated.View>
 
@@ -460,7 +526,7 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                   fontWeight: '600',
                   lineHeight: isLandscape ? 18 : 24,
                 }}>
-                  You've seen all the animals in this level!
+                  {t('youveSeenAllAnimals')}
                 </Text>
 
                 {/* Modal Buttons */}

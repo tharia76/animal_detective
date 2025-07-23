@@ -18,10 +18,6 @@ const getFlag = (code: string) => {
   switch (code) {
     case 'en': return '🇺🇸';
     case 'ru': return '🇷🇺';
-    case 'es': return '🇪🇸';
-    case 'de': return '🇩🇪';
-    case 'fr': return '🇫🇷';
-    case 'it': return '🇮🇹';
     case 'tr': return '🇹🇷';
     default: return '';
   }

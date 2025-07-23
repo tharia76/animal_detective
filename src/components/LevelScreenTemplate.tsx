@@ -651,12 +651,46 @@ export default function LevelScreenTemplate({
   ]);
 
   const handleNext = useCallback(() => {
+    // Play button sound
+    if (!isMuted) {
+      try {
+        const buttonPlayer = createAudioPlayer(require('../assets/sounds/other/button.mp3'));
+        buttonPlayer.play();
+        
+        // Clean up sound when it finishes
+        buttonPlayer.addListener('playbackStatusUpdate', (status: any) => {
+          if (status.didJustFinish) {
+            buttonPlayer.remove();
+          }
+        });
+      } catch (error) {
+        console.warn('Error playing button sound:', error);
+      }
+    }
+    
     handleNavigation('next');
-  }, [handleNavigation]);
+  }, [handleNavigation, isMuted]);
 
   const handlePrev = useCallback(() => {
+    // Play button sound
+    if (!isMuted) {
+      try {
+        const buttonPlayer = createAudioPlayer(require('../assets/sounds/other/button.mp3'));
+        buttonPlayer.play();
+        
+        // Clean up sound when it finishes
+        buttonPlayer.addListener('playbackStatusUpdate', (status: any) => {
+          if (status.didJustFinish) {
+            buttonPlayer.remove();
+          }
+        });
+      } catch (error) {
+        console.warn('Error playing button sound:', error);
+      }
+    }
+    
     handleNavigation('prev');
-  }, [handleNavigation]);
+  }, [handleNavigation, isMuted]);
 
   const goToHome = useCallback(() => {
     stopSound(false);

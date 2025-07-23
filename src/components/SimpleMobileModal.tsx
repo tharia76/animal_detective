@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Dimensions
 } from 'react-native';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface SimpleMobileModalProps {
   visible: boolean;
@@ -20,17 +21,19 @@ const SimpleMobileModal: React.FC<SimpleMobileModalProps> = ({
   onStartOver, 
   onGoHome 
 }) => {
+  const { t } = useLocalization();
+  
   if (!visible) return null;
 
   return (
     <View style={styles.overlay}>
       <View style={styles.modal}>
-        <Text style={styles.title}>Congratulations!</Text>
+        <Text style={styles.title}>{t('congratulations')}</Text>
         
         <Text style={styles.emoji}>🏆</Text>
         
         <Text style={styles.message}>
-          You've seen all the animals in this level!
+          {t('youveSeenAllAnimals')}
         </Text>
 
         <View style={styles.buttonContainer}>
@@ -39,7 +42,7 @@ const SimpleMobileModal: React.FC<SimpleMobileModalProps> = ({
             onPress={onStartOver}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Start Over</Text>
+            <Text style={styles.buttonText}>{t('startOver')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -47,7 +50,7 @@ const SimpleMobileModal: React.FC<SimpleMobileModalProps> = ({
             onPress={onGoHome}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Menu</Text>
+            <Text style={styles.buttonText}>{t('menu')}</Text>
           </TouchableOpacity>
         </View>
       </View>

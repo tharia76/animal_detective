@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { ActivityIndicator, View, useWindowDimensions, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { Asset } from 'expo-asset';
 import { VideoView, useVideoPlayer } from 'expo-video';
@@ -17,7 +17,7 @@ type DesertScreenProps = {
 };
 
 export default function DesertScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: DesertScreenProps) {
-  const { lang } = useLocalization();
+  const { lang, t } = useLocalization();
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
   
@@ -34,7 +34,7 @@ export default function DesertScreen({ onBackToMenu, backgroundImageUri, skyBack
   // Typewriter effect state
   const [displayedText, setDisplayedText] = useState('');
   const [showCursor, setShowCursor] = useState(false);
-  const fullText = 'LEVEL: DESERT';
+  const fullText = useMemo(() => t('levelDesert'), [t, lang]);
   const cursorOpacity = useRef(new Animated.Value(1)).current;
   
   // Video player setup
@@ -145,7 +145,7 @@ export default function DesertScreen({ onBackToMenu, backgroundImageUri, skyBack
         cursorBlink.stop();
       };
     }
-  }, [showVideo, isLandscape]);
+  }, [showVideo, isLandscape, fullText]);
 
   // Handle orientation changes
   useEffect(() => {
@@ -240,13 +240,13 @@ export default function DesertScreen({ onBackToMenu, backgroundImageUri, skyBack
           {/* Skip button */}
           <TouchableOpacity style={styles.rightSkipButton} onPress={skipVideo}>
             <Ionicons name="play-skip-forward" size={24} color="#fff" />
-            <Text style={styles.rightButtonText}>Skip</Text>
+            <Text style={styles.rightButtonText}>{t('skip')}</Text>
           </TouchableOpacity>
 
           {/* Home button */}
           <TouchableOpacity style={styles.rightHomeButton} onPress={onBackToMenu}>
             <Ionicons name="home" size={24} color="#fff" />
-            <Text style={styles.rightButtonText}>Home</Text>
+            <Text style={styles.rightButtonText}>{t('home')}</Text>
           </TouchableOpacity>
         </View>
       </View>
