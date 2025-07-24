@@ -10,20 +10,20 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Animated, useWindowDimensions, ImageBackground, View, ActivityIndicator, Platform, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import MenuScreen from '../screens/MenuScreen';
-import SplashScreen from '../screens/SplashScreen';
-import FarmScreen from '../screens/levels/Farm';
+import MenuScreen from '../../screens/MenuScreen';
+import SplashScreen from '../../screens/SplashScreen';
+import FarmScreen from '../../screens/levels/Farm';
 import { useFonts } from 'expo-font';
 import { Asset } from 'expo-asset';
-import ForestScreen from '../screens/levels/Forest';
-import '../src/localization/i18next';
-import ArcticScreen from '../screens/levels/Arctic';
-import OceanScreen from '../screens/levels/Ocean';
-import DesertScreen from '../screens/levels/Desert';
-import SavannahScreen from '../screens/levels/Savannah';
-import JungleScreen from '../screens/levels/Jungle';
-import InsectsScreen from '../screens/levels/Insects';
-import BirdsScreen from '../screens/levels/Birds';
+import ForestScreen from '../../screens/levels/Forest';
+import '../../src/localization/i18next';
+import ArcticScreen from '../../screens/levels/Arctic';
+import OceanScreen from '../../screens/levels/Ocean';
+import DesertScreen from '../../screens/levels/Desert';
+import SavannahScreen from '../../screens/levels/Savannah';
+import JungleScreen from '../../screens/levels/Jungle';
+import InsectsScreen from '../../screens/levels/Insects';
+import BirdsScreen from '../../screens/levels/Birds';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -85,26 +85,26 @@ export default function App() {
   useEffect(() => {
     const preloadAssets = async () => {
       try {
-        const farm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
-        const menu = Asset.fromModule(require('../src/assets/images/menu-screen.png'));
-        const forest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
+        const farm = Asset.fromModule(require('../../src/assets/images/level-backgrounds/farm.png'));
+        const menu = Asset.fromModule(require('../../src/assets/images/menu-screen.png'));
+        const forest = Asset.fromModule(require('../../src/assets/images/level-backgrounds/forest.png'));
         // For moving backgrounds, you can use different images if you have them
-        const movingFarm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
-        const movingForest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
-        const movingJungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.png'));
-        const movingDesert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.png'));
-        const movingArctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.png'));
-        const movingOcean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.png'));
-        const arctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.png'));
-        const ocean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.png'));
-        const savannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.png'));
-        const desert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.png'));
-        const jungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.png'));
-        const insects = Asset.fromModule(require('../src/assets/images/level-backgrounds/insect.png'));
-        const birds = Asset.fromModule(require('../src/assets/images/level-backgrounds/birds.png'));
-        // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
-        const movingSavannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.png'));
-        // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
+        const movingFarm = Asset.fromModule(require('../../src/assets/images/level-backgrounds/farm.png'));
+        const movingForest = Asset.fromModule(require('../../src/assets/images/level-backgrounds/forest.png'));
+        const movingJungle = Asset.fromModule(require('../../src/assets/images/level-backgrounds/jungle.png'));
+        const movingDesert = Asset.fromModule(require('../../src/assets/images/level-backgrounds/desert.png'));
+        const movingArctic = Asset.fromModule(require('../../src/assets/images/level-backgrounds/arctic.png'));
+        const movingOcean = Asset.fromModule(require('../../src/assets/images/level-backgrounds/ocean.png'));
+        const arctic = Asset.fromModule(require('../../src/assets/images/level-backgrounds/arctic.png'));
+        const ocean = Asset.fromModule(require('../../src/assets/images/level-backgrounds/ocean.png'));
+        const savannah = Asset.fromModule(require('../../src/assets/images/level-backgrounds/savannah.png'));
+        const desert = Asset.fromModule(require('../../src/assets/images/level-backgrounds/desert.png'));
+        const jungle = Asset.fromModule(require('../../src/assets/images/level-backgrounds/jungle.png'));
+        const insects = Asset.fromModule(require('../../src/assets/images/level-backgrounds/insect.png'));
+        const birds = Asset.fromModule(require('../../src/assets/images/level-backgrounds/birds.png'));
+        // const movingOcean = Asset.fromModule(require('../../src/assets/images/ocean.jpg'));
+        const movingSavannah = Asset.fromModule(require('../../src/assets/images/level-backgrounds/savannah.png'));
+        // const movingOcean = Asset.fromModule(require('../../src/assets/images/ocean.jpg'));
 
         await Promise.all([
           farm.downloadAsync(),

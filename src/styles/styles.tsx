@@ -173,7 +173,7 @@ export function useDynamicStyles() {
         justifyContent: 'center',
         width: '100%',
         height: screenH * (isTabletDevice ? 0.7 : (isLandscapeMode ? 0.65 : 0.55)), // Increased height for phones - landscape from 0.6 to 0.65, portrait from 0.5 to 0.55
-        marginTop: Math.max(getResponsiveSpacing(70, scaleFactor), screenH * 0.1) + 100 - (isTabletDevice ? 0 : 50),
+        marginTop: '50%'
       },
       animalNameWrapper: {
         position: 'absolute',
@@ -184,14 +184,14 @@ export function useDynamicStyles() {
         alignItems: 'center',
       },
       animalImage: {
-        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.85), screenH * 0.99), // Increased width on phones from 0.7 to 0.85
-        height: screenH * (isTabletDevice ? 0.98 : 0.9), // Increased height on phones from 0.85 to 0.9
+        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.75), screenH * 0.99), // Reduced width on phones from 0.85 to 0.75
+        height: screenH * (isTabletDevice ? 0.98 : 0.8), // Reduced height on phones from 0.9 to 0.8
         resizeMode: 'contain',
-        marginTop: 0,
+        marginTop: '10%',
         transform: [{ 
           scale: isTabletDevice 
             ? 1.8 
-            : (isLandscapeMode ? 1.1 : 0.9) // Increased scale - landscape from 1.0 to 1.1, portrait from 0.7 to 0.9
+            : (isLandscapeMode ? 0.9: 0.7) // 10% bigger - landscape: 0.57 * 1.1 = 0.627, portrait: 0.5 * 1.1 = 0.55
         }],
       },
       animalLoadingContainer: {

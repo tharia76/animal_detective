@@ -831,66 +831,99 @@ export default function LevelScreenTemplate({
     const baseMargin = Math.max(getResponsiveSpacing(70, getScaleFactor(screenW, screenH)), screenH * 0.1);
     
     console.log('getAnimalMarginTop debug:', {
-      levelName: levelName.toLowerCase(),
+      levelName,
+      levelNameLower: levelName.toLowerCase(),
       screenW,
       screenH,
       isLandscape,
       platform: Platform.OS,
-      baseMargin
+      baseMargin,
+      isPhone: Math.min(screenW, screenH) < 768
     });
     
-        // Birds level specific logic
+    // Birds level - move animals up by 20% on tablets
     if (levelName.toLowerCase() === 'birds') {
-      // iPad landscape gets 400px offset (check this first)
-      if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
-        console.log('Birds on iPad landscape: returning baseMargin + 400', baseMargin + 400);
-        return baseMargin + 200; // Increased from 200 to 400 to move birds down on iPad
+      const isTablet = Math.min(screenW, screenH) >= 768;
+      if (isTablet) {
+        return baseMargin - (screenH * 0.2);
+      } else {
+        // Phone positioning - move animals up
+        return baseMargin + 50;
       }
-      // Phones get negative offset to move animals UP
-      // Check smaller dimension to detect phones even in landscape
-      const smallerDimension = Math.min(screenW, screenH);
-      if ((Platform.OS === 'ios' || Platform.OS === 'android') && smallerDimension < 900) {
-        console.log('Birds on phone: returning baseMargin - 100', baseMargin - 100);
-        return baseMargin + 50; // Move UP by 100px from base
-      }
-      // Default birds offset
-      console.log('Birds default: returning baseMargin + 100', baseMargin + 100);
-      return baseMargin + 300;
     }
     
-    // Arctic level
+    // Arctic level - move all animals up on both tablets and phones
     if (levelName.toLowerCase() === 'arctic') {
-      let arcticMargin = baseMargin + 100;
-      // iPad landscape: move animals down by 300px
-      if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
-        arcticMargin += 300; // Increased from 200 to 300 (additional 100px down)
-      }
-      return arcticMargin;
+      // Use smaller dimension to detect phones vs tablets
+      const isTablet = Math.min(screenW, screenH) >= 768;
+      
+      if (isTablet && currentAnimal?.isMoving) {
+        // On tablets, move animals up by 20% of screen height
+        return baseMargin + (screenH * 0.2);
+      } else if (isTablet && !currentAnimal?.isMoving) {
+        return baseMargin + (screenH * 0.1);
+      } else if (!isTablet && currentAnimal?.isMoving) {
+        // On phones, move animals up by 15% of screen height
+        return baseMargin + (screenH * 0.1);
+      } else if (!isTablet && !currentAnimal?.isMoving) {
+        return baseMargin- (screenH * 0.1);
+      } 
     }
     
     // Farm level in mobile portrait
     if (levelName.toLowerCase() === 'farm' && !isLandscape) {
-      return baseMargin + 150;
+      return baseMargin + 145; // Moved up 5px (was 150, now 145)
     }
     
-    // Jungle level
+    // Farm level on iPad - move animals up by 30px
+    if (levelName.toLowerCase() === 'farm' && screenW >= 768 && Platform.OS === 'ios') {
+      return baseMargin - 30; // Move up 30px on iPad
+    }
+    
+    // Jungle level - move animals up by 20% on tablets
     if (levelName.toLowerCase() === 'jungle') {
-      if (!isLandscape) {
-        return baseMargin + 350; // portrait
-      }
-      if (isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android')) {
-        let jungleMargin = baseMargin + 50; // mobile landscape
-        // iPad landscape: move animals down by additional 100px
-        if (screenW >= 900 && Platform.OS === 'ios') {
-          jungleMargin += 200;
+      const isTablet = Math.min(screenW, screenH) >= 768;
+      if (isTablet) {
+        return baseMargin + (screenH * 0.1);
+      } else {
+        // Phone positioning - keep existing logic
+        if (!isLandscape) {
+          return baseMargin + 350; // portrait
         }
-        return jungleMargin;
+        if (isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android')) {
+          return baseMargin + 50; // mobile landscape
+        }
       }
     }
     
     // Forest level
     if (levelName.toLowerCase() === 'forest') {
       let forestMargin = baseMargin + 50; // Original forest positioning for all devices
+      
+      // Move animals up by 30% on forest level (general)
+      forestMargin -= screenH * 0.3;
+      
+      // On mobile devices, move only moving animals down
+      const isMobile = Math.min(screenW, screenH) < 768;
+      const isTablet = Math.min(screenW, screenH) >= 768;
+      
+              if (isMobile && currentAnimal?.isMoving) {
+          forestMargin -= screenH * 0.1; // Move moving animals up by 10% on mobile
+        } else if (isMobile && !currentAnimal?.isMoving) {
+          forestMargin += screenH * 0.1; // Move moving animals up by 10% on mobile
+        }
+        
+        // Move forest mouse down specifically on mobile
+        if (isMobile && currentAnimal?.name === t('animals.mouse')) {
+          forestMargin += screenH * 0.2; // Move mouse down by 20% on mobile
+        }
+      
+      // On tablets, move animals down by 10%
+      if (isTablet && currentAnimal?.isMoving) {
+        forestMargin += screenH * 0.1; // Move animals down by 10% on tablets
+      } else if (isTablet && !currentAnimal?.isMoving) {
+        forestMargin += screenH * 0.3; // Move animals down by 10% on tablets
+      }
       
       // iPad landscape gets additional positioning adjustment
       if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
@@ -900,12 +933,81 @@ export default function LevelScreenTemplate({
       return forestMargin;
     }
     
+    // Desert level - different positioning for tablets vs phones
+    if (levelName.toLowerCase() === 'desert') {
+      // Use smaller dimension to detect phones vs tablets (more reliable than just width)
+      const isTablet = Math.min(screenW, screenH) >= 768;
+      console.log('Desert positioning:', {
+        isTablet,
+        isMoving: currentAnimal?.isMoving,
+        baseMargin,
+        screenH,
+        screenW,
+        smallerDimension: Math.min(screenW, screenH),
+        finalMargin: isTablet 
+          ? (currentAnimal?.isMoving ? baseMargin + (screenH * 0.1) : baseMargin + (screenH * 0.4))
+          : baseMargin - (screenH * 0.2)
+      });
+      
+      // On tablets, move non-moving animals up by 10%, moving animals down by 10%
+      if (isTablet) {
+        if (!currentAnimal?.isMoving) {
+          return baseMargin - (screenH * 0.1);
+        } else {
+          return baseMargin + (screenH * 0.1);
+        }
+      } else {
+        // On phones, move animals up by 20%
+        return baseMargin - (screenH * 0.2);
+      }
+    }
+    
+    // Savannah level - move all animals up by 20%
+    if (levelName.toLowerCase() === 'savannah') {
+      return baseMargin - (screenH * 0.2);
+    }
+    
+    // Ocean level - move animals up by 20% on tablets
+    if (levelName.toLowerCase() === 'ocean') {
+      const isTablet = Math.min(screenW, screenH) >= 768;
+      if (isTablet) {
+        return baseMargin - (screenH * 0.2);
+      }
+    }
+    
+    // Insects level - move animals up by 20% on tablets
+    if (levelName.toLowerCase() === 'insects') {
+      const isTablet = Math.min(screenW, screenH) >= 768;
+      if (isTablet) {
+        return baseMargin - (screenH * 0.2);
+      }
+    }
+    
     let finalMargin = baseMargin; // default
+    
+    // Farm level - move animals up by 5px in all cases not handled above
+    if (levelName.toLowerCase() === 'farm') {
+      finalMargin -= 5; // Move up 5px for farm level
+    }
+    
+    // Push animals down 10% on phones (non-tablet devices) - but not for desert level
+    const isPhone = Math.min(screenW, screenH) < 768;
+    if (isPhone && levelName.toLowerCase() !== 'desert') {
+      finalMargin += screenH * 0.1; // Push down 10% of screen height on phones
+    }
     
     // iPad landscape: move all animals down by 200px
     if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
       finalMargin += 300; // Increased from 200 to 300 (additional 100px down)
     }
+    
+    console.log('Final margin calculation:', {
+      levelName,
+      finalMargin,
+      baseMargin,
+      appliedPhoneLogic: isPhone && levelName.toLowerCase() !== 'desert',
+      appliedIpadLogic: isLandscape && screenW >= 900 && Platform.OS === 'ios'
+    });
     
     return finalMargin;
   };
@@ -991,11 +1093,22 @@ export default function LevelScreenTemplate({
                 top: -50, // Move moving background up by 50px in landscape on mobile
                 height: screenH + 200, // Extend height to cover the gap
               },
-              // Move forest moving background up more on phone landscape
+              // Move forest moving background up more on phone landscape (conditional on moving animals)
               levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
-                top: -200, // Move moving background up by 150px in landscape on phones
-                height: screenH + 200, // Extend height to cover the gap
+                top: currentAnimal?.isMoving ? -500 : -200, // Move up more when moving, normal up when not moving
+                height: currentAnimal?.isMoving ? screenH + 500 : screenH + 200, // Extend height accordingly
               },
+              // Move forest moving background on phone portrait (conditional on moving animals)
+              levelName.toLowerCase() === 'forest' && !isLandscape && Math.min(screenW, screenH) < 768 && currentAnimal?.isMoving && {
+                top: -400, // Push background up more
+                height: screenH + 400, // Extend height to cover the gap
+              },
+              // Move forest moving background on tablet (conditional on moving animals)
+              levelName.toLowerCase() === 'forest' && Math.min(screenW, screenH) >= 768 && currentAnimal?.isMoving && {
+                top: -500, // Move up more when moving on tablets
+                height: screenH + 500, // Extend height accordingly
+              },
+              
               // Move farm moving background up
               levelName.toLowerCase() === 'farm' && {
                 top: -200, // Move moving background up by 200px
@@ -1353,6 +1466,22 @@ export default function LevelScreenTemplate({
                   return (
                     <Animated.View style={[
                       dynamicStyles.animalNameWrapper,
+                      // Ocean level - move label down on tablets
+                      levelName.toLowerCase() === 'ocean' && Math.min(screenW, screenH) >= 768 && {
+                        top: screenH * 0.1,
+                      },
+                      // Insects level - move label down on tablets
+                      levelName.toLowerCase() === 'insects' && Math.min(screenW, screenH) >= 768 && {
+                        top: screenH * 0.1,
+                      },
+                      // Savannah level - move label down on tablets
+                      levelName.toLowerCase() === 'savannah' && Math.min(screenW, screenH) >= 768 && {
+                        top: screenH * 0.1,
+                      },
+                      // Jungle level - move label down on tablets
+                      levelName.toLowerCase() === 'jungle' && Math.min(screenW, screenH) >= 768 && {
+                        top: screenH * 0.1,
+                      },
                       {
                         opacity: animalFadeAnim,
                         transform: [

@@ -133,7 +133,8 @@ export default function InstructionBubble({
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          {/* Text centered independently */}
           <Text style={{ 
             fontSize: getResponsiveFontSize(isLandscape ? 22 : 18, scaleFactor), // Bigger text - increased from 18/14 to 22/18
             color: '#FFFFFF', // White text for better contrast on orange
@@ -144,24 +145,25 @@ export default function InstructionBubble({
             textShadowColor: 'rgba(0, 0, 0, 0.5)', // Dark shadow for better readability on orange
             textShadowOffset: { width: 1, height: 1 },
             textShadowRadius: 2,
-            flex: 1,
           }}>
             {text}
           </Text>
-          {/* Conditionally render the Animated.View only if there's an image */}
+          
+          {/* Image positioned absolutely so it doesn't affect text layout */}
           {image && (
             <Animated.View
-              style={{
-                marginLeft: getResponsiveSpacing(5, scaleFactor), // Keep margin
-                // The transform uses the continuously looping arrowAnim value from the parent
-                transform: [{ translateY: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }],
-              }}
+                              style={{
+                  position: 'absolute',
+                  right: getResponsiveSpacing(350, scaleFactor), // Position from right edge - decreased to move image further right
+                  // The transform uses the continuously looping arrowAnim value from the parent
+                  transform: [{ translateY: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }],
+                }}
             >
               <Image
                 source={image}
                 style={{ 
-                  width: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 50 : 65), // Ensure minimum size on phones
-                  height: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 50 : 65), // Ensure minimum size on phones
+                  width: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 65 : 65), // Ensure minimum size on phones
+                  height: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 65 : 65), // Ensure minimum size on phones
                 }} // Define image size here
                 resizeMode="contain"
               />

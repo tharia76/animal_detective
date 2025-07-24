@@ -32,6 +32,7 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
   const { width: screenW, height: screenH } = useWindowDimensions();
   const isLandscape = screenW > screenH;
   const isMobile = Math.min(screenW, screenH) < 768;
+  const isTablet = Math.min(screenW, screenH) >= 768 && Math.max(screenW, screenH) >= 1024;
   const { t } = useLocalization();
 
   // Create refs for animations
@@ -384,8 +385,8 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
         >
           <Animated.View style={{
             transform: [{ scale: modalScale }],
-            width: isLandscape ? '90%' : '85%',
-            maxWidth: isLandscape ? screenW * 0.95 : 500,
+            width: isTablet ? '70%' : isLandscape ? '90%' : '85%',
+            maxWidth: isTablet ? screenW * 0.8 : isLandscape ? screenW * 0.95 : 500,
             marginVertical: isMobile && isLandscape ? 10 : 0,
             alignSelf: 'center',
           }}>
@@ -394,8 +395,8 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
-              padding: 25,
-              borderRadius: 25,
+              padding: isTablet ? 40 : 25,
+              borderRadius: isTablet ? 35 : 25,
               alignItems: 'center',
               elevation: 10,
               shadowColor: '#FF6B9D',
@@ -408,13 +409,13 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
             {/* Inner white container */}
             <View style={{
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              padding: isLandscape ? 20 : 30,
-              borderRadius: 20,
+              padding: isTablet ? 40 : isLandscape ? 20 : 30,
+              borderRadius: isTablet ? 30 : 20,
               alignItems: 'center',
               width: '100%',
               position: 'relative',
               flexDirection: 'column',
-              minHeight: isLandscape ? 180 : 'auto',
+              minHeight: isTablet ? 300 : isLandscape ? 180 : 'auto',
               maxHeight: isLandscape ? screenH * 0.7 : undefined,
               justifyContent: 'center',
             }}>
@@ -490,10 +491,10 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                 {/* Title with bounce animation */}
                 <Animated.View style={{
                   transform: [{ scale: titleBounce }],
-                  marginBottom: isLandscape ? 3 : 8,
+                  marginBottom: isTablet ? 15 : isLandscape ? 3 : 8,
                 }}>
                   <Text style={{ 
-                    fontSize: isLandscape ? 22 : 28, 
+                    fontSize: isTablet ? 36 : isLandscape ? 22 : 28, 
                     fontWeight: 'bold', 
                     color: '#FF9800',
                     textAlign: 'center',
@@ -509,22 +510,22 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                 <Image 
                   source={require('../assets/images/congrats.png')} 
                   style={{ 
-                    width: isLandscape ? 70 : 100, 
-                    height: isLandscape ? 70 : 100, 
-                    marginBottom: isLandscape ? 8 : 15, 
+                    width: isTablet ? 140 : isLandscape ? 70 : 100, 
+                    height: isTablet ? 140 : isLandscape ? 70 : 100, 
+                    marginBottom: isTablet ? 25 : isLandscape ? 8 : 15, 
                     zIndex: 1,
-                    borderRadius: 12,
+                    borderRadius: isTablet ? 20 : 12,
                   }} 
                 />
 
                 <Text style={{ 
-                  fontSize: isLandscape ? 14 : 18, 
+                  fontSize: isTablet ? 24 : isLandscape ? 14 : 18, 
                   textAlign: 'center', 
-                  marginBottom: isLandscape ? 18 : 25, 
+                  marginBottom: isTablet ? 35 : isLandscape ? 18 : 25, 
                   zIndex: 1,
                   color: '#666',
                   fontWeight: '600',
-                  lineHeight: isLandscape ? 18 : 24,
+                  lineHeight: isTablet ? 30 : isLandscape ? 18 : 24,
                 }}>
                   {t('youveSeenAllAnimals')}
                 </Text>
@@ -536,8 +537,8 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                   alignItems: 'center',
                   width: '100%', 
                   zIndex: 1,
-                  gap: isLandscape ? 25 : 30,
-                  marginTop: isLandscape ? 5 : 0,
+                  gap: isTablet ? 40 : isLandscape ? 25 : 30,
+                  marginTop: isTablet ? 10 : isLandscape ? 5 : 0,
                 }}>
                 <Animated.View style={{
                   transform: [{ scale: buttonBounce1 }],
@@ -546,8 +547,8 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                   <TouchableOpacity
                     style={{
                       backgroundColor: '#4CAF50',
-                      padding: isLandscape ? 16 : 20,
-                      borderRadius: isLandscape ? 16 : 20,
+                      padding: isTablet ? 24 : isLandscape ? 16 : 20,
+                      borderRadius: isTablet ? 24 : isLandscape ? 16 : 20,
                       elevation: 5,
                       shadowColor: '#4CAF50',
                       shadowOffset: { width: 0, height: 4 },
@@ -555,15 +556,15 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                       shadowRadius: 8,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minWidth: isLandscape ? 60 : 70,
-                      minHeight: isLandscape ? 60 : 70,
+                      minWidth: isTablet ? 90 : isLandscape ? 60 : 70,
+                      minHeight: isTablet ? 90 : isLandscape ? 60 : 70,
                     }}
                     onPress={startOver}
                     activeOpacity={0.8}
                   >
                     <Ionicons 
                       name="refresh" 
-                      size={isLandscape ? 28 : 32} 
+                      size={isTablet ? 40 : isLandscape ? 28 : 32} 
                       color="white" 
                     />
                   </TouchableOpacity>
@@ -576,8 +577,8 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                   <TouchableOpacity
                     style={{
                       backgroundColor: '#FF9800',
-                      padding: isLandscape ? 16 : 20,
-                      borderRadius: isLandscape ? 16 : 20,
+                      padding: isTablet ? 24 : isLandscape ? 16 : 20,
+                      borderRadius: isTablet ? 24 : isLandscape ? 16 : 20,
                       elevation: 5,
                       shadowColor: '#FF9800',
                       shadowOffset: { width: 0, height: 4 },
@@ -585,15 +586,15 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                       shadowRadius: 8,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minWidth: isLandscape ? 60 : 70,
-                      minHeight: isLandscape ? 60 : 70,
+                      minWidth: isTablet ? 90 : isLandscape ? 60 : 70,
+                      minHeight: isTablet ? 90 : isLandscape ? 60 : 70,
                     }}
                     onPress={goToHome}
                     activeOpacity={0.8}
                   >
                     <Ionicons 
                       name="home" 
-                      size={isLandscape ? 28 : 32} 
+                      size={isTablet ? 40 : isLandscape ? 28 : 32} 
                       color="white" 
                     />
                   </TouchableOpacity>

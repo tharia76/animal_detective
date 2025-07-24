@@ -139,10 +139,10 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       elevation: 5,
     },
     portraitLogo: {
-      width: Math.min(getResponsiveSpacing(320, scaleFactor), width * 0.8),
-      height: Math.min(getResponsiveSpacing(140, scaleFactor), height * 0.18),
+      width: Math.min(getResponsiveSpacing(500, scaleFactor), width * 1.2),
+      height: Math.min(getResponsiveSpacing(300, scaleFactor), height * 0.35),
       resizeMode: 'contain',
-      marginBottom: getResponsiveSpacing(20, scaleFactor),
+      marginBottom: getResponsiveSpacing(5, scaleFactor),
       alignSelf: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
@@ -196,15 +196,15 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       position: 'relative',
     },
     landscapeLogo: {
-      width: Math.min(getResponsiveSpacing(280, scaleFactor), width * 0.4),
-      height: Math.min(getResponsiveSpacing(120, scaleFactor), height * 0.2),
-      resizeMode: 'contain',
-      marginBottom: getResponsiveSpacing(2, scaleFactor),
+      width: Math.min(getResponsiveSpacing(300, scaleFactor), width * 0.9),
+      height: Math.min(getResponsiveSpacing(200, scaleFactor), height * 0.3),
+      resizeMode: 'cover',
+              marginBottom: getResponsiveSpacing(0, scaleFactor),
     },
     landscapeLangContainer: {
       position: 'absolute',
       right: getResponsiveSpacing(16, scaleFactor),
-      top: getResponsiveSpacing(8, scaleFactor),
+      top: getResponsiveSpacing(40, scaleFactor),
       zIndex: 10001,
     },
     landscapeTilesGrid: {
@@ -220,8 +220,8 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: getResponsiveSpacing(8, scaleFactor),
-      marginBottom: getResponsiveSpacing(20, scaleFactor),
+      marginTop: getResponsiveSpacing(0, scaleFactor),
+      marginBottom: getResponsiveSpacing(5, scaleFactor),
       paddingHorizontal: getResponsiveSpacing(2, scaleFactor),
       paddingVertical: getResponsiveSpacing(2, scaleFactor),
       gap: getResponsiveSpacing(12, scaleFactor),
@@ -232,20 +232,20 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       marginHorizontal: getResponsiveSpacing(20, scaleFactor),
     },
     unlockButton: {
-      backgroundColor: '#FF6B9D',
+      backgroundColor: '#4CAF50',
       paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
       paddingVertical: getResponsiveSpacing(8, scaleFactor),
       borderRadius: getResponsiveSpacing(22, scaleFactor),
       flex: 1,
       maxWidth: isLandscape ? 700 : 700,
       minHeight: getResponsiveSpacing(36, scaleFactor),
-      shadowColor: '#FF6B9D',
+      shadowColor: '#4CAF50',
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.3,
       shadowRadius: 6,
       elevation: 6,
       borderWidth: 2,
-      borderColor: '#FFB4C6',
+      borderColor: '#81C784',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -256,33 +256,6 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       textAlign: 'center',
       letterSpacing: 0.3,
       textShadowColor: 'rgba(0,0,0,0.3)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
-    },
-    restoreButton: {
-      paddingHorizontal: getResponsiveSpacing(18, scaleFactor),
-      paddingVertical: getResponsiveSpacing(8, scaleFactor),
-      backgroundColor: '#87CEEB',
-      borderRadius: getResponsiveSpacing(22, scaleFactor),
-      borderWidth: 2,
-      borderColor: '#B0E0E6',
-      flex: 1,
-      maxWidth: isLandscape ? 700 : 700,
-      minHeight: getResponsiveSpacing(36, scaleFactor),
-      justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: '#87CEEB',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 5,
-      elevation: 5,
-    },
-    restoreButtonText: {
-      color: '#FFFFFF',
-      fontSize: getResponsiveFontSize(9, scaleFactor),
-      fontWeight: '700',
-      textAlign: 'center',
-      textShadowColor: 'rgba(0,0,0,0.25)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 2,
     },
@@ -328,20 +301,20 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       fontWeight: '600',
     },
     modalUnlockButton: {
-      backgroundColor: '#FF6B9D',
+      backgroundColor: '#4CAF50',
       paddingHorizontal: getResponsiveSpacing(28, scaleFactor),
       paddingVertical: getResponsiveSpacing(18, scaleFactor),
       borderRadius: getResponsiveSpacing(35, scaleFactor),
       marginBottom: getResponsiveSpacing(15, scaleFactor),
       width: '100%',
       minHeight: getResponsiveSpacing(60, scaleFactor),
-      shadowColor: '#FF6B9D',
+      shadowColor: '#4CAF50',
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.4,
       shadowRadius: 12,
       elevation: 12,
       borderWidth: 4,
-      borderColor: '#FFB4C6',
+      borderColor: '#81C784',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -354,33 +327,6 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       textShadowColor: 'rgba(0,0,0,0.4)',
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 4,
-    },
-    modalRestoreButton: {
-      marginBottom: getResponsiveSpacing(15, scaleFactor),
-      paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
-      paddingVertical: getResponsiveSpacing(14, scaleFactor),
-      backgroundColor: '#87CEEB',
-      borderRadius: getResponsiveSpacing(30, scaleFactor),
-      borderWidth: 3,
-      borderColor: '#B0E0E6',
-      width: '100%',
-      minHeight: getResponsiveSpacing(50, scaleFactor),
-      justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: '#87CEEB',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
-    },
-    modalRestoreButtonText: {
-      color: '#FFFFFF',
-      fontSize: getResponsiveFontSize(16, scaleFactor),
-      fontWeight: '800',
-      textAlign: 'center',
-      textShadowColor: 'rgba(0,0,0,0.3)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
     },
     modalCloseButton: {
       marginTop: getResponsiveSpacing(10, scaleFactor),
@@ -701,13 +647,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
              {t('unlockAllLevels')} ({unlockPrice})
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={responsiveStyles.restoreButton}
-          onPress={handleRestore}
-          disabled={purchaseInProgress}
-        >
-          <Text style={responsiveStyles.restoreButtonText}> {t('restorePurchases')} </Text>
-        </TouchableOpacity>
       </View>
     );
   };
@@ -743,16 +682,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                     ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={responsiveStyles.modalRestoreButton}
-                  onPress={() => {
-                    setShowUnlockModal(false);
-                    handleRestore();
-                  }}
-                  disabled={purchaseInProgress}
-                >
-                  <Text style={responsiveStyles.modalRestoreButtonText}>🔄 {t('restorePurchases')} 🔄</Text>
-                </TouchableOpacity>
               </>
             )}
             <Pressable
@@ -775,7 +704,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
           { 
             justifyContent: 'center', 
             alignItems: 'center', 
-            backgroundColor: '#87CEEB',
+            backgroundColor: '#ffdab9',
             flex: 1,
             width: '100%',
             height: '100%'
@@ -828,7 +757,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   return (
     <View style={{
       flex: 1, 
-      backgroundColor: '#87CEEB',
+      backgroundColor: '#ffdab9',
       width: '100%',
       height: '100%'
     }}>

@@ -1,0 +1,38 @@
+Starting project at /home/sara/game/animal-detective
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+The following packages should be updated for best compatibility with the installed expo version:
+  @react-native-async-storage/async-storage@2.2.0 - expected version: 2.1.2
+  react@19.1.0 - expected version: 19.0.0
+  react-dom@19.1.0 - expected version: 19.0.0
+  react-native-safe-area-context@5.5.2 - expected version: 5.4.0
+  react-native-webview@13.15.0 - expected version: 13.13.5
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 48.6% (546/783)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 77.8% (801/908)
+λ Bundling failed 4883ms node_modules/expo-router/node/render.js (1032 modules)
+
+Metro error: Unable to resolve module ../screens/MenuScreen from /home/sara/game/animal-detective/app/(tabs)/index.tsx: 
+
+None of these files exist:
+  * app/screens/MenuScreen(.web.ts|.ts|.web.tsx|.tsx|.web.js|.js|.web.jsx|.jsx|.web.json|.json|.web.cjs|.cjs|.web.mjs|.mjs|.web.scss|.scss|.web.sass|.sass|.web.css|.css)
+  * app/screens/MenuScreen
+[0m [90m 11 |[39m [36mimport[39m { [33mStatusBar[39m } [36mfrom[39m [32m'expo-status-bar'[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mScreenOrientation[39m [36mfrom[39m [32m'expo-screen-orientation'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m [33mMenuScreen[39m [36mfrom[39m [32m'../screens/MenuScreen'[39m[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m
+ [90m 14 |[39m [36mimport[39m [33mSplashScreen[39m [36mfrom[39m [32m'../screens/SplashScreen'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mFarmScreen[39m [36mfrom[39m [32m'../screens/levels/Farm'[39m[33m;[39m
+ [90m 16 |[39m [36mimport[39m { useFonts } [36mfrom[39m [32m'expo-font'[39m[33m;[39m[0m
+
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m unstable_settings [33m=[39m {
+ [90m 2 |[39m   initialRouteName[33m:[39m [32m'/'[39m[33m,[39m
+ [90m 3 |[39m }[33m;[39m[0m
+
+Call Stack
+  <unknown> (app/(tabs)/index.tsx:0)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.2% (1086/1096)
+Web Bundling failed 4925ms node_modules/expo-router/entry.js (1096 modules)

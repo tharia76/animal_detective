@@ -936,8 +936,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: roosterMeta.size,
       sound: require('../assets/sounds/animal_sounds/rooster.mp3'),
       labelSound: getLabelSound('rooster', language),
-      isMoving: true,
-      movingDirection: 'left',
+      isMoving: false,
     },
     {
       id: 16,
@@ -2065,8 +2064,7 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
       spriteSheetSize: roosterMeta.size,
       sound: require('../assets/sounds/animal_sounds/rooster.mp3'),
       labelSound: getLabelSound('rooster', language),
-      isMoving: true,
-      movingDirection: 'left',
+      isMoving: false,
     },
 	    {
       id: 102,
