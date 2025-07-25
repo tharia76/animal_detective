@@ -179,7 +179,7 @@ export function useDynamicStyles() {
         position: 'absolute',
         top: isTabletDevice 
            ? -Math.max(getResponsiveSpacing(30, scaleFactor), screenH * 0.08) // Move further up on iPad
-          : -Math.max(getResponsiveSpacing(60, scaleFactor), screenH * 0.15), // Keep above on phones
+          : -Math.max(getResponsiveSpacing(60, scaleFactor), screenH * 0.05), // Move down 10% on phones (changed from 0.15 to 0.05)
         width: '100%',
         alignItems: 'center',
       },

@@ -154,7 +154,11 @@ export default function InstructionBubble({
             <Animated.View
                               style={{
                   position: 'absolute',
-                  right: getResponsiveSpacing(350, scaleFactor), // Position from right edge - decreased to move image further right
+                  // On mobile (non-tablet), position from left edge, otherwise from right edge
+                  ...(isTablet(width, height) 
+                    ? { right: getResponsiveSpacing(500, scaleFactor) } 
+                    : { left: getResponsiveSpacing(20, scaleFactor) }
+                  ),
                   // The transform uses the continuously looping arrowAnim value from the parent
                   transform: [{ translateY: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }],
                 }}
@@ -162,8 +166,8 @@ export default function InstructionBubble({
               <Image
                 source={image}
                 style={{ 
-                  width: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 65 : 65), // Ensure minimum size on phones
-                  height: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 65 : 65), // Ensure minimum size on phones
+                  width: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 55 : 65), // Ensure minimum size on phones
+                  height: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 55 : 65), // Ensure minimum size on phones
                 }} // Define image size here
                 resizeMode="contain"
               />

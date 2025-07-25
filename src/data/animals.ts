@@ -622,7 +622,9 @@ const getLabelSound = (animalName: string, language: string) => {
     'wolf': require('../assets/sounds/labels/tr/wolf.mp3'),
     'woodpecker': require('../assets/sounds/labels/tr/woodpecker.mp3'),
     'zebra': require('../assets/sounds/labels/tr/zebra.mp3')
-  } } else {
+  };
+  return turkishLabels[animalName] || turkishLabels['cat']; // Fallback to cat sound if not found
+  } else {
     // English label sounds mapping - only including files that actually exist
     const englishLabels: { [key: string]: any } = {
       'ant': require('../assets/sounds/labels/en/ant.mp3'),

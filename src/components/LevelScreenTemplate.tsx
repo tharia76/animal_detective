@@ -182,8 +182,8 @@ export default function LevelScreenTemplate({
   const [currentBgMusicKey, setCurrentBgMusicKey] = useState<string | undefined>(undefined);
   
   // Audio ducking constants
-  const NORMAL_BG_VOLUME = 1.0;
-  const DUCKED_BG_VOLUME = 0.2;
+  const NORMAL_BG_VOLUME = 0.8; // Reduced by 20% from 1.0
+  const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   // Helper functions for audio ducking
   const duckBackgroundMusic = useCallback(() => {
@@ -886,12 +886,12 @@ export default function LevelScreenTemplate({
       if (isTablet) {
         return baseMargin + (screenH * 0.1);
       } else {
-        // Phone positioning - keep existing logic
+        // Phone positioning - move up by 10% on mobile
         if (!isLandscape) {
-          return baseMargin + 350; // portrait
+          return baseMargin + 350 - (screenH * 0.1); // portrait - moved up 10%
         }
         if (isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android')) {
-          return baseMargin + 50; // mobile landscape
+          return baseMargin + 50 - (screenH * 0.2); // mobile landscape - moved up 10%
         }
       }
     }
@@ -1481,6 +1481,10 @@ export default function LevelScreenTemplate({
                       // Jungle level - move label down on tablets
                       levelName.toLowerCase() === 'jungle' && Math.min(screenW, screenH) >= 768 && {
                         top: screenH * 0.1,
+                      },
+                      // Forest level - move label down on phones
+                      levelName.toLowerCase() === 'forest' && Math.min(screenW, screenH) < 768 && {
+                        top: screenH * 0.01, // Move down 20% on phones (0.05 base + 0.20 = 0.25, but using 0.15 for better positioning)
                       },
                       {
                         opacity: animalFadeAnim,
