@@ -225,7 +225,7 @@ function AnimatedTile({
               <Text
                 numberOfLines={1}
                 style={{
-                  fontSize: isLandscape ? 20 : 22,
+                  fontSize: isLandscape && itemSize >= 280 ? 28 : isLandscape ? 20 : 22, // Bigger font on tablet landscape (large tiles)
                   fontWeight: 'bold',
                   color: 'white',
                 }}

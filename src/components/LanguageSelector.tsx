@@ -106,8 +106,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             onPress={toggleDropdown}
           >
             <Text style={{ fontWeight: 'bold', color: '#612915' }}>
-              {selectedLanguage ? getFlag(selectedLanguage.code) : ''}
-              {selectedLanguage ? selectedLanguage.name : ''}
+              {selectedLanguage ? `${getFlag(selectedLanguage.code)}${selectedLanguage.name}` : 'Select Language'}
             </Text>
             <Text style={{ marginLeft: 5 }}>▼</Text>
           </TouchableOpacity>

@@ -85,7 +85,10 @@ export function useDynamicStyles() {
         flex: 1,
         position: 'relative' as const,
         backgroundColor: 'transparent',
-        padding: getResponsivePadding(20, scaleFactor),
+        padding: 0, // Remove all padding to avoid white space
+        margin: 0, // Remove all margin to avoid white space
+        width: '100%',
+        height: '100%',
       },
       loadingContainer: {
         flex: 1,
@@ -202,12 +205,12 @@ export function useDynamicStyles() {
       },
       soundButton: {
         position: 'absolute',
-        top: getResponsiveSpacing(65, scaleFactor), // Match home button position exactly
+        top: getResponsiveSpacing(65, scaleFactor) + (isTabletDevice && isLandscapeMode ? screenH * 0.1 : 0), // Move down 10% on tablet landscape (same level as instruction bubble)
         left: getResponsiveSpacing(45, scaleFactor), // Match home button distance from edge
         backgroundColor: 'orange', // Match home button color
-        paddingVertical: getResponsiveSpacing(isTabletDevice ? 15 : 20, scaleFactor), // Match home button padding
-        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 22 : 28, scaleFactor), // Match home button padding
-        borderRadius: getResponsiveSpacing(isTabletDevice ? 30 : 35, scaleFactor), // Match home button border radius
+        paddingVertical: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 25 : isTabletDevice ? 15 : 20, scaleFactor), // Bigger on tablet landscape
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 35 : isTabletDevice ? 22 : 28, scaleFactor), // Bigger on tablet landscape
+        borderRadius: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 45 : isTabletDevice ? 30 : 35, scaleFactor), // Bigger on tablet landscape
         flexDirection: 'row', // Match home button layout
         alignItems: 'center', // Match home button alignment
         justifyContent: 'center', // Match home button alignment
@@ -220,9 +223,9 @@ export function useDynamicStyles() {
       },
       backToMenuButton: {
         backgroundColor: 'orange',
-        paddingVertical: getResponsiveSpacing(isTabletDevice ? 15 : 20, scaleFactor), // Made bigger - increased from 10/15 to 15/20
-        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 22 : 28, scaleFactor), // Made bigger - increased from 16/20 to 22/28
-        borderRadius: getResponsiveSpacing(isTabletDevice ? 30 : 35, scaleFactor), // Increased border radius to match bigger button
+        paddingVertical: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 25 : isTabletDevice ? 15 : 20, scaleFactor), // Bigger on tablet landscape
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 35 : isTabletDevice ? 22 : 28, scaleFactor), // Bigger on tablet landscape
+        borderRadius: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 45 : isTabletDevice ? 30 : 35, scaleFactor), // Bigger on tablet landscape
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -232,7 +235,7 @@ export function useDynamicStyles() {
         shadowOpacity: 0.3,
         shadowRadius: 3,
         position: 'absolute',
-        top: getResponsiveSpacing(65, scaleFactor),
+        top: getResponsiveSpacing(65, scaleFactor) + (isTabletDevice && isLandscapeMode ? screenH * 0.1 : 0), // Move down 10% on tablet landscape (same level as instruction bubble)
         right: getResponsiveSpacing(45, scaleFactor), // Moved to right side
         zIndex: 10,
       },
@@ -298,7 +301,7 @@ export function useDynamicStyles() {
       instructionBubble: {
         position: 'absolute',
         top: isLandscapeMode 
-          ? getResponsiveSpacing(70, scaleFactor) 
+          ? getResponsiveSpacing(70, scaleFactor) + (isTabletDevice ? screenH * 0.1 : 0) // Move down only 10% on tablet landscape (was 30%)
           : getResponsiveSpacing(200, scaleFactor), // Lower position in mobile portrait
         left: '15%',
         right: '15%',

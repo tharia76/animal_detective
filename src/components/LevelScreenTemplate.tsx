@@ -856,6 +856,16 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     // Birds level - move animals up by 20% on tablets
     if (levelName.toLowerCase() === 'birds') {
       const isTablet = Math.min(screenW, screenH) >= 768;
+      
+      // Landscape mode - move animals up by additional 25%
+      if (isLandscape) {
+        if (isTablet) {
+          return baseMargin - (screenH * 0.45); // 20% + 25% = 45% up on tablets in landscape
+        } else {
+          return baseMargin + 50 - (screenH * 0.25); // Move up 25% from phone position in landscape
+        }
+      }
+      
       if (isTablet) {
         return baseMargin - (screenH * 0.2);
       } else {
@@ -884,12 +894,22 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     
     // Farm level in mobile portrait
     if (levelName.toLowerCase() === 'farm' && !isLandscape) {
-      return baseMargin + 145; // Moved up 5px (was 150, now 145)
+      return baseMargin + 145;
     }
     
     // Farm level on iPad - move animals up by 30px
     if (levelName.toLowerCase() === 'farm' && screenW >= 768 && Platform.OS === 'ios') {
-      return baseMargin - 30; // Move up 30px on iPad
+      return baseMargin - 30;
+    }
+    
+    // Forest level - use the same logic as farm
+    if (levelName.toLowerCase() === 'forest' && !isLandscape) {
+      return baseMargin + 145;
+    }
+    
+    // Forest level on iPad - move animals up by 30px (same as farm)
+    if (levelName.toLowerCase() === 'forest' && screenW >= 768 && Platform.OS === 'ios') {
+      return baseMargin - 30;
     }
     
     // Jungle level - move animals up by 20% on tablets
@@ -906,43 +926,6 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
           return baseMargin + 50 - (screenH * 0.2); // mobile landscape - moved up 10%
         }
       }
-    }
-    
-    // Forest level
-    if (levelName.toLowerCase() === 'forest') {
-      let forestMargin = baseMargin + 50; // Original forest positioning for all devices
-      
-      // Move animals up by 30% on forest level (general)
-      forestMargin -= screenH * 0.3;
-      
-      // On mobile devices, move only moving animals down
-      const isMobile = Math.min(screenW, screenH) < 768;
-      const isTablet = Math.min(screenW, screenH) >= 768;
-      
-              if (isMobile && currentAnimal?.isMoving) {
-          forestMargin -= screenH * 0.1; // Move moving animals up by 10% on mobile
-        } else if (isMobile && !currentAnimal?.isMoving) {
-          forestMargin += screenH * 0.1; // Move moving animals up by 10% on mobile
-        }
-        
-        // Move forest mouse down specifically on mobile
-        if (isMobile && currentAnimal?.name === t('animals.mouse')) {
-          forestMargin += screenH * 0.2; // Move mouse down by 20% on mobile
-        }
-      
-      // On tablets, move animals down by 10%
-      if (isTablet && currentAnimal?.isMoving) {
-        forestMargin += screenH * 0.1; // Move animals down by 10% on tablets
-      } else if (isTablet && !currentAnimal?.isMoving) {
-        forestMargin += screenH * 0.3; // Move animals down by 10% on tablets
-      }
-      
-      // iPad landscape gets additional positioning adjustment
-      if (isLandscape && screenW >= 900 && Platform.OS === 'ios') {
-        forestMargin += 150; // Reduced from 300 to 150 to push animals up by 150px
-      }
-      
-      return forestMargin;
     }
     
     // Desert level - different positioning for tablets vs phones
@@ -998,8 +981,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     let finalMargin = baseMargin; // default
     
     // Farm level - move animals up by 5px in all cases not handled above
-    if (levelName.toLowerCase() === 'farm') {
-      finalMargin -= 5; // Move up 5px for farm level
+    if (levelName.toLowerCase() === 'farm' || levelName.toLowerCase() === 'forest') {
+      finalMargin -= 5; // Move up 5px for farm and forest level
     }
     
     // Push animals down 10% on phones (non-tablet devices) - but not for desert level
@@ -1044,7 +1027,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     <ReanimatedView.View style={[dynamicStyles.container, animatedStyle]}>
       {/* 1) FULL-SCREEN BACKGROUND SIBLINGS, BOTH MOUNTED, OPACITY ANIMATED */}
       <View style={[StyleSheet.absoluteFillObject, {
-        backgroundColor: levelName.toLowerCase() === 'forest' ? '#1a3d1a' : 
+        backgroundColor: levelName.toLowerCase() === 'forest' ? '#87CEEB' : 
                         levelName.toLowerCase() === 'arctic' ? '#e6f2ff' :
                         levelName.toLowerCase() === 'birds' ? '#87CEEB' :
                         levelName.toLowerCase() === 'jungle' ? '#1a3d1a' :
@@ -1069,142 +1052,94 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                 right: 0,
                 bottom: 0,
               },
-              // Increase height on iPad landscape
+              // Fix for iPad landscape - fill entire screen
               isLandscape && screenW >= 768 && Platform.OS === 'ios' && {
-                height: screenH * 1.2, // Reduce from 1.5 to 1.2 to match better
-                bottom: undefined, // Remove bottom constraint to allow height to work
-                top: screenH * 0.1, // Push down by 10% of screen height
+                height: '100%', // Fill entire screen
+                bottom: 0, // Ensure it reaches the bottom
+                top: 0, // Start from the very top
               },
-              // Move forest moving background up
-   
-              // Move forest moving background up more on mobile landscape
-              // don't move
-              // Move jungle moving background up in mobile portrait
-              levelName.toLowerCase() === 'jungle' && !isLandscape && {
-                top: -400, // Move moving background up by 400px in portrait
-                height: screenH + 400, // Extend height to cover the gap
-              },
-              // Move jungle moving background up more on screens < 900 in portrait
-              levelName.toLowerCase() === 'jungle' && !isLandscape && screenW < 900 && {
-                top: -600, // Move moving background up by 600px on smaller screens in portrait
-                height: screenH + 600, // Extend height to cover the gap
-              },
-              // Move birds moving background up in mobile landscape
-              levelName.toLowerCase() === 'birds' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
-                top: -200, // Move moving background up by 200px in landscape on mobile
-                height: screenH + 200, // Extend height to cover the gap
-              },
-
-              // Move savannah moving background up on mobile
-              levelName.toLowerCase() === 'savannah' && (Platform.OS === 'ios' || Platform.OS === 'android') && {
-                top: -150, // Move moving background up by 150px on mobile (increased by 50px)
-                height: screenH + 150, // Extend height to cover the gap
-              },
-              // Move forest moving background up in landscape
-              levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
-                top: -50, // Move moving background up by 50px in landscape on mobile
-                height: screenH + 200, // Extend height to cover the gap
-              },
-              // Move forest moving background up more on phone landscape (conditional on moving animals)
+              // Move forest moving background down in landscape phones (moved up 30%)
               levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
-                top: currentAnimal?.isMoving ? -500 : -200, // Move up more when moving, normal up when not moving
-                height: currentAnimal?.isMoving ? screenH + 500 : screenH + 200, // Extend height accordingly
+                top: 30 - (screenH * 0.3), // Move background up by 30% from original position
+                height: screenH + (screenH * 0.3), // Extend height to cover the gap
               },
-              // Move forest moving background on phone portrait (conditional on moving animals)
-              levelName.toLowerCase() === 'forest' && !isLandscape && Math.min(screenW, screenH) < 768 && currentAnimal?.isMoving && {
-                top: -400, // Push background up more
-                height: screenH + 400, // Extend height to cover the gap
+              // Move forest moving background up (exclude landscape phones) - moved up 10%
+              levelName.toLowerCase() === 'forest' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                top: -200 - (screenH * 0.1), // Move background up by 10% more
+                height: screenH + 200 + (screenH * 0.1), // Extend height to cover the gap
               },
-              // Move forest moving background on tablet (conditional on moving animals)
-              levelName.toLowerCase() === 'forest' && Math.min(screenW, screenH) >= 768 && currentAnimal?.isMoving && {
-                top: -500, // Move up more when moving on tablets
-                height: screenH + 500, // Extend height accordingly
+              // Move forest moving background up more on phones (exclude landscape) - moved up 10%
+              levelName.toLowerCase() === 'forest' && Math.min(screenW, screenH) < 768 && !isLandscape && {
+                top: -350 - (screenH * 0.1), // Move background up by 10% more
+                height: screenH + 350 + (screenH * 0.1), // Extend height to cover the gap
               },
-              
-              // Move farm moving background up
-              levelName.toLowerCase() === 'farm' && {
-                top: -200, // Move moving background up by 200px
-                height: screenH + 200, // Extend height to cover the gap
+              // Move arctic moving background up (exclude landscape phones) - moved up 80%
+              levelName.toLowerCase() === 'arctic' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                top: -350 - (screenH * 0.8), // Move background up by 80% more
+                height: screenH + 350 + (screenH * 0.8), // Extend height to cover the gap
               },
-              // Move farm moving background up more on phones
-              levelName.toLowerCase() === 'farm' && Math.min(screenW, screenH) < 768 && {
-                top: -350, // Move moving background up by 350px on phones
-                height: screenH + 350, // Extend height to cover the gap
+              // Move arctic moving background up more on phones (exclude landscape) - moved up 80%
+              levelName.toLowerCase() === 'arctic' && Math.min(screenW, screenH) < 768 && !isLandscape && {
+                top: -500 - (screenH * 0.8), // Move background up by 80% more
+                height: screenH + 500 + (screenH * 0.8), // Extend height to cover the gap
               },
-              // Move ocean moving background up
-              levelName.toLowerCase() === 'ocean' && {
-                top: -200, // Move moving background up by 200px
-                height: screenH + 200, // Extend height to cover the gap
+              // Move arctic moving background down on landscape phones - moved up 80%
+              levelName.toLowerCase() === 'arctic' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                top: 100 - (screenH * 0.9), // Move background up by 80% from original position
+                height: screenH + (screenH * 0.9), // Extend height to cover the gap
               },
-              // Move ocean moving background up more on phones
-              levelName.toLowerCase() === 'ocean' && Math.min(screenW, screenH) < 768 && {
-                top: -350, // Move moving background up by 350px on phones
-                height: screenH + 350, // Extend height to cover the gap
+              // Move savannah moving background up on mobile (exclude landscape phones) - moved up 30%
+              levelName.toLowerCase() === 'savannah' && (Platform.OS === 'ios' || Platform.OS === 'android') && !(isLandscape && Math.min(screenW, screenH) < 768) && {
+                top: -150 - (screenH * 0.3), // Move background up by 30% more
+                height: screenH + 150 + (screenH * 0.3), // Extend height to cover the gap
               },
-              // Move desert moving background up
-              levelName.toLowerCase() === 'desert' && {
-                top: -200, // Move moving background up by 200px
-                height: screenH + 200, // Extend height to cover the gap
+              // Move savannah moving background down on landscape phones - moved up 30%
+              levelName.toLowerCase() === 'savannah' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                top: 30 - (screenH * 0.3), // Move background up by 30% from original position
+                height: screenH + (screenH * 0.3), // Extend height to cover the gap
               },
-              // Move desert moving background up more on phones
-              levelName.toLowerCase() === 'desert' && Math.min(screenW, screenH) < 768 && {
-                top: -350, // Move moving background up by 350px on phones
-                height: screenH + 350, // Extend height to cover the gap
+              // Move savannah moving background up (exclude landscape phones) - moved up 30%
+              levelName.toLowerCase() === 'savannah' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                top: -250 - (screenH * 0.3), // Move background up by 30% more
+                height: screenH + 250 + (screenH * 0.3), // Extend height to cover the gap
               },
-              // Move arctic moving background up
-              levelName.toLowerCase() === 'arctic' && {
-                top: -450, // Move moving background up by 350px (increased a bit more)50
-                height: screenH + 350, // Extend height to cover the gap
+              // Move savannah moving background up more on phones (exclude landscape) - moved up 30%
+              levelName.toLowerCase() === 'savannah' && Math.min(screenW, screenH) < 768 && !isLandscape && {
+                top: -400 - (screenH * 0.3), // Move background up by 30% more
+                height: screenH + 400 + (screenH * 0.3), // Extend height to cover the gap
               },
-              // Move arctic moving background up more on phones
-              levelName.toLowerCase() === 'arctic' && Math.min(screenW, screenH) < 768 && {
-                top: -500, // Move moving background up by 500px on phones (increased a bit more)
-                height: screenH + 500, // Extend height to cover the gap
+              // Move jungle moving background up in mobile portrait - moved up 50%
+              levelName.toLowerCase() === 'jungle' && !isLandscape && {
+                top: -400 - (screenH * 0.5), // Move background up by 50% more
+                height: screenH + 400 + (screenH * 0.5), // Extend height to cover the gap
               },
-              // Move savannah moving background up
-              levelName.toLowerCase() === 'savannah' && {
-                top: -250, // Move moving background up by 250px (increased by 50px)
-                height: screenH + 250, // Extend height to cover the gap
+              // Move jungle moving background down in mobile landscape - moved up 50%
+              levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                top: 40 - (screenH * 0.5), // Move background up by 50% from original position
+                height: screenH + (screenH * 0.5), // Extend height to cover the gap
               },
-              // Move savannah moving background up more on phones
-              levelName.toLowerCase() === 'savannah' && Math.min(screenW, screenH) < 900 && {
-                top: -400, // Move moving background up by 400px on phones (increased by 50px)
-                height: screenH + 400, // Extend height to cover the gap
+              // Move jungle moving background up (exclude landscape phones) - moved up 50%
+              levelName.toLowerCase() === 'jungle' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                top: -400 - (screenH * 0.5), // Move background up by 50% more
+                height: screenH + 400 + (screenH * 0.5), // Extend height to cover the gap
               },
-                              // Move jungle moving background up
-                levelName.toLowerCase() === 'jungle' && {
-                  top: -400, // Move moving background up by 400px (pushed down from -600px)
-                  height: screenH + 400, // Extend height to cover the gap
-                },
-             
-                levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
-                  top: -450, // Move moving background up by 400px (pushed down from -600px)
-                  height: screenH + 650, // Extend height to cover the gap
-                },
-                // Move jungle moving background up more on screens < 900 in landscape
-                levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && screenW < 900 && {
-                  top: -520, // Move moving background up by 300px on smaller screens in landscape
-                  height: screenH + 650, // Extend height to cover the gap
-                },
-
-
-              // Move insects moving background up
-              levelName.toLowerCase() === 'insects' && {
-                top: -350, // Move moving background up by 350px
-                height: screenH + 350, // Extend height to cover the gap
+              // Move jungle moving background up more on screens < 900 (exclude landscape phones) - moved up 50%
+              levelName.toLowerCase() === 'jungle' && screenW < 900 && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                top: -600 - (screenH * 0.5), // Move background up by 50% more
+                height: screenH + 600 + (screenH * 0.5), // Extend height to cover the gap
               },
-              // Move insects moving background up more on phones
-              levelName.toLowerCase() === 'insects' && Math.min(screenW, screenH) < 768 && {
-                top: -500, // Move moving background up by 500px on phones
-                height: screenH + 500, // Extend height to cover the gap
-              }
+              // Move birds moving background down in mobile landscape - moved up 10%
+              levelName.toLowerCase() === 'birds' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                top: 30 - (screenH * 0.1), // Move background up by 10% from original position
+                height: screenH + (screenH * 0.1), // Extend height to cover the gap
+              },
             ]}
           >
             <MovingBg
               backgroundImageUri={movingBgSource as string | null}
               movingDirection={currentAnimal?.movingDirection ?? 'left'}
-              containerHeight={isLandscape && screenW >= 768 && Platform.OS === 'ios' ? screenH * 1.3 : undefined}
-              containerWidth={isLandscape && screenW >= 768 && Platform.OS === 'ios' ? screenW * 1.2 : undefined}
+              containerHeight={undefined}
+              containerWidth={undefined}
             />
           </Animated.View>
           {/* Static image background */}
@@ -1227,117 +1162,147 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                   right: 0,
                   bottom: 0,
                 },
-                // Increase height on iPad landscape
+                // Fix for iPad landscape - fill entire screen
                 isLandscape && screenW >= 768 && Platform.OS === 'ios' && {
-                  height: screenH * 1.2, // Reduce from 1.5 to 1.2 to match better
-                  bottom: undefined, // Remove bottom constraint to allow height to work
-                  top: screenH * 0.1, // Push down by 10% of screen height
+                  height: '100%', // Fill entire screen
+                  bottom: 0, // Ensure it reaches the bottom
+                  top: 0, // Start from the very top
                 },
-                // Move jungle background up in mobile portrait
+                // Move jungle background up in mobile portrait - moved up 80%
                 levelName.toLowerCase() === 'jungle' && !isLandscape && {
-                  top: -400, // Move background up by 400px in portrait (pushed down)
-                  height: screenH + 400, // Extend height to cover the gap
+                  top: -400 - (screenH * 0.8), // Move background up by 80% more
+                  height: screenH + 400 + (screenH * 0.8), // Extend height to cover the gap
                 },
-                // Move jungle background up in mobile landscape
-                levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
-                  top: -400, // Move background up by 400px in landscape on mobile
-                  height: screenH + 400, // Extend height to cover the gap
-                },
-                // Move birds background up in mobile landscape
-                levelName.toLowerCase() === 'birds' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
-                  top: -200, // Move background up by 200px in landscape on mobile
-                  height: screenH + 200, // Extend height to cover the gap
-                },
+                                 // Move jungle background down in mobile landscape - moved up 80%
+                 levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                   top: 40 - (screenH * 0.8), // Move background up by 80% from original position
+                   height: screenH + (screenH * 0.8), // Extend height to cover the gap
+                 },
+                 // Move birds background down in mobile landscape - moved up 10%
+                 levelName.toLowerCase() === 'birds' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                   top: 30 - (screenH * 0.1), // Move background up by 10% from original position
+                   height: screenH + (screenH * 0.1), // Extend height to cover the gap
+                 },
 
-                // Move savannah background up on mobile
-                levelName.toLowerCase() === 'savannah' && (Platform.OS === 'ios' || Platform.OS === 'android') && {
-                  top: -150, // Move background up by 150px on mobile (increased by 50px)
-                  height: screenH + 150, // Extend height to cover the gap
+                // Move savannah background up on mobile (exclude landscape phones) - moved up 50%
+                levelName.toLowerCase() === 'savannah' && (Platform.OS === 'ios' || Platform.OS === 'android') && !(isLandscape && Math.min(screenW, screenH) < 768) && {
+                  top: -150 - (screenH * 0.5), // Move background up by 50% more
+                  height: screenH + 150 + (screenH * 0.5), // Extend height to cover the gap
                 },
-                // Move forest background up in landscape
-                levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && {
-                  top: -50, // Move background up by 50px in landscape on mobile
-                  height: screenH + 200, // Extend height to cover the gap
-                },
-                // Move forest background up more on phone landscape
+                                 // Move savannah background down on landscape phones - moved up 50%
+                 levelName.toLowerCase() === 'savannah' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                   top: 30 - (screenH * 0.5), // Move background up by 50% from original position
+                   height: screenH + (screenH * 0.5), // Extend height to cover the gap
+                 },
+                // Move forest background down in landscape phones (moved up 50%)
                 levelName.toLowerCase() === 'forest' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
-                  top: -200, // Move background up by 200px in landscape on phones
-                  height: screenH + 200, // Extend height to cover the gap
+                  top: 30 - (screenH * 0.5), // Move background up by 50% from original position
+                  height: screenH + (screenH * 0.5), // Extend height to cover the gap
                 },
-                // Move farm background up
-                levelName.toLowerCase() === 'farm' && {
+                // Move forest background up (exclude landscape phones) - moved up 10%
+                levelName.toLowerCase() === 'forest' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                  top: -200 - (screenH * 0.1), // Move background up by 10% more
+                  height: screenH + 200 + (screenH * 0.1), // Extend height to cover the gap
+                },
+                // Move forest background up more on phones (exclude landscape) - moved up 10%
+                levelName.toLowerCase() === 'forest' && Math.min(screenW, screenH) < 768 && !isLandscape && {
+                  top: -350 - (screenH * 0.1), // Move background up by 10% more
+                  height: screenH + 350 + (screenH * 0.1), // Extend height to cover the gap
+                },
+                // Move farm background up (exclude landscape phones)
+                levelName.toLowerCase() === 'farm' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
                   top: -200, // Move background up by 200px
                   height: screenH + 200, // Extend height to cover the gap
                 },
-                // Move farm background up more on phones
-                levelName.toLowerCase() === 'farm' && Math.min(screenW, screenH) < 768 && {
+                // Move farm background up more on phones (exclude landscape)
+                levelName.toLowerCase() === 'farm' && Math.min(screenW, screenH) < 768 && !isLandscape && {
                   top: -350, // Move background up by 350px on phones
                   height: screenH + 350, // Extend height to cover the gap
                 },
-                // Move ocean background up
-                levelName.toLowerCase() === 'ocean' && {
+                                 // Move farm background down on landscape phones
+                 levelName.toLowerCase() === 'farm' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                   top: 30, // Move background down by 30px on landscape phones
+                   height: screenH, // Use normal height
+                 },
+                // Move ocean background up (exclude landscape phones)
+                levelName.toLowerCase() === 'ocean' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
                   top: -200, // Move background up by 200px
                   height: screenH + 200, // Extend height to cover the gap
                 },
-                // Move ocean background up more on phones
-                levelName.toLowerCase() === 'ocean' && Math.min(screenW, screenH) < 768 && {
+                // Move ocean background up more on phones (exclude landscape)
+                levelName.toLowerCase() === 'ocean' && Math.min(screenW, screenH) < 768 && !isLandscape && {
                   top: -350, // Move background up by 350px on phones
                   height: screenH + 350, // Extend height to cover the gap
                 },
-                // Move desert background up
-                levelName.toLowerCase() === 'desert' && {
+                                 // Move ocean background down on landscape phones (moved up 10%)
+                 levelName.toLowerCase() === 'ocean' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                   top: 30 - (screenH * 0.1), // Move background up by 10% from original position
+                   height: screenH + (screenH * 0.1), // Extend height to cover the gap
+                 },
+                // Move desert background up (exclude landscape phones)
+                levelName.toLowerCase() === 'desert' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
                   top: -200, // Move background up by 200px
                   height: screenH + 200, // Extend height to cover the gap
                 },
-                // Move desert background up more on phones
-                levelName.toLowerCase() === 'desert' && Math.min(screenW, screenH) < 768 && {
+                // Move desert background up more on phones (exclude landscape)
+                levelName.toLowerCase() === 'desert' && Math.min(screenW, screenH) < 768 && !isLandscape && {
                   top: -350, // Move background up by 350px on phones
                   height: screenH + 350, // Extend height to cover the gap
                 },
-                // Move arctic background up
-                levelName.toLowerCase() === 'arctic' && {
-                  top: -350, // Move background up by 350px (increased a bit more)
-                  height: screenH + 350, // Extend height to cover the gap
+                                 // Move desert background down on landscape phones (moved up 10%)
+                 levelName.toLowerCase() === 'desert' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                   top: 30 - (screenH * 0.1), // Move background up by 10% from original position
+                   height: screenH + (screenH * 0.1), // Extend height to cover the gap
+                 },
+                // Move arctic background up (exclude landscape phones) - moved up 190%
+                levelName.toLowerCase() === 'arctic' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                  top: -350 - (screenH * 1.9), // Move background up by 190% more
+                  height: screenH + 350 + (screenH * 1.9), // Extend height to cover the gap
                 },
-                // Move arctic background up more on phones
-                levelName.toLowerCase() === 'arctic' && Math.min(screenW, screenH) < 768 && {
-                  top: -500, // Move background up by 500px on phones (increased a bit more)
-                  height: screenH + 500, // Extend height to cover the gap
+                // Move arctic background up more on phones (exclude landscape) - moved up 190%
+                levelName.toLowerCase() === 'arctic' && Math.min(screenW, screenH) < 768 && !isLandscape && {
+                  top: -500 - (screenH * 1.9), // Move background up by 190% more
+                  height: screenH + 500 + (screenH * 1.9), // Extend height to cover the gap
                 },
-                // Move savannah background up
-                levelName.toLowerCase() === 'savannah' && {
-                  top: -250, // Move background up by 250px (increased by 50px)
-                  height: screenH + 250, // Extend height to cover the gap
+                // Move arctic background down on landscape phones - moved up 190%
+                levelName.toLowerCase() === 'arctic' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                  top: 100 - (screenH * 5), // Move background up by 190% from original position
+                  height: screenH + (screenH * 5), // Extend height to cover the gap
                 },
-                // Move savannah background up more on phones
-                levelName.toLowerCase() === 'savannah' && Math.min(screenW, screenH) < 768 && {
-                  top: -400, // Move background up by 400px on phones (increased by 50px)
-                  height: screenH + 400, // Extend height to cover the gap
+                // Move savannah background up (exclude landscape phones) - moved up 50%
+                levelName.toLowerCase() === 'savannah' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                  top: -250 - (screenH * 0.5), // Move background up by 50% more
+                  height: screenH + 250 + (screenH * 0.5), // Extend height to cover the gap
                 },
-                // Move jungle background up
-                levelName.toLowerCase() === 'jungle' && {
-                  top: -400, // Move background up by 400px
-                  height: screenH + 400, // Extend height to cover the gap
+                // Move savannah background up more on phones (exclude landscape) - moved up 50%
+                levelName.toLowerCase() === 'savannah' && Math.min(screenW, screenH) < 768 && !isLandscape && {
+                  top: -400 - (screenH * 0.5), // Move background up by 50% more
+                  height: screenH + 400 + (screenH * 0.5), // Extend height to cover the gap
                 },
-                // Move jungle background up more on screens < 900
-                levelName.toLowerCase() === 'jungle' && screenW < 900 && {
-                  top: -600, // Move background up by 600px on smaller screens
-                  height: screenH + 600, // Extend height to cover the gap
+                // Move jungle background up (exclude landscape phones) - moved up 80%
+                levelName.toLowerCase() === 'jungle' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                  top: -400 - (screenH * 0.8), // Move background up by 80% more
+                  height: screenH + 400 + (screenH * 0.8), // Extend height to cover the gap
                 },
-                // Move jungle background up more on screens < 900 in landscape
-                levelName.toLowerCase() === 'jungle' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && screenW < 900 && {
-                  top: -300, // Move background up by 300px on smaller screens in landscape
-                  height: screenH + 300, // Extend height to cover the gap
+                // Move jungle background up more on screens < 900 (exclude landscape phones) - moved up 80%
+                levelName.toLowerCase() === 'jungle' && screenW < 900 && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                  top: -600 - (screenH * 0.8), // Move background up by 80% more
+                  height: screenH + 600 + (screenH * 0.8), // Extend height to cover the gap
                 },
-                // Move insects background up
-                levelName.toLowerCase() === 'insects' && {
-                  top: -350, // Move background up by 350px
-                  height: screenH + 350, // Extend height to cover the gap
+                // Move insects background up (exclude landscape phones) - moved up 30%
+                levelName.toLowerCase() === 'insects' && !(isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768) && {
+                  top: -350 - (screenH * 0.3), // Move background up by 30% more
+                  height: screenH + 350 + (screenH * 0.3), // Extend height to cover the gap
                 },
-                // Move insects background up more on phones
-                levelName.toLowerCase() === 'insects' && Math.min(screenW, screenH) < 768 && {
-                  top: -500, // Move background up by 500px on phones
-                  height: screenH + 500, // Extend height to cover the gap
+                // Move insects background up more on phones (exclude landscape) - moved up 30%
+                levelName.toLowerCase() === 'insects' && Math.min(screenW, screenH) < 768 && !isLandscape && {
+                  top: -500 - (screenH * 0.3), // Move background up by 30% more
+                  height: screenH + 500 + (screenH * 0.3), // Extend height to cover the gap
+                },
+                // Move insects background down on landscape phones - moved up 30%
+                levelName.toLowerCase() === 'insects' && isLandscape && (Platform.OS === 'ios' || Platform.OS === 'android') && Math.min(screenW, screenH) < 768 && {
+                  top: 100 - (screenH * 0.3), // Move background up by 30% from original position
+                  height: screenH + (screenH * 0.3), // Extend height to cover the gap
                 }
               ]}
               resizeMode="cover"
@@ -1353,13 +1318,13 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         <Animated.View style={{ flex: 1, opacity: contentFade }}>
           <View style={{ flex: 1 }}>
             <TouchableOpacity style={dynamicStyles.backToMenuButton} onPress={goToHome}>
-              <Ionicons name="home" size={30} color="#fff" />
+              <Ionicons name="home" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
             </TouchableOpacity>
             {hasAnimals && (
               <TouchableOpacity style={dynamicStyles.soundButton} onPress={toggleMute}>
                 <Ionicons
                   name={isMuted ? 'volume-mute' : 'volume-high'}
-                  size={38}
+                  size={isLandscape && screenW >= 900 ? 48 : 38}
                   color="green"
                 />
               </TouchableOpacity>
@@ -1494,8 +1459,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                       levelName.toLowerCase() === 'jungle' && Math.min(screenW, screenH) >= 768 && {
                         top: screenH * 0.1,
                       },
-                      // Forest level - move label down on phones
-                      levelName.toLowerCase() === 'forest' && Math.min(screenW, screenH) < 768 && {
+                      // Forest and Farm level - move label down on phones
+                      (levelName.toLowerCase() === 'forest' || levelName.toLowerCase() === 'farm') && Math.min(screenW, screenH) < 768 && {
                         top: screenH * 0.01, // Move down 20% on phones (0.05 base + 0.20 = 0.25, but using 0.15 for better positioning)
                       },
                       {

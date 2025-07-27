@@ -239,21 +239,21 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       paddingHorizontal: 0,
       paddingVertical: 0,
       gap: 0,
-      maxWidth: isLandscape ? 280 : 260,
+      maxWidth: isLandscape ? (width >= 900 ? 350 : 280) : 260, // Wider container on tablet landscape
       backgroundColor: 'transparent',
       borderRadius: 0,
       marginHorizontal: 0,
-      marginLeft: -200,
+      marginLeft: isLandscape && width >= 900 ? -120 : -200, // Move more to the right on tablet landscape
       marginRight: 0,
     },
     unlockButton: {
       backgroundColor: '#4CAF50',
-      paddingHorizontal: getResponsiveSpacing(5, scaleFactor),
-      paddingVertical: getResponsiveSpacing(6, scaleFactor),
-      borderRadius: getResponsiveSpacing(22, scaleFactor),
+      paddingHorizontal: getResponsiveSpacing(isLandscape && width >= 900 ? 15 : 5, scaleFactor), // Bigger padding on tablet landscape
+      paddingVertical: getResponsiveSpacing(isLandscape && width >= 900 ? 12 : 6, scaleFactor), // Bigger padding on tablet landscape
+      borderRadius: getResponsiveSpacing(isLandscape && width >= 900 ? 30 : 22, scaleFactor), // Bigger border radius on tablet landscape
       flex: 1,
-      maxWidth: isLandscape ? 280 : 260,
-      minHeight: getResponsiveSpacing(32, scaleFactor),
+      maxWidth: isLandscape ? (width >= 900 ? 350 : 280) : 260, // Wider on tablet landscape
+      minHeight: getResponsiveSpacing(isLandscape && width >= 900 ? 48 : 32, scaleFactor), // Taller on tablet landscape
       shadowColor: '#4CAF50',
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.3,
@@ -267,7 +267,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
     unlockButtonText: {
       color: '#FFFFFF',
       fontWeight: '800',
-      fontSize: getResponsiveFontSize(9, scaleFactor),
+      fontSize: getResponsiveFontSize(isLandscape && width >= 900 ? 14 : 9, scaleFactor), // Bigger font on tablet landscape
       textAlign: 'center',
       letterSpacing: 0.3,
       textShadowColor: 'rgba(0,0,0,0.3)',
@@ -363,7 +363,12 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
 
 const lockedLevels = LEVELS.filter(l => l !== 'farm');
 
-export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
+interface MenuScreenProps {
+  onSelectLevel: (level: string) => void;
+  backgroundImageUri?: string | null;
+}
+
+export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuScreenProps) {
   // IMPORTANT: All hooks must be at the top level and in consistent order
   const navigation = useNavigation();
   const { t, lang, setLang } = useLocalization();
@@ -748,6 +753,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   // Render unlock/restore buttons
   const renderUnlockButtons = () => {
     if (unlocked || Platform.OS !== 'ios') return null;
+    
+    // Detect landscape mode where we want vertical button layout
+    const isPhoneLandscape = isLandscape; // Use landscape orientation regardless of device size
+    // console.log('Unlock button debug:', { width, height, isLandscape, isPhoneLandscape });
+    
     return (
       <View style={responsiveStyles.unlockButtonsContainer}>
         <TouchableOpacity
@@ -755,9 +765,31 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
           onPress={handleUnlock}
           disabled={purchaseInProgress}
         >
-          <Text style={responsiveStyles.unlockButtonText}>
-             {t('unlockAllLevels')} ({unlockPrice})
-          </Text>
+          {isPhoneLandscape ? (
+            // Landscape: Stack icon and text vertically, centered
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons 
+                name="lock-open" 
+                size={responsiveStyles.unlockButtonText.fontSize + 2} 
+                color="#FFFFFF" 
+              />
+              <Text style={[responsiveStyles.unlockButtonText, { marginTop: 2, fontSize: responsiveStyles.unlockButtonText.fontSize - 1 }]}>
+                {t('unlockAllLevels')} ({unlockPrice})
+              </Text>
+            </View>
+          ) : (
+            // Other orientations: Keep original horizontal layout
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Ionicons 
+                name="lock-open" 
+                size={responsiveStyles.unlockButtonText.fontSize} 
+                color="#FFFFFF" 
+              />
+              <Text style={responsiveStyles.unlockButtonText}>
+                {t('unlockAllLevels')} ({unlockPrice})
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
     );
@@ -766,6 +798,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   // Modal for locked level
   const renderUnlockModal = () => {
     if (!showUnlockModal) return null;
+    
+    // Detect landscape mode where we want vertical button layout
+    const isPhoneLandscape = isLandscape; // Use landscape orientation regardless of device size
+    
     return (
       <Modal
         visible={showUnlockModal}
@@ -790,9 +826,31 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                   }}
                   disabled={purchaseInProgress}
                 >
-                  <Text style={responsiveStyles.modalUnlockButtonText}>
-                    ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
-                  </Text>
+                  {isPhoneLandscape ? (
+                    // Phone landscape: Stack icon and text vertically, centered
+                    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons 
+                        name="lock-open" 
+                        size={responsiveStyles.modalUnlockButtonText.fontSize + 2} 
+                        color="#FFFFFF" 
+                      />
+                      <Text style={[responsiveStyles.modalUnlockButtonText, { marginTop: 2, fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 1 }]}>
+                        ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
+                      </Text>
+                    </View>
+                  ) : (
+                    // Other orientations: Keep original horizontal layout
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      <Ionicons 
+                        name="lock-open" 
+                        size={responsiveStyles.modalUnlockButtonText.fontSize} 
+                        color="#FFFFFF" 
+                      />
+                      <Text style={responsiveStyles.modalUnlockButtonText}>
+                        ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </>
             )}
@@ -840,9 +898,23 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
     : currentWidth * 0.70; // Less space in portrait for smaller tiles
   const calculatedSize = (availableWidth / currentNumColumns) - (RESPONSIVE_MARGIN * 2);
   
-  // Use different tile size constraints based on orientation
-  const minTileSize = currentIsLandscape ? MIN_TILE_SIZE_LANDSCAPE : MIN_TILE_SIZE_PORTRAIT;
-  const maxTileSize = currentIsLandscape ? MAX_TILE_SIZE_LANDSCAPE : MAX_TILE_SIZE_PORTRAIT;
+  // Use different tile size constraints based on orientation and device
+  let minTileSize, maxTileSize;
+  
+  if (currentIsLandscape && currentWidth >= 900) {
+    // Tablet landscape - bigger tiles
+    minTileSize = 280;
+    maxTileSize = 380;
+  } else if (currentIsLandscape) {
+    // Phone landscape
+    minTileSize = MIN_TILE_SIZE_LANDSCAPE;
+    maxTileSize = MAX_TILE_SIZE_LANDSCAPE;
+  } else {
+    // Portrait mode
+    minTileSize = MIN_TILE_SIZE_PORTRAIT;
+    maxTileSize = MAX_TILE_SIZE_PORTRAIT;
+  }
+  
   const itemSize = Math.max(minTileSize, Math.min(maxTileSize, calculatedSize));
 
   const languages = [
@@ -940,7 +1012,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                 showsVerticalScrollIndicator={false}
               >
                 {/* Header with logo and unlock button */}
-                <View style={[responsiveStyles.landscapeHeaderContainer, { marginTop: getResponsiveSpacing(100, scaleFactor) }]}>
+                <View style={[responsiveStyles.landscapeHeaderContainer, { 
+                  marginTop: getResponsiveSpacing(100, scaleFactor) + (isLandscape && width >= 900 ? height * 0.3 : 0) // Move down 30% on tablet landscape
+                }]}>
                   <Image
                     source={require('../src/assets/images/game-logo.png')}
                     style={responsiveStyles.landscapeLogo}
@@ -982,7 +1056,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                         fontFamily: 'System',
                       }}
                     >
-                                           {t('pickWorldMessage')}
+                      {t('pickWorldMessage')}
                     </Text>
                   </View>
                   <LevelTiles
@@ -1098,6 +1172,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
           {renderUnlockModal()}
 
           {/* Settings Modal */}
+          {showSettingsModal && volume !== undefined && typeof volume === 'number' && (
           <Modal
             visible={showSettingsModal}
             transparent={true}
@@ -1117,13 +1192,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
               justifyContent: 'center',
               alignItems: 'center',
               paddingHorizontal: 20,
-              paddingVertical: 60, // More padding to ensure modal stays on screen
+              paddingVertical: currentIsLandscape && currentWidth >= 900 ? 40 : 60, // Less vertical padding on tablet landscape
             }}>
               <View style={{
                 backgroundColor: 'white',
-                borderRadius: 20,
-                width: '90%',
-                height: currentHeight * 0.7, // 70% of screen height instead of fixed 500px
+                borderRadius: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger border radius on tablet landscape
+                width: currentIsLandscape && currentWidth >= 900 ? '80%' : '90%', // Slightly narrower on tablet landscape for better proportions
+                height: currentHeight * (currentIsLandscape && currentWidth >= 900 ? 0.65 : 0.7), // Shorter on tablet landscape
                 maxHeight: currentHeight - 120, // Ensure it never exceeds screen bounds
                 elevation: 5,
                 shadowColor: '#000',
@@ -1136,13 +1211,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: 20,
-                  paddingBottom: 10,
+                  padding: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger padding on tablet landscape
+                  paddingBottom: currentIsLandscape && currentWidth >= 900 ? 15 : 10, // Bigger bottom padding on tablet landscape
                   borderBottomWidth: 1,
                   borderBottomColor: '#f0f0f0',
                 }}>
                   <Text style={{
-                    fontSize: 20,
+                    fontSize: currentIsLandscape && currentWidth >= 900 ? 28 : 20, // Bigger font on tablet landscape
                     fontWeight: 'bold',
                     color: '#612915',
                   }}>
@@ -1150,9 +1225,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowSettingsModal(false)}
-                    style={{ padding: 5 }}
+                    style={{ padding: currentIsLandscape && currentWidth >= 900 ? 8 : 5 }} // Bigger padding on tablet landscape
                   >
-                    <Text style={{ fontSize: 24, color: '#666' }}>✕</Text>
+                    <Text style={{ fontSize: currentIsLandscape && currentWidth >= 900 ? 32 : 24, color: '#666' }}>✕</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -1163,9 +1238,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                     backgroundColor: 'transparent',
                   }}
                   contentContainerStyle={{ 
-                    padding: 20,
-                    paddingTop: 15,
-                    paddingBottom: 30,
+                    padding: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger padding on tablet landscape
+                    paddingTop: currentIsLandscape && currentWidth >= 900 ? 20 : 15, // Bigger top padding on tablet landscape
+                    paddingBottom: currentIsLandscape && currentWidth >= 900 ? 25 : 30, // Reduced bottom padding on tablet landscape
                     flexGrow: 1, // Ensure content can grow to trigger scrolling
                   }}
                   showsVerticalScrollIndicator={true}
@@ -1183,7 +1258,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                       color: '#612915',
                       marginBottom: 10,
                     }}>
-                      {t('language') || 'Language'}
+                      Language
                     </Text>
                     <LanguageSelector
                       isLandscape={false}
@@ -1201,7 +1276,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                     color: '#612915',
                     marginBottom: 15,
                   }}>
-                    {t('volume') || 'Volume'}: {Math.round(volume * 100)}%
+                    Volume: {isNaN(volume) ? '0' : Math.round((volume || 0) * 100)}%
                   </Text>
 
                 {/* Volume Slider */}
@@ -1214,35 +1289,24 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                     onPress={() => setVolumeSafely(0)}
                     style={{ 
                       marginRight: 10,
-                      padding: 5, // Add padding for better touch area
+                      padding: 5,
                     }}
                   >
                     <Ionicons 
                       name="volume-mute" 
-                      size={20} 
-                      color={volume === 0 ? '#FF8C00' : '#666'} // Orange when muted, gray otherwise
+                      size={20}
+                      color={(volume || 0) === 0 ? '#FF8C00' : '#666'}
                     />
                   </TouchableOpacity>
                   
-                  {/* Volume Segments Bar with Gesture */}
+                  {/* Volume Segments Bar */}
                   <View style={{
                     flex: 1,
-                    height: 40,
+                    height: 24,
                     justifyContent: 'center',
                     marginHorizontal: 10,
                     paddingVertical: 5,
-                  }}
-                  onLayout={(event) => {
-                    try {
-                      const width = event.nativeEvent.layout.width;
-                      if (width > 0) {
-                        sliderWidth.current = width;
-                      }
-                    } catch (error) {
-                      console.warn('Error in slider onLayout:', error);
-                    }
-                  }}
-                  >
+                  }}>
                     <View style={{
                       height: 24,
                       backgroundColor: '#E0E0E0',
@@ -1254,12 +1318,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.2,
                       shadowRadius: 2,
-                    }}
-                    {...volumePanResponder.panHandlers}
-                    >
+                    }}>
                       {Array.from({ length: 10 }, (_, i) => {
-                        const segmentValue = (i + 1) / 10; // 10%, 20%, 30%, ... 100%
-                        const isActive = segmentValue <= volume;
+                        const segmentValue = (i + 1) / 10;
+                        const isActive = segmentValue <= (volume || 0);
                         return (
                           <TouchableOpacity
                             key={i}
@@ -1291,18 +1353,16 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                     onPress={() => setVolumeSafely(1.0)}
                     style={{ 
                       marginLeft: 10,
-                      padding: 5, // Add padding for better touch area
+                      padding: 5,
                     }}
                   >
                     <Ionicons 
                       name="volume-high" 
-                      size={20} 
-                      color={volume === 1.0 ? '#FF8C00' : '#666'} // Orange when at max volume, gray otherwise
+                      size={20}
+                      color={(volume || 0) === 1.0 ? '#FF8C00' : '#666'}
                     />
                   </TouchableOpacity>
                 </View>
-
-
 
 
 
@@ -1323,7 +1383,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                       fontSize: 16,
                       fontWeight: 'bold',
                     }}>
-                      {t('done') || 'Done'}
+                      Done
                     </Text>
                   </TouchableOpacity>
 
@@ -1333,6 +1393,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
               </View>
             </View>
           </Modal>
+          )}
         </View>
       </ImageBackground>
     </View>
