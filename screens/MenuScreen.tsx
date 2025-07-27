@@ -11,15 +11,17 @@ import {
   Platform,
   TouchableOpacity,
   Text,
-  Modal,
+    Modal,
   Pressable,
   PanResponder,
   Animated,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
 import * as RNIap from 'react-native-iap';
 import { useAudioPlayer } from 'expo-audio';
+import { Ionicons } from '@expo/vector-icons';
 
 import ReAnimated, { 
   useSharedValue, 
@@ -35,6 +37,7 @@ import { useLocalization } from '../src/hooks/useLocalization';
 import { useForceOrientation } from '../src/hooks/useForceOrientation';
 import LanguageSelector from '../src/components/LanguageSelector';
 import LevelTiles from '../src/components/LevelTiles';
+import AnimatedFireflies from '../src/components/AnimatedFireflies';
 import { setGlobalVolume } from '../src/components/LevelScreenTemplate';
 
 const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
@@ -42,10 +45,10 @@ const BG_IMAGE = require('../src/assets/images/menu-screen.png');
 const LEVELS = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
 
 // Responsive tile size constants for different orientations
-const MIN_TILE_SIZE_LANDSCAPE = 80;
-const MAX_TILE_SIZE_LANDSCAPE = 160;
-const MIN_TILE_SIZE_PORTRAIT = 100;  // Slightly bigger minimum for portrait
-const MAX_TILE_SIZE_PORTRAIT = 140; // Slightly bigger maximum for portrait
+const MIN_TILE_SIZE_LANDSCAPE = 120;
+const MAX_TILE_SIZE_LANDSCAPE = 200;
+const MIN_TILE_SIZE_PORTRAIT = 140;  // Slightly bigger minimum for portrait
+const MAX_TILE_SIZE_PORTRAIT = 180; // Slightly bigger maximum for portrait
 const RESPONSIVE_MARGIN = 6;
 
 // Apple App Store product id for unlocking all levels except Farm
@@ -127,7 +130,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       marginBottom: getResponsiveSpacing(15, scaleFactor),
       zIndex: 10000,
       width: '100%',
-      flexDirection: 'column',
+      flexDirection: 'row',
       position: 'relative',
       paddingHorizontal: getResponsiveSpacing(25, scaleFactor),
       paddingVertical: getResponsiveSpacing(20, scaleFactor),
@@ -140,12 +143,16 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       shadowOpacity: 0.2,
       shadowRadius: 8,
       elevation: 5,
+      gap: 0,
     },
     portraitLogo: {
-      width: Math.min(getResponsiveSpacing(500, scaleFactor), width * 1.2),
-      height: Math.min(getResponsiveSpacing(300, scaleFactor), height * 0.35),
+      width: Math.min(getResponsiveSpacing(405, scaleFactor), width * 0.81),
+      height: Math.min(getResponsiveSpacing(243, scaleFactor), height * 0.3375),
       resizeMode: 'contain',
-      marginBottom: getResponsiveSpacing(5, scaleFactor),
+      marginBottom: 0,
+      marginTop: 0,
+      marginLeft: -250,
+      marginRight: -20,
       alignSelf: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
@@ -190,19 +197,23 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       width: '100%',
       alignItems: 'center',
       justifyContent: 'center',
-      flexDirection: 'column',
+      flexDirection: 'row',
       paddingHorizontal: getResponsiveSpacing(32, scaleFactor),
       paddingTop: getResponsiveSpacing(16, scaleFactor),
       paddingBottom: getResponsiveSpacing(8, scaleFactor),
       backgroundColor: 'transparent',
       zIndex: 2,
       position: 'relative',
+      gap: 0,
     },
     landscapeLogo: {
-      width: Math.min(getResponsiveSpacing(300, scaleFactor), width * 0.9),
-      height: Math.min(getResponsiveSpacing(200, scaleFactor), height * 0.3),
-      resizeMode: 'cover',
-              marginBottom: getResponsiveSpacing(0, scaleFactor),
+      width: Math.min(getResponsiveSpacing(338, scaleFactor), width * 0.675),
+      height: Math.min(getResponsiveSpacing(203, scaleFactor), height * 0.3375),
+      resizeMode: 'contain',
+      marginBottom: 0,
+      marginTop: 0,
+      marginLeft: -150,
+      marginRight: 0,
     },
     landscapeLangContainer: {
       position: 'absolute',
@@ -214,7 +225,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       width: '100%',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: getResponsiveSpacing(32, scaleFactor),
+      paddingHorizontal: getResponsiveSpacing(5, scaleFactor),
       paddingTop: getResponsiveSpacing(8, scaleFactor),
       paddingBottom: getResponsiveSpacing(16, scaleFactor),
       zIndex: 1,
@@ -223,25 +234,26 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: getResponsiveSpacing(0, scaleFactor),
-      marginBottom: getResponsiveSpacing(5, scaleFactor),
-      paddingHorizontal: getResponsiveSpacing(2, scaleFactor),
-      paddingVertical: getResponsiveSpacing(2, scaleFactor),
-      gap: getResponsiveSpacing(12, scaleFactor),
-      width: '100%',
-      maxWidth: isLandscape ? 600 : 420,
-      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-      borderRadius: getResponsiveSpacing(22, scaleFactor),
-      marginHorizontal: getResponsiveSpacing(20, scaleFactor),
+      marginTop: 0,
+      marginBottom: 0,
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+      gap: 0,
+      maxWidth: isLandscape ? 280 : 260,
+      backgroundColor: 'transparent',
+      borderRadius: 0,
+      marginHorizontal: 0,
+      marginLeft: -200,
+      marginRight: 0,
     },
     unlockButton: {
       backgroundColor: '#4CAF50',
-      paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
-      paddingVertical: getResponsiveSpacing(8, scaleFactor),
+      paddingHorizontal: getResponsiveSpacing(5, scaleFactor),
+      paddingVertical: getResponsiveSpacing(6, scaleFactor),
       borderRadius: getResponsiveSpacing(22, scaleFactor),
       flex: 1,
-      maxWidth: isLandscape ? 700 : 700,
-      minHeight: getResponsiveSpacing(36, scaleFactor),
+      maxWidth: isLandscape ? 280 : 260,
+      minHeight: getResponsiveSpacing(32, scaleFactor),
       shadowColor: '#4CAF50',
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.3,
@@ -375,10 +387,87 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
   // Settings modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [volume, setVolume] = useState(0.8); // Default volume at 80%
+  const [volumeLoaded, setVolumeLoaded] = useState(false); // Track if volume is loaded from storage
   const sliderWidth = useRef(200);
 
-  // Update menu background music volume when volume changes
+  // Volume storage functions
+  const saveVolumeToStorage = useCallback(async (volumeValue: number) => {
+    try {
+      await AsyncStorage.setItem('gameVolume', volumeValue.toString());
+    } catch (error) {
+      console.warn('Error saving volume to storage:', error);
+    }
+  }, []);
+
+  const loadVolumeFromStorage = useCallback(async () => {
+    try {
+      const savedVolume = await AsyncStorage.getItem('gameVolume');
+      if (savedVolume !== null) {
+        const volumeValue = parseFloat(savedVolume);
+        if (!isNaN(volumeValue) && volumeValue >= 0 && volumeValue <= 1) {
+          setVolume(volumeValue);
+          setGlobalVolume(volumeValue); // Apply to global system immediately
+        }
+      }
+    } catch (error) {
+      console.warn('Error loading volume from storage:', error);
+    } finally {
+      setVolumeLoaded(true); // Mark as loaded regardless of success/failure
+    }
+  }, []);
+
+  // Safe volume setter with bounds checking
+  const setVolumeSafely = useCallback((newVolume: number) => {
+    try {
+      const clampedVolume = Math.max(0, Math.min(1, newVolume));
+      setVolume(clampedVolume);
+      setGlobalVolume(clampedVolume); // Apply globally immediately
+      saveVolumeToStorage(clampedVolume); // Save to persistent storage
+    } catch (error) {
+      console.warn('Error setting volume:', error);
+    }
+  }, [saveVolumeToStorage]);
+
+  // Improved gesture handler for volume slider
+  const handleVolumeGesture = useCallback((event) => {
+    try {
+      const { locationX } = event.nativeEvent;
+      if (!sliderWidth.current || sliderWidth.current <= 0) {
+        return;
+      }
+      
+      // Calculate volume based on touch position
+      const ratio = Math.max(0, Math.min(1, locationX / sliderWidth.current));
+      // Snap to 10% increments to match our 10 segments
+      const snappedVolume = Math.round(ratio * 10) / 10;
+      setVolumeSafely(snappedVolume);
+    } catch (error) {
+      console.warn('Error in volume gesture:', error);
+    }
+  }, [setVolumeSafely]);
+
+  // Create gesture responder
+  const volumePanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: handleVolumeGesture,
+      onPanResponderMove: handleVolumeGesture,
+      onPanResponderRelease: () => {
+        // Optional: Add haptic feedback here
+      },
+    })
+  ).current;
+
+  // Load volume from storage on app start
   useEffect(() => {
+    loadVolumeFromStorage();
+  }, [loadVolumeFromStorage]);
+
+  // Update menu background music volume when volume changes (only after volume is loaded)
+  useEffect(() => {
+    if (!volumeLoaded) return; // Don't apply until volume is loaded from storage
+    
     if (playerRef.current) {
       try {
         playerRef.current.volume = volume;
@@ -386,35 +475,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
         console.warn('Failed to set menu music volume:', e);
       }
     }
-    // Also update global volume for all levels
+    // Global volume is set in setVolumeSafely, but ensure it's set here too for direct volume changes
     setGlobalVolume(volume);
-  }, [volume]);
+  }, [volume, volumeLoaded]);
 
-  // Slidable segments handler
-  const handleSliderInteraction = useCallback((event) => {
-    const { locationX } = event.nativeEvent;
-    const ratio = Math.max(0, Math.min(1, locationX / sliderWidth.current));
-    // Snap to nearest 5% increment (20 segments)
-    const snappedVolume = Math.round(ratio * 19) / 19;
-    setVolume(snappedVolume);
-  }, []);
 
-  // Create slidable segments
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (event) => {
-        handleSliderInteraction(event);
-      },
-      onPanResponderMove: (event) => {
-        handleSliderInteraction(event);
-      },
-      onPanResponderRelease: () => {
-        // Nothing needed on release
-      },
-    })
-  ).current;
   const [products, setProducts] = useState<RNIap.Product[]>([]);
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
   const [unlocked, setUnlocked] = useState<boolean>(false);
@@ -826,6 +891,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
         resizeMode="cover"
       >
         <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+          {/* Animated Fireflies Background */}
+          <AnimatedFireflies />
+          
           {currentIsLandscape ? (
             // LANDSCAPE LAYOUT
             <>
@@ -838,34 +906,25 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                   zIndex: 10002,
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   borderRadius: 25,
-                  padding: getResponsiveSpacing(10, scaleFactor),
+                  padding: getResponsiveSpacing(16, scaleFactor),
                   elevation: 3,
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.25,
                   shadowRadius: 3,
                 }}
-                onPress={() => setShowSettingsModal(true)}
+                onPress={() => {
+                  try {
+                    setShowSettingsModal(true);
+                  } catch (error) {
+                    console.warn('Error opening settings modal:', error);
+                  }
+                }}
               >
-                <Text style={{ fontSize: 24 }}>⚙️</Text>
+                <Ionicons name="settings" size={32} color="#612915" />
               </TouchableOpacity>
 
-              <View style={responsiveStyles.landscapeLangContainer}>
-                <LanguageSelector
-                  isLandscape={currentIsLandscape}
-                  t={t}
-                  lang={lang}
-                  languages={languages}
-                  handleLanguageChange={setLang}
-                />
-              </View>
-              <View style={responsiveStyles.landscapeHeaderContainer}>
-                <Image
-                  source={require('../src/assets/images/game-logo.png')}
-                  style={responsiveStyles.landscapeLogo}
-                  resizeMode="contain"
-                />
-              </View>
+
               <ScrollView
                 style={{ flex: 1, backgroundColor: 'transparent' }}
                 contentContainerStyle={{
@@ -880,6 +939,16 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                 }}
                 showsVerticalScrollIndicator={false}
               >
+                {/* Header with logo and unlock button */}
+                <View style={[responsiveStyles.landscapeHeaderContainer, { marginTop: getResponsiveSpacing(100, scaleFactor) }]}>
+                  <Image
+                    source={require('../src/assets/images/game-logo.png')}
+                    style={responsiveStyles.landscapeLogo}
+                    resizeMode="contain"
+                  />
+                  {renderUnlockButtons()}
+                </View>
+
                 <View
                   style={{
                     width: '100%',
@@ -888,7 +957,34 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                     backgroundColor: 'transparent',
                   }}
                 >
-                  {renderUnlockButtons()}
+                  {/* Info text above tiles */}
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: 25,
+                      paddingHorizontal: getResponsiveSpacing(24, scaleFactor),
+                      paddingVertical: getResponsiveSpacing(12, scaleFactor),
+                      marginBottom: getResponsiveSpacing(20, scaleFactor),
+                      marginHorizontal: getResponsiveSpacing(20, scaleFactor),
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: getResponsiveFontSize(12, scaleFactor),
+                        fontWeight: '600',
+                        color: '#612915',
+                        textAlign: 'center',
+                        fontFamily: 'System',
+                      }}
+                    >
+                                           {t('pickWorldMessage')}
+                    </Text>
+                  </View>
                   <LevelTiles
                     key={`landscape-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
                     levels={LEVELS}
@@ -918,16 +1014,22 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                   zIndex: 10002,
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   borderRadius: 25,
-                  padding: getResponsiveSpacing(10, scaleFactor),
+                  padding: getResponsiveSpacing(16, scaleFactor),
                   elevation: 3,
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.25,
                   shadowRadius: 3,
                 }}
-                onPress={() => setShowSettingsModal(true)}
+                onPress={() => {
+                  try {
+                    setShowSettingsModal(true);
+                  } catch (error) {
+                    console.warn('Error opening settings modal:', error);
+                  }
+                }}
               >
-                <Text style={{ fontSize: 24 }}>⚙️</Text>
+                <Ionicons name="settings" size={32} color="#612915" />
               </TouchableOpacity>
 
               <ScrollView
@@ -935,27 +1037,46 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                 contentContainerStyle={responsiveStyles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                {/* Header with logo and language selector */}
+                {/* Header with logo and unlock button */}
                 <View style={responsiveStyles.portraitHeaderContainer}>
                   <Image
                     source={require('../src/assets/images/game-logo.png')}
                     style={responsiveStyles.portraitLogo}
                     resizeMode="contain"
                   />
-                  <View style={responsiveStyles.portraitLanguageSelector}>
-                    <LanguageSelector
-                      isLandscape={currentIsLandscape}
-                      t={t}
-                      lang={lang}
-                      languages={languages}
-                      handleLanguageChange={setLang}
-                    />
-                  </View>
+                  {renderUnlockButtons()}
                 </View>
 
                 {/* Tiles container */}
                 <View style={responsiveStyles.tilesContainer}>
-                  {renderUnlockButtons()}
+                  {/* Info text above tiles */}
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: 25,
+                      paddingHorizontal: getResponsiveSpacing(24, scaleFactor),
+                      paddingVertical: getResponsiveSpacing(12, scaleFactor),
+                      marginBottom: getResponsiveSpacing(20, scaleFactor),
+                      marginHorizontal: getResponsiveSpacing(20, scaleFactor),
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: getResponsiveFontSize(18, scaleFactor),
+                        fontWeight: '600',
+                        color: '#612915',
+                        textAlign: 'center',
+                        fontFamily: 'System',
+                      }}
+                    >
+                      {t('pickWorldMessage')}
+                    </Text>
+                  </View>
                   <LevelTiles
                     key={`portrait-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
                     levels={LEVELS}
@@ -981,36 +1102,47 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
             visible={showSettingsModal}
             transparent={true}
             animationType="fade"
-            onRequestClose={() => setShowSettingsModal(false)}
+            supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+            onRequestClose={() => {
+              try {
+                setShowSettingsModal(false);
+              } catch (error) {
+                console.warn('Error closing settings modal:', error);
+              }
+            }}
           >
             <View style={{
               flex: 1,
               backgroundColor: 'rgba(0, 0, 0, 0.5)',
               justifyContent: 'center',
               alignItems: 'center',
+              paddingHorizontal: 20,
+              paddingVertical: 60, // More padding to ensure modal stays on screen
             }}>
               <View style={{
                 backgroundColor: 'white',
                 borderRadius: 20,
-                padding: getResponsiveSpacing(30, scaleFactor),
-                margin: getResponsiveSpacing(20, scaleFactor),
-                width: '80%',
-                maxWidth: 400,
+                width: '90%',
+                height: currentHeight * 0.7, // 70% of screen height instead of fixed 500px
+                maxHeight: currentHeight - 120, // Ensure it never exceeds screen bounds
                 elevation: 5,
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.25,
                 shadowRadius: 4,
               }}>
-                {/* Settings Header */}
+                {/* Fixed Header */}
                 <View style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: getResponsiveSpacing(20, scaleFactor),
+                  padding: 20,
+                  paddingBottom: 10,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#f0f0f0',
                 }}>
                   <Text style={{
-                    fontSize: getResponsiveFontSize(24, scaleFactor),
+                    fontSize: 20,
                     fontWeight: 'bold',
                     color: '#612915',
                   }}>
@@ -1018,172 +1150,186 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowSettingsModal(false)}
-                    style={{
-                      padding: 5,
-                    }}
+                    style={{ padding: 5 }}
                   >
                     <Text style={{ fontSize: 24, color: '#666' }}>✕</Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* Language Selector */}
-                <View style={{ marginBottom: getResponsiveSpacing(50, scaleFactor), }}>
-                  <Text style={{
-                    fontSize: getResponsiveFontSize(14, scaleFactor),
-                    fontWeight: 'bold',
-                    color: '#612915',
-                    marginBottom: getResponsiveSpacing(10, scaleFactor),
-                  }}>
-                    {t('language') || 'Language'}
-                  </Text>
-                  <LanguageSelector
-                    
-                    isLandscape={false}
-                    t={t}
-                    lang={lang}
-                    languages={languages}
-                    handleLanguageChange={setLang}
-                  />
-                </View>
+                {/* Scrollable Content */}
+                <ScrollView 
+                  style={{ 
+                    flex: 1,
+                    backgroundColor: 'transparent',
+                  }}
+                  contentContainerStyle={{ 
+                    padding: 20,
+                    paddingTop: 15,
+                    paddingBottom: 30,
+                    flexGrow: 1, // Ensure content can grow to trigger scrolling
+                  }}
+                  showsVerticalScrollIndicator={true}
+                  bounces={true}
+                  scrollEnabled={true}
+                  nestedScrollEnabled={true}
+                >
 
-                                {/* Volume Control */}
-                <View style={{ marginBottom: getResponsiveSpacing(20, scaleFactor) }}>
+
+                  {/* Language Section */}
+                  <View style={{ marginBottom: 25 }}>
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: '#612915',
+                      marginBottom: 10,
+                    }}>
+                      {t('language') || 'Language'}
+                    </Text>
+                    <LanguageSelector
+                      isLandscape={false}
+                      t={t}
+                      lang={lang}
+                      languages={languages}
+                      handleLanguageChange={setLang}
+                    />
+                  </View>
+
+                  {/* Volume Section */}
                   <Text style={{
-                    fontSize: getResponsiveFontSize(18, scaleFactor),
+                    fontSize: 16,
                     fontWeight: 'bold',
                     color: '#612915',
-                    marginBottom: getResponsiveSpacing(15, scaleFactor),
+                    marginBottom: 15,
                   }}>
                     {t('volume') || 'Volume'}: {Math.round(volume * 100)}%
                   </Text>
+
+                {/* Volume Slider */}
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 15,
+                }}>
+                  <TouchableOpacity
+                    onPress={() => setVolumeSafely(0)}
+                    style={{ 
+                      marginRight: 10,
+                      padding: 5, // Add padding for better touch area
+                    }}
+                  >
+                    <Ionicons 
+                      name="volume-mute" 
+                      size={20} 
+                      color={volume === 0 ? '#FF8C00' : '#666'} // Orange when muted, gray otherwise
+                    />
+                  </TouchableOpacity>
                   
-                  {/* Ultra Simple Clickable Slider */}
+                  {/* Volume Segments Bar with Gesture */}
                   <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginTop: getResponsiveSpacing(5, scaleFactor),
-                  }}>
-                    <Text style={{ marginRight: 10, fontSize: 16 }}>🔈</Text>
-                    
-                    {/* Slidable Segments Bar */}
+                    flex: 1,
+                    height: 40,
+                    justifyContent: 'center',
+                    marginHorizontal: 10,
+                    paddingVertical: 5,
+                  }}
+                  onLayout={(event) => {
+                    try {
+                      const width = event.nativeEvent.layout.width;
+                      if (width > 0) {
+                        sliderWidth.current = width;
+                      }
+                    } catch (error) {
+                      console.warn('Error in slider onLayout:', error);
+                    }
+                  }}
+                  >
                     <View style={{
-                      flex: 1,
-                      height: 60, // Increased from 40 to 60
-                      justifyContent: 'center',
-                      marginHorizontal: getResponsiveSpacing(10, scaleFactor),
-                      paddingVertical: getResponsiveSpacing(10, scaleFactor), // Added padding for better touch area
+                      height: 24,
+                      backgroundColor: '#E0E0E0',
+                      borderRadius: 12,
+                      flexDirection: 'row',
+                      overflow: 'hidden',
+                      elevation: 2,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 2,
                     }}
-                    onLayout={(event) => {
-                      sliderWidth.current = event.nativeEvent.layout.width;
-                    }}
+                    {...volumePanResponder.panHandlers}
                     >
-                      <View style={{
-                        height: 32, // Increased from 20 to 32
-                        backgroundColor: '#E0E0E0',
-                        borderRadius: 16, // Adjusted radius for new height
-                        flexDirection: 'row',
-                        overflow: 'hidden',
-                        elevation: 2, // Added shadow for depth
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 2,
-                      }}
-                      {...panResponder.panHandlers}
-                      >
-                        {Array.from({ length: 20 }, (_, i) => {
-                          const segmentValue = i / 19; // 0 to 1 in 20 steps
-                          const isActive = segmentValue <= volume;
-                          return (
-                            <TouchableOpacity
-                              key={i}
-                              style={{
-                                flex: 1,
-                                height: '100%',
-                                backgroundColor: isActive ? '#FF8C00' : 'transparent',
-                                borderRightWidth: i < 19 ? 1 : 0,
-                                borderRightColor: 'rgba(255,255,255,0.3)',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                              }}
-                              onPress={() => setVolume(segmentValue)}
-                            >
-                              <View style={{
-                                width: 3, // Increased from 2 to 3
-                                height: '70%', // Increased from 60% to 70%
-                                backgroundColor: isActive ? 'white' : '#999',
-                                borderRadius: 2, // Increased radius
-                              }} />
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
+                      {Array.from({ length: 10 }, (_, i) => {
+                        const segmentValue = (i + 1) / 10; // 10%, 20%, 30%, ... 100%
+                        const isActive = segmentValue <= volume;
+                        return (
+                          <TouchableOpacity
+                            key={i}
+                            style={{
+                              flex: 1,
+                              height: '100%',
+                              backgroundColor: isActive ? '#FF8C00' : 'transparent',
+                              borderRightWidth: i < 9 ? 1 : 0,
+                              borderRightColor: 'rgba(255,255,255,0.3)',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}
+                            onPress={() => setVolumeSafely(segmentValue)}
+                            activeOpacity={0.7}
+                          >
+                            <View style={{
+                              width: 2,
+                              height: '70%',
+                              backgroundColor: isActive ? 'white' : '#999',
+                              borderRadius: 1,
+                            }} />
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
-                    
-                    <Text style={{ marginLeft: 10, fontSize: 16 }}>🔊</Text>
                   </View>
                   
-                  {/* Quick Volume Buttons */}
-                  <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginTop: getResponsiveSpacing(15, scaleFactor),
-                  }}>
-                    <TouchableOpacity
-                      onPress={() => setVolume(0)}
-                      style={{
-                        backgroundColor: '#E0E0E0',
-                        borderRadius: 15,
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                      }}
-                    >
-                      <Text style={{ fontSize: 12, color: '#666' }}>Mute</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => setVolume(0.5)}
-                      style={{
-                        backgroundColor: '#FFE4B5',
-                        borderRadius: 15,
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                      }}
-                    >
-                      <Text style={{ fontSize: 12, color: '#666' }}>50%</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => setVolume(1.0)}
-                      style={{
-                        backgroundColor: '#FF8C00',
-                        borderRadius: 15,
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                      }}
-                    >
-                      <Text style={{ fontSize: 12, color: 'white' }}>Max</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <TouchableOpacity
+                    onPress={() => setVolumeSafely(1.0)}
+                    style={{ 
+                      marginLeft: 10,
+                      padding: 5, // Add padding for better touch area
+                    }}
+                  >
+                    <Ionicons 
+                      name="volume-high" 
+                      size={20} 
+                      color={volume === 1.0 ? '#FF8C00' : '#666'} // Orange when at max volume, gray otherwise
+                    />
+                  </TouchableOpacity>
                 </View>
 
-                {/* Close Button */}
-                <TouchableOpacity
-                  onPress={() => setShowSettingsModal(false)}
-                  style={{
-                    backgroundColor: '#73c2b9',
-                    borderRadius: 15,
-                    padding: getResponsiveSpacing(12, scaleFactor),
-                    alignItems: 'center',
-                    marginTop: getResponsiveSpacing(10, scaleFactor),
-                  }}
-                >
-                  <Text style={{
-                    color: 'white',
-                    fontSize: getResponsiveFontSize(16, scaleFactor),
-                    fontWeight: 'bold',
-                  }}>
-                    {t('done') || 'Done'}
-                  </Text>
-                </TouchableOpacity>
+
+
+
+
+                  {/* Done Button */}
+                  <TouchableOpacity
+                    onPress={() => setShowSettingsModal(false)}
+                    style={{
+                      backgroundColor: '#73c2b9',
+                      borderRadius: 15,
+                      padding: 12,
+                      alignItems: 'center',
+                      minHeight: 44,
+                      marginTop: 10,
+                    }}
+                  >
+                    <Text style={{
+                      color: 'white',
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                    }}>
+                      {t('done') || 'Done'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Extra space at bottom for better scroll experience */}
+                  <View style={{ height: 40 }} />
+                </ScrollView>
               </View>
             </View>
           </Modal>

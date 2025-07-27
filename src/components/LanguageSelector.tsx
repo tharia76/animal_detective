@@ -37,6 +37,24 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   // For full width in landscape, get device width
   const deviceWidth = Dimensions.get('window').width;
 
+  const handleLanguageSelect = (code: string) => {
+    try {
+      handleLanguageChange(code);
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.warn('Error changing language:', error);
+      setIsDropdownOpen(false);
+    }
+  };
+
+  const toggleDropdown = () => {
+    try {
+      setIsDropdownOpen(!isDropdownOpen);
+    } catch (error) {
+      console.warn('Error toggling dropdown:', error);
+    }
+  };
+
   return (
     <View style={{
       backgroundColor: 'rgba(115, 194, 185, 0.6)',
@@ -52,21 +70,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         justifyContent: 'space-between',
         alignItems: 'center',
         width: '100%',
-        marginBottom: 15
+        marginBottom: isLandscape ? 15 : 0, // No margin in portrait (settings modal)
       }}>
-        <Text style={{
-          fontSize: 22,
-          fontWeight: 'bold',
-          color: '#612915',
-          textAlign: 'left',
-          flex: 1
-        }}>
-          {t('selectLevel')}
-        </Text>
+        {isLandscape && (
+          <Text style={{
+            fontSize: 22,
+            fontWeight: 'bold',
+            color: '#612915',
+            textAlign: 'left',
+            flex: 1
+          }}>
+            {t('selectLevel')}
+          </Text>
+        )}
         <View style={{
           position: 'relative',
-          zIndex: 10,
-          width: isLandscape ? '100%' : '40%',
+          zIndex: 100, // Reduced from 10
+          width: isLandscape ? '100%' : '100%', // Full width in portrait (settings modal)
         }}>
           <TouchableOpacity
             style={{
@@ -83,7 +103,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               shadowRadius: 2,
               width: '100%',
             }}
-            onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+            onPress={toggleDropdown}
           >
             <Text style={{ fontWeight: 'bold', color: '#612915' }}>
               {selectedLanguage ? getFlag(selectedLanguage.code) : ''}
@@ -108,7 +128,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.3,
                   shadowRadius: 3,
-                  zIndex: 9999,
+                  zIndex: 200, // Reduced from 9999
                   maxHeight: 220,
                   alignSelf: 'center',
                 }}
@@ -128,10 +148,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                         backgroundColor: lang === language.code ? 'rgba(255, 165, 0, 0.2)' : 'transparent',
                         borderRadius: 5
                       }}
-                      onPress={() => {
-                        handleLanguageChange(language.code);
-                        setIsDropdownOpen(false);
-                      }}
+                      onPress={() => handleLanguageSelect(language.code)}
                     >
                       <Text style={{
                         fontWeight: lang === language.code ? 'bold' : 'normal'
@@ -149,6 +166,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 top: 45,
                 left: 0,
                 right: 0,
+                width: '100%',
                 backgroundColor: 'white',
                 borderRadius: 10,
                 padding: 5,
@@ -157,7 +175,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
                 shadowRadius: 3,
-                zIndex: 9999, // Ensure dropdown is on top
+                zIndex: 200, // Reduced from 9999
               }}>
                 {languages.map((language) => (
                   <TouchableOpacity
@@ -168,10 +186,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                       backgroundColor: lang === language.code ? 'rgba(255, 165, 0, 0.2)' : 'transparent',
                       borderRadius: 5
                     }}
-                    onPress={() => {
-                      handleLanguageChange(language.code);
-                      setIsDropdownOpen(false);
-                    }}
+                    onPress={() => handleLanguageSelect(language.code)}
                   >
                     <Text style={{
                       fontWeight: lang === language.code ? 'bold' : 'normal'

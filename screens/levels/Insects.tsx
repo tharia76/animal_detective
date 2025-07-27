@@ -5,7 +5,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
-import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
+import LevelScreenTemplate, { getGlobalVolume } from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 
 // Define Props for the screen
@@ -41,6 +41,7 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
   const player = useVideoPlayer(require('../../src/assets/intro_videos/insects-vid.mp4'), player => {
     player.loop = false;
     player.muted = false;
+    player.volume = getGlobalVolume(); // Apply global volume setting
   });
 
   // Listen for video end by checking currentTime vs duration
@@ -199,7 +200,8 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
-          contentFit="cover"
+          contentFit="fill"
+          pointerEvents="none"
         />
         
         {/* Level title overlay */}
@@ -276,14 +278,29 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
 
 const styles = StyleSheet.create({
   fullscreenContainer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000',
-    zIndex: 9999,
-  },
-  fullscreenVideo: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: '100%',
     height: '100%',
+    backgroundColor: '#000',
+    zIndex: 9999,
+    margin: 0,
+    padding: 0,
+  },
+  fullscreenVideo: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#000',
+    margin: 0,
+    padding: 0,
   },
   levelTitleContainer: {
     position: 'absolute',
@@ -321,12 +338,12 @@ const styles = StyleSheet.create({
   },
   rightButtonContainer: {
     position: 'absolute',
+    top: 20,
     right: 20,
-    top: 60,
-    bottom: 60,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 20,
+    gap: 15,
     zIndex: 2,
   },
   rightSkipButton: {

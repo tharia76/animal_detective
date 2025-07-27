@@ -64,6 +64,11 @@ export const setGlobalVolume = (volume: number) => {
   globalVolumeMultiplier = volume;
 };
 
+// Function to get current global volume (for video players)
+export const getGlobalVolume = () => {
+  return globalVolumeMultiplier;
+};
+
 // --- MOVING BG MAP: Map levelName to moving background asset/uri ---
 const MOVING_BG_MAP: Record<string, string | number | undefined> = {
   // Example: 'farm': require('../../../assets/images/sky_farm.png'),

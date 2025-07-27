@@ -195,32 +195,44 @@ function AnimatedTile({
                <Ionicons name="lock-closed" size={24} color="white" />
              </View>
            )}
-          {/* Label fixed to the bottom of the tile */}
+          {/* Label in the center of the tile with pill background */}
           <View
             style={{
               position: 'absolute',
+              top: 0,
               left: 0,
               right: 0,
               bottom: 0,
-              paddingVertical: 6,
-              paddingHorizontal: 8,
-                             backgroundColor: getLevelBackgroundColor(level),
-               borderBottomLeftRadius: 22,
-               borderBottomRightRadius: 22,
-               alignItems: 'center',
+              alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Text
-              numberOfLines={1}
+            <View
               style={{
-                fontSize: isLandscape ? 14 : 16,
-                fontWeight: 'bold',
-                color: 'white',
+                paddingVertical: 20,
+                paddingHorizontal: 40,
+                backgroundColor: getLevelBackgroundColor(level),
+                borderRadius: 30,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 5,
               }}
             >
-              {t(level)}
-            </Text>
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontSize: isLandscape ? 20 : 22,
+                  fontWeight: 'bold',
+                  color: 'white',
+                }}
+              >
+                {t(level)}
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
       </Animated.View>

@@ -202,18 +202,21 @@ export function useDynamicStyles() {
       },
       soundButton: {
         position: 'absolute',
-        top: getResponsiveSpacing(isTabletDevice ? 150 : 180, scaleFactor), // More gap on phones (180 vs 150)
-        right: getResponsiveSpacing(45, scaleFactor), // Moved to right side
-        backgroundColor: 'rgba(220, 173, 30, 0.7)',
-        borderRadius: getResponsiveSpacing(isTabletDevice ? 30 : 35, scaleFactor), // Match home button border radius
+        top: getResponsiveSpacing(65, scaleFactor), // Match home button position exactly
+        left: getResponsiveSpacing(45, scaleFactor), // Match home button distance from edge
+        backgroundColor: 'orange', // Match home button color
         paddingVertical: getResponsiveSpacing(isTabletDevice ? 15 : 20, scaleFactor), // Match home button padding
         paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 22 : 28, scaleFactor), // Match home button padding
-        zIndex: 10,
-        elevation: 5,
+        borderRadius: getResponsiveSpacing(isTabletDevice ? 30 : 35, scaleFactor), // Match home button border radius
+        flexDirection: 'row', // Match home button layout
+        alignItems: 'center', // Match home button alignment
+        justifyContent: 'center', // Match home button alignment
+        elevation: 3, // Match home button elevation
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 3,
+        zIndex: 10,
       },
       backToMenuButton: {
         backgroundColor: 'orange',

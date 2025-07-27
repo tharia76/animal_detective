@@ -154,10 +154,12 @@ export default function InstructionBubble({
             <Animated.View
                               style={{
                   position: 'absolute',
-                  // On mobile (non-tablet), position from left edge, otherwise from right edge
-                  ...(isTablet(width, height) 
-                    ? { right: getResponsiveSpacing(500, scaleFactor) } 
-                    : { left: getResponsiveSpacing(20, scaleFactor) }
+                  // Position based on device type and orientation
+                  ...(isLandscape && width < 900 // Landscape phone (width less than 900px)
+                    ? { left: -100 } // Landscape phone - way further left with fixed value
+                    : width >= 900 // Large tablet/desktop
+                    ? { right: 500 } // Large screen - far right with fixed value
+                    : { left: 20 } // Default mobile portrait - left edge with fixed value
                   ),
                   // The transform uses the continuously looping arrowAnim value from the parent
                   transform: [{ translateY: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }],
