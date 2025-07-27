@@ -40,9 +40,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   return (
     <View style={{
       backgroundColor: 'rgba(115, 194, 185, 0.6)',
-      padding: 10,
+      padding: 8,
       borderRadius: 15,
-      width: isLandscape ? 340 : '90%',
+      width: isLandscape ? 440 : '100%',
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: 0,

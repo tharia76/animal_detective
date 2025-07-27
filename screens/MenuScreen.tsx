@@ -13,13 +13,15 @@ import {
   Text,
   Modal,
   Pressable,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
 import * as RNIap from 'react-native-iap';
 import { useAudioPlayer } from 'expo-audio';
 
-import Animated, { 
+import ReAnimated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withSpring, 
@@ -33,6 +35,7 @@ import { useLocalization } from '../src/hooks/useLocalization';
 import { useForceOrientation } from '../src/hooks/useForceOrientation';
 import LanguageSelector from '../src/components/LanguageSelector';
 import LevelTiles from '../src/components/LevelTiles';
+import { setGlobalVolume } from '../src/components/LevelScreenTemplate';
 
 const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
 const BG_IMAGE = require('../src/assets/images/menu-screen.png');
@@ -368,6 +371,50 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
 
   // Payment state
   const [iapInitialized, setIapInitialized] = useState(false);
+
+  // Settings modal state
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [volume, setVolume] = useState(0.8); // Default volume at 80%
+  const sliderWidth = useRef(200);
+
+  // Update menu background music volume when volume changes
+  useEffect(() => {
+    if (playerRef.current) {
+      try {
+        playerRef.current.volume = volume;
+      } catch (e) {
+        console.warn('Failed to set menu music volume:', e);
+      }
+    }
+    // Also update global volume for all levels
+    setGlobalVolume(volume);
+  }, [volume]);
+
+  // Slidable segments handler
+  const handleSliderInteraction = useCallback((event) => {
+    const { locationX } = event.nativeEvent;
+    const ratio = Math.max(0, Math.min(1, locationX / sliderWidth.current));
+    // Snap to nearest 5% increment (20 segments)
+    const snappedVolume = Math.round(ratio * 19) / 19;
+    setVolume(snappedVolume);
+  }, []);
+
+  // Create slidable segments
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (event) => {
+        handleSliderInteraction(event);
+      },
+      onPanResponderMove: (event) => {
+        handleSliderInteraction(event);
+      },
+      onPanResponderRelease: () => {
+        // Nothing needed on release
+      },
+    })
+  ).current;
   const [products, setProducts] = useState<RNIap.Product[]>([]);
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
   const [unlocked, setUnlocked] = useState<boolean>(false);
@@ -782,6 +829,27 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
           {currentIsLandscape ? (
             // LANDSCAPE LAYOUT
             <>
+              {/* Settings Button - Top Right */}
+              <TouchableOpacity
+                style={{
+                  position: 'absolute',
+                  top: getResponsiveSpacing(20, scaleFactor),
+                  right: getResponsiveSpacing(20, scaleFactor),
+                  zIndex: 10002,
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 25,
+                  padding: getResponsiveSpacing(10, scaleFactor),
+                  elevation: 3,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3,
+                }}
+                onPress={() => setShowSettingsModal(true)}
+              >
+                <Text style={{ fontSize: 24 }}>⚙️</Text>
+              </TouchableOpacity>
+
               <View style={responsiveStyles.landscapeLangContainer}>
                 <LanguageSelector
                   isLandscape={currentIsLandscape}
@@ -841,6 +909,27 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
           ) : (
             // PORTRAIT LAYOUT
             <>
+              {/* Settings Button - Top Right */}
+              <TouchableOpacity
+                style={{
+                  position: 'absolute',
+                  top: getResponsiveSpacing(20, scaleFactor),
+                  right: getResponsiveSpacing(20, scaleFactor),
+                  zIndex: 10002,
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 25,
+                  padding: getResponsiveSpacing(10, scaleFactor),
+                  elevation: 3,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3,
+                }}
+                onPress={() => setShowSettingsModal(true)}
+              >
+                <Text style={{ fontSize: 24 }}>⚙️</Text>
+              </TouchableOpacity>
+
               <ScrollView
                 style={responsiveStyles.scrollView}
                 contentContainerStyle={responsiveStyles.scrollContent}
@@ -886,6 +975,218 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }) {
             </>
           )}
           {renderUnlockModal()}
+
+          {/* Settings Modal */}
+          <Modal
+            visible={showSettingsModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowSettingsModal(false)}
+          >
+            <View style={{
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <View style={{
+                backgroundColor: 'white',
+                borderRadius: 20,
+                padding: getResponsiveSpacing(30, scaleFactor),
+                margin: getResponsiveSpacing(20, scaleFactor),
+                width: '80%',
+                maxWidth: 400,
+                elevation: 5,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 4,
+              }}>
+                {/* Settings Header */}
+                <View style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: getResponsiveSpacing(20, scaleFactor),
+                }}>
+                  <Text style={{
+                    fontSize: getResponsiveFontSize(24, scaleFactor),
+                    fontWeight: 'bold',
+                    color: '#612915',
+                  }}>
+                    {t('settings') || 'Settings'}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowSettingsModal(false)}
+                    style={{
+                      padding: 5,
+                    }}
+                  >
+                    <Text style={{ fontSize: 24, color: '#666' }}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Language Selector */}
+                <View style={{ marginBottom: getResponsiveSpacing(50, scaleFactor), }}>
+                  <Text style={{
+                    fontSize: getResponsiveFontSize(14, scaleFactor),
+                    fontWeight: 'bold',
+                    color: '#612915',
+                    marginBottom: getResponsiveSpacing(10, scaleFactor),
+                  }}>
+                    {t('language') || 'Language'}
+                  </Text>
+                  <LanguageSelector
+                    
+                    isLandscape={false}
+                    t={t}
+                    lang={lang}
+                    languages={languages}
+                    handleLanguageChange={setLang}
+                  />
+                </View>
+
+                                {/* Volume Control */}
+                <View style={{ marginBottom: getResponsiveSpacing(20, scaleFactor) }}>
+                  <Text style={{
+                    fontSize: getResponsiveFontSize(18, scaleFactor),
+                    fontWeight: 'bold',
+                    color: '#612915',
+                    marginBottom: getResponsiveSpacing(15, scaleFactor),
+                  }}>
+                    {t('volume') || 'Volume'}: {Math.round(volume * 100)}%
+                  </Text>
+                  
+                  {/* Ultra Simple Clickable Slider */}
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginTop: getResponsiveSpacing(5, scaleFactor),
+                  }}>
+                    <Text style={{ marginRight: 10, fontSize: 16 }}>🔈</Text>
+                    
+                    {/* Slidable Segments Bar */}
+                    <View style={{
+                      flex: 1,
+                      height: 60, // Increased from 40 to 60
+                      justifyContent: 'center',
+                      marginHorizontal: getResponsiveSpacing(10, scaleFactor),
+                      paddingVertical: getResponsiveSpacing(10, scaleFactor), // Added padding for better touch area
+                    }}
+                    onLayout={(event) => {
+                      sliderWidth.current = event.nativeEvent.layout.width;
+                    }}
+                    >
+                      <View style={{
+                        height: 32, // Increased from 20 to 32
+                        backgroundColor: '#E0E0E0',
+                        borderRadius: 16, // Adjusted radius for new height
+                        flexDirection: 'row',
+                        overflow: 'hidden',
+                        elevation: 2, // Added shadow for depth
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 2,
+                      }}
+                      {...panResponder.panHandlers}
+                      >
+                        {Array.from({ length: 20 }, (_, i) => {
+                          const segmentValue = i / 19; // 0 to 1 in 20 steps
+                          const isActive = segmentValue <= volume;
+                          return (
+                            <TouchableOpacity
+                              key={i}
+                              style={{
+                                flex: 1,
+                                height: '100%',
+                                backgroundColor: isActive ? '#FF8C00' : 'transparent',
+                                borderRightWidth: i < 19 ? 1 : 0,
+                                borderRightColor: 'rgba(255,255,255,0.3)',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                              onPress={() => setVolume(segmentValue)}
+                            >
+                              <View style={{
+                                width: 3, // Increased from 2 to 3
+                                height: '70%', // Increased from 60% to 70%
+                                backgroundColor: isActive ? 'white' : '#999',
+                                borderRadius: 2, // Increased radius
+                              }} />
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
+                    
+                    <Text style={{ marginLeft: 10, fontSize: 16 }}>🔊</Text>
+                  </View>
+                  
+                  {/* Quick Volume Buttons */}
+                  <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginTop: getResponsiveSpacing(15, scaleFactor),
+                  }}>
+                    <TouchableOpacity
+                      onPress={() => setVolume(0)}
+                      style={{
+                        backgroundColor: '#E0E0E0',
+                        borderRadius: 15,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: '#666' }}>Mute</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setVolume(0.5)}
+                      style={{
+                        backgroundColor: '#FFE4B5',
+                        borderRadius: 15,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: '#666' }}>50%</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setVolume(1.0)}
+                      style={{
+                        backgroundColor: '#FF8C00',
+                        borderRadius: 15,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: 'white' }}>Max</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Close Button */}
+                <TouchableOpacity
+                  onPress={() => setShowSettingsModal(false)}
+                  style={{
+                    backgroundColor: '#73c2b9',
+                    borderRadius: 15,
+                    padding: getResponsiveSpacing(12, scaleFactor),
+                    alignItems: 'center',
+                    marginTop: getResponsiveSpacing(10, scaleFactor),
+                  }}
+                >
+                  <Text style={{
+                    color: 'white',
+                    fontSize: getResponsiveFontSize(16, scaleFactor),
+                    fontWeight: 'bold',
+                  }}>
+                    {t('done') || 'Done'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </ImageBackground>
     </View>

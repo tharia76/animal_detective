@@ -57,6 +57,13 @@ const BG_MUSIC_MAP: Record<string, string | number | undefined> = {
   insects: require('../assets/sounds/background_sounds/insects_bg.mp3'),
 };
 
+let globalVolumeMultiplier = 1.0; // Global volume setting from settings
+
+// Function to set global volume (called from settings)
+export const setGlobalVolume = (volume: number) => {
+  globalVolumeMultiplier = volume;
+};
+
 // --- MOVING BG MAP: Map levelName to moving background asset/uri ---
 const MOVING_BG_MAP: Record<string, string | number | undefined> = {
   // Example: 'farm': require('../../../assets/images/sky_farm.png'),
@@ -183,30 +190,30 @@ export default function LevelScreenTemplate({
   
   // Audio ducking constants
   const NORMAL_BG_VOLUME = 0.8; // Reduced by 20% from 1.0
-  const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
+const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   // Helper functions for audio ducking
   const duckBackgroundMusic = useCallback(() => {
     if (bgMusicRef.current && !isMuted) {
       try {
-        bgMusicRef.current.volume = DUCKED_BG_VOLUME;
-        console.log('Background music ducked to', DUCKED_BG_VOLUME);
+        bgMusicRef.current.volume = DUCKED_BG_VOLUME * globalVolumeMultiplier;
+        console.log('Background music ducked to', DUCKED_BG_VOLUME * globalVolumeMultiplier);
       } catch (error) {
         console.warn('Error ducking background music:', error);
       }
     }
-  }, [isMuted, DUCKED_BG_VOLUME]);
+  }, [isMuted]);
 
   const restoreBackgroundMusic = useCallback(() => {
     if (bgMusicRef.current && !isMuted) {
       try {
-        bgMusicRef.current.volume = NORMAL_BG_VOLUME;
-        console.log('Background music restored to', NORMAL_BG_VOLUME);
+        bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
+        console.log('Background music restored to', NORMAL_BG_VOLUME * globalVolumeMultiplier);
       } catch (error) {
         console.warn('Error restoring background music:', error);
       }
     }
-  }, [isMuted, NORMAL_BG_VOLUME]);
+  }, [isMuted]);
 
   const currentAnimal = useMemo(() => {
     if (animals.length > 0 && currentAnimalIndex >= 0 && currentAnimalIndex < animals.length) {
@@ -298,7 +305,7 @@ export default function LevelScreenTemplate({
       try {
         const p = createAudioPlayer(source);
         p.loop = true;
-        p.volume = NORMAL_BG_VOLUME; // Set initial volume
+        p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier; // Apply global volume setting
         p.play();
         bgMusicRef.current = p;
         setCurrentBgMusicKey(String(source));
