@@ -158,7 +158,7 @@ export default function InstructionBubble({
                   ...(isLandscape && width < 900 // Landscape phone (width less than 900px)
                     ? { left: -100 } // Landscape phone - way further left with fixed value
                     : width >= 900 // Large tablet/desktop
-                    ? { right: 500 } // Large screen - far right with fixed value
+                    ? { right: 300 } // Large screen - positioned safely on screen
                     : { left: 20 } // Default mobile portrait - left edge with fixed value
                   ),
                   // The transform uses the continuously looping arrowAnim value from the parent

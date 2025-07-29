@@ -1194,18 +1194,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
               paddingHorizontal: 20,
               paddingVertical: currentIsLandscape && currentWidth >= 900 ? 40 : 60, // Less vertical padding on tablet landscape
             }}>
-              <View style={{
-                backgroundColor: 'white',
-                borderRadius: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger border radius on tablet landscape
-                width: currentIsLandscape && currentWidth >= 900 ? '80%' : '90%', // Slightly narrower on tablet landscape for better proportions
-                height: currentHeight * (currentIsLandscape && currentWidth >= 900 ? 0.65 : 0.7), // Shorter on tablet landscape
-                maxHeight: currentHeight - 120, // Ensure it never exceeds screen bounds
-                elevation: 5,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 4,
-              }}>
+                             <View style={{
+                 backgroundColor: 'white',
+                 borderRadius: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger border radius on tablet landscape
+                 width: currentIsLandscape && currentWidth >= 900 ? '80%' : '90%', // Slightly narrower on tablet landscape for better proportions
+                 height: currentHeight * (currentIsLandscape && currentWidth >= 900 ? 0.5 : 0.7), // Much shorter on tablet landscape
+                 maxHeight: currentHeight - 120, // Ensure it never exceeds screen bounds
+                 elevation: 5,
+                 shadowColor: '#000',
+                 shadowOffset: { width: 0, height: 2 },
+                 shadowOpacity: 0.25,
+                 shadowRadius: 4,
+               }}>
                 {/* Fixed Header */}
                 <View style={{
                   flexDirection: 'row',
@@ -1240,7 +1240,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   contentContainerStyle={{ 
                     padding: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger padding on tablet landscape
                     paddingTop: currentIsLandscape && currentWidth >= 900 ? 20 : 15, // Bigger top padding on tablet landscape
-                    paddingBottom: currentIsLandscape && currentWidth >= 900 ? 25 : 30, // Reduced bottom padding on tablet landscape
+                    paddingBottom: currentIsLandscape && currentWidth >= 900 ? 10 : 30, // Further reduced bottom padding on tablet landscape
                     flexGrow: 1, // Ensure content can grow to trigger scrolling
                   }}
                   showsVerticalScrollIndicator={true}
@@ -1388,7 +1388,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   </TouchableOpacity>
 
                   {/* Extra space at bottom for better scroll experience */}
-                  <View style={{ height: 40 }} />
+                  <View style={{ height: currentIsLandscape && currentWidth >= 900 ? 10 : 40 }} />
                 </ScrollView>
               </View>
             </View>

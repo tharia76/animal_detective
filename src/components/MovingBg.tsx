@@ -17,7 +17,7 @@ const MovingBg = ({
   containerHeight,
   containerWidth,
 }: {
-  backgroundImageUri: string | null;
+  backgroundImageUri: string | number | null;
   movingDirection: 'left' | 'right';
   containerHeight?: number;
   containerWidth?: number;
@@ -38,11 +38,56 @@ const MovingBg = ({
   const [imgHeight, setImgHeight] = useState<number>(screenH);
   const scrollX = useRef(new Animated.Value(0)).current;
 
+  // Helper function to determine image source format
+  const getImageSource = () => {
+    if (!backgroundImageUri) return undefined;
+    
+    // If it's a number, it's a require() asset
+    if (typeof backgroundImageUri === 'number') {
+      return backgroundImageUri;
+    }
+    
+    // If it's a string, it's a URI
+    return { uri: backgroundImageUri };
+  };
+
+  const imageSource = getImageSource();
+
+  // Don't render anything if no image source
+  if (!imageSource) {
+    return null;
+  }
+
   // Get the real image size to avoid cropping/cutting
   useEffect(() => {
     let mounted = true;
     if (backgroundImageUri) {
-              Image.getSize(
+      // Handle require() assets differently from URI strings
+      if (typeof backgroundImageUri === 'number') {
+        // For require() assets, use Image.resolveAssetSource
+        try {
+          const resolved = Image.resolveAssetSource(backgroundImageUri);
+          if (mounted && resolved) {
+            // For portrait: scale to fill height, for landscape: scale to fill width
+            if (isPortrait) {
+              const scale = effectiveHeight / resolved.height;
+              setImgWidth(resolved.width * scale);
+              setImgHeight(effectiveHeight);
+            } else {
+              const scale = effectiveWidth / resolved.width;
+              setImgWidth(effectiveWidth);
+              setImgHeight(resolved.height * scale);
+            }
+          }
+        } catch (error) {
+          console.warn('Error resolving asset source:', error);
+          // Fallback to screen size
+          setImgWidth(effectiveWidth);
+          setImgHeight(effectiveHeight);
+        }
+      } else {
+        // For URI strings, use Image.getSize
+        Image.getSize(
           backgroundImageUri,
           (width, height) => {
             if (mounted) {
@@ -64,12 +109,13 @@ const MovingBg = ({
             setImgHeight(effectiveHeight);
           }
         );
+      }
     }
     return () => {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [backgroundImageUri, effectiveHeight, effectiveWidth, screenW, isPortrait]);
+  }, [backgroundImageUri, effectiveHeight, effectiveWidth, screenW, isPortrait]);
 
   useEffect(() => {
     let isMounted = true;
@@ -160,7 +206,7 @@ const MovingBg = ({
   return (
     <View style={[styles.container]}>
       <Animated.Image
-        source={{ uri: backgroundImageUri || '' }}
+        source={imageSource}
         resizeMode="cover"
         style={[
           getImageStyle({
@@ -178,7 +224,7 @@ const MovingBg = ({
         ]}
       />
       <Animated.Image
-        source={{ uri: backgroundImageUri || '' }}
+        source={imageSource}
         resizeMode="cover"
         style={[
           getImageStyle({
