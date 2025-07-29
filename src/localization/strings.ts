@@ -47,6 +47,8 @@ export const strings = {
     startOver: 'Start Over',
     menu: 'Menu',
     pickWorldMessage: 'Pick a world and meet your new animal friends! 🐾',
+    about: 'About',
+    aboutDescription: 'Ready for some fun? In this game, you\'ll meet all kinds of animals — and hear the silly sounds they make! Just click or tap on each animal to hear its name and the noise it makes. Moo! Quack! Roar!\n\nCan you guess them all? Let\'s play and learn together!',
     animals: {
       cat: 'Cat',
       chicken: 'Chicken',
@@ -231,6 +233,8 @@ export const strings = {
     startOver: 'Начать заново',
     menu: 'Меню',
     pickWorldMessage: 'Выберите мир и познакомьтесь с новыми друзьями-животными! 🐾',
+    about: 'О игре',
+    aboutDescription: 'Готовы к веселью? В этой игре вы встретите всех видов животных — и услышите забавные звуки, которые они издают! Просто нажмите на каждое животное, чтобы услышать его имя и звук, который оно издает. Му! Кря! Рычание!\n\nМожете ли вы угадать их всех? Давайте играть и учиться вместе!',
     animals: {
       cat: 'Кот',
       chicken: 'Курица',
@@ -415,6 +419,8 @@ export const strings = {
     startOver: 'Yeniden Başla',
     menu: 'Menü',
     pickWorldMessage: 'Bir dünya seçin ve yeni hayvan arkadaşlarınızla tanışın! 🐾',
+    about: 'Hakkında',
+    aboutDescription: 'Eğlenceye hazır mısınız? Bu oyunda her türlü hayvanla tanışacak ve çıkardıkları komik sesleri duyacaksınız! Her hayvana tıklayarak ismini ve çıkardığı sesi duymak için tıklayın veya dokunun. Möö! Vak vak! Kükremeee!\n\nHepsini tahmin edebilir misiniz? Hadi birlikte oynayalım ve öğrenelim!',
     animals: {
       cat: 'Kedi',
       chicken: 'Tavuk',

@@ -1258,7 +1258,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                       color: '#612915',
                       marginBottom: 10,
                     }}>
-                      Language
+                      {t('language')}
                     </Text>
                     <LanguageSelector
                       isLandscape={false}
@@ -1276,7 +1276,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     color: '#612915',
                     marginBottom: 15,
                   }}>
-                    Volume: {isNaN(volume) ? '0' : Math.round((volume || 0) * 100)}%
+                    {t('volume')}: {isNaN(volume) ? '0' : Math.round((volume || 0) * 100)}%
                   </Text>
 
                 {/* Volume Slider */}
@@ -1364,7 +1364,33 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   </TouchableOpacity>
                 </View>
 
-
+                  {/* About Section */}
+                  <View style={{ marginTop: 25, marginBottom: 20 }}>
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: '#612915',
+                      marginBottom: 10,
+                    }}>
+                      {t('about')}
+                    </Text>
+                    <View style={{
+                      backgroundColor: 'rgba(115, 194, 185, 0.1)',
+                      padding: 15,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: 'rgba(115, 194, 185, 0.3)',
+                    }}>
+                      <Text style={{
+                        fontSize: 14,
+                        color: '#444',
+                        lineHeight: 20,
+                        textAlign: 'left',
+                      }}>
+                        {t('aboutDescription')}
+                      </Text>
+                    </View>
+                  </View>
 
                   {/* Done Button */}
                   <TouchableOpacity
@@ -1383,7 +1409,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                       fontSize: 16,
                       fontWeight: 'bold',
                     }}>
-                      Done
+                      {t('done')}
                     </Text>
                   </TouchableOpacity>
 

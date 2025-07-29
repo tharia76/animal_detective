@@ -301,8 +301,8 @@ export function useDynamicStyles() {
       instructionBubble: {
         position: 'absolute',
         top: isLandscapeMode 
-          ? getResponsiveSpacing(70, scaleFactor) + (isTabletDevice ? screenH * 0.1 : 0) // Move down only 10% on tablet landscape (was 30%)
-          : getResponsiveSpacing(200, scaleFactor), // Lower position in mobile portrait
+          ? getResponsiveSpacing(40, scaleFactor) + (isTabletDevice ? screenH * 0.05 : 0) // Moved up from 70 to 40, and tablet offset from 10% to 5%
+          : getResponsiveSpacing(120, scaleFactor), // Moved up from 200 to 120 in mobile portrait
         left: '15%',
         right: '15%',
         backgroundColor: 'transparent',

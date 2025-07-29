@@ -1309,11 +1309,19 @@
         <View style={StyleSheet.absoluteFillObject}>
           <Animated.View style={{ flex: 1, opacity: contentFade }}>
             <View style={{ flex: 1 }}>
-              <TouchableOpacity style={dynamicStyles.backToMenuButton} onPress={goToHome}>
-                <Ionicons name="home" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
-              </TouchableOpacity>
-              {hasAnimals && (
-                <TouchableOpacity style={dynamicStyles.soundButton} onPress={toggleMute}>
+                          <TouchableOpacity style={[
+              dynamicStyles.backToMenuButton,
+              // Move up 10% on iPad
+              screenW >= 1000 && { top: (dynamicStyles.backToMenuButton.top || 50) - (screenH * 0.1) }
+            ]} onPress={goToHome}>
+              <Ionicons name="home" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
+            </TouchableOpacity>
+            {hasAnimals && (
+              <TouchableOpacity style={[
+                dynamicStyles.soundButton,
+                // Move up 10% on iPad
+                screenW >= 1000 && { top: (dynamicStyles.soundButton.top || 50) - (screenH * 0.1) }
+              ]} onPress={toggleMute}>
                   <Ionicons
                     name={isMuted ? 'volume-mute' : 'volume-high'}
                     size={isLandscape && screenW >= 900 ? 48 : 38}
@@ -1429,9 +1437,23 @@
                       (levelName.toLowerCase() === 'ocean' || 
                        levelName.toLowerCase() === 'insects' || 
                        levelName.toLowerCase() === 'savannah' || 
-                       levelName.toLowerCase() === 'jungle') && 
+                       levelName.toLowerCase() === 'jungle' ||
+                       levelName.toLowerCase() === 'birds' ||
+                       levelName.toLowerCase() === 'desert' ||
+                       levelName.toLowerCase() === 'forest' ||
+                       levelName.toLowerCase() === 'farm' ||
+                       levelName.toLowerCase() === 'arctic') && 
                        Math.min(screenW, screenH) >= 768 && {
-                        top: levelName.toLowerCase() === 'ocean' ? screenH * 0.02 : screenH * 0.1,
+                        top: levelName.toLowerCase() === 'ocean' ? screenH * 0.02 : 
+                             levelName.toLowerCase() === 'birds' ? screenH * 0.01 : 
+                             levelName.toLowerCase() === 'farm' ? screenH * 0.01 : 
+                             levelName.toLowerCase() === 'arctic' ? screenH * 0.01 : 
+                             levelName.toLowerCase() === 'desert' ? screenH * 0.01 : 
+                             levelName.toLowerCase() === 'forest' ? screenH * 0.01 : 
+                             levelName.toLowerCase() === 'jungle' ? screenH * 0.01 : 
+                             levelName.toLowerCase() === 'insects' ? screenH * 0.1 : 
+                             levelName.toLowerCase() === 'savannah' ? screenH * 0.01 : 
+                             screenH * 0.1,
                       },
                         (levelName.toLowerCase() === 'forest' || 
                         levelName.toLowerCase() === 'farm') && 
@@ -1441,7 +1463,7 @@
                                               // Insects level - move label down 10% on phones
                       levelName.toLowerCase() === 'insects' && 
                        Math.min(screenW, screenH) < 768 && {
-                        top: screenH * 0.1,
+                        top: screenH * 0.01,
                       },
                       // Ocean level - move label up on phone landscape
                       levelName.toLowerCase() === 'ocean' && 
@@ -1451,13 +1473,20 @@
                       // Desert level - move label down on phones
                       levelName.toLowerCase() === 'desert' && 
                        Math.min(screenW, screenH) < 768 && {
-                        top: screenH * 0.05,
+                        top: screenH * 0.01,
                       },
                       // Savannah level - move label down 10% on phones
                       levelName.toLowerCase() === 'savannah' && 
                        Math.min(screenW, screenH) < 768 && {
-                        top: screenH * 0.1,
+                        top: screenH * 0.01,
                       },
+                      // Arctic level - move label down on phones
+                      levelName.toLowerCase() === 'jungle' && 
+                       Math.min(screenW, screenH) < 768 && {
+                        top: screenH * 0.01,
+                      },
+                      // Forest level - move label down on phones
+
                         {
                           opacity: animalFadeAnim,
                           transform: [
@@ -1510,7 +1539,7 @@
                     bgColor={isMuted ? 'rgba(0,0,0,0.5)' : 'rgba(255, 255, 255, 0.7)'}
                   />
                   
-                  {hasAnimals && !showName && !isTransitioning && (
+                                  {hasAnimals && !showName && !isTransitioning && (
                     <InstructionBubble
                       text={t('tapAnimalToHearSound')}
                       arrowAnim={arrowAnim}

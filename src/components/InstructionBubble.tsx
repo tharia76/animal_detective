@@ -149,32 +149,7 @@ export default function InstructionBubble({
             {text}
           </Text>
           
-          {/* Image positioned absolutely so it doesn't affect text layout */}
-          {image && (
-            <Animated.View
-                              style={{
-                  position: 'absolute',
-                  // Position based on device type and orientation
-                  ...(isLandscape && width < 900 // Landscape phone (width less than 900px)
-                    ? { left: -100 } // Landscape phone - way further left with fixed value
-                    : width >= 900 // Large tablet/desktop
-                    ? { right: 300 } // Large screen - positioned safely on screen
-                    : { left: 20 } // Default mobile portrait - left edge with fixed value
-                  ),
-                  // The transform uses the continuously looping arrowAnim value from the parent
-                  transform: [{ translateY: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }],
-                }}
-            >
-              <Image
-                source={image}
-                style={{ 
-                  width: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 55 : 65), // Ensure minimum size on phones
-                  height: Math.max(getResponsiveSpacing(60, scaleFactor), isTablet(width, height) ? 55 : 65), // Ensure minimum size on phones
-                }} // Define image size here
-                resizeMode="contain"
-              />
-            </Animated.View>
-          )}
+          {/* Tap image removed completely */}
         </View>
       </LinearGradient>
     </Animated.View>
