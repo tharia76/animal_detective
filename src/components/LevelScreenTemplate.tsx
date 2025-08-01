@@ -30,6 +30,7 @@
   import { useDynamicStyles } from '../styles/styles';
   import NavigationButtons from './NavigationButtons';
   import CongratsModal from './CongratsModal';
+import DiscoverScreen from './DiscoverScreen';
   import MovingBg from './MovingBg';
   import AnimatedBubbles from './AnimatedBubbles';
   import AnimatedSand from './AnimatedSand';
@@ -42,6 +43,244 @@
   import { useSmoothRotation } from '../hooks/useSmoothRotation';
   import ReanimatedView from 'react-native-reanimated';
   import { getResponsiveSpacing, getScaleFactor, isTablet } from '../utils/responsive';
+
+  // Water Progress Bar Component
+  const WaterProgressBar = ({ progress, totalAnimals, level }: { progress: number; totalAnimals: number; level: string }) => {
+    const waterHeight = useRef(new Animated.Value(0)).current;
+    const { width: screenW, height: screenH } = useWindowDimensions();
+    const isLandscape = screenW > screenH;
+    
+    // Animate water level when progress changes
+    useEffect(() => {
+      const targetHeight = (progress / totalAnimals) * 100;
+      Animated.timing(waterHeight, {
+        toValue: targetHeight,
+        duration: 800,
+        useNativeDriver: false,
+      }).start();
+    }, [progress, totalAnimals, waterHeight]);
+
+    // Get level-appropriate colors
+    const getLevelColors = () => {
+      switch (level.toLowerCase()) {
+        case 'ocean':
+          return {
+            waterColor: 'rgba(30, 144, 255, 0.7)',
+            containerColor: 'rgba(70, 130, 180, 0.3)',
+            bubbleColor: 'rgba(173, 216, 230, 0.8)'
+          };
+        case 'forest':
+          return {
+            waterColor: 'rgba(34, 139, 34, 0.7)',
+            containerColor: 'rgba(107, 142, 35, 0.3)',
+            bubbleColor: 'rgba(144, 238, 144, 0.8)'
+          };
+        case 'arctic':
+          return {
+            waterColor: 'rgba(176, 224, 230, 0.8)',
+            containerColor: 'rgba(240, 248, 255, 0.3)',
+            bubbleColor: 'rgba(255, 255, 255, 0.9)'
+          };
+        case 'desert':
+          return {
+            waterColor: 'rgba(255, 165, 0, 0.7)',
+            containerColor: 'rgba(210, 180, 140, 0.3)',
+            bubbleColor: 'rgba(255, 218, 185, 0.8)'
+          };
+        case 'jungle':
+          return {
+            waterColor: 'rgba(0, 100, 0, 0.7)',
+            containerColor: 'rgba(85, 107, 47, 0.3)',
+            bubbleColor: 'rgba(152, 251, 152, 0.8)'
+          };
+        case 'savannah':
+          return {
+            waterColor: 'rgba(218, 165, 32, 0.7)',
+            containerColor: 'rgba(244, 164, 96, 0.3)',
+            bubbleColor: 'rgba(255, 228, 181, 0.8)'
+          };
+        case 'farm':
+          return {
+            waterColor: 'rgba(50, 205, 50, 0.7)',
+            containerColor: 'rgba(124, 252, 0, 0.3)',
+            bubbleColor: 'rgba(173, 255, 47, 0.8)'
+          };
+        case 'birds':
+          return {
+            waterColor: 'rgba(135, 206, 235, 0.7)',
+            containerColor: 'rgba(176, 196, 222, 0.3)',
+            bubbleColor: 'rgba(230, 230, 250, 0.8)'
+          };
+        case 'insects':
+          return {
+            waterColor: 'rgba(255, 20, 147, 0.7)',
+            containerColor: 'rgba(255, 182, 193, 0.3)',
+            bubbleColor: 'rgba(255, 240, 245, 0.8)'
+          };
+        default:
+          return {
+            waterColor: 'rgba(30, 144, 255, 0.7)',
+            containerColor: 'rgba(70, 130, 180, 0.3)',
+            bubbleColor: 'rgba(173, 216, 230, 0.8)'
+          };
+      }
+    };
+
+    const colors = getLevelColors();
+    
+    // Responsive sizing
+    const barWidth = Math.min(screenW * 0.08, 60);
+    const barHeight = Math.min(screenH * 0.25, 200);
+    
+    // Position based on device and orientation
+    const getPosition = () => {
+      const isPhone = Math.min(screenW, screenH) < 768;
+      
+      if (isLandscape) {
+        return {
+          position: 'absolute' as const,
+          top: isPhone ? screenH * 0.15 : screenH * 0.2,
+          right: isPhone ? 15 : 30,
+          width: barWidth,
+          height: barHeight,
+        };
+      } else {
+        return {
+          position: 'absolute' as const,
+          top: isPhone ? screenH * 0.1 : screenH * 0.15,
+          right: isPhone ? 10 : 20,
+          width: barWidth,
+          height: barHeight,
+        };
+      }
+    };
+
+    return (
+      <View style={[
+        getPosition(),
+        {
+          backgroundColor: colors.containerColor,
+          borderRadius: 15,
+          borderWidth: 2,
+          borderColor: 'rgba(255, 255, 255, 0.5)',
+          overflow: 'hidden',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 4,
+          elevation: 5,
+        }
+      ]}>
+        {/* Water fill */}
+        <Animated.View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: colors.waterColor,
+            height: waterHeight.interpolate({
+              inputRange: [0, 100],
+              outputRange: ['0%', '100%'],
+              extrapolate: 'clamp',
+            }),
+          }}
+        />
+        
+        {/* Progress text */}
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <Text style={{
+            color: '#fff',
+            fontSize: Math.min(barWidth * 0.2, 12),
+            fontWeight: 'bold',
+            textAlign: 'center',
+            textShadowColor: '#000',
+            textShadowOffset: { width: 1, height: 1 },
+            textShadowRadius: 2,
+          }}>
+            {progress}/{totalAnimals}
+          </Text>
+        </View>
+        
+        {/* Animated bubbles for water effect */}
+        {progress > 0 && (
+          <View style={StyleSheet.absoluteFillObject}>
+            {[...Array(3)].map((_, index) => (
+              <WaterBubble 
+                key={index} 
+                delay={index * 300} 
+                color={colors.bubbleColor}
+                containerHeight={barHeight}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  // Animated bubble component for water effect
+  const WaterBubble = ({ delay, color, containerHeight }: { delay: number; color: string; containerHeight: number }) => {
+    const bubbleAnim = useRef(new Animated.Value(0)).current;
+    const opacityAnim = useRef(new Animated.Value(0)).current;
+    
+    useEffect(() => {
+      const animateBubble = () => {
+        bubbleAnim.setValue(containerHeight);
+        opacityAnim.setValue(1);
+        
+        Animated.parallel([
+          Animated.timing(bubbleAnim, {
+            toValue: 0,
+            duration: 2000 + Math.random() * 1000,
+            useNativeDriver: false,
+          }),
+          Animated.sequence([
+            Animated.timing(opacityAnim, {
+              toValue: 0.8,
+              duration: 500,
+              useNativeDriver: false,
+            }),
+            Animated.timing(opacityAnim, {
+              toValue: 0,
+              duration: 500,
+              useNativeDriver: false,
+            }),
+          ]),
+        ]).start(() => {
+          setTimeout(animateBubble, Math.random() * 2000);
+        });
+      };
+      
+      setTimeout(animateBubble, delay);
+    }, [bubbleAnim, opacityAnim, delay, containerHeight]);
+    
+      const leftPosition = Math.random() * 60;
+  const bubbleSize = 6 + Math.random() * 4;
+  
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: `${leftPosition}%`,
+        bottom: bubbleAnim,
+        width: bubbleSize,
+        height: bubbleSize,
+        borderRadius: 10,
+        backgroundColor: color,
+        opacity: opacityAnim,
+      }}
+    />
+  );
+  };
 
   // --- BG MUSIC MAP: Map levelName to bg music asset/uri ---
   // Make sure all keys are lowercase for bulletproof matching
@@ -137,13 +376,18 @@
     const isSoundPlayingRef = useRef<boolean>(false);
     const confettiAnimRefs = useRef<Animated.Value[]>([]);
     const [showCongratsModal, setShowCongratsModal] = useState(false);
+    const [showDiscoverScreen, setShowDiscoverScreen] = useState(false);
     const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set([0]));
     const [levelCompleted, setLevelCompleted] = useState(false);
+    
+
     
     // Glow animation values
     const glowAnim = useRef(new Animated.Value(0)).current;
     const nameScaleAnim = useRef(new Animated.Value(0)).current;
     const glowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+
+
 
     // Continuous glow animation while name is showing
     useEffect(() => {
@@ -540,6 +784,13 @@
         console.log('Setting showName to true and playing sounds');
         setShowName(true);
         
+        // Add current animal to visited animals when first clicked
+        setVisitedAnimals(prev => {
+          const newVisited = new Set(prev);
+          newVisited.add(currentAnimalIndex);
+          return newVisited;
+        });
+
         // Start name scale animation
         Animated.sequence([
           Animated.timing(nameScaleAnim, {
@@ -615,7 +866,8 @@
           
           if (newIndex >= animals.length && !levelCompleted) {
             setLevelCompleted(true);
-            setShowCongratsModal(true);
+            // Show DiscoverScreen first for all levels, then CongratsModal
+            setShowDiscoverScreen(true);
             setIsTransitioning(false);
             return;
           }
@@ -748,6 +1000,7 @@
 
     const startOver = useCallback(() => {
       setShowCongratsModal(false);
+      setShowDiscoverScreen(false);
       stopSound(true);
       setIsTransitioning(true);
       animalFadeAnim.setValue(0);
@@ -768,6 +1021,23 @@
       }, 16); // One frame delay
 
     }, [stopSound, animalFadeAnim]);
+
+    // Handle when DiscoverScreen closes (after all animals are revealed)
+    const handleDiscoverScreenClose = useCallback(() => {
+      setShowDiscoverScreen(false);
+      // Show the congrats modal after discover screen closes
+      setShowCongratsModal(true);
+    }, []);
+
+    // Handle when user wants to go back to level from DiscoverScreen (without congrats)
+    const handleBackToLevel = useCallback((animalIndex?: number) => {
+      setShowDiscoverScreen(false);
+      // If an animal index is provided, navigate to that animal
+      if (typeof animalIndex === 'number' && animalIndex >= 0 && animalIndex < animals.length) {
+        setCurrentAnimalIndex(animalIndex);
+      }
+      // Don't show congrats modal - just return to level
+    }, [animals.length]);
 
     const renderAnimal = () => {
       if (!currentAnimal) return null;
@@ -1309,19 +1579,120 @@
         <View style={StyleSheet.absoluteFillObject}>
           <Animated.View style={{ flex: 1, opacity: contentFade }}>
             <View style={{ flex: 1 }}>
-                          <TouchableOpacity style={[
-              dynamicStyles.backToMenuButton,
-              // Move up 10% on iPad
-              screenW >= 1000 && { top: (dynamicStyles.backToMenuButton.top || 50) - (screenH * 0.1) }
-            ]} onPress={goToHome}>
-              <Ionicons name="home" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
-            </TouchableOpacity>
-            {hasAnimals && (
+            {!showDiscoverScreen && (
               <TouchableOpacity style={[
-                dynamicStyles.soundButton,
+                dynamicStyles.backToMenuButton,
                 // Move up 10% on iPad
-                screenW >= 1000 && { top: (dynamicStyles.soundButton.top || 50) - (screenH * 0.1) }
-              ]} onPress={toggleMute}>
+                screenW >= 1000 && { top: (dynamicStyles.backToMenuButton.top || 50) - (screenH * 0.1) }
+              ]} onPress={goToHome}>
+                <Ionicons name="home" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
+              </TouchableOpacity>
+            )}
+            
+            {!showDiscoverScreen && (
+              <TouchableOpacity style={[
+                dynamicStyles.backToMenuButton,
+                // Position notebook button below the home button
+                { 
+                  top: (dynamicStyles.backToMenuButton.top || 50) + 
+                       getResponsiveSpacing(isTablet() && isLandscape ? 150 : isTablet() ? 80 : 120, getScaleFactor(screenW, screenH)) +
+                       (screenW >= 1000 ? -(screenH * 0.1) : 0) // Account for iPad offset
+                },
+              ]} onPress={() => {
+                // Navigate to discovery screen for this level
+                setShowDiscoverScreen(true);
+              }}>
+                
+                
+                <Ionicons name="document-text" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
+                
+                                                  {/* Cute Progress Badge */}
+                 <Animated.View style={{
+                   position: 'absolute',
+                   bottom: -18,
+                   right: -18,
+                   backgroundColor: '#40E0D0', // Turquoise for all levels
+                   borderRadius: 30,
+                   minWidth: 60,
+                   height: 48,
+                   justifyContent: 'center',
+                   alignItems: 'center',
+                   borderWidth: 4,
+                   borderColor: 'black',
+                   shadowColor: '#000',
+                   shadowOffset: { width: 0, height: 4 },
+                   shadowOpacity: 0.3,
+                   shadowRadius: 8,
+                   elevation: 8,
+                   transform: [{
+                     scale: nameScaleAnim.interpolate({
+                       inputRange: [0, 1, 1.1],
+                       outputRange: [1, 1.1, 1.2],
+                     }),
+                   }],
+                 }}>
+                  {/* Cute sparkle effect when progress increases */}
+                  {visitedAnimals.size > 1 && (
+                    <Animated.View style={{
+                      position: 'absolute',
+                      top: -4,
+                      right: -4,
+                      opacity: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.5, 1],
+                      }),
+                    }}>
+                      <Text style={{ fontSize: 12, color: '#FFD700' }}>✨</Text>
+                    </Animated.View>
+                  )}
+                  
+                  {/* Heart emoji for completed levels */}
+                  {visitedAnimals.size === animals.length && (
+                    <Animated.View style={{
+                      position: 'absolute',
+                      top: -6,
+                      left: -6,
+                      transform: [{
+                        scale: glowAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.8, 1.2],
+                        }),
+                      }],
+                    }}>
+                      <Text style={{ fontSize: 14 }}>💖</Text>
+                    </Animated.View>
+                  )}
+                  
+                                     <Text style={{
+                     color: 'black',
+                     fontSize: 18,
+                     fontWeight: '800',
+        
+                     fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto',
+                   }}>
+                    {visitedAnimals.size}/{animals.length}
+                  </Text>
+                  
+                  {/* Cute gradient overlay */}
+                  <View style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderTopLeftRadius: 13,
+                    borderTopRightRadius: 13,
+                  }} />
+                </Animated.View>
+              </TouchableOpacity>
+            )}
+                          {hasAnimals && !showDiscoverScreen && (
+                <TouchableOpacity style={[
+                  dynamicStyles.soundButton,
+                  // Move up 10% on iPad
+                  screenW >= 1000 && { top: (dynamicStyles.soundButton.top || 50) - (screenH * 0.1) }
+                ]} onPress={toggleMute}>
                   <Ionicons
                     name={isMuted ? 'volume-mute' : 'volume-high'}
                     size={isLandscape && screenW >= 900 ? 48 : 38}
@@ -1330,14 +1701,16 @@
                 </TouchableOpacity>
               )}
 
-              {/* Level-specific animations */}
-              {levelName.toLowerCase() === 'ocean' && showInstruction && <AnimatedBubbles />}
-              {levelName.toLowerCase() === 'desert' && showInstruction && <AnimatedSand />}
-              {levelName.toLowerCase() === 'arctic' && showInstruction && <AnimatedSnow />}
-              {levelName.toLowerCase() === 'forest' && showInstruction && <AnimatedFireflies />}
-              {levelName.toLowerCase() === 'forest' && showInstruction && <AnimatedLeaves />}
 
-              {hasAnimals && (
+
+              {/* Level-specific animations */}
+              {levelName.toLowerCase() === 'ocean' && showInstruction && !showDiscoverScreen && <AnimatedBubbles />}
+              {levelName.toLowerCase() === 'desert' && showInstruction && !showDiscoverScreen && <AnimatedSand />}
+              {levelName.toLowerCase() === 'arctic' && showInstruction && !showDiscoverScreen && <AnimatedSnow />}
+              {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedFireflies />}
+              {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedLeaves />}
+
+              {hasAnimals && !showDiscoverScreen && (
                 <View style={dynamicStyles.content}>
                   <View style={[
                     dynamicStyles.animalCard,
@@ -1531,15 +1904,17 @@
                     )}
                   </View>
 
-                  <NavigationButtons
-                    handlePrev={handlePrev}
-                    handleNext={handleNext}
-                    isTransitioning={isTransitioning}
-                    currentAnimalIndex={currentAnimalIndex}
-                    bgColor={isMuted ? 'rgba(0,0,0,0.5)' : 'rgba(255, 255, 255, 0.7)'}
-                  />
+                  {!showDiscoverScreen && (
+                    <NavigationButtons
+                      handlePrev={handlePrev}
+                      handleNext={handleNext}
+                      isTransitioning={isTransitioning}
+                      currentAnimalIndex={currentAnimalIndex}
+                      bgColor={isMuted ? 'rgba(0,0,0,0.5)' : 'rgba(255, 255, 255, 0.7)'}
+                    />
+                  )}
                   
-                                  {hasAnimals && !showName && !isTransitioning && (
+                                  {hasAnimals && !showName && !isTransitioning && !showDiscoverScreen && (
                     <InstructionBubble
                       text={t('tapAnimalToHearSound')}
                       arrowAnim={arrowAnim}
@@ -1549,7 +1924,7 @@
                 </View>
               )}
 
-              {!hasAnimals && (
+              {!hasAnimals && !showDiscoverScreen && (
                 <View style={dynamicStyles.content}>
                   <Text style={[dynamicStyles.animalName, { fontSize: 24, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }]}>
                     {t('noAnimalsForLevel')}
@@ -1557,10 +1932,25 @@
                 </View>
               )}
 
+              {showDiscoverScreen && (
+                <View style={StyleSheet.absoluteFillObject}>
+                  <DiscoverScreen
+                    animals={animals}
+                    levelName={levelName}
+                    onComplete={handleDiscoverScreenClose}
+                    onBackToMenu={onBackToMenu}
+                    onBackToLevel={handleBackToLevel}
+                    visitedAnimals={visitedAnimals}
+                    currentAnimalIndex={currentAnimalIndex}
+                  />
+                </View>
+              )}
+
               <CongratsModal
                 showCongratsModal={showCongratsModal}
                 startOver={startOver}
                 goToHome={goToHome}
+                levelName={levelName}
               />
             </View>
           </Animated.View>

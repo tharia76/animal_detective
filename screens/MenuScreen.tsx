@@ -22,6 +22,7 @@ import { Asset } from 'expo-asset';
 import * as RNIap from 'react-native-iap';
 import { useAudioPlayer } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import ReAnimated, { 
   useSharedValue, 
@@ -30,7 +31,9 @@ import ReAnimated, {
   withTiming,
   runOnJS,
   interpolate,
-  Extrapolate
+  Extrapolate,
+  withRepeat,
+  withSequence
 } from 'react-native-reanimated';
 import { useDynamicStyles } from '../src/styles/styles';
 import { useLocalization } from '../src/hooks/useLocalization';
@@ -39,6 +42,7 @@ import LanguageSelector from '../src/components/LanguageSelector';
 import LevelTiles from '../src/components/LevelTiles';
 import AnimatedFireflies from '../src/components/AnimatedFireflies';
 import { setGlobalVolume } from '../src/components/LevelScreenTemplate';
+import { useLevelCompletion } from '../src/hooks/useLevelCompletion';
 
 const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
 const BG_IMAGE = require('../src/assets/images/menu-screen.png');
@@ -113,10 +117,11 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
   return StyleSheet.create({
     lockOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.3)',
+      backgroundColor: 'rgba(0,0,0,0.4)',
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: getResponsiveSpacing(25, scaleFactor),
+      zIndex: 10,
     },
     logo: {
       width: getResponsiveSpacing(280, scaleFactor),
@@ -239,28 +244,24 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       paddingHorizontal: 0,
       paddingVertical: 0,
       gap: 0,
-      maxWidth: isLandscape ? (width >= 900 ? 350 : 280) : 260, // Wider container on tablet landscape
       backgroundColor: 'transparent',
       borderRadius: 0,
       marginHorizontal: 0,
-      marginLeft: isLandscape && width >= 900 ? -120 : -200, // Move more to the right on tablet landscape
+      marginLeft: isLandscape && width >= 900 ? -80 : -120, // Less negative margin
       marginRight: 0,
     },
     unlockButton: {
       backgroundColor: '#4CAF50',
-      paddingHorizontal: getResponsiveSpacing(isLandscape && width >= 900 ? 15 : 5, scaleFactor), // Bigger padding on tablet landscape
-      paddingVertical: getResponsiveSpacing(isLandscape && width >= 900 ? 12 : 6, scaleFactor), // Bigger padding on tablet landscape
-      borderRadius: getResponsiveSpacing(isLandscape && width >= 900 ? 30 : 22, scaleFactor), // Bigger border radius on tablet landscape
-      flex: 1,
-      maxWidth: isLandscape ? (width >= 900 ? 350 : 280) : 260, // Wider on tablet landscape
-      minHeight: getResponsiveSpacing(isLandscape && width >= 900 ? 48 : 32, scaleFactor), // Taller on tablet landscape
+      paddingHorizontal: getResponsiveSpacing(isLandscape && width >= 900 ? 12 : 8, scaleFactor), // Reduced padding
+      paddingVertical: getResponsiveSpacing(isLandscape && width >= 900 ? 8 : 6, scaleFactor), // Reduced padding
+      borderRadius: getResponsiveSpacing(isLandscape && width >= 900 ? 20 : 15, scaleFactor), // Smaller border radius
+      maxWidth: isLandscape ? (width >= 900 ? 200 : 160) : 140, // Much smaller max width
+      minHeight: getResponsiveSpacing(isLandscape && width >= 900 ? 36 : 28, scaleFactor), // Smaller height
       shadowColor: '#4CAF50',
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.3,
       shadowRadius: 6,
       elevation: 6,
-      borderWidth: 2,
-      borderColor: '#81C784',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -328,8 +329,6 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       shadowOpacity: 0.4,
       shadowRadius: 12,
       elevation: 12,
-      borderWidth: 4,
-      borderColor: '#81C784',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -369,6 +368,7 @@ interface MenuScreenProps {
 }
 
 export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuScreenProps) {
+  const { isLevelCompleted, unmarkLevelCompleted } = useLevelCompletion();
   // IMPORTANT: All hooks must be at the top level and in consistent order
   const navigation = useNavigation();
   const { t, lang, setLang } = useLocalization();
@@ -378,6 +378,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   // Calculate responsive values
   const scaleFactor = getScaleFactor(width, height);
   const numColumns = getResponsiveColumns(width, isLandscape);
+
+  // Animated gradient values
+  const gradientPosition = useSharedValue(0);
+  const pulseScale = useSharedValue(1);
 
   // Use dimensions directly for more stable layouts
   const [layoutReady, setLayoutReady] = useState(false);
@@ -499,6 +503,22 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   // Create responsive styles
   const responsiveStyles = createResponsiveStyles(scaleFactor, width, height, isLandscape);
 
+  // Animated styles for gradient buttons with pulse
+  const animatedGradientStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: pulseScale.value }],
+    };
+  });
+
+  // Get gradient start/end positions based on animation
+  const getGradientPositions = () => {
+    const progress = gradientPosition.value;
+    return {
+      start: { x: progress, y: 0 },
+      end: { x: 1 - progress, y: 1 },
+    };
+  };
+
   // Handle layout ready state to prevent black screen during rotation
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -511,6 +531,29 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   useEffect(() => {
     playerRef.current = player;
   }, [player]);
+
+  // Initialize gradient animations
+  useEffect(() => {
+    // Continuous gradient position animation
+    gradientPosition.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 3000 }),
+        withTiming(0, { duration: 3000 })
+      ),
+      -1,
+      false
+    );
+
+    // Pulse animation
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.1, { duration: 1000 }),
+        withTiming(1, { duration: 1000 })
+      ),
+      -1,
+      false
+    );
+  }, []);
 
   // Play immediately on mount, and cleanup on unmount
   useEffect(() => {
@@ -727,18 +770,29 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     setPurchaseInProgress(false);
   }, [purchaseInProgress, t]);
 
+  // Handle toggling level completion status
+  const handleToggleCompletion = useCallback(
+    async (level: string, isCompleted: boolean) => {
+      try {
+        if (!isCompleted) {
+          // Unmark as completed
+          await unmarkLevelCompleted(level);
+        }
+        // Note: We don't mark as completed here, that only happens when the congrats modal shows
+      } catch (error) {
+        console.warn('Error toggling level completion:', error);
+      }
+    },
+    [unmarkLevelCompleted]
+  );
+
   // also stop when you select a level
   const handleSelect = useCallback(
     (level, isLocked) => {
       stopAndUnload();
-      if (!isLocked) {
-        // Defensive: ensure onSelectLevel is a function
-        if (typeof onSelectLevel === 'function') {
-          onSelectLevel(level);
-        }
-      } else {
-        // Show modal for locked level
-        setShowUnlockModal(true);
+      // Always allow navigation regardless of locked state (visual only)
+      if (typeof onSelectLevel === 'function') {
+        onSelectLevel(level);
       }
     },
     [onSelectLevel, stopAndUnload]
@@ -756,41 +810,55 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     
     // Detect landscape mode where we want vertical button layout
     const isPhoneLandscape = isLandscape; // Use landscape orientation regardless of device size
-    // console.log('Unlock button debug:', { width, height, isLandscape, isPhoneLandscape });
     
     return (
       <View style={responsiveStyles.unlockButtonsContainer}>
-        <TouchableOpacity
-          style={responsiveStyles.unlockButton}
-          onPress={handleUnlock}
-          disabled={purchaseInProgress}
-        >
-          {isPhoneLandscape ? (
-            // Landscape: Stack icon and text vertically, centered
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons 
-                name="lock-open" 
-                size={responsiveStyles.unlockButtonText.fontSize + 2} 
-                color="#FFFFFF" 
-              />
-              <Text style={[responsiveStyles.unlockButtonText, { marginTop: 2, fontSize: responsiveStyles.unlockButtonText.fontSize - 1 }]}>
-                {t('unlockAllLevels')} ({unlockPrice})
-              </Text>
-            </View>
-          ) : (
-            // Other orientations: Keep original horizontal layout
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Ionicons 
-                name="lock-open" 
-                size={responsiveStyles.unlockButtonText.fontSize} 
-                color="#FFFFFF" 
-              />
-              <Text style={responsiveStyles.unlockButtonText}>
-                {t('unlockAllLevels')} ({unlockPrice})
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <ReAnimated.View style={animatedGradientStyle}>
+          <TouchableOpacity
+            style={[responsiveStyles.unlockButton, { backgroundColor: 'transparent' }]}
+            onPress={handleUnlock}
+            disabled={purchaseInProgress}
+          >
+            <LinearGradient
+              colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: getResponsiveSpacing(isLandscape && width >= 900 ? 30 : 22, scaleFactor),
+              }}
+            />
+            {isPhoneLandscape ? (
+              // Landscape: Stack icon and text vertically, centered
+              <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                <Ionicons 
+                  name="lock-open" 
+                  size={responsiveStyles.unlockButtonText.fontSize + 2} 
+                  color="#FFFFFF" 
+                />
+                <Text style={[responsiveStyles.unlockButtonText, { marginTop: 2, fontSize: responsiveStyles.unlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                  {t('unlockAllLevels')} ({unlockPrice})
+                </Text>
+              </View>
+            ) : (
+              // Other orientations: Keep original horizontal layout
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 1 }}>
+                <Ionicons 
+                  name="lock-open" 
+                  size={responsiveStyles.unlockButtonText.fontSize} 
+                  color="#FFFFFF" 
+                />
+                <Text style={[responsiveStyles.unlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                  {t('unlockAllLevels')} ({unlockPrice})
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </ReAnimated.View>
       </View>
     );
   };
@@ -818,40 +886,55 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
               </Text>
             {Platform.OS === 'ios' && !unlocked && (
               <>
-                <TouchableOpacity
-                  style={responsiveStyles.modalUnlockButton}
-                  onPress={() => {
-                    setShowUnlockModal(false);
-                    handleUnlock();
-                  }}
-                  disabled={purchaseInProgress}
-                >
-                  {isPhoneLandscape ? (
-                    // Phone landscape: Stack icon and text vertically, centered
-                    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons 
-                        name="lock-open" 
-                        size={responsiveStyles.modalUnlockButtonText.fontSize + 2} 
-                        color="#FFFFFF" 
-                      />
-                      <Text style={[responsiveStyles.modalUnlockButtonText, { marginTop: 2, fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 1 }]}>
-                        ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
-                      </Text>
-                    </View>
-                  ) : (
-                    // Other orientations: Keep original horizontal layout
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                      <Ionicons 
-                        name="lock-open" 
-                        size={responsiveStyles.modalUnlockButtonText.fontSize} 
-                        color="#FFFFFF" 
-                      />
-                      <Text style={responsiveStyles.modalUnlockButtonText}>
-                        ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
+                <ReAnimated.View style={animatedGradientStyle}>
+                  <TouchableOpacity
+                    style={[responsiveStyles.modalUnlockButton, { backgroundColor: 'transparent' }]}
+                    onPress={() => {
+                      setShowUnlockModal(false);
+                      handleUnlock();
+                    }}
+                    disabled={purchaseInProgress}
+                  >
+                    <LinearGradient
+                      colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: getResponsiveSpacing(35, scaleFactor),
+                      }}
+                    />
+                    {isPhoneLandscape ? (
+                      // Phone landscape: Stack icon and text vertically, centered
+                      <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                        <Ionicons 
+                          name="lock-open" 
+                          size={responsiveStyles.modalUnlockButtonText.fontSize + 2} 
+                          color="#FFFFFF" 
+                        />
+                        <Text style={[responsiveStyles.modalUnlockButtonText, { marginTop: 2, fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                          ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
+                        </Text>
+                      </View>
+                    ) : (
+                      // Other orientations: Keep original horizontal layout
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 1 }}>
+                        <Ionicons 
+                          name="lock-open" 
+                          size={responsiveStyles.modalUnlockButtonText.fontSize} 
+                          color="#FFFFFF" 
+                        />
+                        <Text style={[responsiveStyles.modalUnlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                          ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </ReAnimated.View>
               </>
             )}
             <Pressable
@@ -923,19 +1006,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     { code: 'tr', name: 'Türkçe' },
   ];
 
-  // Determine locked state for each level
+  // Determine locked state for each level (visual only, not functional)
   const getIsLocked = (level: string) => {
+    console.log('getIsLocked called for level:', level);
     if (level === 'farm') return false;
-    if (level === 'arctic') return false;
-    if (level === 'desert') return false;
-    if (level === 'savannah') return false;
-    if (level === 'jungle') return false;
-    if (level === 'birds') return false;
-    if (level === 'insects') return false;
-    if (level === 'forest') return false;
-    if (level === 'ocean') return false;
-
-    return !unlocked;
+    
+    // Show locked styling for all other levels but keep them functional
+    console.log('Returning true (locked) for level:', level);
+    return true;
   };
 
   return (
@@ -996,6 +1074,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                 <Ionicons name="settings" size={32} color="#612915" />
               </TouchableOpacity>
 
+             
 
               <ScrollView
                 style={{ flex: 1, backgroundColor: 'transparent' }}
@@ -1072,6 +1151,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     getLevelBackgroundColor={getLevelBackgroundColor}
                     t={t}
                     getIsLocked={getIsLocked}
+                    isLevelCompleted={isLevelCompleted}
+                    onToggleCompletion={handleToggleCompletion}
                   />
                 </View>
               </ScrollView>
@@ -1104,6 +1185,34 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                 }}
               >
                 <Ionicons name="settings" size={32} color="#612915" />
+              </TouchableOpacity>
+
+              {/* Notebook Button - Under Settings */}
+              <TouchableOpacity
+                style={{
+                  position: 'absolute',
+                  top: getResponsiveSpacing(90, scaleFactor),
+                  right: getResponsiveSpacing(20, scaleFactor),
+                  zIndex: 10002,
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 25,
+                  padding: getResponsiveSpacing(16, scaleFactor),
+                  elevation: 3,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3,
+                }}
+                onPress={() => {
+                  try {
+                    console.log('Notebook button pressed');
+                    // Add notebook functionality here
+                  } catch (error) {
+                    console.warn('Error opening notebook:', error);
+                  }
+                }}
+              >
+                <Ionicons name="book" size={32} color="#612915" />
               </TouchableOpacity>
 
               <ScrollView
@@ -1164,6 +1273,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     getLevelBackgroundColor={getLevelBackgroundColor}
                     t={t}
                     getIsLocked={getIsLocked}
+                    isLevelCompleted={isLevelCompleted}
+                    onToggleCompletion={handleToggleCompletion}
                   />
                 </View>
               </ScrollView>

@@ -17,6 +17,8 @@ type LevelTilesProps = {
   ListFooterComponent?: React.ReactNode;
   horizontal?: boolean;
   getIsLocked?: (level: string) => boolean; // Make optional
+  isLevelCompleted?: (level: string) => boolean; // Add completion check function
+  onToggleCompletion?: (level: string, isCompleted: boolean) => void; // Add toggle function
 };
 
 /**
@@ -36,7 +38,9 @@ function AnimatedTile({
   getLevelBackgroundColor, 
   isLandscape, 
   t, 
-  handleLevelSelect 
+  handleLevelSelect,
+  isCompleted,
+  onToggleCompletion
 }: {
   level: string;
   itemSize: number;
@@ -50,6 +54,8 @@ function AnimatedTile({
   isLandscape: boolean;
   t: (key: string) => string;
   handleLevelSelect: (level: string, isLocked: boolean) => void;
+  isCompleted?: boolean;
+  onToggleCompletion?: (level: string, isCompleted: boolean) => void;
 }) {
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -146,6 +152,9 @@ function AnimatedTile({
     }
   };
 
+  // Debug logging
+  console.log('AnimatedTile rendering:', { level, isLocked });
+
   return (
     <Animated.View
       style={{
@@ -190,11 +199,44 @@ function AnimatedTile({
              }}
             resizeMode="cover"
           />
-                     {isLocked && (
-             <View style={[styles.lockOverlay, { borderRadius: 22 }]}>
-               <Ionicons name="lock-closed" size={24} color="white" />
-             </View>
-           )}
+                               {isLocked && (
+            <View style={[styles.lockOverlay, { borderRadius: 22 }]}>
+              <Ionicons name="lock-closed" size={40} color="white" />
+            </View>
+          )}
+          
+          {/* Completion Checkmark - top right corner */}
+          {isCompleted && (
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                width: 32,
+                height: 32,
+                backgroundColor: 'rgba(34, 197, 94, 0.9)', // Green background
+                borderRadius: 16,
+                borderWidth: 2,
+                borderColor: 'white',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 5,
+              }}
+              onPress={() => {
+                if (onToggleCompletion) {
+                  onToggleCompletion(level, false); // Toggle to incomplete
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="checkmark" size={20} color="white" />
+            </TouchableOpacity>
+          )}
           {/* Label in the center of the tile with pill background */}
           <View
             style={{
@@ -253,6 +295,8 @@ export default function LevelTiles({
   t,
   horizontal,
   getIsLocked,
+  isLevelCompleted,
+  onToggleCompletion,
 }: LevelTilesProps) {
   // In both portrait and landscape, use 3 columns per row
   const columns = 3;
@@ -291,8 +335,12 @@ export default function LevelTiles({
   const rows = chunk(levels, columns);
 
   // Use getIsLocked if provided, otherwise lock all except 'farm'
-  const safeGetIsLocked = (level: string) =>
-    typeof getIsLocked === 'function' ? getIsLocked(level) : level !== 'farm';
+  const safeGetIsLocked = (level: string) => {
+    console.log('LevelTiles safeGetIsLocked called for level:', level, 'getIsLocked type:', typeof getIsLocked);
+    const result = typeof getIsLocked === 'function' ? getIsLocked(level) : level !== 'farm';
+    console.log('safeGetIsLocked result for', level, ':', result);
+    return result;
+  };
 
   return (
     <ScrollView
@@ -311,6 +359,7 @@ export default function LevelTiles({
         >
           {row.map((level, colIdx) => {
             const isLocked = safeGetIsLocked(level);
+            const isCompleted = isLevelCompleted ? isLevelCompleted(level) : false;
             return (
               <AnimatedTile
                 key={level}
@@ -326,6 +375,8 @@ export default function LevelTiles({
                 isLandscape={isLandscape}
                 t={t}
                 handleLevelSelect={handleLevelSelect}
+                isCompleted={isCompleted}
+                onToggleCompletion={onToggleCompletion}
               />
             );
           })}
