@@ -64,12 +64,12 @@ export default function InstructionBubble({
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.05,
-          duration: 1500,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 1500,
+          duration: 800,
           useNativeDriver: true,
         }),
       ])
@@ -80,12 +80,12 @@ export default function InstructionBubble({
       Animated.sequence([
         Animated.timing(floatAnim, {
           toValue: 1,
-          duration: 2000,
+          duration: 1200,
           useNativeDriver: true,
         }),
         Animated.timing(floatAnim, {
           toValue: 0,
-          duration: 2000,
+          duration: 1200,
           useNativeDriver: true,
         }),
       ])

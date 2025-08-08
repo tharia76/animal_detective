@@ -16,6 +16,161 @@ import {
 import { createAudioPlayer } from 'expo-audio';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { useLevelCompletion } from '../hooks/useLevelCompletion';
+import { useLocalization } from '../hooks/useLocalization';
+
+// Fallback to using the translated name for now - this will restore the original behavior 
+// but keep the structure for the fix once we get the correct mappings
+const getAnimalEnglishKey = (animal: any): string => {
+  // For now, let's just use the translated name lowercased as the key
+  // This should at least make names and images consistent again
+  const translatedKey = animal.name.toLowerCase();
+  
+  // Create a mapping from common translated names to English image keys
+  // This is a temporary workaround - we need the actual ID mappings
+  const nameToKeyMap: { [key: string]: string } = {
+    // English (these should work as-is)
+    'dog': 'dog', 'cat': 'cat', 'chicken': 'chicken', 'chick': 'chick',
+    'donkey': 'donkey', 'cow': 'cow', 'duck': 'duck', 'goat': 'goat',
+    'goose': 'goose', 'horse': 'horse', 'llama': 'llama', 'pig': 'pig',
+    'rabbit': 'rabbit', 'rooster': 'rooster', 'sheep': 'sheep', 'turkey': 'turkey',
+    
+    // Russian animals - using exact translations from strings.ts
+    // Farm animals
+    'собака': 'dog', 'кот': 'cat', 'курица': 'chicken', 'цыпленок': 'chick',
+    'осел': 'donkey', 'корова': 'cow', 'утка': 'duck', 'коза': 'goat',
+    'гусь': 'goose', 'лошадь': 'horse', 'лама': 'llama', 'свинья': 'pig',
+    'кролик': 'rabbit', 'петух': 'rooster', 'овца': 'sheep', 'индейка': 'turkey',
+    'коала': 'koala',
+    
+    // Arctic animals 
+    'белый медведь': 'white bear', 'белая лиса': 'white fox',
+    'северный олень': 'reindeer', 'тюлень': 'seal', 'полярная сова': 'snow owl',
+    'пингвин': 'penguin', 'морж': 'walrus',
+    
+    // Forest animals
+    'барсук': 'badger', 'лиса': 'fox', 'медведь': 'bear', 'енот': 'raccoon',
+    'белка': 'squirrel', 'ёж': 'hedgehog', 'сова': 'owl', 'волк': 'wolf',
+    'олень': 'deer', 'лось': 'moose', 'мышь': 'mouse', 'бобр': 'beaver',
+    'кабан': 'boar', 'летучая мышь': 'bat', 'выдра': 'otter', 'сурок': 'skunk',
+    
+    // Ocean animals
+    'краб': 'crab', 'дельфин': 'dolphin', 'рыба': 'fish', 'медуза': 'jellyfish',
+    'омар': 'lobster', 'осьминог': 'octopus', 'морская черепаха': 'sea turtle',
+    'морской конек': 'seahorse', 'акула': 'shark', 'креветка': 'shrimp',
+    'морская звезда': 'starfish', 'скат': 'stingray', 'кит': 'whale',
+    
+    // Desert animals  
+    'верблюд': 'camel', 'пустынная черепаха': 'desert tortoise', 'фенек': 'fennec fox',
+    'игуана': 'iguana', 'шакал': 'jackal', 'тушканчик': 'jerboa',
+    'сурикат': 'meerkat', 'орикс': 'oryx', 'песчаная кошка': 'sand cat', 'скорпион': 'scorpion',
+    'каракал': 'caracal', 'ящерица': 'lizard',
+    
+    // Insects
+    'муравей': 'ant', 'пчела': 'bee', 'жук': 'beetle', 'бабочка': 'butterfly',
+    'сверчок': 'cricket', 'гусеница': 'caterpillar', 'таракан': 'cockroach',
+    'стрекоза': 'dragonfly', 'светлячок': 'firefly', 'муха': 'fly',
+    'кузнечик': 'grasshopper', 'божья коровка': 'ladybug', 'мантис': 'mantis',
+    'комар': 'mosquito', 'улитка': 'snail', 'паук': 'spider', 'оса': 'wasp', 'червь': 'worm',
+    
+    // Savannah animals
+    'слон': 'elephant', 'жираф': 'giraffe', 'лев': 'lion', 'зебра': 'zebra',
+    'носорог': 'rhinoceros', 'бегемот': 'hippopotamus', 'гепард': 'cheetah',
+    'гиена': 'hyena', 'антилопа': 'antelope', 'бизон': 'bison',
+    'леопард': 'leopard', 'обезьяна': 'monkey', 'дикий кабан': 'wild boar',
+    
+    // Jungle animals
+    'тигр': 'tiger', 'ягуар': 'jaguar', 'горилла': 'gorilla', 'шимпанзе': 'chimpanzee',
+    'орангутан': 'orangutan', 'лемур': 'lemur', 'ленивец': 'sloth', 'хамелеон': 'chameleon',
+    'лягушка': 'frog', 'крокодил': 'crocodile', 'панда': 'panda', 'змея': 'snake',
+    'черепаха': 'turtle', 'муравьед': 'ant eater', 'азиатский слон': 'asian elephant',
+    'бенгальский тигр': 'bengal tiger', 'чёрная пантера': 'black panther',
+    'капибара': 'capybara', 'кобра': 'cobra', 'рысь': 'lynx', 'мангуст': 'mongoose',
+    
+    // Birds
+    'орел': 'eagle', 'голубь': 'dove', 'канарейка': 'canary', 'фламинго': 'flamingo',
+    'страус': 'ostrich', 'попугай': 'parrot', 'павлин': 'peacock', 'пеликан': 'pelican',
+    'ворон': 'raven', 'чайка': 'seagull', 'воробей': 'sparrow', 'аист': 'stork',
+    'лебедь': 'swan', 'тукан': 'toucan', 'дятел': 'woodpecker',
+    
+    // Turkish animals - using exact translations from strings.ts
+    // Farm animals
+    'köpek': 'dog', 'kedi': 'cat', 'tavuk': 'chicken', 'civciv': 'chick',
+    'eşek': 'donkey', 'inek': 'cow', 'ördek': 'duck', 'keçi': 'goat',
+    'kaz': 'goose', 'at': 'horse', 'lama': 'llama', 'domuz': 'pig',
+    'tavşan': 'rabbit', 'horoz': 'rooster', 'koyun': 'sheep', 'hindi': 'turkey',
+    
+    // Arctic animals 
+    'beyaz ayı': 'white bear', 'kutup tilkisi': 'white fox',
+    'ren geyiği': 'reindeer', 'fok': 'seal', 'kar baykuşu': 'snow owl',
+    'penguen': 'penguin', 'deniz aygırı': 'walrus', // Note: strings.ts has walrus as "deniz aygırı"
+    
+    // Forest animals
+    'porsuk': 'badger', 'tilki': 'fox', 'ayı': 'bear', 'rakum': 'raccoon',
+    'sincap': 'squirrel', 'kirpi': 'hedgehog', 'baykuş': 'owl', 'kurt': 'wolf',
+    'geyik': 'deer', 'alageyik': 'moose', 'fare': 'mouse', 'kunduz': 'beaver',
+    'yaban domuzu': 'boar', 'yarasa': 'bat', 'su samuru': 'otter', 'kedi köpeği': 'skunk',
+    'koala': 'koala',
+    
+    // Ocean animals
+    'yengeç': 'crab', 'yunus': 'dolphin', 'balık': 'fish', 'denizanası': 'jellyfish',
+    'istakoz': 'lobster', 'ahtapot': 'octopus', 'deniz kaplumbağası': 'sea turtle',
+    'denizatı': 'seahorse', 'köpekbalığı': 'shark', 'karides': 'shrimp',
+    'deniz yıldızı': 'starfish', 'vatoz': 'stingray', 'balina': 'whale',
+    
+    // Desert animals
+    'deve': 'camel', 'çöl kaplumbağası': 'desert tortoise', 'fennek tilkisi': 'fennec fox',
+    'iguana': 'iguana', 'i̇guana': 'iguana', 'ıguana': 'iguana', 'çakal': 'jackal', 'çöl faresi': 'jerboa',
+    'surikat': 'meerkat', 'oryx': 'oryx', 'kum kedisi': 'sand cat',
+    'akrep': 'scorpion', 'karakal': 'caracal', 'kertenkele': 'lizard',
+    
+    // Insects
+    'karınca': 'ant', 'arı': 'bee', 'kelebek': 'butterfly', 'böcek': 'beetle',
+    'tırtıl': 'caterpillar', 'hamam böceği': 'cockroach', 'yusufçuk': 'dragonfly',
+    'sinek': 'fly', 'çekirge': 'grasshopper', 'uğur böceği': 'ladybug',
+    'mantis': 'mantis', 'sivrisinek': 'mosquito', 'salyangoz': 'snail',
+    'örümcek': 'spider', 'sürüngen': 'worm', 'eşek arısı': 'wasp',
+    'cırcır böceği': 'cricket', 'ateşböceği': 'firefly',
+    
+    // Savannah animals
+    'fil': 'elephant', 'zürafa': 'giraffe', 'aslan': 'lion', 'zebra': 'zebra',
+    'gergedan': 'rhinoceros', 'su aygırı': 'hippopotamus', 'çita': 'cheetah',
+    'sırtlan': 'hyena', 'antilop': 'antelope', 'bizon': 'bison',
+    'leopar': 'leopard', 'maymun': 'monkey',
+    
+    // Jungle animals
+    'kaplan': 'tiger', 'siyah panter': 'black panther', 'jaguar': 'jaguar',
+    'goril': 'gorilla', 'şempanze': 'chimpanzee', 'orangutan': 'orangutan',
+    'lemur': 'lemur', 'tembel hayvan': 'sloth', 'bukalemun': 'chameleon',
+    'kurbağa': 'frog', 'timsah': 'crocodile', 'panda': 'panda',
+    'karınca yiyen': 'ant eater', 'asya fili': 'asian elephant',
+    'bengal kaplanı': 'bengal tiger', 'kapibara': 'capybara',
+    'yılan': 'snake', 'kaplumbağa': 'turtle', 'kobra': 'cobra',
+    'vaşak': 'lynx', 'mangust': 'mongoose',
+    
+    // Birds
+    'kartal': 'eagle', 'güvercin': 'dove', 'kanarya': 'canary',
+    'flamingo': 'flamingo', 'devekuşu': 'ostrich', 'papağan': 'parrot',
+    'pelikan': 'pelican', 'kuzgun': 'raven', 'martı': 'seagull',
+    'serçe': 'sparrow', 'leylek': 'stork', 'kuğu': 'swan',
+    'tukan': 'toucan', 'ağaçkakan': 'woodpecker', 'tavus kuşu': 'peacock',
+    
+    // English animal names (no duplicates)
+    'white bear': 'white bear', 'white fox': 'white fox', 'reindeer': 'reindeer',
+    'seal': 'seal', 'snow owl': 'snow owl', 'penguin': 'penguin', 'walrus': 'walrus',
+  };
+  
+  // Try to find a mapping, fallback to the translated key, then fallback to 'cat'
+  const result = nameToKeyMap[translatedKey] || translatedKey || 'cat';
+  
+  // Debug specific mapping issues
+  if (translatedKey.includes('кошк') || translatedKey.includes('кот') || translatedKey.includes('cat')) {
+    console.log(`🔍 CAT MAPPING DEBUG: "${translatedKey}" → "${result}"`);
+    console.log('Available mappings for cats:', Object.keys(nameToKeyMap).filter(k => k.includes('кошк') || k.includes('кот') || k.includes('cat')));
+  }
+  
+  return result;
+};
 
 interface DiscoverScreenProps {
   animals?: any[];
@@ -100,7 +255,9 @@ const LevelAnimalGrid: React.FC<{
     return stickerImages[index];
   };
 
-  // Static mapping of animal names to their silhouette images
+
+
+  // Static mapping of English keys to their silhouette images
   const silhouetteImageMap: { [key: string]: any } = {
     // Arctic animals
     'white bear': require('../assets/images/silhouettes/whitebear_silhouette.png'),
@@ -428,13 +585,14 @@ const LevelAnimalGrid: React.FC<{
   // Move to next unrevealed available animal when current one is revealed
   useEffect(() => {
     const currentAnimal = levelAnimals[currentGuideIndex];
-    if (currentAnimal && revealedAnimals.has(currentAnimal.name.toLowerCase())) {
+    if (currentAnimal && revealedAnimals.has(getAnimalEnglishKey(currentAnimal))) {
       // Find the next unrevealed available animal
       let nextIndex = -1;
-      for (let i = 0; i < levelAnimals.length; i++) {
-        const animalKey = levelAnimals[i].name.toLowerCase();
-        const isAvailable = availableAnimals.has(animalKey);
-        const isRevealed = revealedAnimals.has(animalKey);
+              for (let i = 0; i < levelAnimals.length; i++) {
+          const animalKey = levelAnimals[i].name.toLowerCase();
+          const englishKey = getAnimalEnglishKey(levelAnimals[i]);
+          const isAvailable = availableAnimals.has(animalKey);
+          const isRevealed = revealedAnimals.has(englishKey);
         
         if (isAvailable && !isRevealed) {
           nextIndex = i;
@@ -451,15 +609,35 @@ const LevelAnimalGrid: React.FC<{
   return (
     <>
       {levelAnimals.map((animal: any, index: number) => {
-        // Show all animals - no filtering needed
-        const animalKey = animal.name.toLowerCase();
-        const isRevealed = revealedAnimals.has(animalKey);
-        const isAvailable = availableAnimals.has(animalKey);
-        const silhouetteImage = silhouetteImageMap[animalKey];
-        const realImage = stillImageMap[animalKey];
+        // Use English key for consistency across all operations
+        const englishKey = getAnimalEnglishKey(animal);
+        const animalKey = animal.name.toLowerCase(); // Keep for backward compatibility
+        
+        // Use English key for revealed/available tracking (consistent across languages)
+        const isRevealed = revealedAnimals.has(englishKey);
+        const isAvailable = availableAnimals.has(animalKey); // Keep using translated name for this
+        
+        // Use English key for image lookups (works across all languages)
+        const silhouetteImage = silhouetteImageMap[englishKey];
+        const realImage = stillImageMap[englishKey];
         const displayImage = isRevealed ? realImage : silhouetteImage;
         
-        console.log('Processing animal:', animal.name, 'Key:', animalKey, 'Revealed:', isRevealed, 'Available:', isAvailable);
+        // Enhanced debugging for missing images
+        if (!silhouetteImage || !realImage) {
+          console.warn(`❌ Missing images for "${animal.name}" (ID: ${animal.id})`);
+          console.warn(`   English key: "${englishKey}"`);
+          console.warn(`   Silhouette found: ${!!silhouetteImage}`);
+          console.warn(`   Real image found: ${!!realImage}`);
+          console.warn(`   Available silhouette keys:`, Object.keys(silhouetteImageMap).filter(k => k.includes('cat')));
+        } else {
+          console.log(`✅ Images found for "${animal.name}" → "${englishKey}"`);
+        }
+        
+        // Debug name-image mismatch for cats specifically
+        if (animal.name.toLowerCase().includes('кошка') || animal.name.toLowerCase().includes('кот') || animal.name.toLowerCase().includes('cat')) {
+          console.log(`🐱 CAT DEBUG: "${animal.name}" (ID: ${animal.id}) → key: "${englishKey}"`);
+          console.log(`   Silhouette: ${!!silhouetteImage}, Real: ${!!realImage}`);
+        }
         
         // Get the animation value for this specific animal card
         const animValue = animalAnimRefs.current[index];
@@ -518,23 +696,38 @@ const LevelAnimalGrid: React.FC<{
           // Reveal the animal (stays revealed, no toggling back)
           setRevealedAnimals(prev => {
             const newSet = new Set(prev);
-            const animalKey = animal.name.toLowerCase();
+            const englishKey = getAnimalEnglishKey(animal);
             
-            if (!newSet.has(animalKey)) {
-              newSet.add(animalKey); // Show real image
+            if (!newSet.has(englishKey)) {
+              newSet.add(englishKey); // Show real image
               
               // Check if this was the last available animal to reveal
               // Count how many available animals have been revealed
-              const revealedAvailableCount = Array.from(newSet).filter(name => 
-                availableAnimals.has(name)
-              ).length;
+              const revealedAvailableCount = Array.from(newSet).filter(englishKeyRevealed => {
+                // Convert available animals (which use translated names) to English keys for comparison
+                const availableEnglishKeys = new Set();
+                levelAnimals.forEach(lvlAnimal => {
+                  if (availableAnimals.has(lvlAnimal.name.toLowerCase())) {
+                    availableEnglishKeys.add(getAnimalEnglishKey(lvlAnimal));
+                  }
+                });
+                return availableEnglishKeys.has(englishKeyRevealed);
+              }).length;
               
               console.log('Revealed available count:', revealedAvailableCount);
               console.log('Total available animals:', availableAnimals.size);
               console.log('Available animals:', Array.from(availableAnimals));
               console.log('All revealed animals:', Array.from(newSet));
               
-              if (revealedAvailableCount === availableAnimals.size && availableAnimals.size > 0 && onAllRevealed) {
+              // Convert available animals count to match English key counting
+              const availableEnglishKeysCount = new Set();
+              levelAnimals.forEach(lvlAnimal => {
+                if (availableAnimals.has(lvlAnimal.name.toLowerCase())) {
+                  availableEnglishKeysCount.add(getAnimalEnglishKey(lvlAnimal));
+                }
+              });
+              
+              if (revealedAvailableCount === availableEnglishKeysCount.size && availableEnglishKeysCount.size > 0 && onAllRevealed) {
                 console.log('All available animals revealed! Triggering completion...');
                 // Wait a moment to let the user see the last reveal, then trigger callback
                 setTimeout(() => {
@@ -696,13 +889,15 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   visitedAnimals = new Set(),
   currentAnimalIndex = 0
 }) => {
+  const { markLevelCompleted, isLevelCompleted } = useLevelCompletion();
+  const { t } = useLocalization();
   const { width: screenW, height: screenH } = useWindowDimensions();
   const isLandscape = screenW > screenH;
   const isMobile = Math.min(screenW, screenH) < 768;
   const isTablet = Math.min(screenW, screenH) >= 768 && Math.max(screenW, screenH) >= 1024;
 
   // State to track which animals have been revealed (show real image instead of silhouette)
-  // Initialize with visited animals already revealed
+  // Initialize with visited animals already revealed - using English keys for consistency
   const [revealedAnimals, setRevealedAnimals] = useState<Set<string>>(() => {
     const initialRevealed = new Set<string>();
     if (visitedAnimals.size > 0) {
@@ -710,10 +905,11 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       const levelAnimals = animals.filter((animal: any) => 
         animal.animalType.toLowerCase() === levelName.toLowerCase()
       );
-      // Add visited animals to revealed set (they're already discovered)
+      // Add visited animals to revealed set using English keys (they're already discovered)
       visitedAnimals.forEach(index => {
         if (levelAnimals[index]) {
-          initialRevealed.add(levelAnimals[index].name.toLowerCase());
+          const englishKey = getAnimalEnglishKey(levelAnimals[index]);
+          initialRevealed.add(englishKey);
         }
       });
     }
@@ -768,6 +964,13 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   
   // Mission stamp fade animation (shows after blur)
   const stampOpacity = useRef(new Animated.Value(0)).current;
+  
+  // Complete mission button bounce animation
+  const buttonBounceScale = useRef(new Animated.Value(1)).current;
+  
+  // Hand pop animations flanking the button
+  const leftHandScale = useRef(new Animated.Value(1)).current;
+  const rightHandScale = useRef(new Animated.Value(1)).current;
 
   // Initialize guide to first available unrevealed animal when screen mounts
   useEffect(() => {
@@ -872,16 +1075,26 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   };
 
   // Handler for completing the mission
-  const handleCompleteMission = () => {
+  const handleCompleteMission = async () => {
     setMissionCompleted(true);
     setShowCompleteButton(false);
     
-    // Wait 5 seconds after stamp appears before calling completion callback
+    // Mark level as completed immediately
+    if (levelName) {
+      try {
+        await markLevelCompleted(levelName);
+        console.log(`Level ${levelName} marked as completed!`);
+      } catch (error) {
+        console.warn('Error marking level as completed:', error);
+      }
+    }
+    
+    // Wait 3 seconds after stamp appears, then call completion callback to show congrats modal
     setTimeout(() => {
       if (onComplete) {
-        onComplete();
+        onComplete(); // This will show the congrats modal, which can then go to home
       }
-    }, 5000); // 5 seconds delay
+    }, 3000); // Reduced to 3 seconds
   };
 
   // Start mission stamp pulse animation when all animals are revealed
@@ -944,6 +1157,59 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       };
     }
   }, [missionCompleted, missionStampScale, blurOpacity, stampOpacity]);
+
+  // Flash and bounce animation for complete mission button when enabled
+  useEffect(() => {
+    if (areAllAnimalsRevealed && showCompleteButton) {
+       // Hand pop animations (left and right) with slight phase offset
+       const leftHandPop = Animated.loop(
+         Animated.sequence([
+           Animated.timing(leftHandScale, {
+             toValue: 1.25,
+             duration: 500,
+             useNativeDriver: true,
+           }),
+           Animated.timing(leftHandScale, {
+             toValue: 1,
+             duration: 500,
+             useNativeDriver: true,
+           }),
+           Animated.delay(200),
+         ])
+       );
+ 
+       const rightHandPop = Animated.loop(
+         Animated.sequence([
+           Animated.delay(250),
+           Animated.timing(rightHandScale, {
+             toValue: 1.25,
+             duration: 500,
+             useNativeDriver: true,
+           }),
+           Animated.timing(rightHandScale, {
+             toValue: 1,
+             duration: 500,
+             useNativeDriver: true,
+           }),
+           Animated.delay(200),
+         ])
+       );
+ 
+       leftHandPop.start();
+       rightHandPop.start();
+ 
+       return () => {
+         leftHandPop.stop();
+         rightHandPop.stop();
+         leftHandScale.setValue(1);
+         rightHandScale.setValue(1);
+       };
+     } else {
+       // Reset animations when button is disabled
+       leftHandScale.setValue(1);
+       rightHandScale.setValue(1);
+     }
+  }, [areAllAnimalsRevealed, showCompleteButton, leftHandScale, rightHandScale]);
 
   const levelAnimals = animals.filter((animal: any) => 
     animal.animalType.toLowerCase() === levelName.toLowerCase()
@@ -1009,13 +1275,13 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               marginTop: isTablet ? -70 : -70,
               paddingTop: 30,
             }}>
-              {levelName} mission notebook!
+              {t('missionNotebook').replace('{level}', t(levelName.toLowerCase()))}
             </Text>
                           <Text style={{
                 fontSize: isTablet ? 20 : 20,
                 fontFamily: Platform.OS === 'ios' ? 'Marker Felt' : 'cursive',
                 fontWeight: Platform.OS === 'ios' ? 'normal' : 'bold',
-                color: 'black',
+                color: (missionCompleted || isLevelCompleted(levelName || '')) ? '#4CAF50' : 'black', // Green when mission completed
                 textAlign: 'center',
                 textShadowColor: 'rgba(255,255,255,0.8)',
                 textShadowOffset: {width: 1, height: 1},
@@ -1024,7 +1290,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                 marginBottom: 5,
                 marginTop: isTablet ? 10 : 0,
               }}>
-                {levelAnimals.length} animals to discover
+                {(missionCompleted || isLevelCompleted(levelName || '')) ? t('missionComplete') : t('animalsToDiscover').replace('{count}', levelAnimals.length.toString())}
               </Text>
           </View>
           
@@ -1082,49 +1348,80 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
 
 
         
-        {/* Complete Mission Button - appears when all animals are revealed */}
-        {showCompleteButton && (
+        {/* Complete Mission Button - appears when all animals are revealed, hidden if mission is completed or already completed */}
+        {showCompleteButton && !missionCompleted && !isLevelCompleted(levelName || '') && (
           <View style={{
             alignItems: 'center',
             marginTop: 10,
             marginBottom: 0,
             zIndex: 10,
           }}>
-            <TouchableOpacity
-              onPress={areAllAnimalsRevealed ? handleCompleteMission : undefined}
-              disabled={!areAllAnimalsRevealed}
-              style={{
-                backgroundColor: areAllAnimalsRevealed ? '#4CAF50' : '#cccccc', // Green when enabled, gray when disabled
-                paddingVertical: isTablet ? 18 : 15,
-                paddingHorizontal: isTablet ? 30 : 25,
-                borderRadius: isTablet ? 35 : 30,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                elevation: areAllAnimalsRevealed ? 5 : 2,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: areAllAnimalsRevealed ? 3 : 1 },
-                shadowOpacity: areAllAnimalsRevealed ? 0.4 : 0.2,
-                shadowRadius: areAllAnimalsRevealed ? 5 : 2,
-                borderWidth: 3,
-                borderColor: '#fff',
-              }}
-            >
-              <Ionicons 
-                name={areAllAnimalsRevealed ? "checkmark-circle" : "lock-closed"} 
-                size={isTablet ? 28 : 24} 
-                color={areAllAnimalsRevealed ? "#fff" : "#999"} 
-                style={{ marginRight: 8 }} 
-              />
-              <Text style={{
-                color: areAllAnimalsRevealed ? '#fff' : '#999',
-                fontSize: isTablet ? 22 : 18,
-                fontWeight: 'bold',
-                fontFamily: Platform.OS === 'ios' ? 'Marker Felt' : 'cursive',
-              }}>
-                {areAllAnimalsRevealed ? 'Complete Mission!' : 'Complete Mission'}
-              </Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <View pointerEvents="none">
+                <Animated.Image
+                  source={require('../assets/images/hand.png')}
+                  style={{
+                    width: isTablet ? 60 : 40,
+                    height: isTablet ? 60 : 40,
+                    marginRight: isTablet ? 12 : 8,
+                    transform: [{ scale: leftHandScale }, { rotate: '-10deg' }],
+                  }}
+                  resizeMode="contain"
+                />
+              </View>
+              <View>
+                <TouchableOpacity
+                  onPress={areAllAnimalsRevealed ? handleCompleteMission : undefined}
+                  disabled={!areAllAnimalsRevealed}
+                  style={{
+                    backgroundColor: areAllAnimalsRevealed ? '#FF4500' : '#cccccc', // Bright orange-red when enabled for maximum attention
+                    paddingVertical: isTablet ? 22 : 18, // Larger padding for bigger button
+                    paddingHorizontal: isTablet ? 40 : 30, // Wider button
+                    borderRadius: isTablet ? 40 : 35, // Bigger border radius
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    elevation: areAllAnimalsRevealed ? 8 : 2, // Higher elevation for more dramatic shadow
+                    shadowColor: areAllAnimalsRevealed ? '#FF4500' : '#000', // Colored shadow when enabled
+                    shadowOffset: { width: 0, height: areAllAnimalsRevealed ? 5 : 1 },
+                    shadowOpacity: areAllAnimalsRevealed ? 0.6 : 0.2, // More dramatic shadow
+                    shadowRadius: areAllAnimalsRevealed ? 8 : 2,
+                    borderWidth: areAllAnimalsRevealed ? 4 : 3, // Thicker border when enabled
+                    borderColor: areAllAnimalsRevealed ? '#FFD700' : '#fff', // Gold border when enabled
+                  }}
+                >
+                  <Ionicons 
+                    name={areAllAnimalsRevealed ? "checkmark-circle" : "lock-closed"} 
+                    size={isTablet ? 28 : 24} 
+                    color={areAllAnimalsRevealed ? "#fff" : "#999"} 
+                    style={{ marginRight: 8 }} 
+                  />
+                  <Text style={{
+                    color: areAllAnimalsRevealed ? '#fff' : '#999',
+                    fontSize: isTablet ? 26 : 20, // Larger text
+                    fontWeight: 'bold',
+                    fontFamily: Platform.OS === 'ios' ? 'Marker Felt' : 'cursive',
+                    textShadowColor: areAllAnimalsRevealed ? 'rgba(0,0,0,0.5)' : 'transparent', // Text shadow when enabled
+                    textShadowOffset: {width: 2, height: 2},
+                    textShadowRadius: 3,
+                  }}>
+                    {areAllAnimalsRevealed ? '🎉 COMPLETE MISSION! 🎉' : 'Complete Mission'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View pointerEvents="none">
+                <Animated.Image
+                  source={require('../assets/images/hand.png')}
+                  style={{
+                    width: isTablet ? 60 : 40,
+                    height: isTablet ? 60 : 40,
+                    marginLeft: isTablet ? 12 : 8,
+                    transform: [{ scaleX: -1 }, { scale: rightHandScale }, { rotate: '10deg' }],
+                  }}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
           </View>
         )}
 
@@ -1206,14 +1503,39 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               { scale: missionStampScale }
             ],
           }}>
-            <Image
-              source={require('../assets/images/mission-completed.png')}
+            <View
               style={{
-                width: isTablet ? 300 : 120,
-                height: isTablet ? 300 : 120,
+                paddingVertical: isTablet ? 24 : 14,
+                paddingHorizontal: isTablet ? 36 : 20,
+                borderWidth: isTablet ? 8 : 5,
+                borderColor: '#D32F2F',
+                borderStyle: 'dashed',
+                borderRadius: 18,
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                transform: [{ rotate: '-12deg' }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 6,
+                elevation: 8,
               }}
-              resizeMode="contain"
-            />
+            >
+              <Text
+                style={{
+                  color: '#D32F2F',
+                  fontSize: isTablet ? 36 : 20,
+                  fontWeight: '900',
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  textAlign: 'center',
+                  textShadowColor: 'rgba(0,0,0,0.15)',
+                  textShadowOffset: { width: 1, height: 1 },
+                  textShadowRadius: 2,
+                }}
+              >
+                {t('missionComplete')}
+              </Text>
+            </View>
           </Animated.View>
         )}
       </Animated.View>
@@ -1285,7 +1607,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               marginBottom: 10,
               color: '#333',
             }}>
-              Animal Locked!
+              {t('animalLocked')}
             </Text>
             
             <Text style={{
@@ -1295,7 +1617,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               color: '#666',
               lineHeight: 22,
             }}>
-              Go back to the level to discover this animal first.
+              {t('unlockAnimalMessage')}
             </Text>
             
             <View style={{ flexDirection: 'row', gap: 15 }}>
@@ -1315,7 +1637,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                   textAlign: 'center',
                   fontSize: 16,
                 }}>
-                  Cancel
+                  {t('cancel')}
                 </Text>
               </TouchableOpacity>
               
@@ -1347,7 +1669,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                    textAlign: 'center',
                    fontSize: 16,
                  }}>
-                   Go Back
+                   {t('goBack')}
                  </Text>
                </TouchableOpacity>
                          </View>

@@ -505,7 +505,7 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                 {/* Title with bounce animation */}
                 <Animated.View style={{
                   transform: [{ scale: titleBounce }],
-                  marginBottom: isTablet ? 20 : isLandscape ? 8 : 8, // Smaller margin for phones
+                  marginBottom: isTablet ? 20 : 5 // Smaller margin for phones
                 }}>
                   <Text style={{ 
                     fontSize: isTablet ? 48 : isLandscape ? 28 : 28, // Smaller text for phones
@@ -520,17 +520,19 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                   </Text>
                 </Animated.View>
 
-                {/* Cat image under title */}
-                <Image 
-                  source={require('../assets/images/congrats.png')} 
-                  style={{ 
-                    width: isTablet ? 180 : isLandscape ? 90 : 80, // Even smaller image for phones
-                    height: isTablet ? 180 : isLandscape ? 90 : 80, 
-                    marginBottom: isTablet ? 30 : isLandscape ? 12 : 10, // Smaller margin for phones
-                    zIndex: 1,
-                    borderRadius: isTablet ? 25 : 15,
-                  }} 
-                />
+                {/* Cat image under title (hide on phones) */}
+                {isTablet && (
+                  <Image 
+                    source={require('../assets/images/congrats.png')} 
+                    style={{ 
+                      width: 180,
+                      height: 180,
+                      marginBottom: 30,
+                      zIndex: 1,
+                      borderRadius: 25,
+                    }} 
+                  />
+                )}
 
                 <Text style={{ 
                   fontSize: isTablet ? 28 : isLandscape ? 18 : 16, // Even smaller subtitle text for phones
@@ -553,6 +555,7 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
                   zIndex: 1,
                   gap: isTablet ? 50 : isLandscape ? 35 : 20, // Even smaller gap between buttons for phones
                   marginTop: isTablet ? 15 : isLandscape ? 10 : 0, // No top margin for phones
+                  marginBottom: isTablet ? 20 : 30, // No top margin for phones
                 }}>
                 <Animated.View style={{
                   transform: [{ scale: buttonBounce1 }],

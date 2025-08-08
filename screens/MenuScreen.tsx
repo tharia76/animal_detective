@@ -43,6 +43,7 @@ import LevelTiles from '../src/components/LevelTiles';
 import AnimatedFireflies from '../src/components/AnimatedFireflies';
 import { setGlobalVolume } from '../src/components/LevelScreenTemplate';
 import { useLevelCompletion } from '../src/hooks/useLevelCompletion';
+import { getAnimals } from '../src/data/animals';
 
 const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
 const BG_IMAGE = require('../src/assets/images/menu-screen.png');
@@ -282,6 +283,11 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       alignItems: 'center',
       zIndex: 100000,
       paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
     },
     modalContent: {
       backgroundColor: '#FFF8DC',
@@ -374,6 +380,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const { t, lang, setLang } = useLocalization();
   const dynStyles = useDynamicStyles();
   const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
+  
+  // Get animals data for level tile subtitles
+  const animals = getAnimals(lang);
 
   // Calculate responsive values
   const scaleFactor = getScaleFactor(width, height);
@@ -875,10 +884,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
         visible={showUnlockModal}
         animationType="fade"
         transparent
+        presentationStyle="overFullScreen"
+        statusBarTranslucent
+        hardwareAccelerated
         onRequestClose={() => setShowUnlockModal(false)}
-        supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+        supportedOrientations={['landscape', 'landscape-left', 'landscape-right', 'portrait', 'portrait-upside-down']}
       >
-        <View style={responsiveStyles.modalOverlay}>
+        <View style={responsiveStyles.modalOverlay} pointerEvents="auto">
           <View style={responsiveStyles.modalContent}>
             <Text style={responsiveStyles.modalTitle}>🔓 {t('unlockAllLevelsToPlay')} 🔓</Text>
                           <Text style={responsiveStyles.modalText}>
@@ -973,6 +985,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const currentWidth = width;
   const currentHeight = height;
   const currentIsLandscape = true; // Always force landscape layout
+  const isTablet = currentWidth >= 900;
   
   // Calculate responsive tile size with min/max constraints
   const currentNumColumns = getResponsiveColumns(currentWidth, currentIsLandscape);
@@ -999,13 +1012,21 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   }
   
   const itemSize = Math.max(minTileSize, Math.min(maxTileSize, calculatedSize));
+ 
+   const languages = [
+     { code: 'en', name: 'English' },
+     { code: 'ru', name: 'Русский' },
+     { code: 'tr', name: 'Türkçe' },
+   ];
 
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'ru', name: 'Русский' },
-    { code: 'tr', name: 'Türkçe' },
-  ];
-
+  // Explicit sizing for Settings modal and absolute centering
+  const settingsModalWidth = isTablet ? Math.round(currentWidth * 0.8) : Math.round(currentWidth * 0.94);
+  const settingsModalHeight = isTablet
+    ? Math.round(currentHeight * 0.5)
+    : Math.min(Math.round(currentHeight * 0.88), currentHeight - 32);
+  const settingsModalTop = Math.max(0, Math.round((currentHeight - settingsModalHeight) / 2));
+  const settingsModalLeft = Math.max(0, Math.round((currentWidth - settingsModalWidth) / 2));
+ 
   // Determine locked state for each level (visual only, not functional)
   const getIsLocked = (level: string) => {
     console.log('getIsLocked called for level:', level);
@@ -1153,6 +1174,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     getIsLocked={getIsLocked}
                     isLevelCompleted={isLevelCompleted}
                     onToggleCompletion={handleToggleCompletion}
+                    animals={animals}
                   />
                 </View>
               </ScrollView>
@@ -1275,6 +1297,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     getIsLocked={getIsLocked}
                     isLevelCompleted={isLevelCompleted}
                     onToggleCompletion={handleToggleCompletion}
+                    animals={animals}
                   />
                 </View>
               </ScrollView>
@@ -1288,7 +1311,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
             visible={showSettingsModal}
             transparent={true}
             animationType="fade"
-            supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+            presentationStyle="overFullScreen"
+            statusBarTranslucent
+            hardwareAccelerated
+            supportedOrientations={['landscape', 'landscape-left', 'landscape-right', 'portrait', 'portrait-upside-down']}
             onRequestClose={() => {
               try {
                 setShowSettingsModal(false);
@@ -1303,14 +1329,21 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
               justifyContent: 'center',
               alignItems: 'center',
               paddingHorizontal: 20,
-              paddingVertical: currentIsLandscape && currentWidth >= 900 ? 40 : 60, // Less vertical padding on tablet landscape
-            }}>
-                             <View style={{
+              paddingVertical: isTablet ? 32 : 12,
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+            }} pointerEvents="auto">
+              <View style={{
                  backgroundColor: 'white',
-                 borderRadius: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger border radius on tablet landscape
-                 width: currentIsLandscape && currentWidth >= 900 ? '80%' : '90%', // Slightly narrower on tablet landscape for better proportions
-                 height: currentHeight * (currentIsLandscape && currentWidth >= 900 ? 0.5 : 0.7), // Much shorter on tablet landscape
-                 maxHeight: currentHeight - 120, // Ensure it never exceeds screen bounds
+                 borderRadius: isTablet ? 30 : 18,
+                 width: settingsModalWidth,
+                 height: settingsModalHeight,
+                 position: 'absolute',
+                 top: settingsModalTop,
+                 left: settingsModalLeft,
                  elevation: 5,
                  shadowColor: '#000',
                  shadowOffset: { width: 0, height: 2 },
@@ -1322,13 +1355,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger padding on tablet landscape
-                  paddingBottom: currentIsLandscape && currentWidth >= 900 ? 15 : 10, // Bigger bottom padding on tablet landscape
+                  padding: isTablet ? 24 : 14,
+                  paddingBottom: isTablet ? 12 : 8,
                   borderBottomWidth: 1,
                   borderBottomColor: '#f0f0f0',
                 }}>
                   <Text style={{
-                    fontSize: currentIsLandscape && currentWidth >= 900 ? 28 : 20, // Bigger font on tablet landscape
+                    fontSize: isTablet ? 24 : 18,
                     fontWeight: 'bold',
                     color: '#612915',
                   }}>
@@ -1336,9 +1369,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowSettingsModal(false)}
-                    style={{ padding: currentIsLandscape && currentWidth >= 900 ? 8 : 5 }} // Bigger padding on tablet landscape
+                    style={{ padding: isTablet ? 8 : 6 }}
                   >
-                    <Text style={{ fontSize: currentIsLandscape && currentWidth >= 900 ? 32 : 24, color: '#666' }}>✕</Text>
+                    <Text style={{ fontSize: isTablet ? 28 : 22, color: '#666' }}>✕</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -1349,9 +1382,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     backgroundColor: 'transparent',
                   }}
                   contentContainerStyle={{ 
-                    padding: currentIsLandscape && currentWidth >= 900 ? 30 : 20, // Bigger padding on tablet landscape
-                    paddingTop: currentIsLandscape && currentWidth >= 900 ? 20 : 15, // Bigger top padding on tablet landscape
-                    paddingBottom: currentIsLandscape && currentWidth >= 900 ? 10 : 30, // Further reduced bottom padding on tablet landscape
+                    padding: isTablet ? 22 : 14,
+                    paddingTop: isTablet ? 16 : 12,
+                    paddingBottom: isTablet ? 10 : 16,
                     flexGrow: 1, // Ensure content can grow to trigger scrolling
                   }}
                   showsVerticalScrollIndicator={true}
@@ -1475,34 +1508,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   </TouchableOpacity>
                 </View>
 
-                  {/* About Section */}
-                  <View style={{ marginTop: 25, marginBottom: 20 }}>
-                    <Text style={{
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                      color: '#612915',
-                      marginBottom: 10,
-                    }}>
-                      {t('about')}
-                    </Text>
-                    <View style={{
-                      backgroundColor: 'rgba(115, 194, 185, 0.1)',
-                      padding: 15,
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: 'rgba(115, 194, 185, 0.3)',
-                    }}>
-                      <Text style={{
-                        fontSize: 14,
-                        color: '#444',
-                        lineHeight: 20,
-                        textAlign: 'left',
-                      }}>
-                        {t('aboutDescription')}
-                      </Text>
-                    </View>
-                  </View>
-
                   {/* Done Button */}
                   <TouchableOpacity
                     onPress={() => setShowSettingsModal(false)}
@@ -1525,7 +1530,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   </TouchableOpacity>
 
                   {/* Extra space at bottom for better scroll experience */}
-                  <View style={{ height: currentIsLandscape && currentWidth >= 900 ? 10 : 40 }} />
+                  <View style={{ height: isTablet ? 10 : 16 }} />
                 </ScrollView>
               </View>
             </View>

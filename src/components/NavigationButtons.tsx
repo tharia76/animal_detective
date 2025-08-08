@@ -17,6 +17,9 @@ interface NavigationButtonsProps {
   isTransitioning: boolean;
   currentAnimalIndex: number;
   bgColor: string;
+  totalAnimals?: number;
+  levelCompleted?: boolean;
+  buttonsDisabled?: boolean;
 }
 
 // Device detection functions
@@ -53,6 +56,9 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isTransitioning,
   currentAnimalIndex,
   bgColor,
+  totalAnimals = 0,
+  levelCompleted = false,
+  buttonsDisabled = false,
 }) => {
   // Animate the arrows with a subtle left-right wiggle
   const leftAnim = useSharedValue(0);
@@ -60,7 +66,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   
   // Add throttling to prevent rapid taps
   const lastTapTime = useRef(0);
-  const TAP_THROTTLE_MS = 300; // Prevent taps closer than 300ms
+  const TAP_THROTTLE_MS = 180; // Prevent taps closer than 180ms
 
   // Get orientation and dimensions
   const { width, height } = useWindowDimensions();
@@ -71,7 +77,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 
   useEffect(() => {
     // Reduce animation complexity on phones to prevent memory issues
-    const animationDuration = isTabletDevice ? 300 : 400;
+    const animationDuration = isTabletDevice ? 220 : 260;
     const animationScale = isTabletDevice ? 6 : 4; // Smaller movement on phones
     
     leftAnim.value = withRepeat(
@@ -180,11 +186,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       <TouchableOpacity
         onPress={handlePrevPress}
         activeOpacity={0.7}
-        disabled={isTransitioning || currentAnimalIndex === 0}
+        disabled={isTransitioning || currentAnimalIndex === 0 || buttonsDisabled}
         style={navButtonStyle}
       >
         <LinearGradient
-          colors={isTransitioning || currentAnimalIndex === 0 ? ['#ccc', '#999'] : leftGradientColors}
+          colors={isTransitioning || currentAnimalIndex === 0 || buttonsDisabled ? ['#ccc', '#999'] : leftGradientColors}
           style={styles.gradientBackground}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -193,7 +199,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             <Ionicons
               name="arrow-back"
               size={iconSize}
-              color={isTransitioning || currentAnimalIndex === 0 ? 'rgba(0,0,0,0.4)' : 'white'}
+              color={isTransitioning || currentAnimalIndex === 0 || buttonsDisabled ? 'rgba(0,0,0,0.4)' : 'white'}
             />
           </Animated.View>
         </LinearGradient>
@@ -203,11 +209,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       <TouchableOpacity
         onPress={handleNextPress}
         activeOpacity={0.7}
-        disabled={isTransitioning}
+        disabled={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled}
         style={navButtonStyle}
       >
         <LinearGradient
-          colors={isTransitioning ? ['#ccc', '#999'] : rightGradientColors}
+          colors={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled ? ['#ccc', '#999'] : rightGradientColors}
           style={styles.gradientBackground}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -216,7 +222,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             <Ionicons
               name="arrow-forward"
               size={iconSize}
-              color={isTransitioning ? 'rgba(0,0,0,0.4)' : 'white'}
+              color={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled ? 'rgba(0,0,0,0.4)' : 'white'}
             />
           </Animated.View>
         </LinearGradient>

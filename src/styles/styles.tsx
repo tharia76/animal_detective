@@ -236,7 +236,7 @@ export function useDynamicStyles() {
         shadowRadius: 3,
         position: 'absolute',
         top: getResponsiveSpacing(65, scaleFactor) + (isTabletDevice && isLandscapeMode ? screenH * 0.1 : 0), // Move down 10% on tablet landscape (same level as instruction bubble)
-        right: getResponsiveSpacing(45, scaleFactor), // Moved to right side
+        right: getResponsiveSpacing(75, scaleFactor) + (isTabletDevice ? 0 : getResponsiveSpacing(15, scaleFactor)), // Shift a bit left on phones
         zIndex: 10,
       },
       levelGrid: {

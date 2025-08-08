@@ -19,6 +19,7 @@ type LevelTilesProps = {
   getIsLocked?: (level: string) => boolean; // Make optional
   isLevelCompleted?: (level: string) => boolean; // Add completion check function
   onToggleCompletion?: (level: string, isCompleted: boolean) => void; // Add toggle function
+  animals?: any[]; // Add animals array to count animals per level
 };
 
 /**
@@ -40,7 +41,8 @@ function AnimatedTile({
   t, 
   handleLevelSelect,
   isCompleted,
-  onToggleCompletion
+  onToggleCompletion,
+  animals
 }: {
   level: string;
   itemSize: number;
@@ -56,6 +58,7 @@ function AnimatedTile({
   handleLevelSelect: (level: string, isLocked: boolean) => void;
   isCompleted?: boolean;
   onToggleCompletion?: (level: string, isCompleted: boolean) => void;
+  animals?: any[];
 }) {
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -151,6 +154,11 @@ function AnimatedTile({
       default: return '#c8c8c8';
     }
   };
+
+  // Calculate animal count for this level
+  const levelAnimalCount = animals ? animals.filter((animal: any) => 
+    animal.animalType.toLowerCase() === level.toLowerCase()
+  ).length : 0;
 
   // Debug logging
   console.log('AnimatedTile rendering:', { level, isLocked });
@@ -274,6 +282,22 @@ function AnimatedTile({
               >
                 {t(level)}
               </Text>
+              
+              {/* Subtitle showing mission status */}
+              {levelAnimalCount > 0 && (
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: isLandscape && itemSize >= 280 ? 16 : isLandscape ? 12 : 14,
+                    fontWeight: '500',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    marginTop: 4,
+                    textAlign: 'center',
+                  }}
+                >
+                  {isCompleted ? t('missionComplete') : t('animalsToDiscover').replace('{count}', levelAnimalCount.toString())}
+                </Text>
+              )}
             </View>
           </View>
         </TouchableOpacity>
@@ -297,6 +321,7 @@ export default function LevelTiles({
   getIsLocked,
   isLevelCompleted,
   onToggleCompletion,
+  animals,
 }: LevelTilesProps) {
   // In both portrait and landscape, use 3 columns per row
   const columns = 3;
@@ -377,6 +402,7 @@ export default function LevelTiles({
                 handleLevelSelect={handleLevelSelect}
                 isCompleted={isCompleted}
                 onToggleCompletion={onToggleCompletion}
+                animals={animals}
               />
             );
           })}

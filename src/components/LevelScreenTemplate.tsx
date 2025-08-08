@@ -41,11 +41,12 @@ import DiscoverScreen from './DiscoverScreen';
   import { useLocalization } from '../hooks/useLocalization';
   // --- Add smooth rotation hook ---
   import { useSmoothRotation } from '../hooks/useSmoothRotation';
+  import { useLevelCompletion } from '../hooks/useLevelCompletion';
   import ReanimatedView from 'react-native-reanimated';
   import { getResponsiveSpacing, getScaleFactor, isTablet } from '../utils/responsive';
 
   // Water Progress Bar Component
-  const WaterProgressBar = ({ progress, totalAnimals, level }: { progress: number; totalAnimals: number; level: string }) => {
+  const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
     const waterHeight = useRef(new Animated.Value(0)).current;
     const { width: screenW, height: screenH } = useWindowDimensions();
     const isLandscape = screenW > screenH;
@@ -55,7 +56,7 @@ import DiscoverScreen from './DiscoverScreen';
       const targetHeight = (progress / totalAnimals) * 100;
       Animated.timing(waterHeight, {
         toValue: targetHeight,
-        duration: 800,
+        duration: 400,
         useNativeDriver: false,
       }).start();
     }, [progress, totalAnimals, waterHeight]);
@@ -206,7 +207,7 @@ import DiscoverScreen from './DiscoverScreen';
             textShadowOffset: { width: 1, height: 1 },
             textShadowRadius: 2,
           }}>
-            {progress}/{totalAnimals}
+            {isCompleted ? 'Complete!' : `${progress}/${totalAnimals}`}
           </Text>
         </View>
         
@@ -240,18 +241,18 @@ import DiscoverScreen from './DiscoverScreen';
         Animated.parallel([
           Animated.timing(bubbleAnim, {
             toValue: 0,
-            duration: 2000 + Math.random() * 1000,
+            duration: 1200 + Math.random() * 600,
             useNativeDriver: false,
           }),
           Animated.sequence([
             Animated.timing(opacityAnim, {
               toValue: 0.8,
-              duration: 500,
+              duration: 300,
               useNativeDriver: false,
             }),
             Animated.timing(opacityAnim, {
               toValue: 0,
-              duration: 500,
+              duration: 300,
               useNativeDriver: false,
             }),
           ]),
@@ -339,8 +340,8 @@ import DiscoverScreen from './DiscoverScreen';
     bgMusic?: string | number; // allow prop for override
   };
 
-  const FADE_DURATION = 150;
-  const CONTENT_FADE_DURATION = 300;
+  const FADE_DURATION = 100;
+  const CONTENT_FADE_DURATION = 180;
 
   export default function LevelScreenTemplate({
     levelName,
@@ -352,6 +353,7 @@ import DiscoverScreen from './DiscoverScreen';
   }: Props) {
     // --- Use localization hook ---
     const { t } = useLocalization();
+    const { isLevelCompleted } = useLevelCompletion();
 
     // 1️⃣ Hoist your hook: only call it once, at the top level
     const dynamicStyles = useDynamicStyles();
@@ -377,8 +379,12 @@ import DiscoverScreen from './DiscoverScreen';
     const confettiAnimRefs = useRef<Animated.Value[]>([]);
     const [showCongratsModal, setShowCongratsModal] = useState(false);
     const [showDiscoverScreen, setShowDiscoverScreen] = useState(false);
-    const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set([0]));
+    const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set());
     const [levelCompleted, setLevelCompleted] = useState(false);
+    const [wasAlreadyCompleted, setWasAlreadyCompleted] = useState(false); // Track if level was already completed when entering
+    const [showCompletionCelebration, setShowCompletionCelebration] = useState(false);
+    const [screenLocked, setScreenLocked] = useState(false);
+    const [buttonsDisabledManually, setButtonsDisabledManually] = useState(false);
     
 
     
@@ -386,6 +392,118 @@ import DiscoverScreen from './DiscoverScreen';
     const glowAnim = useRef(new Animated.Value(0)).current;
     const nameScaleAnim = useRef(new Animated.Value(0)).current;
     const glowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+    
+    // Completion celebration animation values
+    const celebrationScaleAnim = useRef(new Animated.Value(0)).current;
+    const celebrationOpacityAnim = useRef(new Animated.Value(0)).current;
+    const badgePulseAnim = useRef(new Animated.Value(1)).current;
+    const badgeGiantAnim = useRef(new Animated.Value(1)).current;
+    const badgeSlideX = useRef(new Animated.Value(0)).current;
+    const badgeSlideY = useRef(new Animated.Value(0)).current;
+    const celebrationPulseAnim = useRef(new Animated.Value(1)).current;
+    const arrowPulseAnim = useRef(new Animated.Value(1)).current;
+    // Badge measurement for centering animation
+    const badgeRef = useRef<View | null>(null);
+    const [badgeWindowLayout, setBadgeWindowLayout] = useState<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    } | null>(null);
+
+    // Function to start the celebration
+    const startCelebration = useCallback(() => {
+      console.log('🎉 STARTING CELEBRATION NOW');
+      setShowCompletionCelebration(true);
+      setScreenLocked(false); // Unlock screen when celebration appears
+      setButtonsDisabledManually(false); // Re-enable buttons when celebration appears
+      
+      // Play celebration sound
+      if (!isMuted) {
+        try {
+          const celebrationPlayer = createAudioPlayer(require('../assets/sounds/other/yay.mp3'));
+          celebrationPlayer.play();
+          
+          // Clean up sound when it finishes
+          celebrationPlayer.addListener('playbackStatusUpdate', (status: any) => {
+            if (status.didJustFinish) {
+              celebrationPlayer.remove();
+            }
+          });
+        } catch (error) {
+          console.warn('Error playing celebration sound:', error);
+        }
+      }
+      
+      // Start badge pulsing animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(badgePulseAnim, {
+            toValue: 1.3,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(badgePulseAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ]),
+        { iterations: 3 }
+      ).start();
+      
+      // Show celebration overlay after a brief delay
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(celebrationOpacityAnim, {
+            toValue: 1,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.spring(celebrationScaleAnim, {
+            toValue: 1,
+            tension: 80,
+            friction: 5,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        
+        // Start pulsing animation for 3 times only, then stop
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(celebrationPulseAnim, {
+              toValue: 1.1,
+              duration: 450,
+              useNativeDriver: true,
+            }),
+            Animated.timing(celebrationPulseAnim, {
+              toValue: 1,
+              duration: 450,
+              useNativeDriver: true,
+            }),
+          ]),
+          { iterations: 3 } // Only 3 pulses
+        ).start(() => {
+          // After celebration pulses finish, start arrow pulsing
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(arrowPulseAnim, {
+                toValue: 1.2,
+                duration: 600,
+                useNativeDriver: true,
+              }),
+              Animated.timing(arrowPulseAnim, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+              }),
+            ]),
+            { iterations: -1 } // Infinite loop
+          ).start();
+        });
+        // No automatic transition - wait for user to click button
+      }, 400); // Wait briefly before showing celebration overlay
+    }, [isMuted, badgePulseAnim, celebrationOpacityAnim, celebrationScaleAnim, celebrationPulseAnim, setShowCompletionCelebration]);
 
 
 
@@ -397,12 +515,12 @@ import DiscoverScreen from './DiscoverScreen';
           Animated.sequence([
             Animated.timing(glowAnim, {
               toValue: 1,
-              duration: 800,
+              duration: 500,
               useNativeDriver: true,
             }),
             Animated.timing(glowAnim, {
               toValue: 0.1,
-              duration: 800,
+              duration: 500,
               useNativeDriver: true,
             }),
           ]),
@@ -584,7 +702,7 @@ import DiscoverScreen from './DiscoverScreen';
       const isFox = currentAnimal?.name?.toLowerCase().includes('fox') || 
                     currentAnimal?.name?.toLowerCase().includes('лисица') || 
                     currentAnimal?.name?.toLowerCase().includes('tilki');
-      const transitionDuration = isFox ? 0 : 350; // No delay for fox, 350ms for others
+      const transitionDuration = isFox ? 0 : 180; // No delay for fox, 180ms for others
       
       if (currentAnimal?.isMoving) {
         // Fade in moving bg, fade out image bg
@@ -626,7 +744,7 @@ import DiscoverScreen from './DiscoverScreen';
       Animated.loop(
         Animated.timing(roadAnimation, {
           toValue: 1,
-          duration: 2000,
+          duration: 1200,
           useNativeDriver: true,
         })
       ).start();
@@ -645,12 +763,12 @@ import DiscoverScreen from './DiscoverScreen';
         Animated.sequence([
           Animated.timing(arrowAnim, {
             toValue: 1,
-            duration: 500,
+            duration: 300,
             useNativeDriver: true,
           }),
           Animated.timing(arrowAnim, {
             toValue: 0,
-            duration: 500,
+            duration: 300,
             useNativeDriver: true,
           }),
         ])
@@ -676,6 +794,21 @@ import DiscoverScreen from './DiscoverScreen';
       };
     }, []);
 
+    // Initialize level completion state for already completed levels
+    useEffect(() => {
+      if (levelName && isLevelCompleted(levelName)) {
+        console.log(`🎯 Level ${levelName} is already completed - initializing completed state`);
+        setLevelCompleted(true);
+        setWasAlreadyCompleted(true); // Mark as already completed to prevent celebration
+        // Set all animals as visited for completed levels
+        const allAnimalIndices = new Set<number>();
+        for (let i = 0; i < animals.length; i++) {
+          allAnimalIndices.add(i);
+        }
+        setVisitedAnimals(allAnimalIndices);
+      }
+    }, [levelName, isLevelCompleted, animals.length]);
+
     const stopSound = useCallback(async (unload = false) => {
       if (soundRef.current) {
         try {
@@ -695,7 +828,15 @@ import DiscoverScreen from './DiscoverScreen';
     // remove the `isSoundPlayingRef` check so it always goes through
     // 3) in your playSounds() playbackStatusUpdate, after it finally finishes, restore background music volume
     const playSounds = useCallback(async () => {
-      if (isMuted || !currentAnimal?.sound) return;
+      if (isMuted || !currentAnimal?.sound) {
+        // If muted or no sound, check for celebration immediately
+        console.log('🔇 No sound - checking for celebration:', { levelCompleted, showCompletionCelebration, isMuted, hasSound: !!currentAnimal?.sound });
+        if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
+          console.log('🔇 No sound playing, starting celebration immediately');
+          startCelebration();
+        }
+        return;
+      }
 
       // Additional safety checks to prevent crashes during navigation
       if (isTransitioning) {
@@ -744,6 +885,12 @@ import DiscoverScreen from './DiscoverScreen';
 
                   // Restore background music volume instead of resuming playback
                   restoreBackgroundMusic();
+                  
+                  // Check if we should start celebration after label sound finishes
+                  console.log('🔊 Label sound finished, checking celebration:', { levelCompleted, showCompletionCelebration });
+                  if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
+                    startCelebration();
+                  }
                 }
               });
             } else {
@@ -751,6 +898,12 @@ import DiscoverScreen from './DiscoverScreen';
 
               // Restore background music volume instead of resuming playback
               restoreBackgroundMusic();
+              
+              // Check if we should start celebration after animal sound finishes (no label)
+              console.log('🔊 Animal sound finished (no label), checking celebration:', { levelCompleted, showCompletionCelebration });
+              if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
+                startCelebration();
+              }
             }
           }
         });
@@ -766,7 +919,7 @@ import DiscoverScreen from './DiscoverScreen';
         // Restore background music volume in case of error
         restoreBackgroundMusic();
       }
-    }, [currentAnimal, isMuted, stopSound, isTransitioning, duckBackgroundMusic, restoreBackgroundMusic]);
+    }, [currentAnimal, isMuted, stopSound, isTransitioning, duckBackgroundMusic, restoreBackgroundMusic, levelCompleted, showCompletionCelebration, startCelebration]);
 
     // --- REWRITE: handleAnimalPress as the single tap handler for animal card ---
     // 2) tweak your handleAnimalPress to use volume ducking instead of pause/resume
@@ -778,16 +931,94 @@ import DiscoverScreen from './DiscoverScreen';
         return;
       }
       
+      // Block animal clicks if buttons are manually disabled
+      if (buttonsDisabledManually) {
+        console.log('🚫 Animal click blocked: buttons manually disabled');
+        return;
+      }
+      
       // Glow animation will be handled by useEffect based on showName state
       
       if (!showName) {
         console.log('Setting showName to true and playing sounds');
         setShowName(true);
         
-        // Add current animal to visited animals when first clicked
+                // Add current animal to visited animals when first clicked
         setVisitedAnimals(prev => {
           const newVisited = new Set(prev);
           newVisited.add(currentAnimalIndex);
+          console.log(`🔥 CLICKED animal ${currentAnimalIndex}, visited now:`, Array.from(newVisited).sort());
+          
+          // Check if this click completes the level and disable buttons immediately
+          if (newVisited.size === animals.length && !levelCompleted) {
+            console.log('🔘 DISABLING BUTTONS IMMEDIATELY - last animal clicked');
+            setButtonsDisabledManually(true);
+          }
+          
+          // Just mark as ready for celebration, don't start it yet
+          if (newVisited.size === animals.length && !levelCompleted) {
+            console.log('✅ ALL ANIMALS CLICKED - READY FOR CELEBRATION AFTER SOUND', {
+              newVisitedSize: newVisited.size,
+              animalsLength: animals.length,
+              currentIndex: currentAnimalIndex
+            });
+            setLevelCompleted(true);
+            setScreenLocked(true); // Lock screen until modal appears
+            
+            // Stop background music completely when level is completed
+            if (bgMusicRef.current) {
+              try {
+                bgMusicRef.current.pause();
+                bgMusicRef.current.remove();
+              } catch (e) {}
+              bgMusicRef.current = null;
+              setCurrentBgMusicKey(undefined);
+              console.log('🎵 Background music stopped for level completion');
+            }
+            
+            // Move the badge to the center of the screen and bounce 3 times
+            let targetDX = 0;
+            let targetDY = 0;
+            if (badgeWindowLayout) {
+              const badgeCenterX = badgeWindowLayout.x + badgeWindowLayout.width / 2;
+              const badgeCenterY = badgeWindowLayout.y + badgeWindowLayout.height / 2;
+              targetDX = (screenW / 2) - badgeCenterX;
+              targetDY = (screenH / 2) - badgeCenterY;
+            } else {
+              // Fallback approximate move to center if measurement not ready
+              targetDX = -(screenW * 0.35);
+              targetDY = screenH * 0.35;
+            }
+
+            // Pulse in place 3 times (no movement)
+            // Stop any in-flight translation animations and reset to zero
+            try {
+              // @ts-ignore - stopAnimation exists on Animated.Value
+              badgeSlideX.stopAnimation && badgeSlideX.stopAnimation();
+              // @ts-ignore
+              badgeSlideY.stopAnimation && badgeSlideY.stopAnimation();
+            } catch {}
+            // Snap to the computed center offsets instantly
+            badgeSlideX.setValue(targetDX);
+            badgeSlideY.setValue(targetDY);
+            Animated.loop(
+              Animated.sequence([
+                Animated.spring(badgePulseAnim, { toValue: 1.25, useNativeDriver: true, tension: 140, friction: 6 }),
+                Animated.spring(badgePulseAnim, { toValue: 1.0, useNativeDriver: true, tension: 140, friction: 6 }),
+              ]),
+              { iterations: 3 }
+            ).start();
+            console.log('📍 Badge snapped to center and pulsing 3 times for full completion');
+            
+            // Fallback: If celebration doesn't start within 3 seconds, start it anyway
+            setTimeout(() => {
+              if (!showCompletionCelebration && !wasAlreadyCompleted) {
+                console.log('🚨 FALLBACK: Starting celebration after timeout');
+                startCelebration();
+              }
+            }, 3000);
+          }
+          
           return newVisited;
         });
 
@@ -795,12 +1026,12 @@ import DiscoverScreen from './DiscoverScreen';
         Animated.sequence([
           Animated.timing(nameScaleAnim, {
             toValue: 1,
-            duration: 200,
+            duration: 120,
             useNativeDriver: true,
           }),
           Animated.spring(nameScaleAnim, {
             toValue: 1.1,
-            tension: 100,
+            tension: 140,
             friction: 5,
             useNativeDriver: true,
           }),
@@ -829,7 +1060,7 @@ import DiscoverScreen from './DiscoverScreen';
         }
         // If sound is playing, volume will be restored when sound finishes
       }
-    }, [showName, playSounds, stopSound, restoreBackgroundMusic, isTransitioning, currentAnimal, glowAnim, nameScaleAnim]);
+    }, [showName, playSounds, stopSound, restoreBackgroundMusic, isTransitioning, currentAnimal, glowAnim, nameScaleAnim, buttonsDisabledManually, badgeWindowLayout]);
 
     // Remove toggleShowName entirely
 
@@ -864,19 +1095,41 @@ import DiscoverScreen from './DiscoverScreen';
         if (direction === 'next') {
           newIndex = currentAnimalIndex + 1;
           
-          if (newIndex >= animals.length && !levelCompleted) {
-            setLevelCompleted(true);
-            // Show DiscoverScreen first for all levels, then CongratsModal
-            setShowDiscoverScreen(true);
-            setIsTransitioning(false);
-            return;
-          }
-          
-          // Safety check: don't allow navigation beyond array bounds
           if (newIndex >= animals.length) {
-            console.warn('Attempted to navigate beyond available animals');
-            setIsTransitioning(false);
-            return;
+            // Check if all animals have been visited (clicked)
+            const allAnimalsVisited = visitedAnimals.size === animals.length;
+            
+            console.log(`🚀 REACHED END: visited=${visitedAnimals.size}/${animals.length}, allVisited=${allAnimalsVisited}`, Array.from(visitedAnimals).sort());
+            
+            if (allAnimalsVisited && !levelCompleted) {
+              console.log('✅ ALL ANIMALS CLICKED - SHOWING DISCOVER SCREEN');
+              setLevelCompleted(true);
+              // Show DiscoverScreen first for all levels, then CongratsModal
+              setShowDiscoverScreen(true);
+              setIsTransitioning(false);
+              return;
+            } else if (allAnimalsVisited && levelCompleted) {
+              // Level already completed, don't allow going past last animal
+              console.log('🚫 Level completed, staying at last animal');
+              setIsTransitioning(false);
+              return;
+            } else if (!allAnimalsVisited) {
+              // Find the first unvisited animal starting from index 0
+              let foundUnvisited = false;
+              for (let i = 0; i < animals.length; i++) {
+                if (!visitedAnimals.has(i)) {
+                  newIndex = i;
+                  foundUnvisited = true;
+                  console.log(`🔄 GOING TO UNVISITED animal at index ${i}`);
+                  break;
+                }
+              }
+              // If somehow no unvisited animals found, go to first animal
+              if (!foundUnvisited) {
+                newIndex = 0;
+                console.log('⚠️ NO UNVISITED FOUND, going to 0');
+              }
+            }
           }
         } else {
           newIndex = (currentAnimalIndex - 1 + animals.length) % animals.length;
@@ -889,11 +1142,7 @@ import DiscoverScreen from './DiscoverScreen';
           return;
         }
 
-        if (direction === 'prev') {
-            const newVisitedAnimals = new Set(visitedAnimals);
-            newVisitedAnimals.add(newIndex);
-            setVisitedAnimals(newVisitedAnimals);
-        }
+
 
         setCurrentAnimalIndex(newIndex);
         setShowName(false);
@@ -921,6 +1170,14 @@ import DiscoverScreen from './DiscoverScreen';
     ]);
 
     const handleNext = useCallback(() => {
+      console.log(`🎯 NEXT BUTTON pressed, currentIndex: ${currentAnimalIndex}, levelCompleted: ${levelCompleted}, isTransitioning: ${isTransitioning}`);
+      
+      // Block navigation if buttons are manually disabled
+      if (buttonsDisabledManually) {
+        console.log('🚫 Navigation blocked: buttons manually disabled');
+        return;
+      }
+      
       // Play button sound
       if (!isMuted) {
         try {
@@ -939,9 +1196,15 @@ import DiscoverScreen from './DiscoverScreen';
       }
       
       handleNavigation('next');
-    }, [handleNavigation, isMuted]);
+    }, [handleNavigation, isMuted, buttonsDisabledManually]);
 
     const handlePrev = useCallback(() => {
+      // Block navigation if buttons are manually disabled
+      if (buttonsDisabledManually) {
+        console.log('🚫 Navigation blocked: buttons manually disabled');
+        return;
+      }
+      
       // Play button sound
       if (!isMuted) {
         try {
@@ -960,7 +1223,7 @@ import DiscoverScreen from './DiscoverScreen';
       }
       
       handleNavigation('prev');
-    }, [handleNavigation, isMuted]);
+    }, [handleNavigation, isMuted, buttonsDisabledManually]);
 
     const goToHome = useCallback(() => {
       stopSound(false);
@@ -1001,13 +1264,26 @@ import DiscoverScreen from './DiscoverScreen';
     const startOver = useCallback(() => {
       setShowCongratsModal(false);
       setShowDiscoverScreen(false);
+      setShowCompletionCelebration(false);
+      setScreenLocked(false);
+      setButtonsDisabledManually(false);
       stopSound(true);
       setIsTransitioning(true);
       animalFadeAnim.setValue(0);
       setCurrentAnimalIndex(0);
       setShowName(false);
       setLevelCompleted(false);
-      setVisitedAnimals(new Set([0]));
+      setVisitedAnimals(new Set());
+      
+      // Reset celebration animations
+      celebrationScaleAnim.setValue(0);
+      celebrationOpacityAnim.setValue(0);
+      badgePulseAnim.setValue(1);
+      badgeGiantAnim.setValue(1);
+      badgeSlideX.setValue(0);
+      badgeSlideY.setValue(0);
+      celebrationPulseAnim.setValue(1);
+      arrowPulseAnim.setValue(1);
 
       // Use a small delay to ensure state updates are processed
       setTimeout(() => {
@@ -1036,8 +1312,34 @@ import DiscoverScreen from './DiscoverScreen';
       if (typeof animalIndex === 'number' && animalIndex >= 0 && animalIndex < animals.length) {
         setCurrentAnimalIndex(animalIndex);
       }
+      
+      // Resume background music when returning to level after 7/7 completion
+      if (levelCompleted && !isMuted) {
+        const key = levelName.trim().toLowerCase();
+        let source: string | number | undefined = undefined;
+        if (typeof bgMusic !== 'undefined') {
+          source = bgMusic;
+        } else if (BG_MUSIC_MAP.hasOwnProperty(key)) {
+          source = BG_MUSIC_MAP[key];
+        }
+        
+        if (source) {
+          try {
+            const p = createAudioPlayer(source);
+            p.loop = true;
+            p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
+            p.play();
+            bgMusicRef.current = p;
+            setCurrentBgMusicKey(String(source));
+            console.log('🎵 Background music resumed after returning from discover screen');
+          } catch (e) {
+            console.warn('Error resuming background music:', e);
+          }
+        }
+      }
+      
       // Don't show congrats modal - just return to level
-    }, [animals.length]);
+    }, [animals.length, levelCompleted, isMuted, levelName, bgMusic]);
 
     const renderAnimal = () => {
       if (!currentAnimal) return null;
@@ -1082,7 +1384,7 @@ import DiscoverScreen from './DiscoverScreen';
       if (showCongratsModal) {
         confettiAnimRefs.current.forEach((anim, index) => {
           anim.setValue(0);
-          const randomDuration = 2000 + Math.random() * 3000;
+          const randomDuration = 1200 + Math.random() * 1800;
           const randomDelay = Math.random() * 500;
 
           Animated.timing(anim, {
@@ -1575,6 +1877,19 @@ import DiscoverScreen from './DiscoverScreen';
           </View>
         </View>
 
+        {/* Screen lock overlay when reaching 7/7 for first time */}
+        {screenLocked && (
+          <View style={[
+            StyleSheet.absoluteFillObject,
+            {
+              backgroundColor: 'transparent',
+              zIndex: 999,
+            }
+          ]} 
+          pointerEvents="auto" // Block all touches
+          />
+        )}
+
         {/* Foreground content */}
         <View style={StyleSheet.absoluteFillObject}>
           <Animated.View style={{ flex: 1, opacity: contentFade }}>
@@ -1606,86 +1921,261 @@ import DiscoverScreen from './DiscoverScreen';
                 
                 <Ionicons name="document-text" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
                 
-                                                  {/* Cute Progress Badge */}
-                 <Animated.View style={{
-                   position: 'absolute',
-                   bottom: -18,
-                   right: -18,
-                   backgroundColor: '#40E0D0', // Turquoise for all levels
-                   borderRadius: 30,
-                   minWidth: 60,
-                   height: 48,
-                   justifyContent: 'center',
-                   alignItems: 'center',
-                   borderWidth: 4,
-                   borderColor: 'black',
-                   shadowColor: '#000',
-                   shadowOffset: { width: 0, height: 4 },
-                   shadowOpacity: 0.3,
-                   shadowRadius: 8,
-                   elevation: 8,
-                   transform: [{
-                     scale: nameScaleAnim.interpolate({
-                       inputRange: [0, 1, 1.1],
-                       outputRange: [1, 1.1, 1.2],
-                     }),
-                   }],
-                 }}>
-                  {/* Cute sparkle effect when progress increases */}
-                  {visitedAnimals.size > 1 && (
-                    <Animated.View style={{
-                      position: 'absolute',
-                      top: -4,
-                      right: -4,
-                      opacity: glowAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.5, 1],
-                      }),
-                    }}>
-                      <Text style={{ fontSize: 12, color: '#FFD700' }}>✨</Text>
-                    </Animated.View>
-                  )}
-                  
-                  {/* Heart emoji for completed levels */}
+                                                  {/* Super Cute Progress Badge */}
+                 <Animated.View
+                   ref={badgeRef}
+                   onLayout={() => {
+                     // Measure in window to compute translation to screen center when needed
+                     try {
+                       badgeRef.current?.measureInWindow?.((x, y, width, height) => {
+                         setBadgeWindowLayout({ x, y, width, height });
+                       });
+                     } catch (e) {
+                       // ignore measure errors
+                     }
+                   }}
+                   style={{
+                     position: 'absolute',
+                     bottom: isTablet() && isLandscape ? -70 : -50,
+                     right: Math.min(screenW, screenH) < 768 ? -10 : -10,
+                     backgroundColor: visitedAnimals.size === animals.length ? '#FF69B4' : '#40E0D0', // Pink when complete, turquoise otherwise
+                     borderRadius: Math.min(screenW, screenH) < 768 ? 32 : 48,
+                      minWidth: Math.min(screenW, screenH) < 768 ? 75 : 110,
+                      height: Math.min(screenW, screenH) < 768 ? 54 : 78,
+                     justifyContent: 'center',
+                     alignItems: 'center',
+                     borderWidth: Math.min(screenW, screenH) < 768 ? 4 : 6,
+                     borderColor: '#FFF',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.45,
+                    shadowRadius: 14,
+                    elevation: 18,
+                    opacity: visitedAnimals.size === animals.length ? 0 : 1,
+                    transform: [{
+                      // When completed, use pulse scale (also used during celebration overlay)
+                      scale: (visitedAnimals.size === animals.length || showCompletionCelebration)
+                        ? badgePulseAnim
+                        : Animated.multiply(
+                            badgeGiantAnim,
+                            nameScaleAnim.interpolate({
+                              inputRange: [0, 1, 1.1],
+                              outputRange: [1, 1.1, 1.2],
+                            })
+                          ),
+                    }],
+                  }}>
+                  {/* Rainbow gradient background when completed */}
                   {visitedAnimals.size === animals.length && (
-                    <Animated.View style={{
+                    <View style={{
                       position: 'absolute',
-                      top: -6,
-                      left: -6,
-                      transform: [{
-                        scale: glowAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.8, 1.2],
-                        }),
-                      }],
-                    }}>
-                      <Text style={{ fontSize: 14 }}>💖</Text>
-                    </Animated.View>
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      borderRadius: 44,
+                      backgroundColor: '#FF69B4',
+                      opacity: 0.85,
+                    }} />
                   )}
                   
-                                     <Text style={{
-                     color: 'black',
-                     fontSize: 18,
-                     fontWeight: '800',
-        
-                     fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto',
+                  {/* Cute sparkle effects */}
+                  {visitedAnimals.size > 0 && (
+                    <>
+                      <Animated.View style={{
+                        position: 'absolute',
+                        top: -10,
+                        right: -8,
+                        opacity: glowAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.6, 1],
+                        }),
+                        transform: [{
+                          rotate: glowAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '360deg'],
+                          }),
+                        }],
+                      }}>
+                        <Text style={{ fontSize: 18, color: '#FFD700' }}>✨</Text>
+                      </Animated.View>
+                      
+                      <Animated.View style={{
+                        position: 'absolute',
+                        top: -8,
+                        left: -10,
+                        opacity: glowAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.4, 0.9],
+                        }),
+                        transform: [{
+                          rotate: glowAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['180deg', '-180deg'],
+                          }),
+                        }],
+                      }}>
+                        <Text style={{ fontSize: 16, color: '#FFF' }}>⭐</Text>
+                      </Animated.View>
+                    </>
+                  )}
+                  
+                  {/* Multiple celebration emojis for completed levels */}
+                  {visitedAnimals.size === animals.length && (
+                    <>
+                      <Animated.View style={{
+                        position: 'absolute',
+                        top: -14,
+                        left: -14,
+                        transform: [{
+                          scale: glowAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.85, 1.35],
+                          }),
+                        }, {
+                          rotate: glowAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '20deg'],
+                          }),
+                        }],
+                      }}>
+                        <Text style={{ fontSize: 22 }}>🎉</Text>
+                      </Animated.View>
+                      
+                      <Animated.View style={{
+                        position: 'absolute',
+                        bottom: -10,
+                        right: -10,
+                        transform: [{
+                          scale: glowAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.95, 1.25],
+                          }),
+                        }],
+                      }}>
+                        <Text style={{ fontSize: 20 }}>🏆</Text>
+                      </Animated.View>
+                      
+                      <Animated.View style={{
+                        position: 'absolute',
+                        bottom: -8,
+                        left: -8,
+                        transform: [{
+                          scale: glowAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.75, 1.15],
+                          }),
+                        }],
+                      }}>
+                        <Text style={{ fontSize: 18 }}>💖</Text>
+                      </Animated.View>
+                    </>
+                  )}
+                  
+                  {/* Main counter text with enhanced styling */}
+                  <Text style={{
+                     color: visitedAnimals.size === animals.length ? '#FFF' : '#000',
+                     fontSize: Math.min(screenW, screenH) < 768 ? 18 : 26,
+                     fontWeight: '900',
+                     fontFamily: Platform.OS === 'ios' ? 'Arial Rounded MT Bold' : 'Roboto',
+                     textShadowColor: visitedAnimals.size === animals.length ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)',
+                     textShadowOffset: { width: 1, height: 1 },
+                     textShadowRadius: 2,
+                     letterSpacing: 0.8,
                    }}>
                     {visitedAnimals.size}/{animals.length}
                   </Text>
                   
-                  {/* Cute gradient overlay */}
+                  {/* Enhanced gradient overlays */}
                   <View style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    borderTopLeftRadius: 13,
-                    borderTopRightRadius: 13,
+                    height: '60%',
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                    borderTopLeftRadius: 44,
+                    borderTopRightRadius: 44,
                   }} />
+                  
+                  {/* Extra shimmer effect */}
+                  <Animated.View style={{
+                    position: 'absolute',
+                    top: 6,
+                    left: 6,
+                    right: 6,
+                    height: 18,
+                    backgroundColor: 'rgba(255,255,255,0.4)',
+                    borderRadius: 18,
+                    opacity: glowAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.3, 0.7],
+                    }),
+                  }} />
+                  
+                  {/* Outer glow ring when active */}
+                  {showName && (
+                    <Animated.View style={{
+                      position: 'absolute',
+                      top: -4,
+                      left: -4,
+                      right: -4,
+                      bottom: -4,
+                      borderRadius: 52,
+                      borderWidth: 3,
+                      borderColor: '#FFD700',
+                      opacity: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 0.8],
+                      }),
+                    }} />
+                  )}
                 </Animated.View>
               </TouchableOpacity>
+            )}
+            {visitedAnimals.size === animals.length && !showDiscoverScreen && (
+              <Animated.View style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                paddingTop: !isTablet() ? Math.min(screenH * 0.25, 100) : Math.min(screenH * 0.85, 100) + 50,
+                zIndex: 900,
+                pointerEvents: 'none',
+              }}>
+                <Animated.View style={{
+                  backgroundColor: 'orange',
+                  borderRadius: Math.min(screenW, screenH) < 768 ? 36 : 48,
+                  minWidth: Math.min(screenW, screenH) < 768 ? 75 : 110,
+                  height: Math.min(screenW, screenH) < 768 ? 54 : 78,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  borderWidth: Math.min(screenW, screenH) < 768 ? 4 : 6,
+                  borderColor: '#FFF',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.45,
+                  shadowRadius: 14,
+                  elevation: 18,
+                  transform: [{ scale: badgePulseAnim }],
+                }}>
+                  <Text style={{
+                    color: '#FFF',
+                    fontSize: Math.min(screenW, screenH) < 768 ? 18 : 26,
+                    fontWeight: '900',
+                    fontFamily: Platform.OS === 'ios' ? 'Arial Rounded MT Bold' : 'Roboto',
+                    textShadowColor: 'rgba(0,0,0,0.5)',
+                    textShadowOffset: { width: 1, height: 1 },
+                    textShadowRadius: 2,
+                    letterSpacing: 0.8,
+                  }}>
+                    {visitedAnimals.size}/{animals.length}
+                  </Text>
+                </Animated.View>
+              </Animated.View>
             )}
                           {hasAnimals && !showDiscoverScreen && (
                 <TouchableOpacity style={[
@@ -1768,6 +2258,36 @@ import DiscoverScreen from './DiscoverScreen';
                         }}>
                           {renderAnimal()}
                         </Animated.View>
+                        {currentAnimalIndex === 0 && !visitedAnimals.has(0) && !showDiscoverScreen && (
+                          <Animated.View
+                            pointerEvents="none"
+                            style={{
+                              position: 'absolute',
+                              zIndex: 50,
+                              top: Math.min(screenH * 0.12, 120),
+                              left: Math.min(screenW * 0.18, 140),
+                              transform: [
+                                {
+                                  translateY: arrowAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0, -12],
+                                  }),
+                                },
+                                { rotate: '20deg' },
+                              ],
+                              opacity: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }),
+                            }}
+                          >
+                            <Image
+                              source={require('../assets/images/hand.png')}
+                              style={{
+                                width: Math.min(screenW * 0.12, 100),
+                                height: Math.min(screenW * 0.12, 100),
+                                resizeMode: 'contain',
+                              }}
+                            />
+                          </Animated.View>
+                        )}
                       </TouchableOpacity>
                     ) : (
                       /* Non-touchable animal display for phones */
@@ -1800,6 +2320,36 @@ import DiscoverScreen from './DiscoverScreen';
                         pointerEvents="none"
                       >
                         {renderAnimal()}
+                        {currentAnimalIndex === 0 && !visitedAnimals.has(0) && !showDiscoverScreen && (
+                          <Animated.View
+                            pointerEvents="none"
+                            style={{
+                              position: 'absolute',
+                              zIndex: 50,
+                              top: Math.min(screenH * 0.12, 120),
+                              left: Math.max(0, Math.min(screenW * 0.18, 140) - screenW * 0.3),
+                              transform: [
+                                {
+                                  translateY: arrowAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0, -12],
+                                  }),
+                                },
+                                { rotate: '20deg' },
+                              ],
+                              opacity: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }),
+                            }}
+                          >
+                            <Image
+                              source={require('../assets/images/hand.png')}
+                              style={{
+                                width: Math.min(screenW * 0.12, 100),
+                                height: Math.min(screenW * 0.12, 100),
+                                resizeMode: 'contain',
+                              }}
+                            />
+                          </Animated.View>
+                        )}
                       </Animated.View>
                     )}
                     
@@ -1904,13 +2454,16 @@ import DiscoverScreen from './DiscoverScreen';
                     )}
                   </View>
 
-                  {!showDiscoverScreen && (
+                  {!showDiscoverScreen && !screenLocked && (
                     <NavigationButtons
                       handlePrev={handlePrev}
                       handleNext={handleNext}
                       isTransitioning={isTransitioning}
                       currentAnimalIndex={currentAnimalIndex}
                       bgColor={isMuted ? 'rgba(0,0,0,0.5)' : 'rgba(255, 255, 255, 0.7)'}
+                      totalAnimals={animals.length}
+                      levelCompleted={levelCompleted}
+                      buttonsDisabled={buttonsDisabledManually}
                     />
                   )}
                   
@@ -1918,7 +2471,7 @@ import DiscoverScreen from './DiscoverScreen';
                     <InstructionBubble
                       text={t('tapAnimalToHearSound')}
                       arrowAnim={arrowAnim}
-                      image={require('../assets/images/tap.png')}
+                      image={require('../assets/images/hand.png')}
                     />
                   )}
                 </View>
@@ -1944,6 +2497,172 @@ import DiscoverScreen from './DiscoverScreen';
                     currentAnimalIndex={currentAnimalIndex}
                   />
                 </View>
+              )}
+
+              {/* Completion Celebration Overlay with pulsing animation */}
+              {showCompletionCelebration && (
+                <Animated.View style={[
+                  StyleSheet.absoluteFillObject,
+                  {
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000,
+                    opacity: celebrationOpacityAnim,
+                  }
+                ]}>
+                                     <Animated.View
+                     style={{
+                       alignItems: 'center',
+                       maxWidth: Math.min(screenW, screenH) < 768 ? screenW * 0.98 : screenW * 0.95,
+                       // Add pulsing animation to scale
+                       transform: [{ scale: celebrationScaleAnim }],
+                     }}
+                   >
+                     {/* Background image with pulsing animation */}
+                     <Animated.Image
+                       source={require('../assets/images/discovered_number.png')}
+                       style={{
+                         width: Math.min(screenW, screenH) < 768 ? screenW * 0.95 : screenW * 0.85,
+                         height: Math.min(screenW, screenH) < 768 ? screenH * 0.9 : screenH * 0.6,
+                         resizeMode: 'contain',
+                         // Add pulsing animation to image as well
+                         transform: [{ scale: celebrationPulseAnim }],
+                       }}
+                     />
+
+                                         {/* Overlay content on top of the image */}
+                     <View style={{
+                       position: 'absolute',
+                       top: 0,
+                       left: 0,
+                       right: 0,
+                       bottom: 0,
+                       justifyContent: 'center',
+                       alignItems: 'center',
+                       paddingHorizontal: Math.min(screenW, screenH) < 768 ? 10 : 20,
+                     }}>
+                       {/* Congrats image at the top */}
+                       <Animated.Image
+                         source={require('../assets/images/congrats.png')}
+                         style={{
+                           width: screenW * 0.3,
+                           height: screenH * 0.15,
+                           resizeMode: 'contain',
+                           marginTop: 60,
+                           marginBottom: -20,
+                           transform: [{ scale: celebrationPulseAnim }],
+                         }}
+                       />
+                       
+                       {/* "Discovered" text */}
+                       <Animated.Text style={{
+                         fontSize: 36,
+                         fontWeight: 'bold',
+                         textAlign: 'center',
+                         color: 'rgba(0,0,0,0.8)',
+                         marginBottom: 1,
+                         transform: [{ scale: celebrationPulseAnim }],
+                       }}>
+                         Discovered
+                       </Animated.Text>
+                       
+                       {/* x/x count in its own pill */}
+                       <Animated.View style={{
+                         backgroundColor: 'rgba(255,255,255,0.9)',
+                         borderRadius: 25,
+                         paddingHorizontal: 20,
+                         paddingVertical: 8,
+                         marginBottom: 10,
+                         borderWidth: 2,
+                         borderColor: '#333',
+                         transform: [{ scale: celebrationPulseAnim }],
+                       }}>
+                         <Text style={{
+                           fontSize: 42,
+                           fontWeight: '800',
+                           textAlign: 'center',
+                           color: 'green',
+                           fontFamily: Platform.OS === 'ios' ? 'Arial Rounded MT Bold' : 'Roboto',
+                           textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                           textShadowOffset: { width: 2, height: 2 },
+                           textShadowRadius: 3,
+                           letterSpacing: 1,
+                         }}>
+                           {animals.length}/{animals.length}
+                         </Text>
+                       </Animated.View>
+
+                       <Animated.Text style={{
+                         fontSize: 30,
+                         fontWeight: 'bold',
+                         textAlign: 'center',
+                         color: levelName.toLowerCase() === 'ocean' ? 'rgba(15, 82, 83, 0.8)' :
+                                levelName.toLowerCase() === 'birds' ? 'rgba(255, 192, 203, 0.8)' :
+                                levelName.toLowerCase() === 'farm' ? 'rgba(255, 165, 0, 0.8)' :
+                                levelName.toLowerCase() === 'arctic' ? 'rgba(51, 94, 108, 0.8)' :
+                                levelName.toLowerCase() === 'desert' ? 'rgba(255, 215, 0, 0.8)' :
+                                levelName.toLowerCase() === 'forest' ? 'rgba(0, 128, 0, 0.8)' :
+                                levelName.toLowerCase() === 'jungle' ? 'rgba(0, 128, 0, 0.8)' :
+                                levelName.toLowerCase() === 'insects' ? 'rgba(255, 192, 203, 0.8)' :
+                                levelName.toLowerCase() === 'savannah' ? 'rgba(255, 165, 0, 0.8)' :
+                                'rgba(0, 128, 0, 0.8)',
+                         marginBottom: 20,
+                         transform: [{ scale: celebrationPulseAnim }],
+                       }}>
+                         {levelName} Animals!
+                       </Animated.Text>
+                       
+                       {/* Continue arrow button with pulsing animation */}
+                       <Animated.View style={{
+                         transform: [{ scale: arrowPulseAnim }],
+                       }}>
+                         <TouchableOpacity 
+                           style={{
+                             backgroundColor: 'rgba(0, 150, 0, 0.9)',
+                             borderRadius: 45,
+                             width: 90,
+                             height: 90,
+                             justifyContent: 'center',
+                             alignItems: 'center',
+                             borderWidth: 4,
+                             borderColor: '#fff',
+                             shadowColor: '#000',
+                             shadowOffset: { width: 0, height: 6 },
+                             shadowOpacity: 0.4,
+                             shadowRadius: 8,
+                             elevation: 12,
+                             marginTop: -20,
+                           }}
+                           onPress={() => {
+                             // Play button sound
+                             if (!isMuted) {
+                               try {
+                                 const buttonPlayer = createAudioPlayer(require('../assets/sounds/other/button.mp3'));
+                                 buttonPlayer.play();
+                                 
+                                 // Clean up sound when it finishes
+                                 buttonPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                                   if (status.didJustFinish) {
+                                     buttonPlayer.remove();
+                                   }
+                                 });
+                               } catch (error) {
+                                 console.warn('Error playing button sound:', error);
+                               }
+                             }
+                             
+                             setShowCompletionCelebration(false);
+                             setShowDiscoverScreen(true);
+                           }}
+                           activeOpacity={0.8}
+                         >
+                           <Ionicons name="arrow-forward" size={45} color="#fff" />
+                         </TouchableOpacity>
+                       </Animated.View>
+                    </View>
+                  </Animated.View>
+                </Animated.View>
               )}
 
               <CongratsModal
