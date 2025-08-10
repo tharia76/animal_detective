@@ -20,6 +20,7 @@ interface NavigationButtonsProps {
   totalAnimals?: number;
   levelCompleted?: boolean;
   buttonsDisabled?: boolean;
+  nextButtonDisabled?: boolean; // New prop to control next button specifically
 }
 
 // Device detection functions
@@ -59,6 +60,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   totalAnimals = 0,
   levelCompleted = false,
   buttonsDisabled = false,
+  nextButtonDisabled = false,
 }) => {
   // Animate the arrows with a subtle left-right wiggle
   const leftAnim = useSharedValue(0);
@@ -209,11 +211,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       <TouchableOpacity
         onPress={handleNextPress}
         activeOpacity={0.7}
-        disabled={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled}
+        disabled={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled || nextButtonDisabled}
         style={navButtonStyle}
       >
         <LinearGradient
-          colors={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled ? ['#ccc', '#999'] : rightGradientColors}
+          colors={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled || nextButtonDisabled ? ['#ccc', '#999'] : rightGradientColors}
           style={styles.gradientBackground}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -222,7 +224,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             <Ionicons
               name="arrow-forward"
               size={iconSize}
-              color={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled ? 'rgba(0,0,0,0.4)' : 'white'}
+              color={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled || nextButtonDisabled ? 'rgba(0,0,0,0.4)' : 'white'}
             />
           </Animated.View>
         </LinearGradient>

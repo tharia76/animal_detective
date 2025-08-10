@@ -374,7 +374,7 @@ interface MenuScreenProps {
 }
 
 export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuScreenProps) {
-  const { isLevelCompleted, unmarkLevelCompleted } = useLevelCompletion();
+  const { isLevelCompleted, unmarkLevelCompleted, clearAllCompletions } = useLevelCompletion();
   // IMPORTANT: All hooks must be at the top level and in consistent order
   const navigation = useNavigation();
   const { t, lang, setLang } = useLocalization();
@@ -786,6 +786,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
         if (!isCompleted) {
           // Unmark as completed
           await unmarkLevelCompleted(level);
+          
+          // Clear animal progress for this level
+          const progressKey = `animalProgress_${level.toLowerCase()}`;
+          await AsyncStorage.removeItem(progressKey);
+          console.log(`🗑️ Cleared animal progress for ${level} when unchecking completion`);
         }
         // Note: We don't mark as completed here, that only happens when the congrats modal shows
       } catch (error) {
@@ -794,6 +799,55 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     },
     [unmarkLevelCompleted]
   );
+
+  // Handle resetting all levels
+  const handleResetAllLevels = useCallback(async () => {
+    try {
+      // Show confirmation dialog
+      Alert.alert(
+        t('resetAllLevels') || 'Reset All Levels',
+        t('resetAllLevelsConfirmation') || 'Are you sure you want to reset all level progress? This action cannot be undone.',
+        [
+          {
+            text: t('cancel') || 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: t('reset') || 'Reset',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                // Reset completion status for all levels using the dedicated function
+                await clearAllCompletions();
+                
+                // Clear animal progress for each level
+                for (const level of LEVELS) {
+                  const progressKey = `animalProgress_${level.toLowerCase()}`;
+                  await AsyncStorage.removeItem(progressKey);
+                }
+                
+                console.log('🗑️ Reset all levels and cleared all animal progress');
+                
+                // Show success message
+                Alert.alert(
+                  t('resetComplete') || 'Reset Complete',
+                  t('allLevelsReset') || 'All levels have been reset successfully!'
+                );
+              } catch (error) {
+                console.warn('Error resetting all levels:', error);
+                Alert.alert(
+                  t('error') || 'Error',
+                  t('resetError') || 'There was an error resetting the levels. Please try again.'
+                );
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.warn('Error showing reset confirmation:', error);
+    }
+  }, [t, clearAllCompletions]);
 
   // also stop when you select a level
   const handleSelect = useCallback(
@@ -1507,6 +1561,49 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     />
                   </TouchableOpacity>
                 </View>
+
+                  {/* Reset All Levels Section */}
+                  <View style={{ marginTop: 25, marginBottom: 15 }}>
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: '#612915',
+                      marginBottom: 10,
+                    }}>
+                      {t('gameProgress') || 'Game Progress'}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={handleResetAllLevels}
+                      style={{
+                        backgroundColor: '#FF6B6B',
+                        borderRadius: 15,
+                        padding: 12,
+                        alignItems: 'center',
+                        minHeight: 44,
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        shadowColor: '#FF6B6B',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                    >
+                      <Ionicons 
+                        name="refresh-circle" 
+                        size={20} 
+                        color="white" 
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text style={{
+                        color: 'white',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                      }}>
+                        {t('resetAllLevels') || 'Reset All Levels'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
 
                   {/* Done Button */}
                   <TouchableOpacity
