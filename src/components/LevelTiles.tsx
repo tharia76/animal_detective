@@ -20,6 +20,7 @@ type LevelTilesProps = {
   isLevelCompleted?: (level: string) => boolean; // Add completion check function
   onToggleCompletion?: (level: string, isCompleted: boolean) => void; // Add toggle function
   animals?: any[]; // Add animals array to count animals per level
+  visitedCounts?: Record<string, number>; // Per-level visited counts
 };
 
 /**
@@ -42,7 +43,8 @@ function AnimatedTile({
   handleLevelSelect,
   isCompleted,
   onToggleCompletion,
-  animals
+  animals,
+  visitedCount
 }: {
   level: string;
   itemSize: number;
@@ -59,6 +61,7 @@ function AnimatedTile({
   isCompleted?: boolean;
   onToggleCompletion?: (level: string, isCompleted: boolean) => void;
   animals?: any[];
+  visitedCount?: number;
 }) {
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -160,6 +163,9 @@ function AnimatedTile({
     animal.animalType.toLowerCase() === level.toLowerCase()
   ).length : 0;
 
+  const visited = Math.max(0, Math.min(visitedCount ?? 0, levelAnimalCount));
+  const progress = levelAnimalCount > 0 ? visited / levelAnimalCount : 0;
+
   // Debug logging
   console.log('AnimatedTile rendering:', { level, isLocked });
 
@@ -174,8 +180,8 @@ function AnimatedTile({
            width: itemSize,
            height: itemSize,
            marginRight: colIdx < columns - 1 ? margin : 0,
-           borderRadius: 25,
-           borderWidth: 3,
+          borderRadius: 25,
+          borderWidth: 6,
            borderColor: animatedBorderColor,
            shadowColor: getShadowColor(level, isLocked),
            shadowOffset: { width: 0, height: 0 },
@@ -301,6 +307,57 @@ function AnimatedTile({
             </View>
           </View>
         </TouchableOpacity>
+
+        {/* Bottom progress bar */}
+        {levelAnimalCount > 0 && (
+          <View
+            style={{
+              position: 'absolute',
+              left: 8,
+              right: 8,
+              bottom: 6,
+              height:36,
+              borderRadius: 13,
+              backgroundColor: 'rgba(255,255,255,0.4)'
+            }}
+          >
+            <Animated.View
+              style={{
+                width: `${progress * 100}%`,
+                height: '100%',
+                borderRadius: 13,
+                backgroundColor: 'rgba(226, 70, 43, 0.98)'
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  color: '#fff',
+                  fontSize: 11,
+                  fontWeight: '700',
+                  textShadowColor: 'rgba(0,0,0,0.4)',
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: 2,
+                }}
+              >
+                {visited}/{levelAnimalCount}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Progress text moved inside the progress bar */}
       </Animated.View>
     </Animated.View>
   );
@@ -322,6 +379,7 @@ export default function LevelTiles({
   isLevelCompleted,
   onToggleCompletion,
   animals,
+  visitedCounts,
 }: LevelTilesProps) {
   // In both portrait and landscape, use 3 columns per row
   const columns = 3;
@@ -385,6 +443,7 @@ export default function LevelTiles({
           {row.map((level, colIdx) => {
             const isLocked = safeGetIsLocked(level);
             const isCompleted = isLevelCompleted ? isLevelCompleted(level) : false;
+            const visitedCount = visitedCounts ? visitedCounts[level] ?? 0 : 0;
             return (
               <AnimatedTile
                 key={level}
@@ -403,6 +462,7 @@ export default function LevelTiles({
                 isCompleted={isCompleted}
                 onToggleCompletion={onToggleCompletion}
                 animals={animals}
+                visitedCount={visitedCount}
               />
             );
           })}

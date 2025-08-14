@@ -11,7 +11,7 @@ import {
   Platform,
   TouchableOpacity,
   Text,
-    Modal,
+  Modal,
   Pressable,
   PanResponder,
   Animated,
@@ -363,6 +363,90 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       textAlign: 'center',
       fontWeight: '700',
     },
+      controlPanelContainer: {
+        width: '80%',
+        maxWidth: Math.min(1200, width * 0.95),
+        height: getResponsiveSpacing(isLandscape ? 240 : 280, scaleFactor),
+        alignSelf: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderRadius: getResponsiveSpacing(20, scaleFactor),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 4,
+        marginTop: getResponsiveSpacing(10, scaleFactor),
+        marginBottom: getResponsiveSpacing(8, scaleFactor),
+        overflow: 'hidden',
+      },
+      controlPanelBg: {
+        width: '100%',
+        height: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
+        paddingTop: getResponsiveSpacing(isLandscape ? -200 : 20, scaleFactor),
+        paddingBottom: getResponsiveSpacing(isLandscape ? 20 : 20, scaleFactor),
+        gap: getResponsiveSpacing(12, scaleFactor),
+      },
+      controlPanelLogo: {
+        width: Math.min(getResponsiveSpacing(isLandscape ? 240 : 260, scaleFactor), width * 0.6),
+        height: Math.min(getResponsiveSpacing(isLandscape ? 120 : 140, scaleFactor), height * 0.2),
+        maxHeight: '100%',
+        resizeMode: 'cover',
+      },
+      controlPanelImage: {
+        borderRadius: getResponsiveSpacing(20, scaleFactor),
+      },
+      controlPanelContent: {
+        ...StyleSheet.absoluteFillObject,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
+      },
+      controlPanelItem: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      controlPanelRightGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: getResponsiveSpacing(10, scaleFactor),
+      },
+      controlPanelIconButton: {
+        backgroundColor: '#ffffff',
+        borderRadius: getResponsiveSpacing(18, scaleFactor),
+        padding: getResponsiveSpacing(10, scaleFactor),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 3,
+      },
+      settingsButtonContainer: {
+        width: getResponsiveSpacing(isLandscape ? 56 : 50, scaleFactor),
+        height: getResponsiveSpacing(isLandscape ? 56 : 50, scaleFactor),
+        borderRadius: getResponsiveSpacing(isLandscape ? 28 : 25, scaleFactor),
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+      },
+      settingsButtonImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+      },
   });
 };
 
@@ -398,6 +482,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const [bgReady, setBgReady] = useState(false);
   const [bgUri, setBgUri] = useState<string | null>(null);
   const [imgsReady, setImgsReady] = useState(false);
+  const [visitedCounts, setVisitedCounts] = useState<Record<string, number>>({});
 
   // Payment state
   const [iapInitialized, setIapInitialized] = useState(false);
@@ -655,6 +740,30 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     })();
   }, []);
 
+  // Load visited counts for each level from AsyncStorage
+  useEffect(() => {
+    (async () => {
+      try {
+        const entries = await Promise.all(
+          LEVELS.map(async (lvl) => {
+            try {
+              const key = `animalProgress_${lvl}`;
+              const saved = await AsyncStorage.getItem(key);
+              const arr = saved ? JSON.parse(saved) : [];
+              const count = Array.isArray(arr) ? arr.length : 0;
+              return [lvl, count] as const;
+            } catch {
+              return [lvl, 0] as const;
+            }
+          })
+        );
+        const map: Record<string, number> = {};
+        for (const [lvl, count] of entries) map[lvl] = count;
+        setVisitedCounts(map);
+      } catch (e) {}
+    })();
+  }, []);
+
   // play on focus, stop on blur
   useEffect(() => {
     const onFocus = () => {
@@ -670,10 +779,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
 
     const fSub = navigation.addListener('focus', onFocus);
     const bSub = navigation.addListener('blur', onBlur);
+    // Stop immediately before navigating away to avoid overlap during transitions
+    const brSub = navigation.addListener('beforeRemove', () => {
+      stopAndUnload();
+    });
     return () => {
       try {
         fSub && fSub();
         bSub && bSub();
+        brSub && brSub();
       } catch (e) {}
       stopAndUnload();
     };
@@ -791,6 +905,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
           const progressKey = `animalProgress_${level.toLowerCase()}`;
           await AsyncStorage.removeItem(progressKey);
           console.log(`🗑️ Cleared animal progress for ${level} when unchecking completion`);
+
+          // Immediately reset progress count in UI for this level
+          setVisitedCounts((prev) => ({
+            ...prev,
+            [level]: 0,
+          }));
         }
         // Note: We don't mark as completed here, that only happens when the congrats modal shows
       } catch (error) {
@@ -827,6 +947,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                 }
                 
                 console.log('🗑️ Reset all levels and cleared all animal progress');
+                
+                // Reset UI visited counts for all levels immediately
+                setVisitedCounts(() => {
+                  const reset: Record<string, number> = {};
+                  for (const lvl of LEVELS) reset[lvl] = 0;
+                  return reset;
+                });
                 
                 // Show success message
                 Alert.alert(
@@ -878,7 +1005,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
       <View style={responsiveStyles.unlockButtonsContainer}>
         <ReAnimated.View style={animatedGradientStyle}>
           <TouchableOpacity
-            style={[responsiveStyles.unlockButton, { backgroundColor: 'transparent' }]}
+            style={[ { backgroundColor: 'transparent' }]}
             onPress={handleUnlock}
             disabled={purchaseInProgress}
           >
@@ -1113,6 +1240,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
           width: '100%',
           height: '100%'
         }}
+        imageStyle={{ opacity: 0.65 }}
         resizeMode="cover"
       >
         <View style={{ flex: 1, backgroundColor: 'transparent' }}>
@@ -1122,61 +1250,34 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
           {currentIsLandscape ? (
             // LANDSCAPE LAYOUT
             <>
-              {/* Settings Button - Top Right */}
-              <TouchableOpacity
-                style={{
-                  position: 'absolute',
-                  top: getResponsiveSpacing(20, scaleFactor),
-                  right: getResponsiveSpacing(20, scaleFactor),
-                  zIndex: 10002,
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 25,
-                  padding: getResponsiveSpacing(16, scaleFactor),
-                  elevation: 3,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 3,
-                }}
-                onPress={() => {
-                  try {
-                    setShowSettingsModal(true);
-                  } catch (error) {
-                    console.warn('Error opening settings modal:', error);
-                  }
-                }}
-              >
-                <Ionicons name="settings" size={32} color="#612915" />
-              </TouchableOpacity>
-
-             
+              {/* Settings button only (top-right) */}
+              <View style={{ position: 'absolute', top: getResponsiveSpacing(12, scaleFactor), right: getResponsiveSpacing(12, scaleFactor), zIndex: 1000 }}>
+                <TouchableOpacity
+                  style={responsiveStyles.settingsButtonContainer}
+                  onPress={() => setShowSettingsModal(true)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={require('../src/assets/images/settings.png')}
+                    style={responsiveStyles.settingsButtonImage}
+                  />
+                </TouchableOpacity>
+              </View>
 
               <ScrollView
                 style={{ flex: 1, backgroundColor: 'transparent' }}
                 contentContainerStyle={{
                   flexGrow: 1,
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'flex-start',
                   paddingHorizontal: getResponsiveSpacing(32, scaleFactor),
-                  paddingTop: getResponsiveSpacing(8, scaleFactor),
+                  paddingTop: getResponsiveSpacing(24, scaleFactor),
                   paddingBottom: getResponsiveSpacing(16, scaleFactor),
                   minHeight: currentHeight * 0.6,
                   backgroundColor: 'transparent',
                 }}
                 showsVerticalScrollIndicator={false}
               >
-                {/* Header with logo and unlock button */}
-                <View style={[responsiveStyles.landscapeHeaderContainer, { 
-                  marginTop: getResponsiveSpacing(100, scaleFactor) + (isLandscape && width >= 900 ? height * 0.3 : 0) // Move down 30% on tablet landscape
-                }]}>
-                  <Image
-                    source={require('../src/assets/images/game-logo.png')}
-                    style={responsiveStyles.landscapeLogo}
-                    resizeMode="contain"
-                  />
-                  {renderUnlockButtons()}
-                </View>
-
                 <View
                   style={{
                     width: '100%',
@@ -1189,16 +1290,20 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   <View
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      borderRadius: 25,
-                      paddingHorizontal: getResponsiveSpacing(24, scaleFactor),
-                      paddingVertical: getResponsiveSpacing(12, scaleFactor),
-                      marginBottom: getResponsiveSpacing(20, scaleFactor),
-                      marginHorizontal: getResponsiveSpacing(20, scaleFactor),
+                      borderRadius: 20,
+                      paddingHorizontal: getResponsiveSpacing(8, scaleFactor),
+                      paddingVertical: getResponsiveSpacing(10, scaleFactor),
+                      marginBottom: getResponsiveSpacing(16, scaleFactor),
+                      marginHorizontal: getResponsiveSpacing(40, scaleFactor),
                       shadowColor: '#000',
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: 0.1,
                       shadowRadius: 4,
-                      elevation: 3,
+                      elevation: 2,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: getResponsiveSpacing(6, scaleFactor),
                     }}
                   >
                     <Text
@@ -1212,6 +1317,34 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     >
                       {t('pickWorldMessage')}
                     </Text>
+                    {Platform.OS === 'ios' && !unlocked && (
+                      <TouchableOpacity
+                        onPress={handleUnlock}
+                        disabled={purchaseInProgress}
+                        activeOpacity={0.9}
+                        style={{ marginLeft: getResponsiveSpacing(10, scaleFactor), borderRadius: getResponsiveSpacing(18, scaleFactor), overflow: 'hidden' }}
+                      >
+                        <LinearGradient
+                          colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={{
+                            paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
+                            paddingVertical: getResponsiveSpacing(6, scaleFactor),
+                            borderRadius: getResponsiveSpacing(18, scaleFactor),
+                            elevation: 2,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.2,
+                            shadowRadius: 2,
+                          }}
+                        >
+                          <Text style={{ color: 'white', fontWeight: '800', fontSize: getResponsiveFontSize(12, scaleFactor), textShadowColor: 'rgba(0,0,0,0.25)', textShadowRadius: 2 }}>
+                            {t('unlockAllLevels')}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    )}
                   </View>
                   <LevelTiles
                     key={`landscape-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
@@ -1229,6 +1362,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     isLevelCompleted={isLevelCompleted}
                     onToggleCompletion={handleToggleCompletion}
                     animals={animals}
+                    visitedCounts={visitedCounts}
                   />
                 </View>
               </ScrollView>
@@ -1236,76 +1370,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
           ) : (
             // PORTRAIT LAYOUT
             <>
-              {/* Settings Button - Top Right */}
-              <TouchableOpacity
-                style={{
-                  position: 'absolute',
-                  top: getResponsiveSpacing(20, scaleFactor),
-                  right: getResponsiveSpacing(20, scaleFactor),
-                  zIndex: 10002,
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 25,
-                  padding: getResponsiveSpacing(16, scaleFactor),
-                  elevation: 3,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 3,
-                }}
-                onPress={() => {
-                  try {
-                    setShowSettingsModal(true);
-                  } catch (error) {
-                    console.warn('Error opening settings modal:', error);
-                  }
-                }}
-              >
-                <Ionicons name="settings" size={32} color="#612915" />
-              </TouchableOpacity>
-
-              {/* Notebook Button - Under Settings */}
-              <TouchableOpacity
-                style={{
-                  position: 'absolute',
-                  top: getResponsiveSpacing(90, scaleFactor),
-                  right: getResponsiveSpacing(20, scaleFactor),
-                  zIndex: 10002,
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 25,
-                  padding: getResponsiveSpacing(16, scaleFactor),
-                  elevation: 3,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 3,
-                }}
-                onPress={() => {
-                  try {
-                    console.log('Notebook button pressed');
-                    // Add notebook functionality here
-                  } catch (error) {
-                    console.warn('Error opening notebook:', error);
-                  }
-                }}
-              >
-                <Ionicons name="book" size={32} color="#612915" />
-              </TouchableOpacity>
+              {/* Notebook button moved into control panel in portrait */}
 
               <ScrollView
                 style={responsiveStyles.scrollView}
-                contentContainerStyle={responsiveStyles.scrollContent}
+                contentContainerStyle={[responsiveStyles.scrollContent, { paddingTop: getResponsiveSpacing(24, scaleFactor) }]}
                 showsVerticalScrollIndicator={false}
               >
-                {/* Header with logo and unlock button */}
-                <View style={responsiveStyles.portraitHeaderContainer}>
-                  <Image
-                    source={require('../src/assets/images/game-logo.png')}
-                    style={responsiveStyles.portraitLogo}
-                    resizeMode="contain"
-                  />
-                  {renderUnlockButtons()}
-                </View>
-
                 {/* Tiles container */}
                 <View style={responsiveStyles.tilesContainer}>
                   {/* Info text above tiles */}
@@ -1322,6 +1393,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                       shadowOpacity: 0.1,
                       shadowRadius: 4,
                       elevation: 3,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: getResponsiveSpacing(10, scaleFactor),
                     }}
                   >
                     <Text
@@ -1335,6 +1410,34 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     >
                       {t('pickWorldMessage')}
                     </Text>
+                    {Platform.OS === 'ios' && !unlocked && (
+                      <TouchableOpacity
+                        onPress={handleUnlock}
+                        disabled={purchaseInProgress}
+                        activeOpacity={0.9}
+                        style={{ marginLeft: getResponsiveSpacing(12, scaleFactor), borderRadius: getResponsiveSpacing(20, scaleFactor), overflow: 'hidden' }}
+                      >
+                        <LinearGradient
+                          colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={{
+                            paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
+                            paddingVertical: getResponsiveSpacing(8, scaleFactor),
+                            borderRadius: getResponsiveSpacing(20, scaleFactor),
+                            elevation: 2,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.2,
+                            shadowRadius: 2,
+                          }}
+                        >
+                          <Text style={{ color: 'white', fontWeight: '800', fontSize: getResponsiveFontSize(14, scaleFactor), textShadowColor: 'rgba(0,0,0,0.25)', textShadowRadius: 2 }}>
+                            {t('unlockAllLevels')}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    )}
                   </View>
                   <LevelTiles
                     key={`portrait-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
@@ -1352,6 +1455,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     isLevelCompleted={isLevelCompleted}
                     onToggleCompletion={handleToggleCompletion}
                     animals={animals}
+                    visitedCounts={visitedCounts}
                   />
                 </View>
               </ScrollView>
@@ -1500,15 +1604,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   {/* Volume Segments Bar */}
                   <View style={{
                     flex: 1,
-                    height: 24,
+                    height: 36,
                     justifyContent: 'center',
                     marginHorizontal: 10,
-                    paddingVertical: 5,
+                    paddingVertical: 8,
                   }}>
                     <View style={{
-                      height: 24,
+                      height: 36,
                       backgroundColor: '#E0E0E0',
-                      borderRadius: 12,
+                      borderRadius: 18,
                       flexDirection: 'row',
                       overflow: 'hidden',
                       elevation: 2,
@@ -1536,10 +1640,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                             activeOpacity={0.7}
                           >
                             <View style={{
-                              width: 2,
-                              height: '70%',
+                              width: 4,
+                              height: '80%',
                               backgroundColor: isActive ? 'white' : '#999',
-                              borderRadius: 1,
+                              borderRadius: 2,
                             }} />
                           </TouchableOpacity>
                         );

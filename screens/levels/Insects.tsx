@@ -7,6 +7,7 @@ import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate, { getGlobalVolume } from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define Props for the screen
 type InsectsScreenProps = {
@@ -180,6 +181,30 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
     };
 
     load();
+  }, []);
+
+  // Ensure player pauses when video is hidden
+  useEffect(() => {
+    if (!showVideo) {
+      try { player.pause(); } catch (e) {}
+    }
+  }, [showVideo]);
+
+  // Skip intro if any animal was already clicked for this level
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await AsyncStorage.getItem('animalProgress_insects');
+        if (saved) {
+          const arr = JSON.parse(saved);
+          if (Array.isArray(arr) && arr.length > 0) {
+            try { player.pause(); } catch (e) {}
+            setShowVideo(false);
+            setGameStarted(true);
+          }
+        }
+      } catch (e) {}
+    })();
   }, []);
 
   if (!bgReady) {

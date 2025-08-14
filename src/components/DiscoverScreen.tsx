@@ -18,6 +18,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useLevelCompletion } from '../hooks/useLevelCompletion';
 import { useLocalization } from '../hooks/useLocalization';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Fallback to using the translated name for now - this will restore the original behavior 
 // but keep the structure for the fix once we get the correct mappings
@@ -178,6 +179,7 @@ interface DiscoverScreenProps {
   onComplete?: () => void;
   onBackToMenu?: () => void;
   onBackToLevel?: (animalIndex?: number) => void;
+  // onResetLevel?: () => void;
   visitedAnimals?: Set<number>;
   currentAnimalIndex?: number;
 }
@@ -198,7 +200,8 @@ const LevelAnimalGrid: React.FC<{
   availableAnimals: Set<string>;
   setShowLockedModal: React.Dispatch<React.SetStateAction<boolean>>;
   setClickedAnimalIndex: React.Dispatch<React.SetStateAction<number>>;
-}> = ({ animals, levelName, isTablet, isMobile, revealedAnimals, setRevealedAnimals, onAllRevealed, currentGuideIndex, setCurrentGuideIndex, magnifyingGlassRotation, magnifyingGlassScale, availableAnimals, setShowLockedModal, setClickedAnimalIndex }) => {
+  onPlayAnimalSound: (source: any) => void;
+}> = ({ animals, levelName, isTablet, isMobile, revealedAnimals, setRevealedAnimals, onAllRevealed, currentGuideIndex, setCurrentGuideIndex, magnifyingGlassRotation, magnifyingGlassScale, availableAnimals, setShowLockedModal, setClickedAnimalIndex, onPlayAnimalSound }) => {
   // Filter animals by the current level's animal type
   const levelAnimals = animals.filter((animal: any) => 
     animal.animalType.toLowerCase() === levelName.toLowerCase()
@@ -650,30 +653,9 @@ const LevelAnimalGrid: React.FC<{
             return;
           }
           
-          // If already revealed, don't do anything
-          if (isRevealed) {
-            return;
-          }
-
-          // Play random aha sound
-          try {
-            const ahaFiles = [
-              require('../assets/sounds/other/aha1.mp3'),
-              require('../assets/sounds/other/aha2.mp3'),
-              require('../assets/sounds/other/aha3.mp3'),
-            ];
-            const randomAha = ahaFiles[Math.floor(Math.random() * ahaFiles.length)];
-            const ahaPlayer = createAudioPlayer(randomAha);
-            ahaPlayer.play();
-            
-            // Clean up sound when it finishes
-            ahaPlayer.addListener('playbackStatusUpdate', (status: any) => {
-              if (status.didJustFinish) {
-                ahaPlayer.remove();
-              }
-            });
-          } catch (error) {
-            console.warn('Error playing aha sound:', error);
+          // Play only the animal sound (no label), stopping any previous one
+          if (animal?.sound) {
+            onPlayAnimalSound(animal.sound);
           }
 
           // Create pop animation
@@ -693,7 +675,7 @@ const LevelAnimalGrid: React.FC<{
           // Start the animation
           popAnimation.start();
           
-          // Reveal the animal (stays revealed, no toggling back)
+          // Reveal the animal if not revealed yet (stays revealed, no toggling back)
           setRevealedAnimals(prev => {
             const newSet = new Set(prev);
             const englishKey = getAnimalEnglishKey(animal);
@@ -886,15 +868,81 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   onComplete,
   onBackToMenu,
   onBackToLevel,
+  // onResetLevel,
   visitedAnimals = new Set(),
   currentAnimalIndex = 0
 }) => {
-  const { markLevelCompleted, isLevelCompleted } = useLevelCompletion();
+  const { markLevelCompleted, unmarkLevelCompleted, isLevelCompleted } = useLevelCompletion();
   const { t } = useLocalization();
   const { width: screenW, height: screenH } = useWindowDimensions();
   const isLandscape = screenW > screenH;
   const isMobile = Math.min(screenW, screenH) < 768;
   const isTablet = Math.min(screenW, screenH) >= 768 && Math.max(screenW, screenH) >= 1024;
+  // Single shared player to avoid overlapping sounds
+  const currentAnimalPlayerRef = useRef<any | null>(null);
+  const activePlayersRef = useRef<Set<any>>(new Set());
+  const playTokenRef = useRef<number>(0);
+
+  const playAnimalSound = (source: any) => {
+    try {
+      // Stop and remove ALL existing players to be absolutely sure
+      if (activePlayersRef.current.size > 0) {
+        for (const pl of Array.from(activePlayersRef.current)) {
+          try { pl.pause?.(); } catch {}
+          try { pl.stop?.(); } catch {}
+          try { pl.volume = 0; } catch {}
+          try { pl.remove?.(); } catch {}
+          activePlayersRef.current.delete(pl);
+        }
+      }
+      if (currentAnimalPlayerRef.current) {
+        try { currentAnimalPlayerRef.current.pause?.(); } catch {}
+        try { currentAnimalPlayerRef.current.stop?.(); } catch {}
+        try { currentAnimalPlayerRef.current.volume = 0; } catch {}
+        try { currentAnimalPlayerRef.current.remove?.(); } catch {}
+        currentAnimalPlayerRef.current = null;
+      }
+      const token = ++playTokenRef.current;
+      setTimeout(() => {
+        if (playTokenRef.current !== token) return;
+        const p = createAudioPlayer(source);
+        currentAnimalPlayerRef.current = p;
+        activePlayersRef.current.add(p);
+        p.play();
+        p.addListener('playbackStatusUpdate', (status: any) => {
+          if (status?.didJustFinish) {
+            try { p.remove(); } catch {}
+            if (currentAnimalPlayerRef.current === p) {
+              currentAnimalPlayerRef.current = null;
+            }
+            activePlayersRef.current.delete(p);
+          }
+        });
+      }, 50);
+    } catch (error) {
+      console.warn('Error playing animal sound:', error);
+    }
+  };
+
+  // Ensure we stop any playing animal sound when unmounting DiscoverScreen
+  useEffect(() => {
+    return () => {
+      // Stop all known players on unmount
+      for (const pl of Array.from(activePlayersRef.current)) {
+        try { pl.pause?.(); } catch {}
+        try { pl.stop?.(); } catch {}
+        try { pl.remove?.(); } catch {}
+        activePlayersRef.current.delete(pl);
+      }
+      if (currentAnimalPlayerRef.current) {
+        try { currentAnimalPlayerRef.current.pause?.(); } catch {}
+        try { currentAnimalPlayerRef.current.stop?.(); } catch {}
+        try { currentAnimalPlayerRef.current.remove?.(); } catch {}
+        currentAnimalPlayerRef.current = null;
+      }
+    };
+  }, []);
+
 
   // State to track which animals have been revealed (show real image instead of silhouette)
   // Initialize with visited animals already revealed - using English keys for consistency
@@ -940,6 +988,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   // State for mission completion flow
   const [showCompleteButton, setShowCompleteButton] = useState(false);
   const [missionCompleted, setMissionCompleted] = useState(false);
+  // const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   
   // State for locked animal modal
   const [showLockedModal, setShowLockedModal] = useState(false);
@@ -1096,6 +1145,9 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       }
     }, 3000); // Reduced to 3 seconds
   };
+
+  // Reset only this level via parent handler if provided, otherwise fallback to local reset and navigate back
+  // Removed reset mission handler and UI
 
   // Start mission stamp pulse animation when all animals are revealed
   useEffect(() => {
@@ -1425,6 +1477,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </View>
         )}
 
+        {/* Reset Mission section removed */}
+
         {/* Level Animals Grid */}
         <ScrollView
           style={{ 
@@ -1461,6 +1515,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               availableAnimals={availableAnimals}
               setShowLockedModal={setShowLockedModal}
               setClickedAnimalIndex={setClickedAnimalIndex}
+               onPlayAnimalSound={playAnimalSound}
             />
           </View>
         </ScrollView>
@@ -1536,6 +1591,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                 {t('missionComplete')}
               </Text>
             </View>
+
+            {/* Reset Mission Button removed */}
           </Animated.View>
         )}
       </Animated.View>
@@ -1641,10 +1698,18 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                 </Text>
               </TouchableOpacity>
               
-                                            <TouchableOpacity
+                <TouchableOpacity
                  onPress={() => {
                    setShowLockedModal(false);
-                   onBackToLevel?.(clickedAnimalIndex);
+                   // Navigate to the first unseen animal in this level
+                   let firstUnseenIndex: number | undefined = undefined;
+                   for (let i = 0; i < animals.length; i++) {
+                     if (!visitedAnimals.has(i)) {
+                       firstUnseenIndex = i;
+                       break;
+                     }
+                   }
+                   onBackToLevel?.(firstUnseenIndex);
                  }}
                  style={{
                    backgroundColor: 'orange',
@@ -1676,6 +1741,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
            </View>
          </View>
        </Modal>
+
+      {/* Reset Mission Confirmation Modal removed */}
      </ImageBackground>
      </View>
   );

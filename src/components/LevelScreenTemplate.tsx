@@ -18,9 +18,12 @@ import {
   Platform,
   Dimensions,
   useWindowDimensions,
+  InteractionManager,
 } from 'react-native';
+import { Easing } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import {
   useAudioPlayer,
   createAudioPlayer,
@@ -43,7 +46,7 @@ import { useLocalization } from '../hooks/useLocalization';
 // --- Add smooth rotation hook ---
 import { useSmoothRotation } from '../hooks/useSmoothRotation';
   import { useLevelCompletion } from '../hooks/useLevelCompletion';
-import ReanimatedView from 'react-native-reanimated';
+import AnimatedReanimated from 'react-native-reanimated';
   import { getResponsiveSpacing, getScaleFactor, isTablet } from '../utils/responsive';
 
   // Water Progress Bar Component
@@ -341,8 +344,8 @@ type Props = {
   bgMusic?: string | number; // allow prop for override
 };
 
-  const FADE_DURATION = 100;
-  const CONTENT_FADE_DURATION = 180;
+  const FADE_DURATION = 160; // snappier navigation feel
+  const CONTENT_FADE_DURATION = 200;
 
 export default function LevelScreenTemplate({
   levelName,
@@ -352,6 +355,7 @@ export default function LevelScreenTemplate({
   onBackToMenu,
   bgMusic, // allow prop for override
 }: Props) {
+  const navigation = useNavigation();
   // --- Use localization hook ---
   const { t } = useLocalization();
     const { isLevelCompleted } = useLevelCompletion();
@@ -366,7 +370,7 @@ export default function LevelScreenTemplate({
     mass: 0.7,
   });
 
-  const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
+  const [currentAnimalIndex, setCurrentAnimalIndex] = useState(-1);
   const [showName, setShowName] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
@@ -374,7 +378,7 @@ export default function LevelScreenTemplate({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const arrowAnim = useRef(new Animated.Value(0)).current;
   const animalFadeAnim = useRef(new Animated.Value(1)).current;
-  const contentFade = useRef(new Animated.Value(0)).current;
+  const contentFade = useRef(new Animated.Value(1)).current;
   const soundRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const isSoundPlayingRef = useRef<boolean>(false);
   const confettiAnimRefs = useRef<Animated.Value[]>([]);
@@ -388,40 +392,40 @@ export default function LevelScreenTemplate({
       const [hasClickedCurrentAnimal, setHasClickedCurrentAnimal] = useState(false); // Track if user clicked current animal
   const [buttonsDisabledManually, setButtonsDisabledManually] = useState(false);
   const isClickingRef = useRef(false);
+  const labelShowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clickFlagClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [canRenderLabel, setCanRenderLabel] = useState(false);
+  const [initialIndexHydrated, setInitialIndexHydrated] = useState(false);
   
-  // Update hasClickedCurrentAnimal and showName when navigating between animals
+  // Update hasClickedCurrentAnimal and show/hide label when navigating between animals
   useEffect(() => {
     const isCurrentAnimalVisited = visitedAnimals.has(currentAnimalIndex);
     setHasClickedCurrentAnimal(isCurrentAnimalVisited);
     
-    // Only update showName during navigation, not during clicks
     if (!isClickingRef.current) {
-      if (isCurrentAnimalVisited) {
+      if (isCurrentAnimalVisited && initialIndexHydrated && !isTransitioning) {
+        // If revisiting an already-clicked animal after hydration, show the label immediately
+        setCanRenderLabel(true);
         setShowName(true);
-        console.log('✅ Setting showName to true for visited animal (navigation):', currentAnimalIndex);
+        console.log('🏷️ Auto-showing label on revisit. Index:', currentAnimalIndex);
       } else {
+        // Otherwise hide during navigation to prevent flashes
         setShowName(false);
-        console.log('❌ Setting showName to false for unvisited animal (navigation):', currentAnimalIndex);
+        setCanRenderLabel(false);
+        console.log('🔒 Hiding label on navigation. Visited:', isCurrentAnimalVisited, 'index:', currentAnimalIndex);
       }
     } else {
       console.log('🚫 Skipping showName update during click operation');
     }
-  }, [currentAnimalIndex, visitedAnimals]);
+  }, [currentAnimalIndex, visitedAnimals, initialIndexHydrated, isTransitioning]);
 
-  // Handle nameScaleAnim only on navigation (not on clicks)
-  useEffect(() => {
-    const isCurrentAnimalVisited = visitedAnimals.has(currentAnimalIndex);
-    
-    if (isCurrentAnimalVisited) {
-      // Set scale for previously visited animals when navigating to them
-      nameScaleAnim.setValue(1.1);
-      console.log('🔄 Set scale for visited animal on navigation');
-    } else {
-      // Reset scale for unvisited animals
-      nameScaleAnim.setValue(0);
-      console.log('🔄 Reset scale for unvisited animal on navigation');
-    }
-  }, [currentAnimalIndex]); // Only trigger on navigation, not on clicks
+  
+
+	// Always reset name scale on navigation; it will be bumped on click
+	useEffect(() => {
+		try { nameScaleAnim.setValue(0); } catch {}
+		console.log('🔄 Reset nameScaleAnim on navigation');
+	}, [currentAnimalIndex]);
 
   // Save visited animals progress to AsyncStorage
   const saveProgress = useCallback(async (visited: Set<number>) => {
@@ -435,6 +439,17 @@ export default function LevelScreenTemplate({
     }
   }, [levelName]);
 
+  // Save current animal index per level
+  const saveCurrentIndex = useCallback(async (index: number) => {
+    try {
+      const indexKey = `animalCurrentIndex_${levelName.toLowerCase()}`;
+      await AsyncStorage.setItem(indexKey, String(index));
+      console.log(`💾 Saved current index for ${levelName}:`, index);
+    } catch (error) {
+      console.error('Error saving current animal index:', error);
+    }
+  }, [levelName]);
+
   // Load visited animals progress from AsyncStorage
   const loadProgress = useCallback(async () => {
     try {
@@ -445,23 +460,62 @@ export default function LevelScreenTemplate({
         const visitedSet = new Set<number>(visitedArray);
         setVisitedAnimals(visitedSet);
         console.log(`📂 Loaded progress for ${levelName}:`, visitedArray);
-        
-        // Check if current animal was already visited
-        const isCurrentVisited = visitedSet.has(currentAnimalIndex);
-        setHasClickedCurrentAnimal(isCurrentVisited);
-        if (isCurrentVisited) {
-          setShowName(true);
+
+        // Determine index to show: first unvisited if any; otherwise fall back to saved or 0
+        let indexToShow = 0;
+        if (animals.length > 0) {
+          if (visitedSet.size < animals.length) {
+            for (let i = 0; i < animals.length; i++) {
+              if (!visitedSet.has(i)) { indexToShow = i; break; }
+            }
+          } else {
+            // All visited: try to restore saved index if available
+            const indexKey = `animalCurrentIndex_${levelName.toLowerCase()}`;
+            const savedIndexStr = await AsyncStorage.getItem(indexKey);
+            const parsed = parseInt(savedIndexStr ?? '', 10);
+            if (!isNaN(parsed) && parsed >= 0 && parsed < animals.length) {
+              indexToShow = parsed;
+            }
+          }
         }
+        setCurrentAnimalIndex(indexToShow);
+
+        // Update UI flags based on chosen index
+        const isIndexVisited = visitedSet.has(indexToShow);
+        setHasClickedCurrentAnimal(isIndexVisited);
+        // Do not auto-show the label on load; only show after an explicit click
+        setShowName(false);
+      } else {
+        // No saved progress yet: start from the first animal
+        setVisitedAnimals(new Set());
+        const indexToShow = animals.length > 0 ? 0 : -1;
+        if (indexToShow !== -1) {
+          setCurrentAnimalIndex(indexToShow);
+        }
+        setHasClickedCurrentAnimal(false);
+        setShowName(false);
       }
+      // Mark hydration complete regardless of whether we had saved data
+      setInitialIndexHydrated(true);
     } catch (error) {
       console.error('Error loading animal progress:', error);
+      setInitialIndexHydrated(true);
     }
-  }, [levelName, currentAnimalIndex]);
+  }, [levelName, animals.length]);
 
-  // Load progress when component mounts or level changes
+  // Load progress when component mounts or level changes (layout effect to avoid hook order change warnings)
   useEffect(() => {
     loadProgress();
-  }, [loadProgress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelName]);
+
+  // Also refresh progress when the screen gains focus (covers return-from-menu case)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadProgress();
+    });
+    return unsubscribe;
+  }, [navigation, loadProgress]);
 
   // Save progress whenever visitedAnimals changes
   useEffect(() => {
@@ -469,16 +523,48 @@ export default function LevelScreenTemplate({
       saveProgress(visitedAnimals);
     }
   }, [visitedAnimals, saveProgress]);
+
+  // Persist current animal index whenever it changes
+  useEffect(() => {
+    if (animals.length > 0 && currentAnimalIndex >= 0 && currentAnimalIndex < animals.length) {
+      saveCurrentIndex(currentAnimalIndex);
+    }
+  }, [currentAnimalIndex, animals.length, saveCurrentIndex]);
     
 
   
   // Glow animation values
   const glowAnim = useRef(new Animated.Value(0)).current;
   const nameScaleAnim = useRef(new Animated.Value(0)).current;
+  const clickBounceAnim = useRef(new Animated.Value(1)).current;
   const glowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
     
     // Bouncing hand animation for unclicked animals
     const handBounceAnim = useRef(new Animated.Value(0)).current;
+
+    // Ensure label scale reflects visibility even when returning to a level on the first animal
+    useEffect(() => {
+      if (showName) {
+        nameScaleAnim.setValue(1.1);
+      }
+    }, [showName, currentAnimalIndex]);
+    
+    // After initial hydration, enable label rendering so visited animals can show labels
+    useEffect(() => {
+      if (initialIndexHydrated) {
+        setCanRenderLabel(true);
+      }
+    }, [initialIndexHydrated]);
+    
+    // Auto-show label when navigating back to an already-clicked animal
+    useEffect(() => {
+      if (!isTransitioning && canRenderLabel) {
+        const alreadyVisited = visitedAnimals.has(currentAnimalIndex);
+        if (alreadyVisited) {
+          setShowName(true);
+        }
+      }
+    }, [isTransitioning, canRenderLabel, visitedAnimals, currentAnimalIndex]);
     
     // Start bouncing hand animation
     useEffect(() => {
@@ -665,6 +751,7 @@ export default function LevelScreenTemplate({
   // --- BG MUSIC STATE ---
   const bgMusicRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const [currentBgMusicKey, setCurrentBgMusicKey] = useState<string | undefined>(undefined);
+  const bgLastPositionMsRef = useRef<number>(0);
   
   // Audio ducking constants
   const NORMAL_BG_VOLUME = 0.8; // Reduced by 20% from 1.0
@@ -728,7 +815,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   }, [levelName, skyBackgroundImageUri, currentAnimal?.isMoving]);
 
   // --- BG MUSIC EFFECT (only play if instruction bubble is visible) ---
-  // REWRITE: Remove all showName-related branches from this effect.
+  // NOTE: Do NOT depend on isMuted here to avoid tearing down/recreating the player and losing position
   useEffect(() => {
     // Always use lowercase for lookup
     const key = levelName.trim().toLowerCase();       // e.g. "Forest" ➞ "forest"
@@ -742,8 +829,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       source = BG_MUSIC_MAP[key];
     }
 
-    // Stop music if: no source or instruction bubble not visible
-    if (!source || !showInstruction) {
+    // Stop music if no source; if just hidden by instruction bubble, pause but keep player
+    if (!source) {
       if (bgMusicRef.current) {
         try {
           bgMusicRef.current.pause();
@@ -754,23 +841,53 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       }
       return;
     }
+    if (!showInstruction) {
+      if (bgMusicRef.current) {
+        try { bgMusicRef.current.pause(); } catch (e) {}
+      }
+      return;
+    }
 
-    // If already playing the right track, just honor mute/unmute
+    // If already playing the right track, just honor mute/unmute without recreating the player
     // For require() assets, String(require(...)) is "[object Module]" or "[object Object]", so compare by reference
     if (bgMusicRef.current && currentBgMusicKey && currentBgMusicKey === String(source)) {
       if (bgMusicRef.current) {
         if (isMuted) {
-          bgMusicRef.current.pause();
+          // Pause but do not remove to preserve position
+          try { bgMusicRef.current.pause(); } catch {}
         } else {
-          bgMusicRef.current.volume = NORMAL_BG_VOLUME; // Ensure volume is at normal level
-          bgMusicRef.current.play();
+          // Resume from paused position
+          try {
+            const p: any = bgMusicRef.current;
+            // Attempt to seek to last position before playing
+            if (typeof p.setPosition === 'function') {
+              p.setPosition(bgLastPositionMsRef.current);
+            } else if (typeof p.seek === 'function') {
+              p.seek(bgLastPositionMsRef.current / 1000);
+            } else if ('currentTime' in p) {
+              p.currentTime = bgLastPositionMsRef.current / 1000;
+            }
+            p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
+            p.play();
+          } catch {}
         }
       }
       return;
     }
 
-    // else swap out the old player
+    // else swap out the old player (only when source changes)
+    // Before removing, capture last position to resume on the new source if identical assets on some platforms
     if (bgMusicRef.current) {
+      try {
+        const p: any = bgMusicRef.current;
+        if (typeof p.getStatusAsync === 'function') {
+          p.getStatusAsync?.().then((status: any) => {
+            if (status && typeof status.positionMillis === 'number') {
+              bgLastPositionMsRef.current = status.positionMillis;
+            }
+          }).catch(() => {});
+        }
+      } catch {}
       try {
         bgMusicRef.current.pause();
         bgMusicRef.current.remove();
@@ -784,7 +901,28 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         const p = createAudioPlayer(source);
         p.loop = true;
         p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier; // Apply global volume setting
+        // Seek to last position if we have one and the new player supports it
+        try {
+          const anyP: any = p;
+          if (bgLastPositionMsRef.current > 0) {
+            if (typeof anyP.setPosition === 'function') {
+              anyP.setPosition(bgLastPositionMsRef.current);
+            } else if (typeof anyP.seek === 'function') {
+              anyP.seek(bgLastPositionMsRef.current / 1000);
+            } else if ('currentTime' in anyP) {
+              anyP.currentTime = bgLastPositionMsRef.current / 1000;
+            }
+          }
+        } catch {}
         p.play();
+        // Track playback position to support seamless resume
+        try {
+          (p as any).addListener?.('playbackStatusUpdate', (status: any) => {
+            if (status && typeof status.positionMillis === 'number') {
+              bgLastPositionMsRef.current = status.positionMillis;
+            }
+          });
+        } catch {}
         bgMusicRef.current = p;
         setCurrentBgMusicKey(String(source));
       } catch (e) {
@@ -793,6 +931,11 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       }
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelName, bgMusic, showInstruction]);
+
+  // Cleanup bg music strictly on unmount
+  useEffect(() => {
     return () => {
       if (bgMusicRef.current) {
         try {
@@ -803,9 +946,34 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         setCurrentBgMusicKey(undefined);
       }
     };
-  // Remove showName from dependencies
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [levelName, bgMusic, isMuted, showInstruction]);
+  }, []);
+
+  // Respond to mute/unmute without recreating the bg player (preserve position)
+  useEffect(() => {
+    const p = bgMusicRef.current;
+    if (!p) return;
+    try {
+      if (isMuted) {
+        p.pause();
+      } else if (showInstruction) {
+        const anyP: any = p;
+        // Seek back to stored position before resuming to avoid restarting
+        try {
+          if (typeof anyP.setPosition === 'function') {
+            anyP.setPosition(bgLastPositionMsRef.current);
+          } else if (typeof anyP.seek === 'function') {
+            anyP.seek(bgLastPositionMsRef.current / 1000);
+          } else if ('currentTime' in anyP) {
+            anyP.currentTime = bgLastPositionMsRef.current / 1000;
+          }
+        } catch {}
+        anyP.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
+        anyP.play();
+      }
+    } catch (e) {}
+  }, [isMuted, showInstruction]);
+
+  const isHydrated = initialIndexHydrated;
 
   // When currentAnimal?.isMoving changes, crossfade the backgrounds
   useEffect(() => {
@@ -1041,6 +1209,16 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       console.log('Blocked by transition or no current animal');
       return;
     }
+    try { animalFadeAnim.setValue(1); } catch {}
+    // Smooth, responsive click feedback
+    try {
+      (clickBounceAnim as any).stopAnimation?.();
+      clickBounceAnim.setValue(1);
+      Animated.sequence([
+        Animated.timing(clickBounceAnim, { toValue: 1.08, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.spring(clickBounceAnim, { toValue: 1, friction: 5, tension: 160, useNativeDriver: true })
+      ]).start();
+    } catch {}
     
       // Block animal clicks if buttons are manually disabled
       if (buttonsDisabledManually) {
@@ -1059,11 +1237,18 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         const newVisited = new Set(prev);
         newVisited.add(currentAnimalIndex);
         console.log(`🔥 CLICKED animal ${currentAnimalIndex}, visited now:`, Array.from(newVisited).sort());
+        // Persist progress immediately to avoid losing state on quick navigation
+        try { void saveProgress(newVisited); } catch (e) { /* noop */ }
         
         // Show the label immediately after updating visited animals
-        setTimeout(() => {
+        if (labelShowTimeoutRef.current) {
+          clearTimeout(labelShowTimeoutRef.current);
+          labelShowTimeoutRef.current = null;
+        }
+        labelShowTimeoutRef.current = setTimeout(() => {
           console.log('🏷️ Showing label after visitedAnimals update');
           setShowName(true);
+          setCanRenderLabel(true);
           
           // Set name scale to big size on first click of this specific animal
           if (!wasAlreadyVisited) {
@@ -1072,7 +1257,11 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
           }
           
           // Clear clicking flag after state updates complete
-          setTimeout(() => {
+          if (clickFlagClearTimeoutRef.current) {
+            clearTimeout(clickFlagClearTimeoutRef.current);
+            clickFlagClearTimeoutRef.current = null;
+          }
+          clickFlagClearTimeoutRef.current = setTimeout(() => {
             isClickingRef.current = false;
             console.log('🏷️ Clicking operation complete, flag cleared');
           }, 50);
@@ -1160,7 +1349,16 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       // Background music ducking will be handled in playSounds()
       // kill any in‑flight animal audio, then play the new one
       stopSound(true).then(() => {
-        // Force play sounds even if muted is checked, for better UX
+        // Play a short click sound feedback, then the animal/label sounds
+        try {
+          const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
+          clickPlayer.play();
+          clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
+            if (status.didJustFinish) {
+              clickPlayer.remove();
+            }
+          });
+        } catch {}
         playSounds();
       });
     }, [showName, playSounds, stopSound, restoreBackgroundMusic, isTransitioning, currentAnimal, glowAnim, nameScaleAnim, buttonsDisabledManually, badgeWindowLayout, visitedAnimals, currentAnimalIndex]);
@@ -1179,14 +1377,23 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     }
 
     setIsTransitioning(true);
+    // Immediately hide any visible label and cancel pending click/label timers to prevent flashes
+    try { setShowName(false); } catch {}
+    setCanRenderLabel(false);
+    if (labelShowTimeoutRef.current) { clearTimeout(labelShowTimeoutRef.current); labelShowTimeoutRef.current = null; }
+    if (clickFlagClearTimeoutRef.current) { clearTimeout(clickFlagClearTimeoutRef.current); clickFlagClearTimeoutRef.current = null; }
+    isClickingRef.current = false;
     stopSound(true);
 
-    // Use a single animation for smoother transitions
-    Animated.timing(animalFadeAnim, {
-      toValue: 0,
-      duration: FADE_DURATION,
-      useNativeDriver: true,
-    }).start(() => {
+    // Use a smoother crossfade/scale combo for transitions
+    Animated.parallel([
+      Animated.timing(animalFadeAnim, {
+        toValue: 0,
+        duration: FADE_DURATION,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
       // Double-check that we still have animals and valid state
       if (!hasAnimals || animals.length === 0) {
         console.warn('No animals available during navigation');
@@ -1247,7 +1454,11 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
 
 
-      setCurrentAnimalIndex(newIndex);
+      try {
+        requestAnimationFrame(() => setCurrentAnimalIndex(newIndex));
+      } catch {
+        setTimeout(() => setCurrentAnimalIndex(newIndex), 0);
+      }
         // hasClickedCurrentAnimal and showName will be updated by useEffect based on visitedAnimals
 
       // Use a small delay to ensure state updates are processed
@@ -1255,11 +1466,14 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         Animated.timing(animalFadeAnim, {
           toValue: 1,
           duration: FADE_DURATION,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }).start(() => {
           setIsTransitioning(false);
+          // Re-enable label rendering after fade-in completes (landscape safe guard)
+          setCanRenderLabel(true);
         });
-      }, 16); // One frame delay
+      }, 0);
     });
   }, [
       hasAnimals,
@@ -1329,6 +1543,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     }, [handleNavigation, isMuted, buttonsDisabledManually]);
 
   const goToHome = useCallback(() => {
+    // Persist current progress before leaving the level
+    try { void saveProgress(visitedAnimals); } catch (e) { /* noop */ }
     stopSound(false);
     // Stop bg music when going home
     if (bgMusicRef.current) {
@@ -1340,24 +1556,33 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       setCurrentBgMusicKey(undefined);
     }
     onBackToMenu();
-  }, [stopSound, onBackToMenu]);
+  }, [stopSound, onBackToMenu, saveProgress, visitedAnimals]);
 
   const toggleMute = () => {
     const changingToMuted = !isMuted;
     setIsMuted(changingToMuted);
     if (changingToMuted) {
-      stopSound(true).catch(error => console.warn('Error stopping sound on mute:', error));
-      // Pause bg music
+      // Pause, don't unload, so we can resume seamlessly
+      try {
+        if (soundRef.current) {
+          soundRef.current.pause();
+        }
+      } catch (e) {}
+      // Pause bg music too
       if (bgMusicRef.current) {
-        try {
-          bgMusicRef.current.pause();
-        } catch (e) {}
+        try { bgMusicRef.current.pause(); } catch (e) {}
       }
     } else {
-      // Resume bg music, but only if instruction bubble is visible
-      if (bgMusicRef.current && showInstruction) {
+      // Unmuting: resume animal sound from its paused position if present
+      if (soundRef.current) {
         try {
-          bgMusicRef.current.volume = NORMAL_BG_VOLUME; // Ensure volume is restored when unmuting
+          duckBackgroundMusic();
+          soundRef.current.play();
+        } catch (e) {}
+      } else if (bgMusicRef.current && showInstruction) {
+        // Otherwise resume background music if appropriate
+        try {
+          bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
           bgMusicRef.current.play();
         } catch (e) {}
       }
@@ -1486,10 +1711,10 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         <View style={{ alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
           {animalComponent}
           
-          {/* Bouncing hand for unclicked animals */}
+          {/* Bouncing hand for unclicked animals - only after hydration and not during transitions */}
           {(() => {
-            console.log('👋 Hand check - animal:', currentAnimalIndex, 'unclicked:', isCurrentAnimalUnclicked, 'visitedAnimals:', Array.from(visitedAnimals));
-            return isCurrentAnimalUnclicked;
+            console.log('👋 Hand check - animal:', currentAnimalIndex, 'unclicked:', isCurrentAnimalUnclicked, 'hydrated:', initialIndexHydrated, 'transitioning:', isTransitioning);
+            return initialIndexHydrated && !isTransitioning && isCurrentAnimalUnclicked;
           })() && (
             <Animated.View
               style={{
@@ -1567,22 +1792,12 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   const onLoadEnd = useCallback(() => {
     setBgLoading(false);
-    Animated.timing(contentFade, {
-      toValue: 1,
-      duration: CONTENT_FADE_DURATION,
-      useNativeDriver: true,
-    }).start();
-  }, [contentFade]);
+  }, []);
 
+  // Ensure content is visible immediately; no fade-in dependency on currentAnimal
   useEffect(() => {
-    if (currentAnimal?.isMoving) {
-      Animated.timing(contentFade, {
-        toValue: 1,
-        duration: CONTENT_FADE_DURATION,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [currentAnimal?.isMoving, contentFade]);
+    try { contentFade.setValue(1); } catch {}
+  }, []);
 
   // Compute the marginTop for animals based on level and device
   const getAnimalMarginTop = () => {
@@ -1893,7 +2108,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   // --- RENDER: Crossfade both backgrounds ---
   return (
-    <ReanimatedView.View style={[dynamicStyles.container, animatedStyle]}>
+    <View style={dynamicStyles.container}>
+      <AnimatedReanimated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
         {/* Background container */}
         <View style={[StyleSheet.absoluteFillObject, { backgroundColor: getLevelBackgroundColor() }]}>
         <View style={StyleSheet.absoluteFillObject}>
@@ -2067,7 +2283,16 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                 dynamicStyles.backToMenuButton,
                 // Move up 10% on iPad
                 screenW >= 1000 && { top: (dynamicStyles.backToMenuButton.top || 50) - (screenH * 0.1) }
-              ]} onPress={goToHome}>
+              ]} onPress={() => {
+                try {
+                  const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
+                  clickPlayer.play();
+                  clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                    if (status?.didJustFinish) clickPlayer.remove();
+                  });
+                } catch {}
+                goToHome();
+              }}>
               <Ionicons name="home" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
             </TouchableOpacity>
             )}
@@ -2082,6 +2307,13 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                        (screenW >= 1000 ? -(screenH * 0.1) : 0) // Account for iPad offset
                 },
               ]} onPress={() => {
+                try {
+                  const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
+                  clickPlayer.play();
+                  clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                    if (status?.didJustFinish) clickPlayer.remove();
+                  });
+                } catch {}
                 // Navigate to discovery screen for this level
                 setShowDiscoverScreen(true);
               }}>
@@ -2376,103 +2608,53 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
               {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedLeaves />}
 
               {hasAnimals && !showDiscoverScreen && (
-            <View style={dynamicStyles.content}>
+            <View style={[dynamicStyles.content, { zIndex: 50, position: 'relative' }] }>
                             <View style={[
                 dynamicStyles.animalCard,
                     { marginTop: getAnimalMarginTop() }
               ]}>
-                {/* Large invisible touch area for phones */}
-                {Math.min(screenW, screenH) < 768 && (
-                  <TouchableOpacity 
-                    onPress={handleAnimalPress} 
-                        activeOpacity={0.8} 
-                    disabled={isTransitioning}
-                                          style={{
-                        position: 'absolute',
-                          top: '10%',
-                          left: '25%',
-                          right: '25%',
-                          bottom: '1%',
-                          backgroundColor: 'transparent',
-                          zIndex: 999,
-                      }}
-                  />
-                )}
+                {/* Single reliable touch area for all devices, sized to full card with generous hitSlop */}
+                <TouchableOpacity 
+                  onPress={handleAnimalPress} 
+                  activeOpacity={1} 
+                  disabled={isTransitioning}
+                  hitSlop={{ top: 28, bottom: 28, left: 28, right: 28 }}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'transparent',
+                    zIndex: 5,
+                  }}
+                />
                 
-                {/* Touchable animal for tablets */}
-                {Math.min(screenW, screenH) >= 768 ? (
-                  <TouchableOpacity 
-                    onPress={handleAnimalPress} 
-                    activeOpacity={0.8} 
-                    disabled={isTransitioning}
-                    style={{ alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <Animated.View style={{ 
-                      opacity: animalFadeAnim, 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      transform: [{
-                        scale: glowAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [1, 1.08],
-                        }),
-                      }],
-                      shadowColor: '#FFD700',
-                      shadowOpacity: glowAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 1.0],
-                      }),
-                      shadowRadius: glowAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 35],
-                      }),
-                      elevation: glowAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 20],
-                      }),
-                    }}>
-                      {renderAnimal()}
-                    </Animated.View>
+                {/* Single render for animal visual */}
+                <Animated.View 
+                  style={{ 
+                    opacity: 1,
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    zIndex: 50,
+                    transform: [
+                      { scale: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) },
+                      { scale: clickBounceAnim }
+                    ],
+                    shadowColor: '#FFD700',
+                    shadowOpacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1.0] }),
+                    shadowRadius: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 35] }),
+                    elevation: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [5, 25] }),
+                  }}
+                      pointerEvents="none"
+                >
+                  {renderAnimal()}
 
-                  </TouchableOpacity>
-                ) : (
-                      /* Non-touchable animal display for phones */
-                  <Animated.View 
-                    style={{ 
-                      opacity: animalFadeAnim, 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                          zIndex: -1,
-                      transform: [{
-                        scale: glowAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [1, 1.08],
-                        }),
-                      }],
-                      shadowColor: '#FFD700',
-                      shadowOpacity: glowAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 1.0],
-                      }),
-                      shadowRadius: glowAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 35],
-                      }),
-                      elevation: glowAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 20],
-                      }),
-                    }}
-                        pointerEvents="none"
-                  >
-                    {renderAnimal()}
-
-                  </Animated.View>
-                )}
+                </Animated.View>
                     
                     {(() => {
-                      console.log('🏷️ Label render check - showName:', showName, 'currentAnimal:', currentAnimal?.name);
-                      return showName && currentAnimal;
+                      console.log('🏷️ Label render check - showName:', showName, 'currentAnimal:', currentAnimal?.name, 'isTransitioning:', isTransitioning, 'canRenderLabel:', canRenderLabel);
+                      return showName && currentAnimal && !isTransitioning && canRenderLabel;
                     })() && (
                     <Animated.View style={[
                       dynamicStyles.animalNameWrapper,
@@ -2531,7 +2713,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                       // Forest level - move label down on phones
 
                       {
-                        opacity: animalFadeAnim,
+                        opacity: 1,
                         transform: [
                           {
                             translateY: animalFadeAnim.interpolate({
@@ -2794,7 +2976,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         </View>
       </Animated.View>
       </View>
-    </ReanimatedView.View>
+      </AnimatedReanimated.View>
+    </View>
   );
 }
 

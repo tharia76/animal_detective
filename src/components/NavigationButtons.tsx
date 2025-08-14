@@ -68,7 +68,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   
   // Add throttling to prevent rapid taps
   const lastTapTime = useRef(0);
-  const TAP_THROTTLE_MS = 180; // Prevent taps closer than 180ms
+  const TAP_THROTTLE_MS = 100; // Allow faster taps while still preventing spam
 
   // Get orientation and dimensions
   const { width, height } = useWindowDimensions();
@@ -146,7 +146,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     left: '10%', // Spread buttons further apart
     right: '10%', // Spread buttons further apart
     paddingHorizontal: getResponsiveSpacing(30, scaleFactor), // More padding for extra spacing
-    zIndex: 10,
+    zIndex: 10000,
   };
 
   // Gradient colors for the buttons
