@@ -370,7 +370,9 @@ export default function LevelScreenTemplate({
     mass: 0.7,
   });
 
-  const [currentAnimalIndex, setCurrentAnimalIndex] = useState(-1);
+  const [currentAnimalIndex, setCurrentAnimalIndex] = useState(() =>
+    typeof levelName === 'string' && levelName.toLowerCase() === 'forest' ? 0 : -1
+  );
   const [showName, setShowName] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
@@ -486,10 +488,10 @@ export default function LevelScreenTemplate({
         // Do not auto-show the label on load; only show after an explicit click
         setShowName(false);
       } else {
-        // No saved progress yet: start from the first animal
+        // No saved progress yet: start from the first animal (index already 0 for forest on first mount)
         setVisitedAnimals(new Set());
         const indexToShow = animals.length > 0 ? 0 : -1;
-        if (indexToShow !== -1) {
+        if (indexToShow !== -1 && currentAnimalIndex === -1) {
           setCurrentAnimalIndex(indexToShow);
         }
         setHasClickedCurrentAnimal(false);
@@ -1985,6 +1987,9 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       appliedIpadLogic: isLandscape && screenW >= 900 && Platform.OS === 'ios'
     });
     
+    // Ensure top UI (home/notebook) remains tappable: enforce a minimum top clearance
+    const minTopClearance = Math.max(getResponsiveSpacing(80, getScaleFactor(screenW, screenH)), screenH * 0.08);
+    finalMargin = Math.max(finalMargin, minTopClearance);
     return finalMargin;
   };
 
@@ -2181,13 +2186,14 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                           bottom: 1,
                         };
                       case 'forest':
+                        // Remove all negative margins for forest bg
                         return isIPad ? {
                           height: '120%',
-                          top: -250,
+                          top: 0,
                           bottom: 1,
                         } : {
                           height: '120%',
-                          top: -155,
+                          top: 0,
                           bottom: 1,
                         };
                       case 'jungle':
@@ -2608,7 +2614,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
               {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedLeaves />}
 
               {hasAnimals && !showDiscoverScreen && (
-            <View style={[dynamicStyles.content, { zIndex: 50, position: 'relative' }] }>
+            <View style={dynamicStyles.content}>
                             <View style={[
                 dynamicStyles.animalCard,
                     { marginTop: getAnimalMarginTop() }
@@ -2636,7 +2642,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     opacity: 1,
                     alignItems: 'center', 
                     justifyContent: 'center',
-                    zIndex: 50,
+                    zIndex: 1,
                     transform: [
                       { scale: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) },
                       { scale: clickBounceAnim }
@@ -2644,7 +2650,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     shadowColor: '#FFD700',
                     shadowOpacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1.0] }),
                     shadowRadius: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 35] }),
-                    elevation: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [5, 25] }),
+                    elevation: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 20] }),
                   }}
                       pointerEvents="none"
                 >
