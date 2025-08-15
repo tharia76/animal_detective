@@ -26,6 +26,7 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
   const [bgReady, setBgReady] = useState(false);
   const [showVideo, setShowVideo] = useState(isLandscape); // Show video only in landscape
   const [gameStarted, setGameStarted] = useState(!isLandscape); // Start game immediately in portrait
+  const [initialIndex, setInitialIndex] = useState<number | undefined>(undefined);
   
   // Animation values for the level title
   const titleScale = useRef(new Animated.Value(0)).current;
@@ -174,6 +175,16 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
     const load = async () => {
       try {
         await Asset.fromModule(require('../../src/assets/images/level-backgrounds/forest.png')).downloadAsync();
+        // Prefetch first animal sprite/image to avoid initial pop-in
+        if (forestAnimals && forestAnimals.length > 0) {
+          try {
+            const first = forestAnimals[0];
+            // If require()-based asset (number), download via Asset
+            if (typeof first.source === 'number') {
+              await Asset.fromModule(first.source).downloadAsync();
+            }
+          } catch (e) {}
+        }
       } catch (err) {
         console.warn('Failed to preload forest image', err);
       }
@@ -201,11 +212,44 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
             try { player.pause(); } catch (e) {}
             setShowVideo(false);
             setGameStarted(true);
+            
+            // Calculate the correct initial index based on progress
+            const visitedSet = new Set<number>(arr);
+            let indexToShow = 0;
+            if (forestAnimals.length > 0) {
+              if (visitedSet.size < forestAnimals.length) {
+                // Find first unvisited animal
+                for (let i = 0; i < forestAnimals.length; i++) {
+                  if (!visitedSet.has(i)) { 
+                    indexToShow = i; 
+                    break; 
+                  }
+                }
+              } else {
+                // All visited: try to restore saved index
+                const indexKey = 'animalCurrentIndex_forest';
+                const savedIndexStr = await AsyncStorage.getItem(indexKey);
+                const parsed = parseInt(savedIndexStr ?? '', 10);
+                if (!isNaN(parsed) && parsed >= 0 && parsed < forestAnimals.length) {
+                  indexToShow = parsed;
+                }
+              }
+            }
+            setInitialIndex(indexToShow);
+          } else {
+            // No progress yet, start with first animal
+            setInitialIndex(0);
           }
+        } else {
+          // No saved progress, start with first animal
+          setInitialIndex(0);
         }
-      } catch (e) {}
+      } catch (e) {
+        // Error case, start with first animal
+        setInitialIndex(0);
+      }
     })();
-  }, []);
+  }, [forestAnimals.length]);
 
   if (!bgReady) {
     return (
@@ -281,7 +325,7 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
   }
 
   // Show game when video ends or in portrait mode
-  if (gameStarted) {
+  if (gameStarted && typeof initialIndex === 'number') {
     return (
       <LevelScreenTemplate
         levelName="Forest"
@@ -289,6 +333,7 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
         onBackToMenu={onBackToMenu}
         backgroundImageUri={backgroundImageUri}
         skyBackgroundImageUri={skyBackgroundImageUri}
+        initialIndex={initialIndex}
       />
     );
   }

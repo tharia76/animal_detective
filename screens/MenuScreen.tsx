@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Image,
@@ -16,13 +16,15 @@ import {
   PanResponder,
   Animated,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
 import * as RNIap from 'react-native-iap';
-import { useAudioPlayer } from 'expo-audio';
+import { useAudioPlayer, createAudioPlayer } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { CommonActions } from '@react-navigation/native';
 
 import ReAnimated, { 
   useSharedValue, 
@@ -44,6 +46,7 @@ import AnimatedFireflies from '../src/components/AnimatedFireflies';
 import { setGlobalVolume } from '../src/components/LevelScreenTemplate';
 import { useLevelCompletion } from '../src/hooks/useLevelCompletion';
 import { getAnimals } from '../src/data/animals';
+
 
 const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
 const BG_IMAGE = require('../src/assets/images/menu-screen.png');
@@ -452,6 +455,26 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
 
 const lockedLevels = LEVELS.filter(l => l !== 'farm');
 
+// Helper function to play button sound
+const playButtonSound = (volume: number) => {
+  if (volume > 0) {
+    try {
+      const buttonPlayer = createAudioPlayer(require('../src/assets/sounds/other/button.mp3'));
+      buttonPlayer.volume = volume;
+      buttonPlayer.play();
+      
+      // Clean up sound when it finishes
+      buttonPlayer.addListener('playbackStatusUpdate', (status: any) => {
+        if (status.didJustFinish) {
+          buttonPlayer.remove();
+        }
+      });
+    } catch (error) {
+      console.warn('Error playing button sound:', error);
+    }
+  }
+};
+
 interface MenuScreenProps {
   onSelectLevel: (level: string) => void;
   backgroundImageUri?: string | null;
@@ -491,7 +514,17 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [volume, setVolume] = useState(0.8); // Default volume at 80%
   const [volumeLoaded, setVolumeLoaded] = useState(false); // Track if volume is loaded from storage
-  const sliderWidth = useRef(200);
+  
+
+  
+  // Wrapper function for language change with button sound
+  const handleLanguageChange = useCallback((code: string) => {
+    playButtonSound(volume);
+    setLang(code);
+  }, [setLang, volume]);
+
+  
+
 
   // Volume storage functions
   const saveVolumeToStorage = useCallback(async (volumeValue: number) => {
@@ -530,42 +563,24 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
       console.warn('Error setting volume:', error);
     }
   }, [saveVolumeToStorage]);
-
-  // Improved gesture handler for volume slider
-  const handleVolumeGesture = useCallback((event) => {
-    try {
-      const { locationX } = event.nativeEvent;
-      if (!sliderWidth.current || sliderWidth.current <= 0) {
-        return;
-      }
-      
-      // Calculate volume based on touch position
-      const ratio = Math.max(0, Math.min(1, locationX / sliderWidth.current));
-      // Snap to 10% increments to match our 10 segments
-      const snappedVolume = Math.round(ratio * 10) / 10;
-      setVolumeSafely(snappedVolume);
-    } catch (error) {
-      console.warn('Error in volume gesture:', error);
-    }
-  }, [setVolumeSafely]);
-
-  // Create gesture responder
-  const volumePanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: handleVolumeGesture,
-      onPanResponderMove: handleVolumeGesture,
-      onPanResponderRelease: () => {
-        // Optional: Add haptic feedback here
-      },
-    })
-  ).current;
+  
+  // Handle volume change from slider
+  const handleVolumeChange = useCallback((newVolume: number) => {
+    console.log('Volume changing to:', newVolume);
+    console.log('Current volume state:', volume);
+    setVolume(newVolume);
+    setGlobalVolume(newVolume);
+    saveVolumeToStorage(newVolume);
+  }, [saveVolumeToStorage, volume]);
 
   // Load volume from storage on app start
   useEffect(() => {
     loadVolumeFromStorage();
   }, [loadVolumeFromStorage]);
+  
+
+  
+
 
   // Update menu background music volume when volume changes (only after volume is loaded)
   useEffect(() => {
@@ -828,7 +843,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
               await RNIap.finishTransaction({ purchase, isConsumable: false });
               if (purchase.productId === APPLE_PRODUCT_ID) {
                 setUnlocked(true);
-                Alert.alert(t('Thank you!'), t('All levels are now unlocked.'));
+                Alert.alert(t('thankYou'), t('allLevelsNowUnlocked'));
               }
             } catch (err) {
               console.warn('finishTransaction error', err);
@@ -838,11 +853,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
 
         purchaseErrorSubscription = RNIap.purchaseErrorListener((error) => {
           setPurchaseInProgress(false);
-          Alert.alert(t('Purchase Error'), error.message || t('Something went wrong.'));
+          Alert.alert(t('purchaseError'), error.message || t('somethingWentWrong'));
         });
       } catch (e) {
         setIapInitialized(true);
-        // Alert.alert(t('Error'), t('Could not connect to App Store.'));
+        // Alert.alert(t('error'), t('couldNotConnectToAppStore'));
       }
     }
 
@@ -870,12 +885,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
       );
       if (hasUnlock) {
         setUnlocked(true);
-        Alert.alert(t('Restored'), t('All levels are now unlocked.'));
+        Alert.alert(t('restored'), t('allLevelsNowUnlocked'));
       } else {
-        Alert.alert(t('No Purchases'), t('No previous purchases found.'));
+        Alert.alert(t('noPreviousPurchases'), t('noPurchasesFound'));
       }
     } catch (e) {
-      // Alert.alert(t('Error'), t('Could not restore purchases.'));
+      // Alert.alert(t('error'), t('couldNotRestorePurchases'));
     }
     setPurchaseInProgress(false);
   }, [t]);
@@ -888,7 +903,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
       await RNIap.requestPurchase({ sku: APPLE_PRODUCT_ID });
 
     } catch (e) {
-      // Alert.alert(t('Error'), t('Could not complete purchase.'));
+      // Alert.alert(t('error'), t('couldNotCompletePurchase'));
     }
     setPurchaseInProgress(false);
   }, [purchaseInProgress, t]);
@@ -896,6 +911,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   // Handle toggling level completion status
   const handleToggleCompletion = useCallback(
     async (level: string, isCompleted: boolean) => {
+      playButtonSound(volume);
       try {
         if (!isCompleted) {
           // Unmark as completed
@@ -917,7 +933,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
         console.warn('Error toggling level completion:', error);
       }
     },
-    [unmarkLevelCompleted]
+    [unmarkLevelCompleted, volume]
   );
 
   // Handle resetting all levels
@@ -925,15 +941,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     try {
       // Show confirmation dialog
       Alert.alert(
-        t('resetAllLevels') || 'Reset All Levels',
-        t('resetAllLevelsConfirmation') || 'Are you sure you want to reset all level progress? This action cannot be undone.',
+        t('resetAllLevels'),
+        t('resetAllLevelsConfirmation'),
         [
           {
-            text: t('cancel') || 'Cancel',
+            text: t('cancel'),
             style: 'cancel',
           },
           {
-            text: t('reset') || 'Reset',
+            text: t('reset'),
             style: 'destructive',
             onPress: async () => {
               try {
@@ -957,14 +973,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                 
                 // Show success message
                 Alert.alert(
-                  t('resetComplete') || 'Reset Complete',
-                  t('allLevelsReset') || 'All levels have been reset successfully!'
+                  t('resetComplete'),
+                  t('allLevelsReset')
                 );
               } catch (error) {
                 console.warn('Error resetting all levels:', error);
                 Alert.alert(
-                  t('error') || 'Error',
-                  t('resetError') || 'There was an error resetting the levels. Please try again.'
+                  t('error'),
+                  t('resetError')
                 );
               }
             },
@@ -979,20 +995,21 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   // also stop when you select a level
   const handleSelect = useCallback(
     (level, isLocked) => {
+      playButtonSound(volume);
       stopAndUnload();
       // Always allow navigation regardless of locked state (visual only)
       if (typeof onSelectLevel === 'function') {
         onSelectLevel(level);
       }
     },
-    [onSelectLevel, stopAndUnload]
+    [onSelectLevel, stopAndUnload, volume]
   );
 
   // Get price string for unlock button
   const unlockPrice =
     products && products.length > 0 && products[0].localizedPrice
       ? products[0].localizedPrice
-      : '$5.99';
+      : t('defaultPrice');
 
   // Render unlock/restore buttons
   const renderUnlockButtons = () => {
@@ -1006,7 +1023,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
         <ReAnimated.View style={animatedGradientStyle}>
           <TouchableOpacity
             style={[ { backgroundColor: 'transparent' }]}
-            onPress={handleUnlock}
+            onPress={() => {
+              playButtonSound(volume);
+              handleUnlock();
+            }}
             disabled={purchaseInProgress}
           >
             <LinearGradient
@@ -1083,6 +1103,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   <TouchableOpacity
                     style={[responsiveStyles.modalUnlockButton, { backgroundColor: 'transparent' }]}
                     onPress={() => {
+                      playButtonSound(volume);
                       setShowUnlockModal(false);
                       handleUnlock();
                     }}
@@ -1132,7 +1153,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
             )}
             <Pressable
               style={responsiveStyles.modalCloseButton}
-              onPress={() => setShowUnlockModal(false)}
+              onPress={() => {
+                playButtonSound(volume);
+                setShowUnlockModal(false);
+              }}
             >
               <Text style={responsiveStyles.modalCloseButtonText}>❌ {t('close')} ❌</Text>
             </Pressable>
@@ -1254,7 +1278,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
               <View style={{ position: 'absolute', top: getResponsiveSpacing(12, scaleFactor), right: getResponsiveSpacing(12, scaleFactor), zIndex: 1000 }}>
                 <TouchableOpacity
                   style={responsiveStyles.settingsButtonContainer}
-                  onPress={() => setShowSettingsModal(true)}
+                  onPress={() => {
+                    playButtonSound(volume);
+                    setShowSettingsModal(true);
+                  }}
                   activeOpacity={0.8}
                 >
                   <Image
@@ -1319,7 +1346,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     </Text>
                     {Platform.OS === 'ios' && !unlocked && (
                       <TouchableOpacity
-                        onPress={handleUnlock}
+                        onPress={() => {
+                          playButtonSound(volume);
+                          handleUnlock();
+                        }}
                         disabled={purchaseInProgress}
                         activeOpacity={0.9}
                         style={{ marginLeft: getResponsiveSpacing(10, scaleFactor), borderRadius: getResponsiveSpacing(18, scaleFactor), overflow: 'hidden' }}
@@ -1346,6 +1376,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                       </TouchableOpacity>
                     )}
                   </View>
+                  
+
+                  
                   <LevelTiles
                     key={`landscape-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
                     levels={LEVELS}
@@ -1364,6 +1397,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     animals={animals}
                     visitedCounts={visitedCounts}
                   />
+                  
+
                 </View>
               </ScrollView>
             </>
@@ -1412,7 +1447,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     </Text>
                     {Platform.OS === 'ios' && !unlocked && (
                       <TouchableOpacity
-                        onPress={handleUnlock}
+                        onPress={() => {
+                          playButtonSound(volume);
+                          handleUnlock();
+                        }}
                         disabled={purchaseInProgress}
                         activeOpacity={0.9}
                         style={{ marginLeft: getResponsiveSpacing(12, scaleFactor), borderRadius: getResponsiveSpacing(20, scaleFactor), overflow: 'hidden' }}
@@ -1457,79 +1495,110 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     animals={animals}
                     visitedCounts={visitedCounts}
                   />
+                  
+
                 </View>
               </ScrollView>
             </>
           )}
           {renderUnlockModal()}
-
-          {/* Settings Modal */}
+          
+          {/* Settings Full Screen */}
           {showSettingsModal && volume !== undefined && typeof volume === 'number' && (
-          <Modal
-            visible={showSettingsModal}
-            transparent={true}
-            animationType="fade"
-            presentationStyle="overFullScreen"
-            statusBarTranslucent
-            hardwareAccelerated
-            supportedOrientations={['landscape', 'landscape-left', 'landscape-right', 'portrait', 'portrait-upside-down']}
-            onRequestClose={() => {
-              try {
-                setShowSettingsModal(false);
-              } catch (error) {
-                console.warn('Error closing settings modal:', error);
-              }
-            }}
-          >
             <View style={{
-              flex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingHorizontal: 20,
-              paddingVertical: isTablet ? 32 : 12,
               position: 'absolute',
               top: 0,
+              left: 0,
               right: 0,
               bottom: 0,
-              left: 0,
-            }} pointerEvents="auto">
-              <View style={{
-                 backgroundColor: 'white',
-                 borderRadius: isTablet ? 30 : 18,
-                 width: settingsModalWidth,
-                 height: settingsModalHeight,
-                 position: 'absolute',
-                 top: settingsModalTop,
-                 left: settingsModalLeft,
-                 elevation: 5,
-                 shadowColor: '#000',
-                 shadowOffset: { width: 0, height: 2 },
-                 shadowOpacity: 0.25,
-                 shadowRadius: 4,
-               }}>
+              backgroundColor: '#ffdab9',
+              zIndex: 1000,
+            }}>
+              <ImageBackground
+                source={
+                  backgroundImageUri
+                    ? { uri: backgroundImageUri }
+                    : bgUri
+                    ? { uri: bgUri }
+                    : BG_IMAGE
+                }
+                style={{ 
+                  flex: 1, 
+                  backgroundColor: 'transparent',
+                }}
+                imageStyle={{ opacity: 0.65 }}
+                resizeMode="cover"
+              >
+                <View style={{
+                  flex: 1,
+                  backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                  margin: getResponsiveSpacing(16, scaleFactor),
+                  borderRadius: isTablet ? 35 : 25,
+                  overflow: 'hidden',
+                  elevation: 15,
+                  shadowColor: '#FF8C00',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 12,
+                  borderWidth: 2,
+                  borderColor: 'rgba(255, 140, 0, 0.2)',
+                }}>
                 {/* Fixed Header */}
                 <View style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: isTablet ? 24 : 14,
-                  paddingBottom: isTablet ? 12 : 8,
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#f0f0f0',
+                  padding: isTablet ? 28 : 20,
+                  paddingBottom: isTablet ? 20 : 16,
+                  borderBottomWidth: 3,
+                  borderBottomColor: '#FF8C00',
+                  backgroundColor: 'rgba(255, 140, 0, 0.08)',
                 }}>
-                  <Text style={{
-                    fontSize: isTablet ? 24 : 18,
-                    fontWeight: 'bold',
-                    color: '#612915',
-                  }}>
-                    {t('settings') || 'Settings'}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{
+                      backgroundColor: 'rgba(255, 140, 0, 0.15)',
+                      borderRadius: 15,
+                      padding: 8,
+                      marginRight: 12,
+                    }}>
+                      <Ionicons 
+                        name="settings" 
+                        size={isTablet ? 26 : 22} 
+                        color="#612915" 
+                      />
+                    </View>
+                    <Text style={{
+                      fontSize: isTablet ? 26 : 20,
+                      fontWeight: '800',
+                      color: '#612915',
+                      textShadowColor: 'rgba(255, 140, 0, 0.3)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 2,
+                    }}>
+                      {t('settings') || 'Settings'}
+                    </Text>
+                  </View>
                   <TouchableOpacity
-                    onPress={() => setShowSettingsModal(false)}
-                    style={{ padding: isTablet ? 8 : 6 }}
+                    onPress={() => {
+                      playButtonSound(volume);
+                      setShowSettingsModal(false);
+                    }}
+                    style={{ 
+                      padding: isTablet ? 14 : 10,
+                      backgroundColor: '#FF8C00',
+                      borderRadius: 22,
+                      elevation: 4,
+                      shadowColor: '#FF8C00',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 4,
+                    }}
                   >
-                    <Text style={{ fontSize: isTablet ? 28 : 22, color: '#666' }}>✕</Text>
+                    <Ionicons 
+                      name="close" 
+                      size={isTablet ? 22 : 18} 
+                      color="white" 
+                    />
                   </TouchableOpacity>
                 </View>
 
@@ -1540,9 +1609,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     backgroundColor: 'transparent',
                   }}
                   contentContainerStyle={{ 
-                    padding: isTablet ? 22 : 14,
-                    paddingTop: isTablet ? 16 : 12,
-                    paddingBottom: isTablet ? 10 : 16,
+                    padding: isTablet ? 32 : 20,
+                    paddingTop: isTablet ? 24 : 16,
+                    paddingBottom: isTablet ? 20 : 24,
                     flexGrow: 1, // Ensure content can grow to trigger scrolling
                   }}
                   showsVerticalScrollIndicator={true}
@@ -1553,55 +1622,98 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
 
 
                   {/* Language Section */}
-                  <View style={{ marginBottom: 25 }}>
-                    <Text style={{
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                      color: '#612915',
-                      marginBottom: 10,
+                  <View style={{ marginBottom: 40 }}>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 15,
+                      paddingHorizontal: 8,
                     }}>
-                      {t('language')}
-                    </Text>
+                      <View style={{
+                        width: 4,
+                        height: 20,
+                        backgroundColor: '#FF8C00',
+                        borderRadius: 2,
+                        marginRight: 12,
+                      }} />
+                      <Text style={{
+                        fontSize: 18,
+                        fontWeight: '700',
+                        color: '#612915',
+                        textShadowColor: 'rgba(255, 140, 0, 0.2)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: 1,
+                      }}>
+                        {t('language')}
+                      </Text>
+                    </View>
                     <LanguageSelector
                       isLandscape={false}
                       t={t}
                       lang={lang}
                       languages={languages}
-                      handleLanguageChange={setLang}
+                      handleLanguageChange={handleLanguageChange}
                     />
                   </View>
 
                   {/* Volume Section */}
-                  <Text style={{
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    color: '#612915',
-                    marginBottom: 15,
-                  }}>
-                    {t('volume')}: {isNaN(volume) ? '0' : Math.round((volume || 0) * 100)}%
-                  </Text>
+                  <View style={{ marginBottom: 40 }}>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 20,
+                      paddingHorizontal: 8,
+                    }}>
+                      <View style={{
+                        width: 4,
+                        height: 20,
+                        backgroundColor: '#FF8C00',
+                        borderRadius: 2,
+                        marginRight: 12,
+                      }} />
+                      <Text style={{
+                        fontSize: 18,
+                        fontWeight: '700',
+                        color: '#612915',
+                        textShadowColor: 'rgba(255, 140, 0, 0.2)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: 1,
+                      }}>
+                        {t('volume')}: {isNaN(volume) ? '0' : Math.round((volume || 0) * 100)}%
+                      </Text>
+                    </View>
 
-                {/* Volume Slider */}
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginBottom: 15,
-                }}>
-                  <TouchableOpacity
-                    onPress={() => setVolumeSafely(0)}
-                    style={{ 
-                      marginRight: 10,
-                      padding: 5,
-                    }}
-                  >
-                    <Ionicons 
-                      name="volume-mute" 
-                      size={20}
-                      color={(volume || 0) === 0 ? '#FF8C00' : '#666'}
-                    />
-                  </TouchableOpacity>
+                                        {/* Volume Slider */}
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 20,
+                      backgroundColor: 'rgba(255, 140, 0, 0.05)',
+                      borderRadius: 15,
+                      padding: 15,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 140, 0, 0.1)',
+                    }}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          playButtonSound(volume);
+                          setVolumeSafely(0);
+                        }}
+                        style={{ 
+                          marginRight: 12,
+                          padding: 8,
+                          backgroundColor: (volume || 0) === 0 ? 'rgba(255, 140, 0, 0.2)' : 'transparent',
+                          borderRadius: 12,
+                        }}
+                      >
+                        <Ionicons 
+                          name="volume-mute" 
+                          size={22}
+                          color={(volume || 0) === 0 ? '#FF8C00' : '#666'}
+                        />
+                      </TouchableOpacity>
                   
-                  {/* Volume Segments Bar */}
+                  {/* Volume Slider */}
                   <View style={{
                     flex: 1,
                     height: 36,
@@ -1609,88 +1721,92 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     marginHorizontal: 10,
                     paddingVertical: 8,
                   }}>
-                    <View style={{
-                      height: 36,
-                      backgroundColor: '#E0E0E0',
-                      borderRadius: 18,
-                      flexDirection: 'row',
-                      overflow: 'hidden',
-                      elevation: 2,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 2,
-                    }}>
-                      {Array.from({ length: 10 }, (_, i) => {
-                        const segmentValue = (i + 1) / 10;
-                        const isActive = segmentValue <= (volume || 0);
-                        return (
-                          <TouchableOpacity
-                            key={i}
-                            style={{
-                              flex: 1,
-                              height: '100%',
-                              backgroundColor: isActive ? '#FF8C00' : 'transparent',
-                              borderRightWidth: i < 9 ? 1 : 0,
-                              borderRightColor: 'rgba(255,255,255,0.3)',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                            }}
-                            onPress={() => setVolumeSafely(segmentValue)}
-                            activeOpacity={0.7}
-                          >
-                            <View style={{
-                              width: 4,
-                              height: '80%',
-                              backgroundColor: isActive ? 'white' : '#999',
-                              borderRadius: 2,
-                            }} />
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
+                    <Slider
+                      style={{ width: '100%', height: 40 }}
+                      minimumValue={0}
+                      maximumValue={1}
+                      value={volume || 0}
+                      onValueChange={(value) => {
+                        console.log('Slider value changed to:', value);
+                        handleVolumeChange(value);
+                      }}
+                      onSlidingComplete={(value) => {
+                        console.log('Slider completed at:', value);
+                        handleVolumeChange(value);
+                      }}
+                      minimumTrackTintColor="#FF8C00"
+                      maximumTrackTintColor="#E0E0E0"
+                      thumbTintColor="white"
+                    />
                   </View>
                   
                   <TouchableOpacity
-                    onPress={() => setVolumeSafely(1.0)}
+                    onPress={() => {
+                      playButtonSound(volume);
+                      setVolumeSafely(1.0);
+                    }}
                     style={{ 
-                      marginLeft: 10,
-                      padding: 5,
+                      marginLeft: 12,
+                      padding: 8,
+                      backgroundColor: (volume || 0) === 1.0 ? 'rgba(255, 140, 0, 0.2)' : 'transparent',
+                      borderRadius: 12,
                     }}
                   >
                     <Ionicons 
                       name="volume-high" 
-                      size={20}
+                      size={22}
                       color={(volume || 0) === 1.0 ? '#FF8C00' : '#666'}
                     />
                   </TouchableOpacity>
                 </View>
+                  </View>
 
                   {/* Reset All Levels Section */}
-                  <View style={{ marginTop: 25, marginBottom: 15 }}>
-                    <Text style={{
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                      color: '#612915',
-                      marginBottom: 10,
+                  <View style={{ marginBottom: 40 }}>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 20,
+                      paddingHorizontal: 8,
                     }}>
-                      {t('gameProgress') || 'Game Progress'}
-                    </Text>
+                      <View style={{
+                        width: 4,
+                        height: 20,
+                        backgroundColor: '#FF6B6B',
+                        borderRadius: 2,
+                        marginRight: 12,
+                      }} />
+                      <Text style={{
+                        fontSize: 18,
+                        fontWeight: '700',
+                        color: '#612915',
+                        textShadowColor: 'rgba(255, 107, 107, 0.2)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: 1,
+                      }}>
+                        {t('gameProgress') || 'Game Progress'}
+                      </Text>
+                    </View>
                     <TouchableOpacity
-                      onPress={handleResetAllLevels}
+                      onPress={() => {
+                        playButtonSound(volume);
+                        handleResetAllLevels();
+                      }}
                       style={{
                         backgroundColor: '#FF6B6B',
-                        borderRadius: 15,
-                        padding: 12,
+                        borderRadius: 18,
+                        padding: 16,
                         alignItems: 'center',
-                        minHeight: 44,
+                        minHeight: 50,
                         flexDirection: 'row',
                         justifyContent: 'center',
                         shadowColor: '#FF6B6B',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 4,
-                        elevation: 3,
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: 0.4,
+                        shadowRadius: 6,
+                        elevation: 5,
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 107, 107, 0.3)',
                       }}
                     >
                       <Ionicons 
@@ -1711,20 +1827,33 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
 
                   {/* Done Button */}
                   <TouchableOpacity
-                    onPress={() => setShowSettingsModal(false)}
+                    onPress={() => {
+                      playButtonSound(volume);
+                      setShowSettingsModal(false);
+                    }}
                     style={{
-                      backgroundColor: '#73c2b9',
-                      borderRadius: 15,
-                      padding: 12,
+                      backgroundColor: '#FF8C00',
+                      borderRadius: 25,
+                      padding: 18,
                       alignItems: 'center',
-                      minHeight: 44,
-                      marginTop: 10,
+                      minHeight: 60,
+                      marginTop: 25,
+                      elevation: 6,
+                      shadowColor: '#FF8C00',
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.4,
+                      shadowRadius: 8,
+                      borderWidth: 2,
+                      borderColor: 'rgba(255, 140, 0, 0.3)',
                     }}
                   >
                     <Text style={{
                       color: 'white',
-                      fontSize: 16,
-                      fontWeight: 'bold',
+                      fontSize: 20,
+                      fontWeight: '800',
+                      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 2,
                     }}>
                       {t('done')}
                     </Text>
@@ -1734,8 +1863,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   <View style={{ height: isTablet ? 10 : 16 }} />
                 </ScrollView>
               </View>
-            </View>
-          </Modal>
+            </ImageBackground>
+          </View>
           )}
         </View>
       </ImageBackground>

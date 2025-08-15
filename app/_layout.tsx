@@ -115,6 +115,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="+not-found" />
+            <Stack.Screen name="BonusGame" />
           </Stack>
           <StatusBar style="auto" />
         </GestureHandlerRootView>

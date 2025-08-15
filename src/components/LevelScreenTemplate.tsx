@@ -24,6 +24,7 @@ import { Easing } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { Asset } from 'expo-asset';
 import {
   useAudioPlayer,
   createAudioPlayer,
@@ -342,6 +343,7 @@ type Props = {
   skyBackgroundImageUri: string | null;
   onBackToMenu: () => void;
   bgMusic?: string | number; // allow prop for override
+  initialIndex?: number; // optional: allows caller to set initial animal index synchronously
 };
 
   const FADE_DURATION = 160; // snappier navigation feel
@@ -354,6 +356,7 @@ export default function LevelScreenTemplate({
   skyBackgroundImageUri,
   onBackToMenu,
   bgMusic, // allow prop for override
+  initialIndex,
 }: Props) {
   const navigation = useNavigation();
   // --- Use localization hook ---
@@ -370,8 +373,8 @@ export default function LevelScreenTemplate({
     mass: 0.7,
   });
 
-  const [currentAnimalIndex, setCurrentAnimalIndex] = useState(() =>
-    typeof levelName === 'string' && levelName.toLowerCase() === 'forest' ? 0 : -1
+  const [currentAnimalIndex, setCurrentAnimalIndex] = useState(
+    typeof initialIndex === 'number' ? initialIndex : -1
   );
   const [showName, setShowName] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -404,18 +407,16 @@ export default function LevelScreenTemplate({
     const isCurrentAnimalVisited = visitedAnimals.has(currentAnimalIndex);
     setHasClickedCurrentAnimal(isCurrentAnimalVisited);
     
-    if (!isClickingRef.current) {
-      if (isCurrentAnimalVisited && initialIndexHydrated && !isTransitioning) {
-        // If revisiting an already-clicked animal after hydration, show the label immediately
-        setCanRenderLabel(true);
-        setShowName(true);
-        console.log('🏷️ Auto-showing label on revisit. Index:', currentAnimalIndex);
-      } else {
-        // Otherwise hide during navigation to prevent flashes
-        setShowName(false);
-        setCanRenderLabel(false);
-        console.log('🔒 Hiding label on navigation. Visited:', isCurrentAnimalVisited, 'index:', currentAnimalIndex);
-      }
+    if (isCurrentAnimalVisited && initialIndexHydrated && !isTransitioning) {
+      // If revisiting an already-clicked animal after hydration, show the label immediately
+      setCanRenderLabel(true);
+      setShowName(true);
+      console.log('🏷️ Auto-showing label on revisit. Index:', currentAnimalIndex);
+    } else if (!isClickingRef.current) {
+      // Otherwise hide during navigation to prevent flashes (but not during active clicking)
+      setShowName(false);
+      setCanRenderLabel(false);
+      console.log('🔒 Hiding label on navigation. Visited:', isCurrentAnimalVisited, 'index:', currentAnimalIndex);
     } else {
       console.log('🚫 Skipping showName update during click operation');
     }
@@ -480,18 +481,22 @@ export default function LevelScreenTemplate({
             }
           }
         }
-        setCurrentAnimalIndex(indexToShow);
+        // If initialIndex was provided, do not override the current index on hydration
+        if (typeof initialIndex !== 'number') {
+          setCurrentAnimalIndex(indexToShow);
+        }
 
-        // Update UI flags based on chosen index
-        const isIndexVisited = visitedSet.has(indexToShow);
+        // Update UI flags based on the actual current animal index (which might be initialIndex)
+        const actualIndex = typeof initialIndex === 'number' ? initialIndex : indexToShow;
+        const isIndexVisited = visitedSet.has(actualIndex);
         setHasClickedCurrentAnimal(isIndexVisited);
         // Do not auto-show the label on load; only show after an explicit click
         setShowName(false);
       } else {
-        // No saved progress yet: start from the first animal (index already 0 for forest on first mount)
+        // No saved progress yet: start from the first animal
         setVisitedAnimals(new Set());
         const indexToShow = animals.length > 0 ? 0 : -1;
-        if (indexToShow !== -1 && currentAnimalIndex === -1) {
+        if (indexToShow !== -1 && typeof initialIndex !== 'number') {
           setCurrentAnimalIndex(indexToShow);
         }
         setHasClickedCurrentAnimal(false);
@@ -507,17 +512,29 @@ export default function LevelScreenTemplate({
 
   // Load progress when component mounts or level changes (layout effect to avoid hook order change warnings)
   useEffect(() => {
+    // Always load visited animals progress, even when initialIndex is provided
     loadProgress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [levelName]);
 
+  // Prefetch current animal sprite to avoid pop-in when returning to the level
+  const prefetchCurrentAnimal = useCallback(() => {
+    try {
+      const animal = animals[currentAnimalIndex];
+      if (animal && animal.type === 'sprite' && typeof animal.source === 'number') {
+        Asset.fromModule(animal.source).downloadAsync().catch(() => {});
+      }
+    } catch {}
+  }, [animals, currentAnimalIndex]);
+
   // Also refresh progress when the screen gains focus (covers return-from-menu case)
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      loadProgress();
+      // Always avoid re-hydration reset on focus; just ensure assets are hot
+      prefetchCurrentAnimal();
     });
     return unsubscribe;
-  }, [navigation, loadProgress]);
+  }, [navigation, loadProgress, prefetchCurrentAnimal, levelName]);
 
   // Save progress whenever visitedAnimals changes
   useEffect(() => {
@@ -1815,6 +1832,10 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       baseMargin,
       isPhone: Math.min(screenW, screenH) < 768
     });
+    // Forest: push animals down by 10px
+    if (levelName.toLowerCase() === 'forest') {
+      return baseMargin + 150;
+    }
     
     // Birds level - move animals up by 20% on tablets
     if (levelName.toLowerCase() === 'birds') {
@@ -1865,29 +1886,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         return baseMargin - 30;
       }
       
-      // Forest level - use the same logic as farm
-      if (levelName.toLowerCase() === 'forest' && !isLandscape) {
-        return baseMargin + 145;
-      }
-      
-      // Forest level phone landscape - move animals up significantly
-      if (levelName.toLowerCase() === 'forest' && isLandscape && Math.min(screenW, screenH) < 768) {
-        return baseMargin - (screenH * 0.1); // Move up by 40% of screen height
-      }
-      
-          // Forest level on iPad - move animals up by 30px (same as farm)
-    if (levelName.toLowerCase() === 'forest' && screenW >= 768 && Platform.OS === 'ios') {
-      // Special positioning for mouse in landscape (all languages)
-      const animalNameLower = currentAnimal?.name?.toLowerCase() || '';
-      const isMouseAnimal = animalNameLower.includes('mouse') ||  // English
-                           animalNameLower.includes('мышь') ||   // Russian
-                           animalNameLower.includes('fare');     // Turkish
-      if (isLandscape && isMouseAnimal) {
-        console.log('Moving mouse down! Name:', currentAnimal?.name);
-        return baseMargin + 100; // Move mouse down 100px in landscape
-      }
-      return baseMargin - 30; // Default positioning for other animals
-    }
+      // Forest level: no further adjustments
     
     // Jungle level - move animals up by 20% on tablets
     if (levelName.toLowerCase() === 'jungle') {
@@ -1955,8 +1954,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     let finalMargin = baseMargin; // default
     
     // Farm level - move animals up by 5px in all cases not handled above
-      if (levelName.toLowerCase() === 'farm' || levelName.toLowerCase() === 'forest') {
-        finalMargin -= 5; // Move up 5px for farm and forest level
+      if (levelName.toLowerCase() === 'farm') {
+        finalMargin -= 5; // Move up 5px for farm level
     }
     
       // Phone positioning logic
@@ -2624,7 +2623,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                   onPress={handleAnimalPress} 
                   activeOpacity={1} 
                   disabled={isTransitioning}
-                  hitSlop={{ top: 28, bottom: 28, left: 28, right: 28 }}
+                  hitSlop={{ top: 80, bottom: 80, left: 80, right: 80 }}
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -2633,6 +2632,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     bottom: 0,
                     backgroundColor: 'transparent',
                     zIndex: 5,
+                    width: '100%',
+                    height: '100%',
                   }}
                 />
                 
