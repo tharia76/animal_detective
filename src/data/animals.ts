@@ -678,6 +678,7 @@ const getLabelSound = (animalName: string, language: string) => {
   'chameleon': require('../assets/sounds/labels/en/chameleon.mp3'),
   'cheetah': require('../assets/sounds/labels/en/cheetah.mp3'),
       'chicken': require('../assets/sounds/labels/en/chicken.mp3'),
+      'chick': require('../assets/sounds/labels/en/chick.mp3'),
   'chimpanzee': require('../assets/sounds/labels/en/chimpanzee.mp3'),
       'cockroach': require('../assets/sounds/labels/en/cockroach.mp3'),
       'cow': require('../assets/sounds/labels/en/cow.mp3'),
@@ -781,7 +782,6 @@ const getLabelSound = (animalName: string, language: string) => {
       'wild_boar': require('../assets/sounds/labels/en/wild_boar.mp3'),
       'ostrich': require('../assets/sounds/labels/en/ostrich.mp3'),
       'panda': require('../assets/sounds/labels/en/panda.mp3'), 
-      'asianElephant': require('../assets/sounds/labels/en/asian-elephant.mp3'), 
       'bengalTiger': require('../assets/sounds/labels/en/bengal-tiger.mp3'), 
             'koala': require('../assets/sounds/labels/en/koala.mp3'), 
 

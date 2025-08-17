@@ -34,8 +34,9 @@ export const strings = {
       levelSavannah: 'MISSION: WARM SAVANNAH',
       levelJungle: 'MISSION: MYSTERIOUS JUNGLE',
       levelBirds: 'MISSION: BIRD PARADISE',
-      unlockAllLevels: 'Unlock All Missions 🔓',
+      unlockAllLevels: 'Unlock All Missions ($4.99) 🔓',
       restorePurchases: 'Restore Purchases',
+      processing: 'Processing...',
       volume: 'Volume',
       language: 'Language',
       settings: 'Settings',
@@ -81,7 +82,7 @@ export const strings = {
       restored: 'Restored',
       noPreviousPurchases: 'No purchases found.',
       noPurchasesFound: 'No purchases found.',
-      defaultPrice: '$5.99',
+      defaultPrice: '$4.99',
   
   
     animals: {
@@ -256,6 +257,7 @@ export const strings = {
     levelBirds: 'МИССИЯ: ПТИЧИЙ РАЙ',
     unlockAllLevels: 'Открыть все миссии',
     restorePurchases: 'Вернуть покупки',
+    processing: 'Обработка...',
     close: 'Закрыть',
     thisLevelIsLocked: 'Эта миссия под замочком. Открой все, чтобы играть!',
     unlockAllLevelsToPlay: 'Открыть все миссии 🔓',
@@ -301,7 +303,7 @@ export const strings = {
     restored: 'Восстановлено',
     noPreviousPurchases: 'Покупок не найдено.',
     noPurchasesFound: 'Покупок не найдено.',
-    defaultPrice: '$5.99',
+    defaultPrice: '$4.99',
     animals: {
       cat: 'Kошка',
       chicken: 'Курица',
@@ -475,6 +477,7 @@ export const strings = {
       levelBirds: 'GÖREV: KUŞLAR ÜLKESİ',
       unlockAllLevels: 'Tüm Görevleri Aç 🔓',
       restorePurchases: 'Satın Alınanları Geri Getir',
+      processing: 'İşleniyor...',
       volume: 'Ses',
       done: 'Tamamdır',
       language: 'Dil',
@@ -520,7 +523,7 @@ export const strings = {
       restored: 'Geri Getirildi',
       noPreviousPurchases: 'Önceki satın alım bulunamadı.',
       noPurchasesFound: 'Önceki satın alım bulunamadı.',
-      defaultPrice: '$5.99',
+      defaultPrice: '$4.99',
   
   
     animals: {

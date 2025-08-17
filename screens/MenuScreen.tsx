@@ -250,11 +250,17 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       paddingHorizontal: 0,
       paddingVertical: 0,
       gap: 0,
-      backgroundColor: 'transparent',
+      backgroundColor: 'rgba(255, 0, 0, 0.1)', // Temporary red background for debugging
       borderRadius: 0,
       marginHorizontal: 0,
-      marginLeft: isLandscape && width >= 900 ? -80 : -120, // Less negative margin
+      // Remove negative margins that might hide the button
+      marginLeft: 0,
       marginRight: 0,
+      // Ensure visibility
+      zIndex: 1000,
+      position: 'relative',
+      // Add some padding to make it more visible
+      padding: 10,
     },
     unlockButton: {
       backgroundColor: '#4CAF50',
@@ -270,6 +276,9 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       elevation: 6,
       justifyContent: 'center',
       alignItems: 'center',
+      // Apple Pay specific styling
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     unlockButtonText: {
       color: '#FFFFFF',
@@ -487,6 +496,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   // IMPORTANT: All hooks must be at the top level and in consistent order
   const navigation = useNavigation();
   const { t, lang, setLang } = useLocalization();
+  
+  console.log('🔓 t function available:', typeof t === 'function');
+  console.log('🔓 lang:', lang);
   const dynStyles = useDynamicStyles();
   const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
   
@@ -503,6 +515,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   // Calculate responsive values
   const scaleFactor = getScaleFactor(width, height);
   const numColumns = getResponsiveColumns(width, isLandscape);
+  
+  console.log('🔓 scaleFactor:', scaleFactor);
+  console.log('🔓 numColumns:', numColumns);
+  console.log('🔓 width:', width);
+  console.log('🔓 height:', height);
+  console.log('🔓 isLandscape:', isLandscape);
 
   // Animated gradient values
   const gradientPosition = useSharedValue(0);
@@ -610,6 +628,30 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const [products, setProducts] = useState<RNIap.Product[]>([]);
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
   const [unlocked, setUnlocked] = useState<boolean>(false);
+  
+  // Debug logging for state changes
+  useEffect(() => {
+    console.log('🔓 unlocked state changed:', unlocked);
+  }, [unlocked]);
+  
+  useEffect(() => {
+    console.log('🔓 purchaseInProgress state changed:', purchaseInProgress);
+  }, [purchaseInProgress]);
+  
+  useEffect(() => {
+    console.log('🔓 iapInitialized state changed:', iapInitialized);
+  }, [iapInitialized]);
+
+  // Component mount logging
+  useEffect(() => {
+    console.log('🔓 MenuScreen component mounted');
+    console.log('🔓 Initial state:', {
+      unlocked,
+      purchaseInProgress,
+      iapInitialized,
+      Platform: Platform.OS
+    });
+  }, []);
 
   // Modal state for locked level
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -620,6 +662,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
 
   // Create responsive styles
   const responsiveStyles = createResponsiveStyles(scaleFactor, width, height, isLandscape);
+  
+  console.log('🔓 responsiveStyles created:', responsiveStyles);
+  console.log('🔓 responsiveStyles.unlockButtonsContainer:', responsiveStyles.unlockButtonsContainer);
+  console.log('🔓 responsiveStyles.unlockButton:', responsiveStyles.unlockButton);
 
   // Animated styles for gradient buttons with pulse
   const animatedGradientStyle = useAnimatedStyle(() => {
@@ -627,6 +673,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
       transform: [{ scale: pulseScale.value }],
     };
   });
+  
+  console.log('🔓 animatedGradientStyle created:', animatedGradientStyle);
 
   // Get gradient start/end positions based on animation
   const getGradientPositions = () => {
@@ -822,18 +870,25 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     };
   }, [navigation, stopAndUnload, transitionOpacity]);
 
-  // IAP: Initialize and get products
+  // IAP: Initialize and get products with Apple Pay support
   useEffect(() => {
     let purchaseUpdateSubscription: any;
     let purchaseErrorSubscription: any;
 
     async function initIAP() {
+      console.log('🔓 initIAP called');
+      console.log('🔓 Platform.OS:', Platform.OS);
+      
       if (Platform.OS !== 'ios') {
+        console.log('🔓 Non-iOS platform, setting iapInitialized to true');
         setIapInitialized(true);
         return;
       }
+      
       try {
+        console.log('🔓 iOS platform, initializing RNIap connection');
         await RNIap.initConnection();
+        console.log('🔓 RNIap connection initialized successfully');
         setIapInitialized(true);
 
         // Get product info
@@ -854,24 +909,42 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
           const receipt = purchase.transactionReceipt;
           if (receipt) {
             try {
+              // For Apple Pay transactions, we need to finish them properly
               await RNIap.finishTransaction({ purchase, isConsumable: false });
               if (purchase.productId === APPLE_PRODUCT_ID) {
                 setUnlocked(true);
-                Alert.alert(t('thankYou'), t('allLevelsNowUnlocked'));
+                setPurchaseInProgress(false);
+                Alert.alert(
+                  t('thankYou') || 'Thank You!',
+                  t('allLevelsNowUnlocked') || 'All levels are now unlocked!'
+                );
               }
             } catch (err) {
               console.warn('finishTransaction error', err);
+              setPurchaseInProgress(false);
             }
           }
         });
 
         purchaseErrorSubscription = RNIap.purchaseErrorListener((error) => {
           setPurchaseInProgress(false);
-          Alert.alert(t('purchaseError'), error.message || t('somethingWentWrong'));
+          console.warn('Purchase error:', error);
+          
+          // Handle specific Apple Pay errors
+          if (error.code === 'E_USER_CANCELLED') {
+            // User cancelled Apple Pay - no need to show error
+            return;
+          }
+          
+          Alert.alert(
+            t('purchaseError') || 'Purchase Error',
+            error.message || t('somethingWentWrong') || 'Something went wrong. Please try again.'
+          );
         });
       } catch (e) {
+        console.warn('IAP initialization error:', e);
         setIapInitialized(true);
-        // Alert.alert(t('error'), t('couldNotConnectToAppStore'));
+        // Don't show alert for initialization errors to avoid blocking the app
       }
     }
 
@@ -887,7 +960,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Restore purchases
+  // Restore purchases with Apple Pay support
   const handleRestore = useCallback(async () => {
     setPurchaseInProgress(true);
     try {
@@ -899,28 +972,77 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
       );
       if (hasUnlock) {
         setUnlocked(true);
-        Alert.alert(t('restored'), t('allLevelsNowUnlocked'));
+        Alert.alert(
+          t('restored') || 'Purchases Restored',
+          t('allLevelsNowUnlocked') || 'All levels are now unlocked!'
+        );
       } else {
-        Alert.alert(t('noPreviousPurchases'), t('noPurchasesFound'));
+        Alert.alert(
+          t('noPreviousPurchases') || 'No Previous Purchases',
+          t('noPurchasesFound') || 'No previous purchases were found to restore.'
+        );
       }
     } catch (e) {
-      // Alert.alert(t('error'), t('couldNotRestorePurchases'));
+      console.warn('Restore purchases error:', e);
+      Alert.alert(
+        t('error') || 'Error',
+        t('couldNotRestorePurchases') || 'Could not restore purchases. Please try again.'
+      );
     }
     setPurchaseInProgress(false);
   }, [t]);
 
-  // Purchase handler
+  // Purchase handler with Apple Pay integration
   const handleUnlock = useCallback(async () => {
-    if (purchaseInProgress) return;
-    setPurchaseInProgress(true);
-    try {
-      await RNIap.requestPurchase({ sku: APPLE_PRODUCT_ID });
-
-    } catch (e) {
-      // Alert.alert(t('error'), t('couldNotCompletePurchase'));
+    console.log('🔓 handleUnlock called!');
+    console.log('🔓 purchaseInProgress:', purchaseInProgress);
+    console.log('🔓 Platform.OS:', Platform.OS);
+    console.log('🔓 APPLE_PRODUCT_ID:', APPLE_PRODUCT_ID);
+    console.log('🔓 iapInitialized:', iapInitialized);
+    console.log('🔓 products:', products);
+    
+    if (purchaseInProgress) {
+      console.log('🔓 Purchase already in progress, returning');
+      return;
     }
-    setPurchaseInProgress(false);
-  }, [purchaseInProgress, t]);
+    
+    if (!iapInitialized) {
+      console.log('🔓 IAP not initialized yet, returning');
+      Alert.alert(
+        'IAP Not Ready',
+        'In-App Purchase system is not ready yet. Please wait a moment and try again.'
+      );
+      return;
+    }
+    
+    setPurchaseInProgress(true);
+    console.log('🔓 Set purchaseInProgress to true');
+    
+    try {
+      if (Platform.OS === 'ios') {
+        console.log('🔓 iOS platform detected, calling RNIap.requestPurchase');
+        // For iOS, use Apple Pay through react-native-iap
+        // This will automatically present Apple Pay if available
+        await RNIap.requestPurchase({ 
+          sku: APPLE_PRODUCT_ID,
+          andDangerouslyFinishTransactionAutomaticallyIOS: false // Let us handle transaction completion
+        });
+        console.log('🔓 RNIap.requestPurchase completed successfully');
+      } else {
+        console.log('🔓 Non-iOS platform, calling standard IAP');
+        // For other platforms, use standard IAP
+        await RNIap.requestPurchase({ sku: APPLE_PRODUCT_ID });
+      }
+    } catch (e) {
+      console.warn('🔓 Purchase error:', e);
+      setPurchaseInProgress(false);
+      // Show user-friendly error message
+      Alert.alert(
+        t('purchaseError') || 'Purchase Error',
+        t('couldNotCompletePurchase') || 'Could not complete purchase. Please try again.'
+      );
+    }
+  }, [purchaseInProgress, t, iapInitialized, products]);
 
   // Handle toggling level completion status
   const handleToggleCompletion = useCallback(
@@ -1033,20 +1155,76 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     products && products.length > 0 && products[0].localizedPrice
       ? products[0].localizedPrice
       : t('defaultPrice');
+  
+  console.log('🔓 unlockPrice:', unlockPrice);
+  console.log('🔓 products:', products);
+  console.log('🔓 products.length:', products?.length);
 
   // Render unlock/restore buttons
   const renderUnlockButtons = () => {
-    if (unlocked || Platform.OS !== 'ios') return null;
+    console.log('🔓 renderUnlockButtons called');
+    console.log('🔓 unlocked:', unlocked);
+    console.log('🔓 Platform.OS:', Platform.OS);
+    console.log('🔓 iapInitialized:', iapInitialized);
+    console.log('🔓 products:', products);
+    console.log('🔓 purchaseInProgress:', purchaseInProgress);
+    
+    // Temporarily force button to show for debugging
+    const forceShow = true;
+    
+    if ((unlocked || Platform.OS !== 'ios') && !forceShow) {
+      console.log('🔓 renderUnlockButtons returning null because:', {
+        unlocked,
+        platformOS: Platform.OS,
+        condition: unlocked || Platform.OS !== 'ios'
+      });
+      return null;
+    }
+    
+    console.log('🔓 renderUnlockButtons rendering buttons');
     
     // Detect landscape mode where we want vertical button layout
     const isPhoneLandscape = isLandscape; // Use landscape orientation regardless of device size
     
     return (
       <View style={responsiveStyles.unlockButtonsContainer}>
+        {/* Temporary test button for debugging */}
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#FF0000',
+            padding: 10,
+            borderRadius: 10,
+            marginBottom: 10,
+          }}
+          onPress={() => {
+            console.log('🔓 TEST BUTTON PRESSED!');
+            Alert.alert('Test Button', 'This is a test button to verify the unlock button area is working');
+          }}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>TEST BUTTON</Text>
+        </TouchableOpacity>
+        
         <ReAnimated.View style={animatedGradientStyle}>
           <TouchableOpacity
-            style={[ { backgroundColor: 'transparent' }]}
+            style={[ 
+              { 
+                backgroundColor: 'transparent',
+                minWidth: 200,
+                minHeight: 50,
+                borderWidth: 2,
+                borderColor: '#FF0000',
+                borderStyle: 'dashed',
+              }
+            ]}
             onPress={() => {
+              console.log('🔓 Unlock button pressed!');
+              console.log('🔓 Button press event received');
+              console.log('🔓 Current state:', {
+                unlocked,
+                purchaseInProgress,
+                iapInitialized,
+                Platform: Platform.OS
+              });
               playButtonSound(volume);
               handleUnlock();
             }}
@@ -1065,7 +1243,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                 borderRadius: getResponsiveSpacing(isLandscape && width >= 900 ? 30 : 22, scaleFactor),
               }}
             />
-            {isPhoneLandscape ? (
+            {purchaseInProgress ? (
+              // Show loading indicator during Apple Pay processing
+              <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                <Text style={[responsiveStyles.unlockButtonText, { marginTop: 4, fontSize: responsiveStyles.unlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                  {t('processing') || 'Processing...'}
+                </Text>
+              </View>
+            ) : isPhoneLandscape ? (
               // Landscape: Stack icon and text vertically, centered
               <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                 <Ionicons 
@@ -1083,8 +1269,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                 <Ionicons 
                   name="lock-open" 
                   size={responsiveStyles.unlockButtonText.fontSize} 
-                  color="#FFFFFF" 
-                />
+                  color="#FFFFFF" />
                 <Text style={[responsiveStyles.unlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
                   {t('unlockAllLevels')} ({unlockPrice})
                 </Text>
@@ -1092,6 +1277,50 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
             )}
           </TouchableOpacity>
         </ReAnimated.View>
+        
+        {/* Restore Purchases Button */}
+        <TouchableOpacity
+          style={[responsiveStyles.unlockButton, { 
+            backgroundColor: '#FF8C00',
+            marginLeft: getResponsiveSpacing(8, scaleFactor),
+            shadowColor: '#FF8C00',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+            elevation: 6,
+          }]}
+          onPress={() => {
+            playButtonSound(volume);
+            handleRestore();
+          }}
+          disabled={purchaseInProgress}
+        >
+          {isPhoneLandscape ? (
+            // Landscape: Stack icon and text vertically, centered
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons 
+                name="refresh-circle" 
+                size={responsiveStyles.unlockButtonText.fontSize + 2} 
+                color="#FFFFFF" 
+              />
+              <Text style={[responsiveStyles.unlockButtonText, { marginTop: 2, fontSize: responsiveStyles.unlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                {t('restorePurchases') || 'Restore'}
+              </Text>
+            </View>
+          ) : (
+            // Other orientations: Keep original horizontal layout
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Ionicons 
+                name="refresh-circle" 
+                size={responsiveStyles.unlockButtonText.fontSize} 
+                color="#FFFFFF" 
+              />
+              <Text style={[responsiveStyles.unlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                {t('restorePurchases') || 'Restore'}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
     );
   };
@@ -1145,7 +1374,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                         borderRadius: getResponsiveSpacing(35, scaleFactor),
                       }}
                     />
-                    {isPhoneLandscape ? (
+                    {purchaseInProgress ? (
+                      // Show loading indicator during Apple Pay processing
+                      <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                        <Text style={[responsiveStyles.modalUnlockButtonText, { marginTop: 4, fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                          {t('processing') || 'Processing...'}
+                        </Text>
+                      </View>
+                    ) : isPhoneLandscape ? (
                       // Phone landscape: Stack icon and text vertically, centered
                       <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                         <Ionicons 
@@ -1172,6 +1409,51 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     )}
                   </TouchableOpacity>
                 </ReAnimated.View>
+                
+                {/* Restore Purchases Button in Modal */}
+                <TouchableOpacity
+                  style={[responsiveStyles.modalUnlockButton, { 
+                    backgroundColor: '#FF8C00',
+                    marginTop: getResponsiveSpacing(12, scaleFactor),
+                    shadowColor: '#FF8C00',
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: 0.4,
+                    shadowRadius: 12,
+                    elevation: 12,
+                  }]}
+                  onPress={() => {
+                    playButtonSound(volume);
+                    setShowUnlockModal(false);
+                    handleRestore();
+                  }}
+                  disabled={purchaseInProgress}
+                >
+                  {isPhoneLandscape ? (
+                    // Phone landscape: Stack icon and text vertically, centered
+                    <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                      <Ionicons 
+                        name="refresh-circle" 
+                        size={responsiveStyles.modalUnlockButtonText.fontSize + 2} 
+                        color="#FFFFFF" 
+                      />
+                      <Text style={[responsiveStyles.modalUnlockButtonText, { marginTop: 2, fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                        🔄 {t('restorePurchases') || 'Restore Purchases'} 🔄
+                      </Text>
+                    </View>
+                  ) : (
+                    // Other orientations: Keep original horizontal layout
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 1 }}>
+                      <Ionicons 
+                        name="refresh-circle" 
+                        size={responsiveStyles.modalUnlockButtonText.fontSize} 
+                        color="#FFFFFF" 
+                      />
+                      <Text style={[responsiveStyles.modalUnlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                        🔄 {t('restorePurchases') || 'Restore Purchases'} 🔄
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
               </>
             )}
             <Pressable
@@ -1457,6 +1739,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     visitedCounts={visitedCounts}
                   />
                   
+                  {/* Unlock Buttons */}
+                  {(() => {
+                    console.log('🔓 About to call renderUnlockButtons in landscape layout');
+                    return renderUnlockButtons();
+                  })()}
 
                 </View>
               </ScrollView>
@@ -1555,6 +1842,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     visitedCounts={visitedCounts}
                   />
                   
+                  {/* Unlock Buttons */}
+                  {(() => {
+                    console.log('🔓 About to call renderUnlockButtons in portrait layout');
+                    return renderUnlockButtons();
+                  })()}
 
                 </View>
               </ScrollView>
