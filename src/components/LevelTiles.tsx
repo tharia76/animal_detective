@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Image, Text, ScrollView, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type LevelTilesProps = {
   levels: string[];
@@ -65,6 +66,7 @@ function AnimatedTile({
 }) {
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pressAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Create a smooth, continuous glow animation with easing
@@ -172,7 +174,7 @@ function AnimatedTile({
   return (
     <Animated.View
       style={{
-        transform: [{ scale: pulseAnim }],
+        transform: [{ scale: Animated.multiply(pulseAnim, pressAnim) }],
       }}
     >
       <Animated.View
@@ -180,42 +182,59 @@ function AnimatedTile({
            width: itemSize,
            height: itemSize,
            marginRight: colIdx < columns - 1 ? margin : 0,
-          borderRadius: 25,
-          borderWidth: 6,
+          borderRadius: 28,
+          borderWidth: 4,
            borderColor: animatedBorderColor,
            shadowColor: getShadowColor(level, isLocked),
            shadowOffset: { width: 0, height: 0 },
            shadowOpacity: animatedShadowOpacity,
-           shadowRadius: 8,
-           elevation: 10,
+           shadowRadius: 10,
+           elevation: 12,
          }}
       >
         <TouchableOpacity
           onPress={() => handleLevelSelect(level, isLocked)}
+          onPressIn={() => {
+            // Disable press animation to prevent visual flicker
+            // Animated.timing(pressAnim, { toValue: 0.98, duration: 90, useNativeDriver: true }).start();
+          }}
+          onPressOut={() => {
+            // Disabled
+            // Animated.timing(pressAnim, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+          }}
                      style={{
              width: '100%',
              height: '100%',
-             borderRadius: 22,
+             borderRadius: 24,
              overflow: 'hidden',
              backgroundColor: '#fff2',
            }}
-          activeOpacity={0.7}
+          activeOpacity={1}
         >
           <Image
             source={LEVEL_BACKGROUNDS[level]}
                          style={{
                width: itemSize,
                height: itemSize,
-               borderRadius: 22,
+               borderRadius: 24,
                position: 'absolute',
                top: 0,
                left: 0,
              }}
             resizeMode="cover"
           />
+          {/* Subtle vignette */}
+          <LinearGradient
+            colors={[ 'rgba(0,0,0,0.12)', 'rgba(0,0,0,0.04)', 'rgba(0,0,0,0.12)' ]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          />
                                {isLocked && (
-            <View style={[styles.lockOverlay, { borderRadius: 22 }]}>
-              <Ionicons name="lock-closed" size={40} color="white" />
+            <View style={[styles.lockOverlay, { borderRadius: 24 }] }>
+              <View style={{ marginBottom: 100 }}>
+                <Ionicons name="lock-closed" size={40} color="white" />
+              </View>
             </View>
           )}
           
@@ -265,10 +284,10 @@ function AnimatedTile({
           >
             <View
               style={{
-                paddingVertical: 20,
-                paddingHorizontal: 40,
+                paddingVertical: 14,
+                paddingHorizontal: 28,
                 backgroundColor: getLevelBackgroundColor(level),
-                borderRadius: 30,
+                borderRadius: 24,
                 alignItems: 'center',
                 justifyContent: 'center',
                 shadowColor: '#000',
@@ -279,11 +298,12 @@ function AnimatedTile({
               }}
             >
               <Text
-                numberOfLines={1}
                 style={{
-                  fontSize: isLandscape && itemSize >= 280 ? 28 : isLandscape ? 20 : 22, // Bigger font on tablet landscape (large tiles)
+                  fontSize: isLandscape && itemSize >= 280 ? 26 : isLandscape ? 18 : 20, // Slightly smaller mission names
                   fontWeight: 'bold',
                   color: 'white',
+                  textAlign: 'center',
+                  width: Math.floor(itemSize * 0.8),
                 }}
               >
                 {t(level)}
@@ -316,16 +336,16 @@ function AnimatedTile({
               left: 8,
               right: 8,
               bottom: 6,
-              height:36,
-              borderRadius: 13,
-              backgroundColor: 'rgba(255,255,255,0.4)'
+              height:30,
+              borderRadius: 15,
+              backgroundColor: 'rgba(255,255,255,0.45)'
             }}
           >
             <Animated.View
               style={{
                 width: `${progress * 100}%`,
                 height: '100%',
-                borderRadius: 13,
+                borderRadius: 15,
                 backgroundColor: 'rgba(226, 70, 43, 0.98)'
               }}
             />

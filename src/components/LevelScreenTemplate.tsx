@@ -49,6 +49,9 @@ import { useSmoothRotation } from '../hooks/useSmoothRotation';
   import { useLevelCompletion } from '../hooks/useLevelCompletion';
 import AnimatedReanimated from 'react-native-reanimated';
   import { getResponsiveSpacing, getScaleFactor, isTablet } from '../utils/responsive';
+import { getBackgroundStyles, getLevelBackgroundColor } from '../utils/backgroundPositioning';
+import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
+import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
@@ -81,12 +84,7 @@ import AnimatedReanimated from 'react-native-reanimated';
             containerColor: 'rgba(107, 142, 35, 0.3)',
             bubbleColor: 'rgba(144, 238, 144, 0.8)'
           };
-        case 'arctic':
-          return {
-            waterColor: 'rgba(176, 224, 230, 0.8)',
-            containerColor: 'rgba(240, 248, 255, 0.3)',
-            bubbleColor: 'rgba(255, 255, 255, 0.9)'
-          };
+
         case 'desert':
           return {
             waterColor: 'rgba(255, 165, 0, 0.7)',
@@ -297,7 +295,7 @@ const BG_MUSIC_MAP: Record<string, string | number | undefined> = {
   desert: require('../assets/sounds/background_sounds/desert_bg.mp3'),
   ocean: require('../assets/sounds/background_sounds/ocean_bg.mp3'),
   savannah: require('../assets/sounds/background_sounds/savannah_bg.mp3'),
-  arctic: require('../assets/sounds/background_sounds/arctic_bg.mp3'),
+
   birds: require('../assets/sounds/background_sounds/birds_bg.mp3'),
   insects: require('../assets/sounds/background_sounds/insects_bg.mp3'),
 };
@@ -1313,31 +1311,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
               console.log('🎵 Background music stopped for level completion');
             }
             
-            // Move the badge to the center of the screen and bounce 3 times
-            let targetDX = 0;
-            let targetDY = 0;
-            if (badgeWindowLayout) {
-              const badgeCenterX = badgeWindowLayout.x + badgeWindowLayout.width / 2;
-              const badgeCenterY = badgeWindowLayout.y + badgeWindowLayout.height / 2;
-              targetDX = (screenW / 2) - badgeCenterX;
-              targetDY = (screenH / 2) - badgeCenterY;
-            } else {
-              // Fallback approximate move to center if measurement not ready
-              targetDX = -(screenW * 0.35);
-              targetDY = screenH * 0.35;
-            }
-
             // Pulse in place 3 times (no movement)
-            // Stop any in-flight translation animations and reset to zero
-            try {
-              // @ts-ignore - stopAnimation exists on Animated.Value
-              badgeSlideX.stopAnimation && badgeSlideX.stopAnimation();
-              // @ts-ignore
-              badgeSlideY.stopAnimation && badgeSlideY.stopAnimation();
-            } catch {}
-            // Snap to the computed center offsets instantly
-            badgeSlideX.setValue(targetDX);
-            badgeSlideY.setValue(targetDY);
             Animated.loop(
               Animated.sequence([
                 Animated.spring(badgePulseAnim, { toValue: 1.25, useNativeDriver: true, tension: 140, friction: 6 }),
@@ -1345,7 +1319,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
               ]),
               { iterations: 3 }
             ).start();
-            console.log('📍 Badge snapped to center and pulsing 3 times for full completion');
+            console.log('📍 Badge pulsing 3 times in place for full completion');
             
             // Fallback: If celebration doesn't start within 3 seconds, start it anyway
             setTimeout(() => {
@@ -1738,7 +1712,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
             <Animated.View
               style={{
                 position: 'absolute',
-                top: '50%',
+                top: Math.min(screenW, screenH) >= 768 ? '35%' : '50%', // Move up on tablets
                 left: '5%',
                 transform: [
                   {
@@ -1776,10 +1750,10 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         </View>
     );
 
-    // Wrap in a View with pointerEvents: 'none' for phones
+    // Wrap in a View for phones (removed pointerEvents="none" to allow touches)
     if (isPhone) {
       return (
-          <View pointerEvents="none">
+          <View>
             {animalWithHand}
         </View>
       );
@@ -1832,9 +1806,14 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       baseMargin,
       isPhone: Math.min(screenW, screenH) < 768
     });
-    // Forest: push animals down by 10px
+    // Forest: push animals down by 10px, but move up 30% in phone landscape
     if (levelName.toLowerCase() === 'forest') {
-      return baseMargin + 150;
+      const isPhone = Math.min(screenW, screenH) < 768;
+      if (isPhone && isLandscape) {
+        // Move animals up by 30% of screen height in phone landscape
+        return baseMargin + 100 - (screenH * 0.3);
+      }
+      return baseMargin + 100;
     }
     
     // Birds level - move animals up by 20% on tablets
@@ -1844,7 +1823,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         // Landscape mode - move animals down by 20% on iPad, up by 25% on phones
         if (isLandscape) {
           if (isTablet) {
-            return baseMargin - (screenH * 0.1); // Move animals down 20% on iPad landscape
+            return baseMargin + (screenH * 0.2); // Move animals down 20% on iPad landscape
           } else {
             return baseMargin + 50 - (screenH * 0.25); // Move up 25% from phone position in landscape
           }
@@ -1858,33 +1837,22 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       }
     }
     
-    // Arctic level - move all animals up on both tablets and phones
-    if (levelName.toLowerCase() === 'arctic') {
-      // Use smaller dimension to detect phones vs tablets
-      const isTablet = Math.min(screenW, screenH) >= 768;
-      
-      if (isTablet && currentAnimal?.isMoving) {
-        // On tablets, move animals up by 20% of screen height
-        return baseMargin + (screenH * 0.2);
-      } else if (isTablet && !currentAnimal?.isMoving) {
-        return baseMargin + (screenH * 0.1);
-      } else if (!isTablet && currentAnimal?.isMoving) {
-        // On phones, move animals up by 15% of screen height
-        return baseMargin + (screenH * 0.1);
-      } else if (!isTablet && !currentAnimal?.isMoving) {
-        return baseMargin- (screenH * 0.1);
-      } 
-    }
+
     
-    // Farm level in mobile portrait
-    if (levelName.toLowerCase() === 'farm' && !isLandscape) {
-        return baseMargin + 145;
-    }
+            // Farm level in mobile portrait
+        if (levelName.toLowerCase() === 'farm' && !isLandscape) {
+            return baseMargin + 145;
+        }
     
-    // Farm level on iPad - move animals up by 30px
-    if (levelName.toLowerCase() === 'farm' && screenW >= 768 && Platform.OS === 'ios') {
-        return baseMargin - 30;
-      }
+            // Farm level on iPad - move animals up by 30px
+        if (levelName.toLowerCase() === 'farm' && screenW >= 768 && Platform.OS === 'ios') {
+            return baseMargin - 30;
+          }
+          
+        // Landscape tablets - push animals down by 10%
+        if (isLandscape && Math.min(screenW, screenH) >= 768) {
+          return baseMargin + (screenH * 0.1);
+        }
       
       // Forest level: no further adjustments
     
@@ -1993,107 +1961,9 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   };
 
     // Helper function to get background positioning styles
-    const getBackgroundStyles = (isMoving: boolean) => {
-      const isTablet = Math.min(screenW, screenH) >= 768;
-      const isPhone = !isTablet;
-      const level = levelName.toLowerCase();
-      
 
-      
-      // Base positioning adjustments by level
-      const levelAdjustments: Record<string, { up: number; phoneUp: number; landscapePhoneUp: number }> = {
-                forest: { up: isMoving ? -0.35 : 1.5, phoneUp: isMoving ? 0.3 : 0.5, landscapePhoneUp: isMoving ? 0.3 : 3.0 },
-        arctic: { up: isMoving ? -0.2 : 2.5, phoneUp: isMoving ? 0.1 : 2.5, landscapePhoneUp: isMoving ? 0.9 : 6.5 },
-        savannah: { up: isMoving ? -0.1 : 0.5, phoneUp: isMoving ? 0.3 : 0.5, landscapePhoneUp: isMoving ? 0.3 : 0.5 },
-        jungle: { up: isMoving ? -0.2 : 0.8, phoneUp: isMoving ? 0.5 : 0.8, landscapePhoneUp: isMoving ? 0.5 : 0.8 },
-        birds: { up: 0.1, phoneUp: 0.1, landscapePhoneUp: 0.1 },
-        farm: { up: -0.12, phoneUp: 0, landscapePhoneUp: 0.1 },
-        ocean: { up: 0, phoneUp: 0, landscapePhoneUp: 0.1 },
-        desert: { up: 0, phoneUp: 0, landscapePhoneUp: 0.1 },
-        insects: { up: 0.3, phoneUp: 0.3, landscapePhoneUp: 0.3 },
-      };
 
-      const basePixels: Record<string, { base: number; phone: number }> = {
-        forest: { base: isMoving ? 300 : 400, phone: isMoving ? 350 : 300 },
-        arctic: { base: isMoving ? 350 : 550, phone: isMoving ? 500 : 700 },
-        savannah: { base: isMoving ? 150 : 250, phone: isMoving ? 150 : 400 },
-        jungle: { base: 400, phone: screenW < 900 ? 600 : 400 },
-        birds: { base: 0, phone: 0 },
-        farm: { base: 200, phone: 350 },
-        ocean: { base: 200, phone: 350 },
-        desert: { base: 200, phone: 350 },
-        insects: { base: 350, phone: 500 },
-      };
 
-      const adjustment = levelAdjustments[level] || { up: 0, phoneUp: 0, landscapePhoneUp: 0 };
-      const pixels = basePixels[level] || { base: 0, phone: 0 };
-
-      let topOffset = 0;
-      let heightExtension = 0;
-
-      // Calculate positioning based on device type and orientation
-      if (isLandscape && isPhone) {
-        // Landscape phones
-        const upPercent = adjustment.landscapePhoneUp;
-        topOffset = level === 'arctic' && isMoving ? 100 - (screenH * upPercent) + (screenH * 0.2) : 
-                    30 - (screenH * upPercent);
-        heightExtension = screenH * upPercent;
-        
-
-      } else if (isPhone && !isLandscape) {
-        // Portrait phones
-        const upPercent = adjustment.phoneUp;
-        const basePixel = pixels.phone;
-        topOffset = -basePixel - (screenH * upPercent);
-        heightExtension = basePixel + (screenH * upPercent);
-      } else {
-        // Tablets
-        const upPercent = adjustment.up;
-        const basePixel = pixels.base;
-        
-        // Special tablet landscape adjustments
-        const tabletLandscapeOffset = isLandscape && screenW >= 768 ? {
-          ocean: isMoving ? screenH * 0.1 : screenH * 0.35,
-          desert: isMoving ? screenH * 0.1 : screenH * 0.35,
-          forest: isMoving ? screenH * 0.01 : screenH * 0.25,
-          arctic: isMoving ? screenH * 0.1 : screenH * 0.9,
-          savannah: isMoving ? screenH * 0.001 : screenH * 0.5,
-          jungle: isMoving ? screenH * 0.1 : screenH * 0.8,
-        }[level] || 0 : 0;
-        
-        topOffset = (tabletLandscapeOffset + (-basePixel - (screenH * upPercent)));
-        heightExtension = basePixel + (screenH * upPercent);
-      }
-
-      const finalHeight = topOffset < 0 
-        ? screenH + heightExtension + Math.abs(topOffset) // Add the absolute value of negative topOffset to height
-        : screenH + heightExtension;
-
-      return {
-        top: topOffset,
-        height: finalHeight,
-        position: 'absolute' as const,
-        left: 0,
-        right: 0,
-        bottom: 0,
-
-      };
-    };
-
-    // Helper function to get level background color
-    const getLevelBackgroundColor = () => {
-      const colorMap: Record<string, string> = {
-        forest: '#87CEEB',
-        arctic: '#e6f2ff',
-        birds: '#87CEEB',
-        jungle: '#1a3d1a',
-        savannah: '#f4e4bc',
-        ocean: '#006994',
-        desert: '#f4e4bc',
-        farm: '#87CEEB',
-      };
-      return colorMap[levelName.toLowerCase()] || '#000';
-  };
 
   if (!backgroundImageUri) {
     return (
@@ -2115,7 +1985,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     <View style={dynamicStyles.container}>
       <AnimatedReanimated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
         {/* Background container */}
-        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: getLevelBackgroundColor() }]}>
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
         <View style={StyleSheet.absoluteFillObject}>
           {/* Moving background (sky) */}
           <Animated.View
@@ -2123,7 +1993,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
             style={[
               StyleSheet.absoluteFillObject,
               { opacity: movingBgOpacity, backgroundColor: 'transparent' },
-                getBackgroundStyles(true),
+                getBackgroundStyles(true, levelName, screenW, screenH, isLandscape),
 
             ]}
           >
@@ -2147,11 +2017,19 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
               source={backgroundImageUri ? { uri: backgroundImageUri } : undefined}
               style={[
                 StyleSheet.absoluteFillObject,
-                  getBackgroundStyles(false),
-                  // Level-specific landscape fixes - separate values for iPad and iPhone
+                getBackgroundStyles(false, levelName, screenW, screenH, isLandscape),
+                // Force arctic background positioning on landscape phones
+                levelName.toLowerCase() === 'arctic' && isLandscape && Math.min(screenW, screenH) < 768 && {
+                  top: -(screenH * 0.8),
+                  height: screenH + (screenH * 0.8),
+                },
+                // Level-specific landscape fixes - separate values for iPad and iPhone
+                // TEMPORARILY DISABLED TO TEST BACKGROUND MOVEMENT
+                  /*
                   isLandscape && Platform.OS === 'ios' && (() => {
                     const isIPad = screenW >= 1000;
                     console.log('SCREEN WIDTH:', screenW, isIPad ? '(iPad)' : '(iPhone)');
+                    console.log('iOS landscape fixes running for level:', levelName.toLowerCase());
                     
                     switch (levelName.toLowerCase()) {
                       case 'ocean':
@@ -2174,16 +2052,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                           top: -80,
                           bottom: 1,
                         };
-                      case 'arctic':
-                        return isIPad ? {
-                          height: '160%',
-                          top: -1250,
-                          bottom: 1,
-                        } : {
-                          height: '160%',
-                          top: -600,
-                          bottom: 1,
-                        };
+
                       case 'forest':
                         // Remove all negative margins for forest bg
                         return isIPad ? {
@@ -2218,7 +2087,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                       case 'insects':
                         return isIPad ? {
                           height: '120%',
-                          top: -160,
+                          top: -115,
                           bottom: 1,
                         } : {
                           height: '115%',
@@ -2257,6 +2126,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                         };
                     }
                   })(),
+                  */
               ]}
               resizeMode="cover"
               onLoadEnd={onLoadEnd}
@@ -2285,9 +2155,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
           <View style={{ flex: 1 }}>
             {!showDiscoverScreen && (
               <TouchableOpacity style={[
-                dynamicStyles.backToMenuButton,
-                // Move up 10% on iPad
-                screenW >= 1000 && { top: (dynamicStyles.backToMenuButton.top || 50) - (screenH * 0.1) }
+                isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, false).homeButton : dynamicStyles.homeButton,
               ]} onPress={() => {
                 try {
                   const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
@@ -2298,19 +2166,13 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                 } catch {}
                 goToHome();
               }}>
-              <Ionicons name="home" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
+              <Ionicons name="home" size={isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, false).iconSize : (isLandscape && screenW >= 900 ? 40 : 30)} color="#fff" />
             </TouchableOpacity>
             )}
             
             {!showDiscoverScreen && (
               <TouchableOpacity style={[
-                dynamicStyles.backToMenuButton,
-                // Position notebook button below the home button
-                { 
-                  top: (dynamicStyles.backToMenuButton.top || 50) + 
-                       getResponsiveSpacing(isTablet() && isLandscape ? 150 : isTablet() ? 80 : 120, getScaleFactor(screenW, screenH)) +
-                       (screenW >= 1000 ? -(screenH * 0.1) : 0) // Account for iPad offset
-                },
+                isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, false).documentButton : dynamicStyles.backToMenuButton,
               ]} onPress={() => {
                 try {
                   const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
@@ -2324,7 +2186,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
               }}>
                 
                 
-                <Ionicons name="document-text" size={isLandscape && screenW >= 900 ? 40 : 30} color="#fff" />
+                <Ionicons name="document-text" size={isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, false).iconSize : (isLandscape && screenW >= 900 ? 40 : 30)} color="#fff" />
                 
                                                   {/* Super Cute Progress Badge */}
                  <Animated.View
@@ -2340,16 +2202,15 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                      }
                    }}
                    style={{
-                     position: 'absolute',
-                     // Move badge further right
-                     ...(visitedAnimals.size === animals.length ? {
-                       top: isTablet() && isLandscape ? -5 : 10,
-                       right: Math.min(screenW, screenH) < 768 ? -80 : 100, // moved further right
-                     } : {
-                       bottom: isTablet() && isLandscape ? -70 : -50,
-                   // moved further right
+                     // Use landscape positioning utility for badge
+                     ...(isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, visitedAnimals.size === animals.length).badge : {
+                       position: 'absolute',
+                       top: (dynamicStyles.backToMenuButton.top || 50) + 
+                            getResponsiveSpacing(isTablet() && isLandscape ? 50 : isTablet() ? 80 : 120, getScaleFactor(screenW, screenH)) +
+                            (screenW >= 1000 ? -(screenH * 0.1) : 5) - 50,
+                       right: Math.min(screenW, screenH) < 768 ? -10 : -5,
                      }),
-                     backgroundColor: visitedAnimals.size === animals.length ? '#FF69B4' : 'yellow', // Pink when complete, turquoise otherwise
+                     backgroundColor: 'yellow', // Always yellow
                      borderRadius: Math.min(screenW, screenH) < 768 ? 32 : 48,
                      minWidth: Math.min(screenW, screenH) < 768 ? 95 : 130,
                      height: Math.min(screenW, screenH) < 768 ? 54 : 78,
@@ -2362,7 +2223,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                      shadowOpacity: 0.45,
                      shadowRadius: 14,
                      elevation: 18,
-                     opacity: visitedAnimals.size === animals.length ? 0 : 1,
+                     opacity: 1, // Always visible
                      transform: [{
                        // When completed, use pulse scale (also used during celebration overlay)
                        scale: (visitedAnimals.size === animals.length || showCompletionCelebration)
@@ -2376,19 +2237,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                            ),
                      }],
                    }}>
-                  {/* Rainbow gradient background when completed */}
-                  {visitedAnimals.size === animals.length && (
-                    <View style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      borderRadius: 44,
-                      backgroundColor: '#FF69B4',
-                      opacity: 0.85,
-                    }} />
-                  )}
+
                   
                   {/* Cute sparkle effects */}
                   {visitedAnimals.size > 0 && (
@@ -2431,65 +2280,15 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     </>
                   )}
                   
-                  {/* Multiple celebration emojis for completed levels */}
-                  {visitedAnimals.size === animals.length && (
-                    <>
-                      <Animated.View style={{
-                        position: 'absolute',
-                        top: -14,
-                        left: -14,
-                        transform: [{
-                          scale: glowAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.85, 1.35],
-                          }),
-                        }, {
-                          rotate: glowAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '20deg'],
-                          }),
-                        }],
-                      }}>
-                        <Text style={{ fontSize: 22 }}>🎉</Text>
-                      </Animated.View>
-                      
-                      <Animated.View style={{
-                        position: 'absolute',
-                        bottom: -10,
-                        right: -10,
-                        transform: [{
-                          scale: glowAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.95, 1.25],
-                          }),
-                        }],
-                      }}>
-                        <Text style={{ fontSize: 20 }}>🏆</Text>
-                      </Animated.View>
-                      
-                      <Animated.View style={{
-                        position: 'absolute',
-                        bottom: -8,
-                        left: -8,
-                        transform: [{
-                          scale: glowAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.75, 1.15],
-                          }),
-                        }],
-                      }}>
-                        <Text style={{ fontSize: 18 }}>💖</Text>
-                      </Animated.View>
-                    </>
-                  )}
+
                   
                   {/* Main counter text with enhanced styling */}
                   <Text style={{
-                     color: visitedAnimals.size === animals.length ? '#FFF' : '#000',
+                     color: '#000',
                      fontSize: Math.min(screenW, screenH) < 768 ? 18 : 26,
                      fontWeight: '900',
                      fontFamily: Platform.OS === 'ios' ? 'Arial Rounded MT Bold' : 'Roboto',
-                     textShadowColor: visitedAnimals.size === animals.length ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)',
+                     textShadowColor: 'rgba(255,255,255,0.8)',
                      textShadowOffset: { width: 1, height: 1 },
                      textShadowRadius: 2,
                      letterSpacing: 0.8,
@@ -2544,51 +2343,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                 </Animated.View>
               </TouchableOpacity>
             )}
-            {visitedAnimals.size === animals.length && !showDiscoverScreen && (
-              <Animated.View style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                justifyContent: 'flex-start',
-                alignItems: 'flex-end',
-                paddingTop: !isTablet() ? Math.min(screenH * 0.35, 140) : Math.min(screenH * 0.95, 120) + 120,
-                paddingRight: 80,
-                zIndex: 900,
-                pointerEvents: 'none',
-              }}>
-                <Animated.View style={{
-                  backgroundColor: 'orange',
-                  borderRadius: Math.min(screenW, screenH) < 768 ? 36 : 48,
-                  minWidth: Math.min(screenW, screenH) < 768 ? 75 : 110,
-                  height: Math.min(screenW, screenH) < 768 ? 54 : 78,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  borderWidth: Math.min(screenW, screenH) < 768 ? 4 : 6,
-                  borderColor: '#FFF',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.45,
-                  shadowRadius: 14,
-                  elevation: 18,
-                  transform: [{ scale: badgePulseAnim }],
-                }}>
-                  <Text style={{
-                    color: '#FFF',
-                    fontSize: Math.min(screenW, screenH) < 768 ? 18 : 26,
-                    fontWeight: '900',
-                    fontFamily: Platform.OS === 'ios' ? 'Arial Rounded MT Bold' : 'Roboto',
-                    textShadowColor: 'rgba(0,0,0,0.5)',
-                    textShadowOffset: { width: 1, height: 1 },
-                    textShadowRadius: 2,
-                    letterSpacing: 0.8,
-                  }}>
-                    {visitedAnimals.size}/{animals.length}
-                  </Text>
-                </Animated.View>
-              </Animated.View>
-            )}
+
+
                           {hasAnimals && !showDiscoverScreen && (
                 <TouchableOpacity style={[
                   dynamicStyles.soundButton,
@@ -2606,24 +2362,20 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
 
               {/* Level-specific animations */}
-              {levelName.toLowerCase() === 'ocean' && showInstruction && !showDiscoverScreen && <AnimatedBubbles />}
-              {levelName.toLowerCase() === 'desert' && showInstruction && !showDiscoverScreen && <AnimatedSand />}
-              {levelName.toLowerCase() === 'arctic' && showInstruction && !showDiscoverScreen && <AnimatedSnow />}
-              {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedFireflies />}
-              {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedLeaves />}
+                              {levelName.toLowerCase() === 'ocean' && showInstruction && !showDiscoverScreen && <AnimatedBubbles />}
+                {levelName.toLowerCase() === 'desert' && showInstruction && !showDiscoverScreen && <AnimatedSand />}
+                {levelName.toLowerCase() === 'arctic' && showInstruction && !showDiscoverScreen && <AnimatedSnow />}
+                {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedFireflies />}
+                {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedLeaves />}
 
+
+
+              {/* Single TouchableOpacity covering most of screen, positioned behind nav buttons */}
               {hasAnimals && !showDiscoverScreen && (
-            <View style={dynamicStyles.content}>
-                            <View style={[
-                dynamicStyles.animalCard,
-                    { marginTop: getAnimalMarginTop() }
-              ]}>
-                {/* Single reliable touch area for all devices, sized to full card with generous hitSlop */}
-                <TouchableOpacity 
-                  onPress={handleAnimalPress} 
-                  activeOpacity={1} 
+                <TouchableOpacity
+                  onPress={handleAnimalPress}
+                  activeOpacity={1}
                   disabled={isTransitioning}
-                  hitSlop={{ top: 80, bottom: 80, left: 80, right: 80 }}
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -2631,19 +2383,27 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     right: 0,
                     bottom: 0,
                     backgroundColor: 'transparent',
-                    zIndex: 5,
-                    width: '100%',
-                    height: '100%',
+                    zIndex: 999, // Below celebration modal (1000) but above other elements
                   }}
                 />
-                
-                {/* Single render for animal visual */}
+              )}
+
+              {hasAnimals && !showDiscoverScreen && (
+            <View style={[
+              dynamicStyles.content,
+              Math.min(screenW, screenH) >= 768 ? dynamicStyles.tabletOptimized : dynamicStyles.phoneOptimized
+            ]}>
+                            <View style={[
+                                dynamicStyles.animalCard,
+                                { marginTop: getAnimalMarginTop() }
+                              ]}
+                            >
+                {/* Animal visual */}
                 <Animated.View 
                   style={{ 
                     opacity: 1,
                     alignItems: 'center', 
                     justifyContent: 'center',
-                    zIndex: 1,
                     transform: [
                       { scale: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) },
                       { scale: clickBounceAnim }
@@ -2653,71 +2413,16 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     shadowRadius: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 35] }),
                     elevation: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 20] }),
                   }}
-                      pointerEvents="none"
+                  pointerEvents="none"
                 >
                   {renderAnimal()}
-
                 </Animated.View>
                     
-                    {(() => {
-                      console.log('🏷️ Label render check - showName:', showName, 'currentAnimal:', currentAnimal?.name, 'isTransitioning:', isTransitioning, 'canRenderLabel:', canRenderLabel);
-                      return showName && currentAnimal && !isTransitioning && canRenderLabel;
-                    })() && (
+                    {shouldRenderLabel(showName, currentAnimal, isTransitioning, canRenderLabel) && (
                     <Animated.View style={[
                       dynamicStyles.animalNameWrapper,
-                                              // Level-specific label positioning
-                      (levelName.toLowerCase() === 'ocean' || 
-                       levelName.toLowerCase() === 'insects' || 
-                       levelName.toLowerCase() === 'savannah' || 
-                       levelName.toLowerCase() === 'jungle' ||
-                       levelName.toLowerCase() === 'birds' ||
-                       levelName.toLowerCase() === 'desert' ||
-                       levelName.toLowerCase() === 'forest' ||
-                       levelName.toLowerCase() === 'farm' ||
-                       levelName.toLowerCase() === 'arctic') && 
-                       Math.min(screenW, screenH) >= 768 && {
-                        top: levelName.toLowerCase() === 'ocean' ? screenH * 0.02 : 
-                             levelName.toLowerCase() === 'birds' ? screenH * 0.01 : 
-                             levelName.toLowerCase() === 'farm' ? screenH * 0.01 : 
-                             levelName.toLowerCase() === 'arctic' ? screenH * 0.01 : 
-                             levelName.toLowerCase() === 'desert' ? screenH * 0.01 : 
-                             levelName.toLowerCase() === 'forest' ? screenH * 0.01 : 
-                             levelName.toLowerCase() === 'jungle' ? screenH * 0.01 : 
-                             levelName.toLowerCase() === 'insects' ? screenH * 0.1 : 
-                             levelName.toLowerCase() === 'savannah' ? screenH * 0.01 : 
-                             screenH * 0.1,
-                      },
-                        (levelName.toLowerCase() === 'forest' || 
-                        levelName.toLowerCase() === 'farm') && 
-                        Math.min(screenW, screenH) < 768 && {
-                          top: screenH * 0.01,
-                        },
-                                              // Insects level - move label down 10% on phones
-                      levelName.toLowerCase() === 'insects' && 
-                       Math.min(screenW, screenH) < 768 && {
-                        top: screenH * 0.01,
-                      },
-                      // Ocean level - move label up on phone landscape
-                      levelName.toLowerCase() === 'ocean' && 
-                       isLandscape && Math.min(screenW, screenH) < 768 && {
-                        top: screenH * 0.01,
-                      },
-                      // Desert level - move label down on phones
-                      levelName.toLowerCase() === 'desert' && 
-                       Math.min(screenW, screenH) < 768 && {
-                        top: screenH * 0.01,
-                      },
-                      // Savannah level - move label down 10% on phones
-                      levelName.toLowerCase() === 'savannah' && 
-                       Math.min(screenW, screenH) < 768 && {
-                        top: screenH * 0.01,
-                      },
-                      // Arctic level - move label down on phones
-                      levelName.toLowerCase() === 'jungle' && 
-                       Math.min(screenW, screenH) < 768 && {
-                        top: screenH * 0.01,
-                      },
-                      // Forest level - move label down on phones
+                      // Use the new label positioning utility
+                      getLabelPositioning(levelName, screenW, screenH, isLandscape),
 
                       {
                         opacity: 1,
@@ -2739,6 +2444,13 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     ]}>
                       <Animated.Text style={[
                         dynamicStyles.animalName,
+                        // Apply label styling from positioning utility
+                        {
+                          fontSize: getLabelPositioning(levelName, screenW, screenH, isLandscape).fontSize,
+                          paddingVertical: getLabelPositioning(levelName, screenW, screenH, isLandscape).paddingVertical,
+                          paddingHorizontal: getLabelPositioning(levelName, screenW, screenH, isLandscape).paddingHorizontal,
+                          borderRadius: getLabelPositioning(levelName, screenW, screenH, isLandscape).borderRadius,
+                        },
                         {
                           transform: [{
                             scale: nameScaleAnim.interpolate({
@@ -2768,19 +2480,28 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     )}
               </View>
 
-                  {!showDiscoverScreen && !screenLocked && (
-              <NavigationButtons
-                handlePrev={handlePrev}
-                handleNext={handleNext}
-                isTransitioning={isTransitioning}
-                currentAnimalIndex={currentAnimalIndex}
-                      bgColor={isMuted ? 'rgba(0,0,0,0.5)' : 'rgba(255, 255, 255, 0.7)'}
-                      totalAnimals={animals.length}
-                      levelCompleted={levelCompleted}
-                      buttonsDisabled={buttonsDisabledManually}
-                      nextButtonDisabled={!hasClickedCurrentAnimal}
-                    />
-                  )}
+                                      {!showDiscoverScreen && !screenLocked && (
+                                              <View style={{
+                          // Adjust navigation button positioning on tablets
+                          marginTop: isLandscape && Math.min(screenW, screenH) >= 768 ? screenH * -0.2 : 0,
+                          // Move buttons closer together on tablets
+                          marginHorizontal: Math.min(screenW, screenH) >= 768 ? screenW * 0.15 : 0,
+                        }}>
+                        <NavigationButtons
+                          handlePrev={handlePrev}
+                          handleNext={handleNext}
+                          isTransitioning={isTransitioning}
+                          currentAnimalIndex={currentAnimalIndex}
+                          bgColor={isMuted ? 'rgba(0,0,0,0.5)' : 'rgba(255, 255, 255, 0.7)'}
+                          totalAnimals={animals.length}
+                          levelCompleted={levelCompleted}
+                          buttonsDisabled={buttonsDisabledManually}
+                          nextButtonDisabled={false}
+                          hasClickedCurrentAnimal={hasClickedCurrentAnimal}
+                          visitedAnimals={visitedAnimals}
+                        />
+                      </View>
+                    )}
                   
 
             </View>
@@ -2909,7 +2630,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                          color: levelName.toLowerCase() === 'ocean' ? 'rgba(15, 82, 83, 0.8)' :
                                 levelName.toLowerCase() === 'birds' ? 'rgba(255, 192, 203, 0.8)' :
                                 levelName.toLowerCase() === 'farm' ? 'rgba(255, 165, 0, 0.8)' :
-                                levelName.toLowerCase() === 'arctic' ? 'rgba(51, 94, 108, 0.8)' :
+
                                 levelName.toLowerCase() === 'desert' ? 'rgba(255, 215, 0, 0.8)' :
                                 levelName.toLowerCase() === 'forest' ? 'rgba(0, 128, 0, 0.8)' :
                                 levelName.toLowerCase() === 'jungle' ? 'rgba(0, 128, 0, 0.8)' :

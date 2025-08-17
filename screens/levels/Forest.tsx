@@ -262,7 +262,7 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
   // Show video intro in landscape mode
   if (showVideo && isLandscape) {
     return (
-      <View style={styles.fullscreenContainer}>
+      <View style={styles.fullscreenContainer} pointerEvents="box-none">
         <VideoView
           style={styles.fullscreenVideo}
           player={player}
@@ -408,13 +408,13 @@ const styles = StyleSheet.create({
   },
   rightButtonContainer: {
     position: 'absolute',
-    top: 20,
+    top: 30,
     right: 20,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 15,
-    zIndex: 2,
+    zIndex: 100000, // Much higher z-index to appear above fullscreenContainer
   },
   rightSkipButton: {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rightHomeButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'orange',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 25,
@@ -437,6 +437,7 @@ const styles = StyleSheet.create({
     gap: 8,
     minWidth: 100,
     justifyContent: 'center',
+    zIndex: 100001, // Much higher z-index to ensure home button appears above everything
   },
   rightButtonText: {
     color: '#fff',

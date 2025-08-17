@@ -2,7 +2,7 @@ import { Dimensions, Platform } from 'react-native';
 
 const { width: screenW, height: screenH } = Dimensions.get('window');
 
-// Device detection functions
+// Device detection functions - optimized for landscape mode
 export const isTablet = (): boolean => {
   const { width, height } = Dimensions.get('window');
   const minDimension = Math.min(width, height);
@@ -36,22 +36,24 @@ export const isAndroid = (): boolean => {
   return Platform.OS === 'android';
 };
 
-// Responsive scaling functions
+// Responsive scaling functions - optimized for landscape
 export const getScaleFactor = (width: number, height: number): number => {
   const baseWidth = 375; // iPhone base width
   const baseHeight = 667; // iPhone base height
   
   if (isTablet()) {
-    // Tablet scaling
-    const tabletBaseWidth = 768;
-    const tabletBaseHeight = 1024;
+    // Tablet scaling - optimized for landscape
+    const tabletBaseWidth = 1024; // Use landscape width as base
+    const tabletBaseHeight = 768; // Use portrait height as base
     const widthScale = width / tabletBaseWidth;
     const heightScale = height / tabletBaseHeight;
     return Math.min(widthScale, heightScale, 1.5); // Cap at 1.5x for tablets
   } else {
-    // Phone scaling
-    const widthScale = width / baseWidth;
-    const heightScale = height / baseHeight;
+    // Phone scaling - optimized for landscape
+    const phoneBaseWidth = 667; // Use landscape height as base (rotated)
+    const phoneBaseHeight = 375; // Use portrait width as base (rotated)
+    const widthScale = width / phoneBaseWidth;
+    const heightScale = height / phoneBaseHeight;
     const scale = Math.min(widthScale, heightScale);
     
     if (isSmallPhone()) {
@@ -77,7 +79,7 @@ export const getResponsiveIconSize = (baseSize: number, scaleFactor: number): nu
   return Math.round(baseSize * scaleFactor);
 };
 
-// Device-specific responsive functions
+// Device-specific responsive functions - optimized for landscape
 export const getResponsivePadding = (basePadding: number, scaleFactor: number): number => {
   if (isTablet()) {
     return Math.round(basePadding * scaleFactor * 1.2); // Slightly more padding on tablets
@@ -105,7 +107,7 @@ export const isLandscape = (): boolean => {
   return screenW > screenH;
 };
 
-// Responsive breakpoints
+// Responsive breakpoints - optimized for landscape mode
 export const BREAKPOINTS = {
   SMALL_PHONE: 375,
   LARGE_PHONE: 414,
@@ -113,7 +115,7 @@ export const BREAKPOINTS = {
   LARGE_TABLET: 1024,
 };
 
-// Responsive grid helpers
+// Responsive grid helpers - optimized for landscape
 export const getResponsiveColumns = (width: number, isLandscape: boolean): number => {
   if (isTablet()) {
     return isLandscape ? 4 : 3;
@@ -148,6 +150,27 @@ export const getSafeAreaBottom = (): number => {
   } else {
     return isTablet() ? 24 : 0; // Android navigation bar
   }
+};
+
+// Landscape-specific helpers
+export const getLandscapeOptimizedSpacing = (baseSpacing: number): number => {
+  const scaleFactor = getScaleFactor(screenW, screenH);
+  if (isLandscape()) {
+    return isTablet() 
+      ? Math.round(baseSpacing * scaleFactor * 1.1) // 10% more spacing on landscape tablets
+      : Math.round(baseSpacing * scaleFactor * 0.9); // 10% less spacing on landscape phones
+  }
+  return getResponsiveSpacing(baseSpacing, scaleFactor);
+};
+
+export const getLandscapeOptimizedFontSize = (baseSize: number): number => {
+  const scaleFactor = getScaleFactor(screenW, screenH);
+  if (isLandscape()) {
+    return isTablet()
+      ? Math.min(baseSize * scaleFactor * 1.15, baseSize * 1.5) // Larger on landscape tablets
+      : Math.max(baseSize * scaleFactor * 0.95, baseSize * 0.7); // Smaller on landscape phones
+  }
+  return getResponsiveFontSize(baseSize, scaleFactor);
 };
 
 // Export current screen dimensions

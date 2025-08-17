@@ -132,22 +132,23 @@ export function useDynamicStyles() {
         color: '#612915',
       },
       animalName: {
-        fontSize: getResponsiveFontSize(36, scaleFactor), // Increased from 28 to 36
+        fontSize: getResponsiveFontSize(isTabletDevice ? 42 : 36, scaleFactor), // Bigger on tablets
         marginTop: 0,
         fontWeight: '700' as const,
-        backgroundColor: 'yellow',
-        paddingVertical: getResponsivePadding(16, scaleFactor), // Increased padding from 12 to 16
-        paddingHorizontal: getResponsivePadding(32, scaleFactor), // Increased padding from 24 to 32
-        borderRadius: getResponsiveSpacing(28, scaleFactor), // Increased from 22 to 28
+        backgroundColor: 'rgba(255, 255, 0, 0.95)', // Semi-transparent yellow
+        paddingVertical: getResponsivePadding(isTabletDevice ? 20 : 16, scaleFactor), // Better padding
+        paddingHorizontal: getResponsivePadding(isTabletDevice ? 40 : 32, scaleFactor), // Better padding
+        borderRadius: getResponsiveSpacing(isTabletDevice ? 35 : 28, scaleFactor), // Better border radius
         textAlign: 'center' as const,
-        elevation: 3,
+        elevation: 6,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3,
-        opacity: 0.9,
-        borderWidth: 5,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        opacity: 0.95,
+        borderWidth: isTabletDevice ? 6 : 5,
         borderColor: '#FFD700',
+        minWidth: getResponsiveSpacing(isTabletDevice ? 200 : 150, scaleFactor), // Ensure minimum width
       },
       loadingText: {
         marginTop: getResponsiveMargin(10, scaleFactor),
@@ -162,39 +163,42 @@ export function useDynamicStyles() {
       container: {
         flex: 1,
         backgroundColor: 'transparent',
-        padding: getResponsiveSpacing(15, scaleFactor),
+        padding: getResponsiveSpacing(isTabletDevice ? 20 : 15, scaleFactor), // Better padding on tablets
       },
       content: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingTop: getResponsiveSpacing(20, scaleFactor),
-        paddingBottom: getResponsiveSpacing(20, scaleFactor),
+        paddingTop: getResponsiveSpacing(isTabletDevice ? 30 : 20, scaleFactor), // Better padding on tablets
+        paddingBottom: getResponsiveSpacing(isTabletDevice ? 30 : 20, scaleFactor), // Better padding on tablets
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 25 : 15, scaleFactor), // Add horizontal padding
       },
       animalCard: {
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        height: screenH * (isTabletDevice ? 0.7 : (isLandscapeMode ? 0.65 : 0.55)), // Increased height for phones - landscape from 0.6 to 0.65, portrait from 0.5 to 0.55
-        marginTop: '50%'
+        height: screenH * (isTabletDevice ? 0.75 : (isLandscapeMode ? 0.7 : 0.6)), // Better proportions for all devices
+        marginTop: isTabletDevice ? '25%' : '35%', // Better positioning for tablets vs phones
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 40 : 20, scaleFactor), // Add horizontal padding
       },
       animalNameWrapper: {
         position: 'absolute',
         top: isTabletDevice 
-           ? -Math.max(getResponsiveSpacing(30, scaleFactor), screenH * 0.08) // Move further up on iPad
-          : -Math.max(getResponsiveSpacing(60, scaleFactor), screenH * 0.05), // Move down 10% on phones (changed from 0.15 to 0.05)
+           ? -Math.max(getResponsiveSpacing(40, scaleFactor), screenH * 0.1) // Better positioning on tablets
+          : -Math.max(getResponsiveSpacing(50, scaleFactor), screenH * 0.08), // Better positioning on phones
         width: '100%',
         alignItems: 'center',
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 20 : 15, scaleFactor), // Add horizontal padding
       },
       animalImage: {
-        width: Math.min(screenW * (isTabletDevice ? 0.8 : 0.75), screenH * 0.99), // Reduced width on phones from 0.85 to 0.75
-        height: screenH * (isTabletDevice ? 0.98 : 0.8), // Reduced height on phones from 0.9 to 0.8
+        width: Math.min(screenW * (isTabletDevice ? 0.85 : 0.8), screenH * 0.95), // Better proportions
+        height: screenH * (isTabletDevice ? 0.9 : 0.85), // Better proportions
         resizeMode: 'contain',
-        marginTop: '10%',
+        marginTop: isTabletDevice ? '5%' : '8%', // Better spacing
         transform: [{ 
           scale: isTabletDevice 
-            ? 1.8 
-            : (isLandscapeMode ? 0.9: 0.7) // 10% bigger - landscape: 0.57 * 1.1 = 0.627, portrait: 0.5 * 1.1 = 0.55
+            ? 1.6 
+            : (isLandscapeMode ? 1.0 : 0.85) // Better scaling for all orientations
         }],
       },
       animalLoadingContainer: {
@@ -219,25 +223,43 @@ export function useDynamicStyles() {
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 3,
-        zIndex: 10,
+        zIndex: 10001, // Increased to be higher than navigation buttons (10000)
       },
-      backToMenuButton: {
-        backgroundColor: 'orange',
-        paddingVertical: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 25 : isTabletDevice ? 15 : 20, scaleFactor), // Bigger on tablet landscape
-        paddingHorizontal: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 35 : isTabletDevice ? 22 : 28, scaleFactor), // Bigger on tablet landscape
-        borderRadius: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 45 : isTabletDevice ? 30 : 35, scaleFactor), // Bigger on tablet landscape
+      homeButton: {
+        position: 'absolute',
+        top: getResponsiveSpacing(isTabletDevice ? -10 : 70, scaleFactor) + (isTabletDevice && isLandscapeMode ? screenH * 0.05 : 0), // Updated positioning
+        right: getResponsiveSpacing(isTabletDevice ? 100 : 100, scaleFactor), // Updated right positioning
+        backgroundColor: 'orange', // Orange background for home button
+        paddingVertical: getResponsiveSpacing(isTabletDevice ? 20 : 18, scaleFactor), // Better sizing
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 30 : 25, scaleFactor), // Better sizing
+        borderRadius: getResponsiveSpacing(isTabletDevice ? 40 : 35, scaleFactor), // Better border radius
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        elevation: 3,
+        elevation: 5,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
+        zIndex: 10001, // Increased to be higher than navigation buttons (10000)
+      },
+      backToMenuButton: {
+        backgroundColor: '#9370DB', // Purple instead of light green
+        paddingVertical: getResponsiveSpacing(isTabletDevice ? 20 : 18, scaleFactor), // Better sizing
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 30 : 25, scaleFactor), // Better sizing
+        borderRadius: getResponsiveSpacing(isTabletDevice ? 40 : 35, scaleFactor), // Better border radius
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
         position: 'absolute',
-        top: getResponsiveSpacing(65, scaleFactor) + (isTabletDevice && isLandscapeMode ? screenH * 0.1 : 0), // Move down 10% on tablet landscape (same level as instruction bubble)
-        right: getResponsiveSpacing(75, scaleFactor) + (isTabletDevice ? 0 : getResponsiveSpacing(15, scaleFactor)), // Shift a bit left on phones
-        zIndex: 10,
+        top: getResponsiveSpacing(isTabletDevice ? 100 : 70, scaleFactor) + (isTabletDevice && isLandscapeMode ? screenH * 0.05 : 0), // Updated positioning
+        right: getResponsiveSpacing(isTabletDevice ? 120 : 100, scaleFactor), // Better right positioning
+        zIndex: 10001, // Increased to be higher than navigation buttons (10000)
       },
       levelGrid: {
         flexDirection: 'row',
@@ -281,7 +303,7 @@ export function useDynamicStyles() {
         paddingVertical: getResponsiveSpacing(6, scaleFactor),
         paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
         borderRadius: getResponsiveSpacing(20, scaleFactor),
-        marginHorizontal: getResponsiveSpacing(15, scaleFactor),
+        marginHorizontal: getResponsiveSpacing(10, scaleFactor),
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -312,7 +334,7 @@ export function useDynamicStyles() {
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 3 },
         elevation: 8,
-        zIndex: 20,
+        zIndex: 10001, // Increased to be higher than navigation buttons (10000)
         borderWidth: 3,
         borderColor: '#FFA500',
         marginBottom: getResponsiveSpacing(18, scaleFactor),
@@ -325,12 +347,22 @@ export function useDynamicStyles() {
         alignItems: 'center',
       },
       instructionText: {
-        fontSize: getResponsiveFontSize(16, scaleFactor),
+        fontSize: getResponsiveFontSize(isTabletDevice ? 20 : 16, scaleFactor), // Bigger on tablets
         color: '#333',
         textAlign: 'center',
-        marginBottom: getResponsiveSpacing(10, scaleFactor),
-        marginTop: getResponsiveSpacing(5, scaleFactor),
+        marginBottom: getResponsiveSpacing(isTabletDevice ? 15 : 10, scaleFactor), // Better spacing on tablets
+        marginTop: getResponsiveSpacing(isTabletDevice ? 8 : 5, scaleFactor), // Better spacing on tablets
         fontWeight: 'bold',
+        paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 20 : 15, scaleFactor), // Add horizontal padding
+      },
+      // Additional responsive improvements
+      tabletOptimized: {
+        paddingHorizontal: getResponsiveSpacing(10, scaleFactor),
+        paddingVertical: getResponsiveSpacing(10, scaleFactor),
+      },
+      phoneOptimized: {
+        paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
+        paddingVertical: getResponsiveSpacing(20, scaleFactor),
       },
     });
   }, [screenW, screenH, isLandscapeMode, isTabletDevice, isSmallPhoneDevice, isLargePhoneDevice, scaleFactor]);

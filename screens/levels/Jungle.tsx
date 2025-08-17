@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rightHomeButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'orange',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 25,

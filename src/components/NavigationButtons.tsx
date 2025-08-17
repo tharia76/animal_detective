@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, TouchableOpacity, useWindowDimensions, StyleSheet, ViewStyle } from 'react-native';
+import { View, TouchableOpacity, useWindowDimensions, StyleSheet, ViewStyle, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -21,6 +21,8 @@ interface NavigationButtonsProps {
   levelCompleted?: boolean;
   buttonsDisabled?: boolean;
   nextButtonDisabled?: boolean; // New prop to control next button specifically
+  hasClickedCurrentAnimal?: boolean; // New prop to track if current animal is clicked
+  visitedAnimals?: Set<number>; // New prop to track visited animals
 }
 
 // Device detection functions
@@ -61,6 +63,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   levelCompleted = false,
   buttonsDisabled = false,
   nextButtonDisabled = false,
+  hasClickedCurrentAnimal = false,
+  visitedAnimals = new Set(),
 }) => {
   // Animate the arrows with a subtle left-right wiggle
   const leftAnim = useSharedValue(0);
@@ -76,6 +80,24 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const isTabletDevice = isTablet(width, height);
   const dynamicStyles = useDynamicStyles();
   const scaleFactor = getScaleFactor(width, height);
+
+  // Add glow effect for clicked animals
+  const glowOpacity = useSharedValue(0);
+  
+  useEffect(() => {
+    if (hasClickedCurrentAnimal) {
+      glowOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.3, { duration: 1000 }),
+          withTiming(0.1, { duration: 1000 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      glowOpacity.value = 0;
+    }
+  }, [hasClickedCurrentAnimal, glowOpacity]);
 
   useEffect(() => {
     // Reduce animation complexity on phones to prevent memory issues
@@ -112,6 +134,15 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     transform: [{ translateX: rightAnim.value }],
   }));
 
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: glowOpacity.value,
+    shadowRadius: 10,
+    elevation: glowOpacity.value * 10,
+  }));
+
   // Responsive navigation button style - much smaller in mobile portrait
   const baseButtonSize = isTabletDevice 
     ? 120 
@@ -136,18 +167,49 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     }
   ];
 
-        // Container style optimized for current orientation
+  // Container style optimized for current orientation - no longer needed for positioning
   const containerStyle: ViewStyle = {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     position: 'absolute',
-    bottom: getResponsiveSpacing(isLandscape ? 120 : 80, scaleFactor), // Higher in portrait
-    left: '10%', // Spread buttons further apart
-    right: '10%', // Spread buttons further apart
-    paddingHorizontal: getResponsiveSpacing(30, scaleFactor), // More padding for extra spacing
+    left: 0,
+    right: 0,
     zIndex: 10000,
   };
+
+  // Calculate button positions to eliminate dead space
+  // On tablets, position buttons more towards the center
+  const leftButtonLeft = isTabletDevice 
+    ? getResponsiveSpacing(300, scaleFactor) 
+    : getResponsiveSpacing(200, scaleFactor);
+  const rightButtonRight = isTabletDevice 
+    ? getResponsiveSpacing(300, scaleFactor) 
+    : getResponsiveSpacing(200, scaleFactor);
+  // Adjust button bottom positioning - move up on tablets
+  const buttonBottom = isTabletDevice 
+    ? getResponsiveSpacing(isLandscape ? 30 : 100, scaleFactor) // Much higher up on tablets (positive values)
+    : getResponsiveSpacing(isLandscape ? 20 : 20, scaleFactor); // Better positioning for phones
+
+  // Debug logging for tablet positioning
+  if (isTabletDevice) {
+    console.log('NavigationButtons tablet positioning:', {
+      isTabletDevice,
+      isLandscape,
+      width,
+      height,
+      leftButtonLeft,
+      rightButtonRight,
+      buttonBottom,
+      scaleFactor
+    });
+  }
+
+  // Add visual debugging - log the actual button positions
+  console.log('NavigationButtons button positions:', {
+    leftButton: { left: leftButtonLeft, bottom: buttonBottom },
+    rightButton: { right: rightButtonRight, bottom: buttonBottom },
+    screenDimensions: { width, height },
+    isTablet: isTabletDevice,
+    isLandscape
+  });
 
   // Gradient colors for the buttons
   const leftGradientColors = ['#FF6B6B', '#4ECDC4', '#45B7D1'] as const; // Red to teal to blue
@@ -186,48 +248,88 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     <View style={containerStyle}>
       {/* Left arrow button */}
       <TouchableOpacity
-        onPress={handlePrevPress}
+        onPress={handleNextPress}
         activeOpacity={0.7}
-        disabled={isTransitioning || currentAnimalIndex === 0 || buttonsDisabled}
-        style={navButtonStyle}
+        disabled={isTransitioning || currentAnimalIndex >= totalAnimals - 1 || buttonsDisabled || !hasClickedCurrentAnimal}
+        style={[navButtonStyle, { 
+          position: 'absolute', 
+          left: isTabletDevice ? width * 0.2 : leftButtonLeft, // Move closer to center on tablets
+          bottom: buttonBottom 
+        }]}
       >
-        <LinearGradient
-          colors={isTransitioning || currentAnimalIndex === 0 || buttonsDisabled ? ['#ccc', '#999'] : leftGradientColors}
-          style={styles.gradientBackground}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <View
+          style={[styles.gradientBackground, {
+            backgroundColor: isTransitioning || currentAnimalIndex >= totalAnimals - 1 || buttonsDisabled || !hasClickedCurrentAnimal ? '#ccc' : '#2196F3'
+          }]}
         >
           <Animated.View style={leftArrowStyle}>
-            <Ionicons
-              name="arrow-back"
-              size={iconSize}
-              color={isTransitioning || currentAnimalIndex === 0 || buttonsDisabled ? 'rgba(0,0,0,0.4)' : 'white'}
-            />
+            <Text
+              style={{
+                color: isTransitioning || currentAnimalIndex >= totalAnimals - 1 || buttonsDisabled || !hasClickedCurrentAnimal ? 'rgba(0,0,0,0.4)' : (hasClickedCurrentAnimal ? 'white' : 'white'),
+                fontSize: iconSize,
+                fontWeight: 'bold',
+              }}
+            >
+              →
+            </Text>
           </Animated.View>
-        </LinearGradient>
+          {hasClickedCurrentAnimal && (
+            <View style={{
+              position: 'absolute',
+              top: -2,
+              left: -2,
+              right: -2,
+              bottom: -2,
+              borderRadius: 62,
+              borderWidth: 2,
+              borderColor: '#4CAF50',
+              opacity: 0.6,
+            }} />
+          )}
+        </View>
       </TouchableOpacity>
 
       {/* Right arrow button */}
       <TouchableOpacity
-        onPress={handleNextPress}
+        onPress={handlePrevPress}
         activeOpacity={0.7}
-        disabled={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled || nextButtonDisabled}
-        style={navButtonStyle}
+        disabled={isTransitioning || currentAnimalIndex === 0 || buttonsDisabled || !visitedAnimals.has(currentAnimalIndex - 1)}
+        style={[navButtonStyle, { 
+          position: 'absolute', 
+          right: isTabletDevice ? width * 0.2 : rightButtonRight, // Move closer to center on tablets
+          bottom: buttonBottom 
+        }]}
       >
-        <LinearGradient
-          colors={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled || nextButtonDisabled ? ['#ccc', '#999'] : rightGradientColors}
-          style={styles.gradientBackground}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <View
+          style={[styles.gradientBackground, {
+            backgroundColor: isTransitioning || currentAnimalIndex === 0 || buttonsDisabled || !visitedAnimals.has(currentAnimalIndex - 1) ? '#ccc' : '#FF4757'
+          }]}
         >
           <Animated.View style={rightArrowStyle}>
-            <Ionicons
-              name="arrow-forward"
-              size={iconSize}
-              color={isTransitioning || (levelCompleted && currentAnimalIndex >= totalAnimals - 1) || buttonsDisabled || nextButtonDisabled ? 'rgba(0,0,0,0.4)' : 'white'}
-            />
+            <Text
+              style={{
+                color: isTransitioning || currentAnimalIndex === 0 || buttonsDisabled || !visitedAnimals.has(currentAnimalIndex - 1) ? '#333333' : '#000000',
+                fontSize: iconSize,
+                fontWeight: 'bold',
+              }}
+            >
+              ←
+            </Text>
           </Animated.View>
-        </LinearGradient>
+          {!isTransitioning && currentAnimalIndex > 0 && !buttonsDisabled && visitedAnimals.has(currentAnimalIndex - 1) && (
+            <View style={{
+              position: 'absolute',
+              top: -2,
+              left: -2,
+              right: -2,
+              bottom: -2,
+              borderRadius: 62,
+              borderWidth: 2,
+              borderColor: '#4ECDC4',
+              opacity: 0.6,
+            }} />
+          )}
+        </View>
       </TouchableOpacity>
     </View>
   );

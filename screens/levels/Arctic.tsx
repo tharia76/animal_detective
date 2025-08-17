@@ -8,6 +8,7 @@ import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate, { getGlobalVolume } from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAllLandscapeButtonPositions } from '../../src/utils/landscapeButtonPositioning';
 
 // Define Props for the screen
 type ArcticScreenProps = {
@@ -218,7 +219,7 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
   // Show video intro in landscape mode
   if (showVideo && isLandscape) {
     return (
-      <View style={styles.fullscreenContainer}>
+      <View style={styles.fullscreenContainer} pointerEvents="box-none">
         <VideoView
           style={styles.fullscreenVideo}
           player={player}
@@ -263,15 +264,15 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
         </View>
         
         {/* Right side button container */}
-        <View style={styles.rightButtonContainer}>
+        <View style={getAllLandscapeButtonPositions(width, height, false).videoButtons.container}>
           {/* Skip button */}
-          <TouchableOpacity style={styles.rightSkipButton} onPress={skipVideo}>
+          <TouchableOpacity style={getAllLandscapeButtonPositions(width, height, false).videoButtons.skipButton} onPress={skipVideo}>
             <Ionicons name="play-skip-forward" size={24} color="#fff" />
             <Text style={styles.rightButtonText}>{t('skip')}</Text>
           </TouchableOpacity>
 
           {/* Home button */}
-          <TouchableOpacity style={styles.rightHomeButton} onPress={onBackToMenu}>
+          <TouchableOpacity style={getAllLandscapeButtonPositions(width, height, false).videoButtons.homeButton} onPress={onBackToMenu}>
             <Ionicons name="home" size={24} color="#fff" />
             <Text style={styles.rightButtonText}>{t('home')}</Text>
           </TouchableOpacity>
@@ -361,38 +362,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 2,
   },
-  rightButtonContainer: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 15,
-    zIndex: 2,
-  },
-  rightSkipButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 25,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    minWidth: 100,
-    justifyContent: 'center',
-  },
-  rightHomeButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 25,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    minWidth: 100,
-    justifyContent: 'center',
-  },
+
   rightButtonText: {
     color: '#fff',
     fontSize: 16,

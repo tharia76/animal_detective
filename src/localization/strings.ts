@@ -55,7 +55,7 @@ export const strings = {
       aboutDescription: 'Ready for some giggles and fun? In this game, you’ll meet all sorts of cute animals — and hear the silly sounds they make! Just tap each one to learn their name and sound. Moo! Quack! Roar!\n\nCan you guess them all? Let’s play and learn together!',
       viewAllAnimals: 'See All Animals',
       arcticCollection: 'Arctic Friends Collection',
-      animalsToDiscover: '{count} friends to meet',
+      animalsToDiscover: '{count} animals to discover',
       missionComplete: '🏆 Mission Complete!',
       missionNotebook: '{level} Mission Notebook!',
       resetMissionTitle: 'Are you sure?',

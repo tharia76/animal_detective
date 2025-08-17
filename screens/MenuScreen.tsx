@@ -15,6 +15,8 @@ import {
   Pressable,
   PanResponder,
   Animated,
+  Easing,
+  InteractionManager,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -488,6 +490,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const dynStyles = useDynamicStyles();
   const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
   
+  // Transition overlay to prevent flicker
+  const transitionOpacity = useRef(new Animated.Value(0)).current;
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const isTransitioningRef = useRef(false);
+  const [showInstantOverlay, setShowInstantOverlay] = useState(false);
+
   // Get animals data for level tile subtitles
   const animals = getAnimals(lang);
 
@@ -783,6 +792,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   useEffect(() => {
     const onFocus = () => {
       try {
+        // Reset all transition states when coming back
+        setShowInstantOverlay(false);
+        isTransitioningRef.current = false;
+        transitionOpacity.setValue(0);
+        setIsTransitioning(false);
         if (playerRef.current) playerRef.current.play();
       } catch (e) {
         // Defensive: ignore
@@ -806,7 +820,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
       } catch (e) {}
       stopAndUnload();
     };
-  }, [navigation, stopAndUnload]);
+  }, [navigation, stopAndUnload, transitionOpacity]);
 
   // IAP: Initialize and get products
   useEffect(() => {
@@ -996,11 +1010,20 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const handleSelect = useCallback(
     (level, isLocked) => {
       playButtonSound(volume);
-      stopAndUnload();
-      // Always allow navigation regardless of locked state (visual only)
-      if (typeof onSelectLevel === 'function') {
-        onSelectLevel(level);
-      }
+      
+      // Show destination background immediately
+      setSelectedLevel(level);
+      setShowInstantOverlay(true);
+      
+      // Navigate on next tick
+      setTimeout(() => {
+        if (typeof onSelectLevel === 'function') {
+          onSelectLevel(level);
+        }
+        setTimeout(() => {
+          try { stopAndUnload(); } catch {}
+        }, 0);
+      }, 0);
     },
     [onSelectLevel, stopAndUnload, volume]
   );
@@ -1249,28 +1272,64 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
       width: '100%',
       height: '100%'
     }}>
-      <ImageBackground
-        key={`${currentIsLandscape ? 'landscape' : 'portrait'}-${currentWidth}x${currentHeight}`}
-        source={
-          backgroundImageUri
-            ? { uri: backgroundImageUri }
-            : bgUri
-            ? { uri: bgUri }
-            : BG_IMAGE
-        }
-        style={{ 
-          flex: 1, 
-          backgroundColor: 'transparent',
-          width: '100%',
-          height: '100%'
-        }}
-        imageStyle={{ opacity: 0.65 }}
-        resizeMode="cover"
-      >
+      {/* Instant loading overlay that appears immediately on tap */}
+      {showInstantOverlay && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            backgroundColor: '#ffdab9',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <ActivityIndicator size="large" color="#FF8C00" />
+          <Text
+            style={{
+              marginTop: 20,
+              fontSize: 18,
+              fontWeight: '600',
+              color: '#612915',
+              textAlign: 'center',
+            }}
+          >
+            {t('loading') || 'Loading...'}
+          </Text>
+        </View>
+      )}
+      
+      {/* Menu content */}
+      {!showInstantOverlay ? (
+        <ImageBackground
+          key={`${currentIsLandscape ? 'landscape' : 'portrait'}-${currentWidth}x${currentHeight}`}
+          source={
+            backgroundImageUri
+              ? { uri: backgroundImageUri }
+              : bgUri
+              ? { uri: bgUri }
+              : BG_IMAGE
+          }
+          style={{ 
+            flex: 1, 
+            backgroundColor: 'transparent',
+            width: '100%',
+            height: '100%',
+            opacity: 1,
+          }}
+          imageStyle={{ opacity: 0.65 }}
+          fadeDuration={0}
+          resizeMode="cover"
+        >
         <View style={{ flex: 1, backgroundColor: 'transparent' }}>
           {/* Animated Fireflies Background */}
           <AnimatedFireflies />
-          
+
+
+
           {currentIsLandscape ? (
             // LANDSCAPE LAYOUT
             <>
@@ -1527,6 +1586,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   backgroundColor: 'transparent',
                 }}
                 imageStyle={{ opacity: 0.65 }}
+                fadeDuration={0}
                 resizeMode="cover"
               >
                 <View style={{
@@ -1683,7 +1743,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                       </Text>
                     </View>
 
-                                        {/* Volume Slider */}
+                    {/* Volume Slider */}
                     <View style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -1713,52 +1773,52 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                         />
                       </TouchableOpacity>
                   
-                  {/* Volume Slider */}
-                  <View style={{
-                    flex: 1,
-                    height: 36,
-                    justifyContent: 'center',
-                    marginHorizontal: 10,
-                    paddingVertical: 8,
-                  }}>
-                    <Slider
-                      style={{ width: '100%', height: 40 }}
-                      minimumValue={0}
-                      maximumValue={1}
-                      value={volume || 0}
-                      onValueChange={(value) => {
-                        console.log('Slider value changed to:', value);
-                        handleVolumeChange(value);
-                      }}
-                      onSlidingComplete={(value) => {
-                        console.log('Slider completed at:', value);
-                        handleVolumeChange(value);
-                      }}
-                      minimumTrackTintColor="#FF8C00"
-                      maximumTrackTintColor="#E0E0E0"
-                      thumbTintColor="white"
-                    />
-                  </View>
-                  
-                  <TouchableOpacity
-                    onPress={() => {
-                      playButtonSound(volume);
-                      setVolumeSafely(1.0);
-                    }}
-                    style={{ 
-                      marginLeft: 12,
-                      padding: 8,
-                      backgroundColor: (volume || 0) === 1.0 ? 'rgba(255, 140, 0, 0.2)' : 'transparent',
-                      borderRadius: 12,
-                    }}
-                  >
-                    <Ionicons 
-                      name="volume-high" 
-                      size={22}
-                      color={(volume || 0) === 1.0 ? '#FF8C00' : '#666'}
-                    />
-                  </TouchableOpacity>
-                </View>
+                      {/* Volume Slider */}
+                      <View style={{
+                        flex: 1,
+                        height: 36,
+                        justifyContent: 'center',
+                        marginHorizontal: 10,
+                        paddingVertical: 8,
+                      }}>
+                        <Slider
+                          style={{ width: '100%', height: 40 }}
+                          minimumValue={0}
+                          maximumValue={1}
+                          value={volume || 0}
+                          onValueChange={(value) => {
+                            console.log('Slider value changed to:', value);
+                            handleVolumeChange(value);
+                          }}
+                          onSlidingComplete={(value) => {
+                            console.log('Slider completed at:', value);
+                            handleVolumeChange(value);
+                          }}
+                          minimumTrackTintColor="#FF8C00"
+                          maximumTrackTintColor="#E0E0E0"
+                          thumbTintColor="white"
+                        />
+                      </View>
+                      
+                      <TouchableOpacity
+                        onPress={() => {
+                          playButtonSound(volume);
+                          setVolumeSafely(1.0);
+                        }}
+                        style={{ 
+                          marginLeft: 12,
+                          padding: 8,
+                          backgroundColor: (volume || 0) === 1.0 ? 'rgba(255, 140, 0, 0.2)' : 'transparent',
+                          borderRadius: 12,
+                        }}
+                      >
+                        <Ionicons 
+                          name="volume-high" 
+                          size={22}
+                          color={(volume || 0) === 1.0 ? '#FF8C00' : '#666'}
+                        />
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
                   {/* Reset All Levels Section */}
@@ -1863,11 +1923,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                   <View style={{ height: isTablet ? 10 : 16 }} />
                 </ScrollView>
               </View>
-            </ImageBackground>
-          </View>
+              </ImageBackground>
+            </View>
           )}
+          {/* Close the top-level transparent View opened after ImageBackground start */}
         </View>
       </ImageBackground>
+      ) : null}
     </View>
   );
 }
