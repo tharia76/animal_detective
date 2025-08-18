@@ -6,7 +6,7 @@ import * as Localization from 'expo-localization';
 import i18n from '../../src/localization/i18next';
 // Define return type
 type UseLocalizationReturn = {
-  t: (key: string) => string;
+  t: (key: string, options?: any) => string;
   lang: string;
   setLang: (languageCode: string) => Promise<void>;
 };
@@ -44,8 +44,8 @@ export const useLocalization = (): UseLocalizationReturn => {
   }, []);
 
   const t = useCallback(
-    (key: string): string => {
-      const translation = i18n.t(key, { lng: lang });
+    (key: string, options?: any): string => {
+      const translation = i18n.t(key, { lng: lang, ...options });
       return translation || key;
     },
     [lang]

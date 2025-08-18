@@ -2480,7 +2480,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                     )}
               </View>
 
-                                      {!showDiscoverScreen && !screenLocked && (
+                                      {!showDiscoverScreen && !screenLocked && !showCompletionCelebration && (
                                               <View style={{
                           // Adjust navigation button positioning on tablets
                           marginTop: isLandscape && Math.min(screenW, screenH) >= 768 ? screenH * -0.2 : 0,
@@ -2594,7 +2594,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                          marginBottom: 1,
                          transform: [{ scale: celebrationPulseAnim }],
                        }}>
-                         Discovered
+                         {t('discovered')}
                        </Animated.Text>
                        
                        {/* x/x count in its own pill */}
@@ -2628,19 +2628,21 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                          fontWeight: 'bold',
                          textAlign: 'center',
                          color: levelName.toLowerCase() === 'ocean' ? 'rgba(15, 82, 83, 0.8)' :
-                                levelName.toLowerCase() === 'birds' ? 'rgba(255, 192, 203, 0.8)' :
+                                levelName.toLowerCase() === 'birds' ? 'rgba(63, 148, 37, 0.8)' :
                                 levelName.toLowerCase() === 'farm' ? 'rgba(255, 165, 0, 0.8)' :
 
-                                levelName.toLowerCase() === 'desert' ? 'rgba(255, 215, 0, 0.8)' :
+                                levelName.toLowerCase() === 'desert' ? 'rgba(36, 45, 213, 0.8)' :
                                 levelName.toLowerCase() === 'forest' ? 'rgba(0, 128, 0, 0.8)' :
                                 levelName.toLowerCase() === 'jungle' ? 'rgba(0, 128, 0, 0.8)' :
-                                levelName.toLowerCase() === 'insects' ? 'rgba(255, 192, 203, 0.8)' :
+                                levelName.toLowerCase() === 'insects' ? 'rgba(143, 22, 42, 0.8)' :
                                 levelName.toLowerCase() === 'savannah' ? 'rgba(255, 165, 0, 0.8)' :
                                 'rgba(0, 128, 0, 0.8)',
                          marginBottom: 20,
                          transform: [{ scale: celebrationPulseAnim }],
-                       }}>
-                         {levelName} Animals!
+                                                }}>
+                         {levelName.toLowerCase() === 'birds' ? t('levelDiscoveredBirds') :
+                          levelName.toLowerCase() === 'insects' ? t('levelDiscoveredInsects') :
+                          t('levelDiscoveredAnimals')}
                        </Animated.Text>
                        
                        {/* Continue arrow button with pulsing animation */}

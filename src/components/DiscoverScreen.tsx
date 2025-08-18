@@ -38,7 +38,7 @@ const getAnimalEnglishKey = (animal: any): string => {
     
     // Russian animals - using exact translations from strings.ts
     // Farm animals
-    'собака': 'dog', 'кот': 'cat', 'курица': 'chicken', 'цыпленок': 'chick',
+    'собака': 'dog', 'кошка': 'cat', 'kошка': 'cat', 'курица': 'chicken', 'цыпленок': 'chick',
     'осел': 'donkey', 'корова': 'cow', 'утка': 'duck', 'коза': 'goat',
     'гусь': 'goose', 'лошадь': 'horse', 'лама': 'llama', 'свинья': 'pig',
     'кролик': 'rabbit', 'петух': 'rooster', 'овца': 'sheep', 'индейка': 'turkey',
@@ -165,9 +165,9 @@ const getAnimalEnglishKey = (animal: any): string => {
   const result = nameToKeyMap[translatedKey] || translatedKey || 'cat';
   
   // Debug specific mapping issues
-  if (translatedKey.includes('кошк') || translatedKey.includes('кот') || translatedKey.includes('cat')) {
+  if (translatedKey.includes('кошк') || translatedKey.includes('кошка') || translatedKey.includes('cat')) {
     console.log(`🔍 CAT MAPPING DEBUG: "${translatedKey}" → "${result}"`);
-    console.log('Available mappings for cats:', Object.keys(nameToKeyMap).filter(k => k.includes('кошк') || k.includes('кот') || k.includes('cat')));
+    console.log('Available mappings for cats:', Object.keys(nameToKeyMap).filter(k => k.includes('кошк') || k.includes('кошка') || k.includes('cat')));
   }
   
   return result;
@@ -637,7 +637,7 @@ const LevelAnimalGrid: React.FC<{
         }
         
         // Debug name-image mismatch for cats specifically
-        if (animal.name.toLowerCase().includes('кошка') || animal.name.toLowerCase().includes('кот') || animal.name.toLowerCase().includes('cat')) {
+        if (animal.name.toLowerCase().includes('кошк') || animal.name.toLowerCase().includes('cat')) {
           console.log(`🐱 CAT DEBUG: "${animal.name}" (ID: ${animal.id}) → key: "${englishKey}"`);
           console.log(`   Silhouette: ${!!silhouetteImage}, Real: ${!!realImage}`);
         }
@@ -1457,7 +1457,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                     textShadowOffset: {width: 2, height: 2},
                     textShadowRadius: 3,
                   }}>
-                    {areAllAnimalsRevealed ? '🎉 COMPLETE MISSION! 🎉' : 'Complete Mission'}
+                    {areAllAnimalsRevealed ? t('completeMissionCelebration') : t('completeMission')}
                   </Text>
                 </TouchableOpacity>
               </View>

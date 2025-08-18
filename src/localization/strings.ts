@@ -83,6 +83,12 @@ export const strings = {
       noPreviousPurchases: 'No purchases found.',
       noPurchasesFound: 'No purchases found.',
       defaultPrice: '$4.99',
+      discovered: 'Discovered',
+      levelDiscoveredAnimals: 'Animals!',
+      levelDiscoveredInsects: 'Insects!',
+      levelDiscoveredBirds: 'Birds!',
+      completeMission: 'Complete Mission',
+      completeMissionCelebration: '🎉 COMPLETE MISSION! 🎉',
   
   
     animals: {
@@ -303,7 +309,13 @@ export const strings = {
     restored: 'Восстановлено',
     noPreviousPurchases: 'Покупок не найдено.',
     noPurchasesFound: 'Покупок не найдено.',
-    defaultPrice: '$4.99',
+          defaultPrice: '$4.99',
+      discovered: 'Найдено',
+      levelDiscoveredAnimals: 'Зверюшек!',
+      levelDiscoveredInsects: 'Насекомых!',
+      levelDiscoveredBirds: 'Птиц!',
+      completeMission: 'Завершить миссию',
+      completeMissionCelebration: '🎉 МИССИЯ ЗАВЕРШЕНА! 🎉',
     animals: {
       cat: 'Kошка',
       chicken: 'Курица',
@@ -524,6 +536,12 @@ export const strings = {
       noPreviousPurchases: 'Önceki satın alım bulunamadı.',
       noPurchasesFound: 'Önceki satın alım bulunamadı.',
       defaultPrice: '$4.99',
+      discovered: 'Keşfedildi',
+      levelDiscoveredAnimals: 'Hayvan dostları!',
+      levelDiscoveredInsects: 'Böcekler!',
+      levelDiscoveredBirds: 'Kuşlar!',
+      completeMission: 'Görevi Tamamla',
+      completeMissionCelebration: '🎉 GÖREV TAMAMLANDI! 🎉',
   
   
     animals: {
