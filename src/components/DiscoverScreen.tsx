@@ -53,7 +53,7 @@ const getAnimalEnglishKey = (animal: any): string => {
     'барсук': 'badger', 'лиса': 'fox', 'медведь': 'bear', 'енот': 'raccoon',
     'белка': 'squirrel', 'ёж': 'hedgehog', 'сова': 'owl', 'волк': 'wolf',
     'олень': 'deer', 'лось': 'moose', 'мышь': 'mouse', 'бобр': 'beaver',
-    'кабан': 'boar', 'летучая мышь': 'bat', 'выдра': 'otter', 'сурок': 'skunk',
+    'кабан': 'boar', 'летучая мышь': 'bat', 'выдра': 'otter', 'скунс': 'skunk',
     
     // Ocean animals
     'краб': 'crab', 'дельфин': 'dolphin', 'рыба': 'fish', 'медуза': 'jellyfish',

@@ -377,7 +377,7 @@ export const strings = {
       seal: 'Тюлень',
       shark: 'Акула',
       snake: 'Змея',
-      skunk: 'Сурок',
+      skunk: 'Скунс',
       tiger: 'Тигр',
       turtle: 'Черепаха',
       walrus: 'Морж',
