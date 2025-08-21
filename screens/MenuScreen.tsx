@@ -497,8 +497,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const navigation = useNavigation();
   const { t, lang, setLang } = useLocalization();
   
-  console.log('🔓 t function available:', typeof t === 'function');
-  console.log('🔓 lang:', lang);
+
   const dynStyles = useDynamicStyles();
   const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
   
@@ -516,11 +515,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const scaleFactor = getScaleFactor(width, height);
   const numColumns = getResponsiveColumns(width, isLandscape);
   
-  console.log('🔓 scaleFactor:', scaleFactor);
-  console.log('🔓 numColumns:', numColumns);
-  console.log('🔓 width:', width);
-  console.log('🔓 height:', height);
-  console.log('🔓 isLandscape:', isLandscape);
+
 
   // Animated gradient values
   const gradientPosition = useSharedValue(0);
@@ -629,29 +624,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
   const [unlocked, setUnlocked] = useState<boolean>(false);
   
-  // Debug logging for state changes
-  useEffect(() => {
-    console.log('🔓 unlocked state changed:', unlocked);
-  }, [unlocked]);
-  
-  useEffect(() => {
-    console.log('🔓 purchaseInProgress state changed:', purchaseInProgress);
-  }, [purchaseInProgress]);
-  
-  useEffect(() => {
-    console.log('🔓 iapInitialized state changed:', iapInitialized);
-  }, [iapInitialized]);
 
-  // Component mount logging
-  useEffect(() => {
-    console.log('🔓 MenuScreen component mounted');
-    console.log('🔓 Initial state:', {
-      unlocked,
-      purchaseInProgress,
-      iapInitialized,
-      Platform: Platform.OS
-    });
-  }, []);
 
   // Modal state for locked level
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -663,9 +636,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   // Create responsive styles
   const responsiveStyles = createResponsiveStyles(scaleFactor, width, height, isLandscape);
   
-  console.log('🔓 responsiveStyles created:', responsiveStyles);
-  console.log('🔓 responsiveStyles.unlockButtonsContainer:', responsiveStyles.unlockButtonsContainer);
-  console.log('🔓 responsiveStyles.unlockButton:', responsiveStyles.unlockButton);
+
 
   // Animated styles for gradient buttons with pulse
   const animatedGradientStyle = useAnimatedStyle(() => {
@@ -674,7 +645,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     };
   });
   
-  console.log('🔓 animatedGradientStyle created:', animatedGradientStyle);
+
 
   // Get gradient start/end positions based on animation
   const getGradientPositions = () => {
@@ -876,19 +847,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     let purchaseErrorSubscription: any;
 
     async function initIAP() {
-      console.log('🔓 initIAP called');
-      console.log('🔓 Platform.OS:', Platform.OS);
-      
       if (Platform.OS !== 'ios') {
-        console.log('🔓 Non-iOS platform, setting iapInitialized to true');
         setIapInitialized(true);
         return;
       }
       
       try {
-        console.log('🔓 iOS platform, initializing RNIap connection');
         await RNIap.initConnection();
-        console.log('🔓 RNIap connection initialized successfully');
         setIapInitialized(true);
 
         // Get product info
@@ -994,20 +959,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
 
   // Purchase handler with Apple Pay integration
   const handleUnlock = useCallback(async () => {
-    console.log('🔓 handleUnlock called!');
-    console.log('🔓 purchaseInProgress:', purchaseInProgress);
-    console.log('🔓 Platform.OS:', Platform.OS);
-    console.log('🔓 APPLE_PRODUCT_ID:', APPLE_PRODUCT_ID);
-    console.log('🔓 iapInitialized:', iapInitialized);
-    console.log('🔓 products:', products);
-    
     if (purchaseInProgress) {
-      console.log('🔓 Purchase already in progress, returning');
       return;
     }
     
     if (!iapInitialized) {
-      console.log('🔓 IAP not initialized yet, returning');
       Alert.alert(
         'IAP Not Ready',
         'In-App Purchase system is not ready yet. Please wait a moment and try again.'
@@ -1016,25 +972,21 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     }
     
     setPurchaseInProgress(true);
-    console.log('🔓 Set purchaseInProgress to true');
     
     try {
       if (Platform.OS === 'ios') {
-        console.log('🔓 iOS platform detected, calling RNIap.requestPurchase');
         // For iOS, use Apple Pay through react-native-iap
         // This will automatically present Apple Pay if available
         await RNIap.requestPurchase({ 
           sku: APPLE_PRODUCT_ID,
           andDangerouslyFinishTransactionAutomaticallyIOS: false // Let us handle transaction completion
         });
-        console.log('🔓 RNIap.requestPurchase completed successfully');
       } else {
-        console.log('🔓 Non-iOS platform, calling standard IAP');
         // For other platforms, use standard IAP
         await RNIap.requestPurchase({ sku: APPLE_PRODUCT_ID });
       }
     } catch (e) {
-      console.warn('🔓 Purchase error:', e);
+      console.warn('Purchase error:', e);
       setPurchaseInProgress(false);
       // Show user-friendly error message
       Alert.alert(
@@ -1155,175 +1107,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     products && products.length > 0 && products[0].localizedPrice
       ? products[0].localizedPrice
       : t('defaultPrice');
-  
-  console.log('🔓 unlockPrice:', unlockPrice);
-  console.log('🔓 products:', products);
-  console.log('🔓 products.length:', products?.length);
 
-  // Render unlock/restore buttons
-  const renderUnlockButtons = () => {
-    console.log('🔓 renderUnlockButtons called');
-    console.log('🔓 unlocked:', unlocked);
-    console.log('🔓 Platform.OS:', Platform.OS);
-    console.log('🔓 iapInitialized:', iapInitialized);
-    console.log('🔓 products:', products);
-    console.log('🔓 purchaseInProgress:', purchaseInProgress);
-    
-    // Temporarily force button to show for debugging
-    const forceShow = true;
-    
-    if ((unlocked || Platform.OS !== 'ios') && !forceShow) {
-      console.log('🔓 renderUnlockButtons returning null because:', {
-        unlocked,
-        platformOS: Platform.OS,
-        condition: unlocked || Platform.OS !== 'ios'
-      });
-      return null;
-    }
-    
-    console.log('🔓 renderUnlockButtons rendering buttons');
-    
-    // Detect landscape mode where we want vertical button layout
-    const isPhoneLandscape = isLandscape; // Use landscape orientation regardless of device size
-    
-    return (
-      <View style={responsiveStyles.unlockButtonsContainer}>
-        {/* Temporary test button for debugging */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#FF0000',
-            padding: 10,
-            borderRadius: 10,
-            marginBottom: 10,
-          }}
-          onPress={() => {
-            console.log('🔓 TEST BUTTON PRESSED!');
-            Alert.alert('Test Button', 'This is a test button to verify the unlock button area is working');
-          }}
-        >
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>TEST BUTTON</Text>
-        </TouchableOpacity>
-        
-        <ReAnimated.View style={animatedGradientStyle}>
-          <TouchableOpacity
-            style={[ 
-              { 
-                backgroundColor: 'transparent',
-                minWidth: 200,
-                minHeight: 50,
-                borderWidth: 2,
-                borderColor: '#FF0000',
-                borderStyle: 'dashed',
-              }
-            ]}
-            onPress={() => {
-              console.log('🔓 Unlock button pressed!');
-              console.log('🔓 Button press event received');
-              console.log('🔓 Current state:', {
-                unlocked,
-                purchaseInProgress,
-                iapInitialized,
-                Platform: Platform.OS
-              });
-              playButtonSound(volume);
-              handleUnlock();
-            }}
-            disabled={purchaseInProgress}
-          >
-            <LinearGradient
-              colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                borderRadius: getResponsiveSpacing(isLandscape && width >= 900 ? 30 : 22, scaleFactor),
-              }}
-            />
-            {purchaseInProgress ? (
-              // Show loading indicator during Apple Pay processing
-              <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text style={[responsiveStyles.unlockButtonText, { marginTop: 4, fontSize: responsiveStyles.unlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                  {t('processing') || 'Processing...'}
-                </Text>
-              </View>
-            ) : isPhoneLandscape ? (
-              // Landscape: Stack icon and text vertically, centered
-              <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                <Ionicons 
-                  name="lock-open" 
-                  size={responsiveStyles.unlockButtonText.fontSize + 2} 
-                  color="#FFFFFF" 
-                />
-                <Text style={[responsiveStyles.unlockButtonText, { marginTop: 2, fontSize: responsiveStyles.unlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                  {t('unlockAllLevels')} ({unlockPrice})
-                </Text>
-              </View>
-            ) : (
-              // Other orientations: Keep original horizontal layout
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 1 }}>
-                <Ionicons 
-                  name="lock-open" 
-                  size={responsiveStyles.unlockButtonText.fontSize} 
-                  color="#FFFFFF" />
-                <Text style={[responsiveStyles.unlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                  {t('unlockAllLevels')} ({unlockPrice})
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </ReAnimated.View>
-        
-        {/* Restore Purchases Button */}
-        <TouchableOpacity
-          style={[responsiveStyles.unlockButton, { 
-            backgroundColor: '#FF8C00',
-            marginLeft: getResponsiveSpacing(8, scaleFactor),
-            shadowColor: '#FF8C00',
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.3,
-            shadowRadius: 6,
-            elevation: 6,
-          }]}
-          onPress={() => {
-            playButtonSound(volume);
-            handleRestore();
-          }}
-          disabled={purchaseInProgress}
-        >
-          {isPhoneLandscape ? (
-            // Landscape: Stack icon and text vertically, centered
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons 
-                name="refresh-circle" 
-                size={responsiveStyles.unlockButtonText.fontSize + 2} 
-                color="#FFFFFF" 
-              />
-              <Text style={[responsiveStyles.unlockButtonText, { marginTop: 2, fontSize: responsiveStyles.unlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                {t('restorePurchases') || 'Restore'}
-              </Text>
-            </View>
-          ) : (
-            // Other orientations: Keep original horizontal layout
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Ionicons 
-                name="refresh-circle" 
-                size={responsiveStyles.unlockButtonText.fontSize} 
-                color="#FFFFFF" 
-              />
-              <Text style={[responsiveStyles.unlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                {t('restorePurchases') || 'Restore'}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-    );
-  };
+
 
   // Modal for locked level
   const renderUnlockModal = () => {
@@ -1659,10 +1444,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.9)',
                       borderRadius: 20,
-                      paddingHorizontal: getResponsiveSpacing(8, scaleFactor),
-                      paddingVertical: getResponsiveSpacing(10, scaleFactor),
+                      paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
+                      paddingVertical: getResponsiveSpacing(16, scaleFactor),
                       marginBottom: getResponsiveSpacing(16, scaleFactor),
-                      marginHorizontal: getResponsiveSpacing(40, scaleFactor),
+                      marginHorizontal: getResponsiveSpacing(20, scaleFactor),
                       shadowColor: '#000',
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: 0.1,
@@ -1671,52 +1456,54 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: getResponsiveSpacing(6, scaleFactor),
+                      gap: getResponsiveSpacing(8, scaleFactor),
+                      flexWrap: 'wrap',
+                      maxWidth: '90%',
                     }}
                   >
-                    <Text
-                      style={{
-                        fontSize: getResponsiveFontSize(12, scaleFactor),
-                        fontWeight: '600',
-                        color: '#612915',
-                        textAlign: 'center',
-                        fontFamily: 'System',
-                      }}
-                    >
-                      {t('pickWorldMessage')}
-                    </Text>
-                    {Platform.OS === 'ios' && !unlocked && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          playButtonSound(volume);
-                          handleUnlock();
+                                          <Text
+                        style={{
+                          fontSize: getResponsiveFontSize(12, scaleFactor),
+                          fontWeight: '600',
+                          color: '#612915',
+                          textAlign: 'center',
+                          fontFamily: 'System',
                         }}
-                        disabled={purchaseInProgress}
-                        activeOpacity={0.9}
-                        style={{ marginLeft: getResponsiveSpacing(10, scaleFactor), borderRadius: getResponsiveSpacing(18, scaleFactor), overflow: 'hidden' }}
                       >
-                        <LinearGradient
-                          colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={{
-                            paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
-                            paddingVertical: getResponsiveSpacing(6, scaleFactor),
-                            borderRadius: getResponsiveSpacing(18, scaleFactor),
-                            elevation: 2,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.2,
-                            shadowRadius: 2,
+                        {t('pickWorldMessage')}
+                      </Text>
+                      {Platform.OS === 'ios' && !unlocked && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            playButtonSound(volume);
+                            handleUnlock();
                           }}
+                          disabled={purchaseInProgress}
+                          activeOpacity={0.9}
+                          style={{ marginLeft: getResponsiveSpacing(10, scaleFactor), borderRadius: getResponsiveSpacing(18, scaleFactor), overflow: 'hidden' }}
                         >
-                          <Text style={{ color: 'white', fontWeight: '800', fontSize: getResponsiveFontSize(12, scaleFactor), textShadowColor: 'rgba(0,0,0,0.25)', textShadowRadius: 2 }}>
-                            {t('unlockAllLevels')}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    )}
-                  </View>
+                          <LinearGradient
+                            colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{
+                              paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
+                              paddingVertical: getResponsiveSpacing(6, scaleFactor),
+                              borderRadius: getResponsiveSpacing(18, scaleFactor),
+                              elevation: 2,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.2,
+                              shadowRadius: 2,
+                            }}
+                          >
+                            <Text style={{ color: 'white', fontWeight: '800', fontSize: getResponsiveFontSize(12, scaleFactor), textShadowColor: 'rgba(0,0,0,0.25)', textShadowRadius: 2 }}>
+                              {t('unlockAllLevels')}
+                            </Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   
 
                   
@@ -1739,12 +1526,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     visitedCounts={visitedCounts}
                   />
                   
-                  {/* Unlock Buttons */}
-                  {(() => {
-                    console.log('🔓 About to call renderUnlockButtons in landscape layout');
-                    return renderUnlockButtons();
-                  })()}
-
                 </View>
               </ScrollView>
             </>
@@ -1765,8 +1546,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.9)',
                       borderRadius: 25,
-                      paddingHorizontal: getResponsiveSpacing(24, scaleFactor),
-                      paddingVertical: getResponsiveSpacing(12, scaleFactor),
+                      paddingHorizontal: getResponsiveSpacing(32, scaleFactor),
+                      paddingVertical: getResponsiveSpacing(20, scaleFactor),
                       marginBottom: getResponsiveSpacing(20, scaleFactor),
                       marginHorizontal: getResponsiveSpacing(20, scaleFactor),
                       shadowColor: '#000',
@@ -1777,52 +1558,54 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: getResponsiveSpacing(10, scaleFactor),
+                      gap: getResponsiveSpacing(12, scaleFactor),
+                      flexWrap: 'wrap',
+                      maxWidth: '90%',
                     }}
                   >
-                    <Text
-                      style={{
-                        fontSize: getResponsiveFontSize(18, scaleFactor),
-                        fontWeight: '600',
-                        color: '#612915',
-                        textAlign: 'center',
-                        fontFamily: 'System',
-                      }}
-                    >
-                      {t('pickWorldMessage')}
-                    </Text>
-                    {Platform.OS === 'ios' && !unlocked && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          playButtonSound(volume);
-                          handleUnlock();
+                                          <Text
+                        style={{
+                          fontSize: getResponsiveFontSize(18, scaleFactor),
+                          fontWeight: '600',
+                          color: '#612915',
+                          textAlign: 'center',
+                          fontFamily: 'System',
                         }}
-                        disabled={purchaseInProgress}
-                        activeOpacity={0.9}
-                        style={{ marginLeft: getResponsiveSpacing(12, scaleFactor), borderRadius: getResponsiveSpacing(20, scaleFactor), overflow: 'hidden' }}
                       >
-                        <LinearGradient
-                          colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={{
-                            paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
-                            paddingVertical: getResponsiveSpacing(8, scaleFactor),
-                            borderRadius: getResponsiveSpacing(20, scaleFactor),
-                            elevation: 2,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.2,
-                            shadowRadius: 2,
+                        {t('pickWorldMessage')}
+                      </Text>
+                      {Platform.OS === 'ios' && !unlocked && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            playButtonSound(volume);
+                            handleUnlock();
                           }}
+                          disabled={purchaseInProgress}
+                          activeOpacity={0.9}
+                          style={{ marginLeft: getResponsiveSpacing(12, scaleFactor), borderRadius: getResponsiveSpacing(20, scaleFactor), overflow: 'hidden' }}
                         >
-                          <Text style={{ color: 'white', fontWeight: '800', fontSize: getResponsiveFontSize(14, scaleFactor), textShadowColor: 'rgba(0,0,0,0.25)', textShadowRadius: 2 }}>
-                            {t('unlockAllLevels')}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    )}
-                  </View>
+                          <LinearGradient
+                            colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{
+                              paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
+                              paddingVertical: getResponsiveSpacing(8, scaleFactor),
+                              borderRadius: getResponsiveSpacing(20, scaleFactor),
+                              elevation: 2,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.2,
+                              shadowRadius: 2,
+                            }}
+                          >
+                            <Text style={{ color: 'white', fontWeight: '800', fontSize: getResponsiveFontSize(14, scaleFactor), textShadowColor: 'rgba(0,0,0,0.25)', textShadowRadius: 2 }}>
+                              {t('unlockAllLevels')}
+                            </Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   <LevelTiles
                     key={`portrait-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
                     levels={LEVELS}
@@ -1842,12 +1625,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                     visitedCounts={visitedCounts}
                   />
                   
-                  {/* Unlock Buttons */}
-                  {(() => {
-                    console.log('🔓 About to call renderUnlockButtons in portrait layout');
-                    return renderUnlockButtons();
-                  })()}
-
                 </View>
               </ScrollView>
             </>

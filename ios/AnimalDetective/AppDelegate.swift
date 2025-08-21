@@ -50,6 +50,16 @@ public class AppDelegate: ExpoAppDelegate {
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
   }
+
+  // MARK: - Orientation Methods (Moved Here)
+
+  // Force landscape orientation
+  public override func application(
+    _ application: UIApplication,
+    supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
+    return [.landscapeLeft, .landscapeRight]
+  }
 }
 
 class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
@@ -68,21 +78,5 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 #endif
   }
 
-  // Force landscape orientation
-  public override func application(
-    _ application: UIApplication,
-    supportedInterfaceOrientationsFor window: UIWindow?
-  ) -> UIInterfaceOrientationMask {
-    return [.landscapeLeft, .landscapeRight]
-  }
-  
-  // Prevent autorotation to portrait
-  public override var shouldAutorotate: Bool {
-    return false
-  }
-  
-  // Force initial orientation
-  public override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
-    return .landscapeLeft
-  }
+  // Note: The orientation methods have been removed from this class.
 }
