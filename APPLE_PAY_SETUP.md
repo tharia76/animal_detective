@@ -23,12 +23,12 @@ The app now includes Apple Pay integration through `react-native-iap` library, w
    - Go to Certificates, Identifiers & Profiles
    - Select your App ID
    - Enable "Apple Pay" capability
-   - Add your merchant ID: `merchant.com.kido.animaldetective`
+   - Add your merchant ID: `merchant.com.metaltorchlabs.pixieplay`
 
 2. **Create Merchant ID** (if you don't have one):
    - In Apple Developer Portal, go to Certificates, Identifiers & Profiles
    - Select "Identifiers" → "Merchant IDs"
-   - Create new Merchant ID with identifier: `com.kido.animaldetective`
+   - Create new Merchant ID with identifier: `com.metaltorchlabs.pixieplay`
    - Download and install the merchant certificate
 
 ### 2. Xcode Project Configuration
@@ -45,7 +45,7 @@ The app now includes Apple Pay integration through `react-native-iap` library, w
    - Go to "Signing & Capabilities" tab
    - Click "+ Capability"
    - Add "Apple Pay"
-   - Ensure the merchant ID matches: `merchant.com.kido.animaldetective`
+   - Ensure the merchant ID matches: `merchant.com.metaltorchlabs.pixieplay`
 
 3. **Update Info.plist** (already done):
    - The app automatically handles Apple Pay presentation

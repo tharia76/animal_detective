@@ -1,4 +1,4 @@
-package com.kido.animaldetective
+package com.metaltorchlabs.pixieplay
 
 import android.app.Application
 import android.content.res.Configuration

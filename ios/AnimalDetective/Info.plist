@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>animal-detective</string>
-          <string>com.kido.animal-detective</string>
+          <string>com.metaltorchlabs.pixieplay</string>
         </array>
       </dict>
     </array>

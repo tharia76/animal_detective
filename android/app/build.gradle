@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.kido.animaldetective'
+    namespace 'com.metaltorchlabs.pixieplay'
     defaultConfig {
-        applicationId 'com.kido.animaldetective'
+        applicationId 'com.metaltorchlabs.pixieplay'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
