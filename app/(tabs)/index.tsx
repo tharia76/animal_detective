@@ -4,6 +4,8 @@ export const unstable_settings = {
 
 export const screenOptions = {
   headerShown: false,
+  animation: 'none', // Disable navigation animations
+  cardStyle: { backgroundColor: '#FFDAB9' } // Set consistent background
 };
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';

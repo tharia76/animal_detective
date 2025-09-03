@@ -104,21 +104,10 @@ export default function App() {
 
   // Instant loading overlay with asset preloading
   const handleSelectLevel = useCallback(async (level: string) => {
-    // Fade out current screen
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 150,
-      useNativeDriver: true,
-    }).start(() => {
-      // Set selected level after fade out
-      setSelectedLevel(level);
-      // Fade back in
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    });
+    // Set selected level immediately to avoid black flash
+    setSelectedLevel(level);
+    // Reset fade animation to ensure smooth transition
+    fadeAnim.setValue(1);
     
     // Preload level assets during loading
     const preloadAssets = async () => {
@@ -158,21 +147,10 @@ export default function App() {
   }, [fadeAnim]);
 
   const handleBackToMenu = useCallback(() => {
-    // Fade out current screen
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 150,
-      useNativeDriver: true,
-    }).start(() => {
-      // Go back to menu after fade out
-      setSelectedLevel(null);
-      // Fade back in
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    });
+    // Go back to menu immediately to avoid black flash
+    setSelectedLevel(null);
+    // Reset fade animation to ensure smooth transition
+    fadeAnim.setValue(1);
   }, [fadeAnim]);
 
   if (showSplash || !assetsReady) {
@@ -288,11 +266,7 @@ export default function App() {
   return (
     <>
       <StatusBar hidden />
-      <ImageBackground
-        source={bgUri ? { uri: bgUri } : undefined}
-        style={{ flex: 1 }}
-        resizeMode="cover"
-      >
+      <View style={{ flex: 1, backgroundColor: '#FFDAB9' }}>
         <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
           {selectedLevel == null ? (
             assetsReady ? (
@@ -309,9 +283,7 @@ export default function App() {
             renderLevelScreen()
           )}
         </Animated.View>
-        
-
-      </ImageBackground>
+      </View>
     </>
   );
 }

@@ -187,7 +187,7 @@ export default function BirdsScreen({ onBackToMenu, backgroundImageUri, skyBackg
       assetsToLoad={birdsAssets}
       loadingText={t('loading') || 'Loading Birds...'}
       backgroundColor="#87ceeb"
-      minLoadingTime={1500}
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

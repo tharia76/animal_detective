@@ -192,8 +192,8 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
     <ScreenLoadingWrapper
       assetsToLoad={arcticAssets}
       loadingText={t('loading') || 'Loading Arctic...'}
-      backgroundColor="#4682b4"
-      minLoadingTime={1500}
+      backgroundColor="#87CEEB" // Sky blue to match Arctic level background
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

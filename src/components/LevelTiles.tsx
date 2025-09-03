@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { View, TouchableOpacity, Image, Text, ScrollView, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import LazyImage from './LazyImage';
 
 type LevelTilesProps = {
   levels: string[];
@@ -168,8 +167,7 @@ const AnimatedTile = React.memo(({
   const visited = Math.max(0, Math.min(visitedCount ?? 0, levelAnimalCount));
   const progress = levelAnimalCount > 0 ? visited / levelAnimalCount : 0;
 
-  // Debug logging
-  console.log('AnimatedTile rendering:', { level, isLocked });
+
 
   return (
     <Animated.View
@@ -207,13 +205,12 @@ const AnimatedTile = React.memo(({
              height: '100%',
              borderRadius: 24,
              overflow: 'hidden',
-             backgroundColor: '#fff2',
+             backgroundColor: getLevelBackgroundColor(level), // Use level color as placeholder
            }}
           activeOpacity={1}
         >
-          <LazyImage
+          <Image
             source={LEVEL_BACKGROUNDS[level]}
-            cacheKey={`level_bg_${level}`}
             style={{
                width: itemSize,
                height: itemSize,
@@ -221,8 +218,10 @@ const AnimatedTile = React.memo(({
                position: 'absolute',
                top: 0,
                left: 0,
+               backgroundColor: getLevelBackgroundColor(level), // Fallback color
              }}
             resizeMode="cover"
+            fadeDuration={0} // No fade for instant display
           />
           {/* Subtle vignette */}
           <LinearGradient

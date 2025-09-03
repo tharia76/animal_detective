@@ -185,8 +185,8 @@ export default function JungleScreen({ onBackToMenu, backgroundImageUri, skyBack
     <ScreenLoadingWrapper
       assetsToLoad={jungleAssets}
       loadingText={t('loading') || 'Loading Jungle...'}
-      backgroundColor="#006400"
-      minLoadingTime={1500}
+      backgroundColor="#1a3d1a" // Dark green to match Jungle level background
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

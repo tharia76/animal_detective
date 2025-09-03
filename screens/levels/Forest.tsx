@@ -230,8 +230,8 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
     <ScreenLoadingWrapper
       assetsToLoad={forestAssets}
       loadingText={t('loading') || 'Loading Forest...'}
-      backgroundColor="#228b22"
-      minLoadingTime={1500}
+      backgroundColor="#87CEEB" // Sky blue to match Forest level background
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

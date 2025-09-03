@@ -186,8 +186,8 @@ export default function DesertScreen({ onBackToMenu, backgroundImageUri, skyBack
     <ScreenLoadingWrapper
       assetsToLoad={desertAssets}
       loadingText={t('loading') || 'Loading Desert...'}
-      backgroundColor="#daa520"
-      minLoadingTime={1500}
+      backgroundColor="#f4e4bc" // Beige to match Desert level background
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

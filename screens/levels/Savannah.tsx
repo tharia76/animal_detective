@@ -191,8 +191,8 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
     <ScreenLoadingWrapper
       assetsToLoad={savannahAssets}
       loadingText={t('loading') || 'Loading Savannah...'}
-      backgroundColor="#d2691e"
-      minLoadingTime={1500}
+      backgroundColor="#f4e4bc" // Beige to match Savannah level background
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

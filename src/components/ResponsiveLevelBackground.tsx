@@ -119,12 +119,9 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         blurRadius={0}
-        imageStyle={{
-          opacity: isImageLoaded ? 1 : 0,
-        }}
       >
-        {/* Fallback color overlay when image fails to load */}
-        {imageLoadError && (
+        {/* Fallback color overlay when image is loading or fails to load */}
+        {!isImageLoaded && (
           <View 
             style={[
               StyleSheet.absoluteFillObject,

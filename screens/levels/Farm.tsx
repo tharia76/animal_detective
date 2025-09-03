@@ -211,8 +211,8 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
     <ScreenLoadingWrapper
       assetsToLoad={farmAssets}
       loadingText={t('loading') || 'Loading Farm...'}
-      backgroundColor="#71592b"
-      minLoadingTime={1500}
+      backgroundColor="#87CEEB" // Sky blue to match Farm level background
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

@@ -1298,7 +1298,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       assetsToLoad={menuAssets}
       loadingText={t('loading') || 'Loading...'}
       backgroundColor="#FFDAB9"
-      minLoadingTime={500}
+      minLoadingTime={600} // Give time for level tiles to load
       onAssetsLoaded={() => setAssetsLoaded(true)}
     >
       <View style={{

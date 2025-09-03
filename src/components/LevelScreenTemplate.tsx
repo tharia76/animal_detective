@@ -34,7 +34,6 @@ import SpriteAnimation from './SpriteAnimation';
 import InstructionBubble from './InstructionBubble';
 import { useDynamicStyles } from '../styles/styles';
 import NavigationButtons from './NavigationButtons';
-import CongratsModal from './CongratsModal';
 import DiscoverScreen from './DiscoverScreen';
 import MovingBg from './MovingBg';
 import ResponsiveMovingBg from './ResponsiveMovingBg';
@@ -386,15 +385,14 @@ export default function LevelScreenTemplate({
   const [showName, setShowName] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
-  const [bgLoading, setBgLoading] = useState(!!backgroundImageUri);
+  const [bgLoading, setBgLoading] = useState(false); // Start with no loading state
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [arrowAnim] = useState(() => new Animated.Value(0));
-  const [animalFadeAnim] = useState(() => new Animated.Value(1));
-  const [contentFade] = useState(() => new Animated.Value(1));
+  const [animalFadeAnim] = useState(() => new Animated.Value(1)); // Start fully visible
+  const [contentFade] = useState(() => new Animated.Value(1)); // Start fully visible
   const soundRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const isSoundPlayingRef = useRef<boolean>(false);
   const confettiAnimRefs = useRef<Animated.Value[]>([]);
-  const [showCongratsModal, setShowCongratsModal] = useState(false);
     const [showDiscoverScreen, setShowDiscoverScreen] = useState(false);
     const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set());
   const [levelCompleted, setLevelCompleted] = useState(false);
@@ -407,7 +405,7 @@ export default function LevelScreenTemplate({
   const labelShowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickFlagClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canRenderLabel, setCanRenderLabel] = useState(false);
-  const [allAssetsReady, setAllAssetsReady] = useState(false);
+  const [allAssetsReady, setAllAssetsReady] = useState(true); // Start as ready
   const [initialIndexHydrated, setInitialIndexHydrated] = useState(false);
   
   // Update hasClickedCurrentAnimal and show/hide label when navigating between animals
@@ -817,12 +815,12 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   }, [isMuted]);
 
   const currentAnimal = useMemo(() => {
-    // Only return animal when all assets are ready (ensures simultaneous loading)
-    if (allAssetsReady && animals.length > 0 && currentAnimalIndex >= 0 && currentAnimalIndex < animals.length) {
+    // Return animal immediately when available, don't wait for allAssetsReady
+    if (animals.length > 0 && currentAnimalIndex >= 0 && currentAnimalIndex < animals.length) {
       return animals[currentAnimalIndex];
     }
     return null;
-  }, [animals, currentAnimalIndex, allAssetsReady]);
+  }, [animals, currentAnimalIndex]);
   const hasAnimals = animals.length > 0;
 
   const [roadAnimation] = useState(() => new Animated.Value(0));
@@ -831,8 +829,9 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   // Track which background is currently visible
   const [wasMoving, setWasMoving] = useState(currentAnimal?.isMoving ?? false);
-  const [movingBgOpacity] = useState(() => new Animated.Value(currentAnimal?.isMoving ? 1 : 0));
-  const [imageBgOpacity] = useState(() => new Animated.Value(currentAnimal?.isMoving ? 0 : 1));
+  // Start with correct opacity based on initial animal state
+  const [movingBgOpacity] = useState(() => new Animated.Value(currentAnimal?.isMoving ? 1 : 0.001)); // Use 0.001 instead of 0 to prevent flash
+  const [imageBgOpacity] = useState(() => new Animated.Value(currentAnimal?.isMoving ? 0.001 : 1));
 
   // --- Determine which moving background to use based on levelName ---
   // Priority: MOVING_BG_MAP[levelName] > skyBackgroundImageUri > undefined
@@ -1682,7 +1681,6 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   };
 
   const startOver = useCallback(() => {
-    setShowCongratsModal(false);
       setShowDiscoverScreen(false);
       setShowCompletionCelebration(false);
       setScreenLocked(false);
@@ -1734,9 +1732,9 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     // Handle when DiscoverScreen closes (after all animals are revealed)
     const handleDiscoverScreenClose = useCallback(() => {
       setShowDiscoverScreen(false);
-      // Show the congrats modal after discover screen closes
-      setShowCongratsModal(true);
-    }, []);
+      // Navigate back to menu after discover screen closes
+      goToHome();
+    }, [goToHome]);
 
     // Handle when user wants to go back to level from DiscoverScreen (without congrats)
     const handleBackToLevel = useCallback((animalIndex?: number) => {
@@ -1865,22 +1863,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     confettiAnimRefs.current = Array.from({ length: 30 }).map(() => new Animated.Value(0));
   }, []);
 
-  useEffect(() => {
-    if (showCongratsModal) {
-      confettiAnimRefs.current.forEach((anim, index) => {
-        anim.setValue(0);
-          const randomDuration = 1200 + Math.random() * 1800;
-        const randomDelay = Math.random() * 500;
 
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: randomDuration,
-          delay: randomDelay,
-          useNativeDriver: true,
-        }).start();
-      });
-    }
-  }, [showCongratsModal]);
 
   const onLoadEnd = useCallback(() => {
     setBgLoading(false);
@@ -2072,7 +2055,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   if (!backgroundImageUri) {
     return (
-      <View style={[dynamicStyles.container, { backgroundColor: 'transparent' }]}>
+      <View style={[dynamicStyles.container, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
         <TouchableOpacity style={[dynamicStyles.backToMenuButton]} onPress={goToHome}>
            <Ionicons name="home" size={24} color="#fff" />
         </TouchableOpacity>
@@ -2087,20 +2070,20 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   // --- RENDER: Crossfade both backgrounds ---
   return (
-    <View style={dynamicStyles.container}>
+    <View style={[dynamicStyles.container, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
       <AnimatedReanimated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
-        {/* Background container - show when assets are ready */}
+        {/* Background container - show immediately */}
         <View style={[StyleSheet.absoluteFillObject, { 
-          backgroundColor: allAssetsReady ? getLevelBackgroundColor(levelName) : 'transparent' 
+          backgroundColor: getLevelBackgroundColor(levelName) 
         }]}>
         <View style={StyleSheet.absoluteFillObject}>
           {/* Responsive moving background (sky) */}
-          {allAssetsReady && (
+          {(
             <Animated.View
               pointerEvents="none"
               style={[
                 StyleSheet.absoluteFillObject,
-                { opacity: movingBgOpacity, backgroundColor: 'transparent' }
+                { opacity: movingBgOpacity, backgroundColor: getLevelBackgroundColor(levelName) }
               ]}
             >
               <ResponsiveMovingBg
@@ -2112,12 +2095,12 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
           )}
 
           {/* Responsive static background */}
-          {allAssetsReady && (
+          {(
             <Animated.View
               pointerEvents="none"
               style={[
                 StyleSheet.absoluteFillObject,
-                { opacity: imageBgOpacity, backgroundColor: 'transparent' }
+                { opacity: imageBgOpacity, backgroundColor: getLevelBackgroundColor(levelName) }
               ]}
             >
               <ResponsiveLevelBackground
@@ -2692,12 +2675,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                 </Animated.View>
           )}
 
-         <CongratsModal
-          showCongratsModal={showCongratsModal}
-          startOver={startOver}
-          goToHome={goToHome}
-                levelName={levelName}
-         />
+
         </View>
       </Animated.View>
       </View>

@@ -19,6 +19,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLevelCompletion } from '../hooks/useLevelCompletion';
 import { useLocalization } from '../hooks/useLocalization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LevelVideoPlayer from './LevelVideoPlayer';
+
+// Mapping of level names to their completion videos
+const levelVideoMap: { [key: string]: any } = {
+  'arctic': require('../assets/intro_videos/arctic-vid.mp4'),
+  'birds': require('../assets/intro_videos/birds-vid.mp4'),
+  'desert': require('../assets/intro_videos/desert-vid.mp4'),
+  'farm': require('../assets/intro_videos/farm-vid1.mp4'),
+  'forest': require('../assets/intro_videos/forest.mp4'),
+  'insects': require('../assets/intro_videos/insects-vid.mp4'),
+  'jungle': require('../assets/intro_videos/jungless.mp4'),
+  'ocean': require('../assets/intro_videos/water.mp4'),
+  'savannah': require('../assets/intro_videos/savan-vid.mp4'),
+};
 
 // Fallback to using the translated name for now - this will restore the original behavior 
 // but keep the structure for the fix once we get the correct mappings
@@ -1009,6 +1023,28 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   // Mission stamp fade animation (shows after blur)
   const [stampOpacity] = useState(() => new Animated.Value(0));
   
+  // Video container fade animation (shows after stamp)
+  const [videoOpacity] = useState(() => new Animated.Value(0));
+  
+  // Video pop animation scale
+  const [videoScale] = useState(() => new Animated.Value(1));
+  
+  // Balloon system
+  const [balloons, setBalloons] = useState<Array<{
+    id: number;
+    x: number;
+    y: number;
+    targetY: number;
+    color: string;
+    source: any;
+    animValue: Animated.Value;
+    popAnimValue: Animated.Value;
+    visible: boolean;
+    isPopping: boolean;
+    pieces?: Array<{ dx: number; dy: number; rotation: number }>
+  }>>([]);
+  const balloonIdRef = useRef(0);
+  
   // Complete mission button bounce animation
   const [buttonBounceScale] = useState(() => new Animated.Value(1));
   
@@ -1118,12 +1154,213 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     setShowCompleteButton(true);
   };
 
-  // Handler for completing the mission
-  const handleCompleteMission = async () => {
-    setMissionCompleted(true);
-    setShowCompleteButton(false);
+  // Balloon functions
+  const generateBalloons = () => {
+    const balloonAssets = [
+      { color: 'pink', source: require('../assets/balloons/pink_balloon.png') },
+      { color: 'blue', source: require('../assets/balloons/blue_balloon.png') },
+      { color: 'green', source: require('../assets/balloons/green_balloon.png') },
+      { color: 'orange', source: require('../assets/balloons/orange_balloon.png') },
+    ];
+
+    const newBalloons: typeof balloons = [];
     
-    // Mark level as completed immediately
+    // Create 6 balloons with staggered animations
+    for (let i = 0; i < 6; i++) {
+      const id = balloonIdRef.current++;
+      const balloonAsset = balloonAssets[i % balloonAssets.length];
+      
+      // Position balloons along the sides and corners to avoid center
+      let x, targetY;
+      
+      switch(i) {
+        case 0: // Top-left
+          x = 50;
+          targetY = 150;
+          break;
+        case 1: // Top-right
+          x = screenW - 270; // Adjusted for 220px balloon width
+          targetY = 150;
+          break;
+        case 2: // Left-middle
+          x = 30;
+          targetY = screenH / 2 - 100;
+          break;
+        case 3: // Right-middle
+          x = screenW - 250; // Adjusted for 220px balloon width
+          targetY = screenH / 2 - 100;
+          break;
+        case 4: // Bottom-left
+          x = 50;
+          targetY = screenH - 350;
+          break;
+        case 5: // Bottom-right
+          x = screenW - 270; // Adjusted for 220px balloon width
+          targetY = screenH - 350;
+          break;
+        default:
+          x = 50;
+          targetY = 200;
+      }
+      
+      const balloon = {
+        id,
+        x,
+        y: screenH + 50, // Start closer to visible area
+        targetY,
+        color: balloonAsset.color,
+        source: balloonAsset.source,
+        animValue: new Animated.Value(0),
+        popAnimValue: new Animated.Value(0),
+        visible: true,
+        isPopping: false,
+      };
+      
+      newBalloons.push(balloon);
+      
+      // Start each balloon animation with staggered timing
+      setTimeout(() => {
+        Animated.timing(balloon.animValue, {
+          toValue: 1,
+          duration: 3000 + (i * 200), // Faster rise
+          useNativeDriver: true,
+        }).start();
+      }, i * 300); // Shorter delay between balloons
+    }
+    
+    setBalloons(newBalloons);
+  };
+
+  const popBalloon = (balloonId: number) => {
+    setBalloons(prev => 
+      prev.map(balloon => {
+        if (balloon.id === balloonId && !balloon.isPopping) {
+          // Stop rise animation
+          try { balloon.animValue.stopAnimation(); } catch {}
+
+          // Play pop sound
+          try {
+            const popPlayer = createAudioPlayer(require('../assets/sounds/other/balloon-pop.mp3'));
+            popPlayer.play();
+            popPlayer.addListener('playbackStatusUpdate', (status: any) => {
+              if (status.didJustFinish) popPlayer.remove();
+            });
+          } catch (error) {
+            console.warn('Error playing balloon pop sound:', error);
+          }
+
+          // Generate pieces
+          const pieces = Array.from({ length: 6 }).map((_, idx) => {
+            const angle = (idx / 6) * Math.PI * 2;
+            return {
+              dx: Math.cos(angle) * 80, // Larger spread for bigger balloons
+              dy: Math.sin(angle) * 80,
+              rotation: Math.floor(Math.random() * 180) - 90,
+            };
+          });
+
+          // Start pop animation
+          Animated.timing(balloon.popAnimValue, {
+            toValue: 1,
+            duration: 350,
+            useNativeDriver: true,
+          }).start(() => {
+            // Remove balloon after animation
+            setBalloons(current => current.filter(b => b.id !== balloonId));
+            // Generate new balloon
+            setTimeout(() => generateNewBalloon(), 1000);
+          });
+          
+          return { ...balloon, isPopping: true, pieces };
+        }
+        return balloon;
+      })
+    );
+  };
+
+  const generateNewBalloon = () => {
+    const balloonAssets = [
+      { color: 'pink', source: require('../assets/balloons/pink_balloon.png') },
+      { color: 'blue', source: require('../assets/balloons/blue_balloon.png') },
+      { color: 'green', source: require('../assets/balloons/green_balloon.png') },
+      { color: 'orange', source: require('../assets/balloons/orange_balloon.png') },
+    ];
+
+    const id = balloonIdRef.current++;
+    const balloonAsset = balloonAssets[Math.floor(Math.random() * balloonAssets.length)];
+    
+    // Random position along the sides and corners
+    const position = Math.floor(Math.random() * 6);
+    let x, targetY;
+    
+    switch(position) {
+      case 0: // Top-left
+        x = 50 + Math.random() * 50;
+        targetY = 150 + Math.random() * 50;
+        break;
+      case 1: // Top-right
+        x = screenW - 270 - Math.random() * 50;
+        targetY = 150 + Math.random() * 50;
+        break;
+      case 2: // Left-middle
+        x = 30 + Math.random() * 30;
+        targetY = screenH / 2 - 100 + Math.random() * 100;
+        break;
+      case 3: // Right-middle
+        x = screenW - 250 - Math.random() * 30;
+        targetY = screenH / 2 - 100 + Math.random() * 100;
+        break;
+      case 4: // Bottom-left
+        x = 50 + Math.random() * 50;
+        targetY = screenH - 350 - Math.random() * 50;
+        break;
+      case 5: // Bottom-right
+        x = screenW - 270 - Math.random() * 50;
+        targetY = screenH - 350 - Math.random() * 50;
+        break;
+      default:
+        x = 50;
+        targetY = 200;
+    }
+    
+    const newBalloon = {
+      id,
+      x,
+      y: screenH + 50, // Start closer to visible area
+      targetY,
+      color: balloonAsset.color,
+      source: balloonAsset.source,
+      animValue: new Animated.Value(0),
+      popAnimValue: new Animated.Value(0),
+      visible: true,
+      isPopping: false,
+    };
+
+    setBalloons(prev => [...prev, newBalloon]);
+
+    // Start animation immediately for smooth appearance
+    Animated.timing(newBalloon.animValue, {
+      toValue: 1,
+      duration: 3500,
+      useNativeDriver: true,
+    }).start();
+  };
+  
+  // Handler for closing the mission completion screen
+  const handleCloseMissionComplete = async () => {
+    // Play yay sound
+    try {
+      const yaySound = require('../assets/sounds/other/yay.mp3');
+      const player = await createAudioPlayer(yaySound);
+      player.play();
+    } catch (error) {
+      console.warn('Error playing yay sound:', error);
+    }
+    
+    // Clear balloons immediately
+    setBalloons([]);
+    
+    // Mark level as completed
     if (levelName) {
       try {
         await markLevelCompleted(levelName);
@@ -1133,12 +1370,102 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       }
     }
     
-    // Wait 3 seconds after stamp appears, then call completion callback to show congrats modal
+    // Create pop animation before closing
+    const popAnimation = Animated.sequence([
+      // Pop 1
+      Animated.sequence([
+        Animated.timing(videoScale, {
+          toValue: 1.2,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(videoScale, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Pop 2
+      Animated.sequence([
+        Animated.timing(videoScale, {
+          toValue: 1.2,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(videoScale, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Pop 3
+      Animated.sequence([
+        Animated.timing(videoScale, {
+          toValue: 1.2,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(videoScale, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]);
+
+    // First do the pop animation, then fade out
+    popAnimation.start(() => {
+      // After pops complete, start fade out
+      Animated.parallel([
+        Animated.timing(stampOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(videoOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(blurOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // After fade out completes, reset states
+        setTimeout(() => {
+          setMissionCompleted(false);
+          missionStampScale.setValue(1);
+          videoScale.setValue(1);
+          // Balloons already cleared at the start
+          // Keep button enabled for debugging
+          setAllAnimalsRevealed(true);
+          
+          // Navigate back to menu
+          if (onBackToMenu) {
+            onBackToMenu();
+          }
+        }, 100);
+      });
+    });
+  };
+  
+  // Handler for completing the mission
+  const handleCompleteMission = async () => {
+    setMissionCompleted(true);
+    setShowCompleteButton(false);
+    
+    // No timer - keep mission completion open until user closes it
+    // Animation completes and stays visible
+    
+    // Generate balloons when mission is completed
     setTimeout(() => {
-      if (onComplete) {
-        onComplete(); // This will show the congrats modal, which can then go to home
-      }
-    }, 3000); // Reduced to 3 seconds
+      generateBalloons();
+    }, 1200); // Start sooner for better effect
+    
+    // Note: Level completion is now handled in handleCloseMissionComplete
+    // when the user clicks CLOSE button
   };
 
   // Reset only this level via parent handler if provided, otherwise fallback to local reset and navigate back
@@ -1162,48 +1489,53 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         console.warn('Error playing success sound:', error);
       }
 
-      // Sequence: First blur, then stamp appears
+      // Sequence: First blur, then stamp appears, then video - total 1.6 seconds
       const sequenceAnimation = Animated.sequence([
-        // First fade in the blur
+        // First fade in the blur (0.6s)
         Animated.timing(blurOpacity, {
           toValue: 1,
           duration: 600,
           useNativeDriver: true,
         }),
-        // Then show the mission stamp after blur is visible
+        // Then show the mission stamp after blur is visible (0.4s)
         Animated.timing(stampOpacity, {
           toValue: 1,
           duration: 400,
           useNativeDriver: true,
         }),
+        // Finally fade in the video container (0.6s)
+        Animated.timing(videoOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
       ]);
 
-      const pulseAnimation = Animated.loop(
-        Animated.sequence([
-          Animated.timing(missionStampScale, {
-            toValue: 1.2,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(missionStampScale, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
-      );
+      // Disable pulse animation to prevent bouncing
+      // const pulseAnimation = Animated.loop(
+      //   Animated.sequence([
+      //     Animated.timing(missionStampScale, {
+      //       toValue: 1.2,
+      //       duration: 800,
+      //       useNativeDriver: true,
+      //     }),
+      //     Animated.timing(missionStampScale, {
+      //       toValue: 1,
+      //       duration: 800,
+      //       useNativeDriver: true,
+      //     }),
+      //   ])
+      // );
 
-      // Start the sequence, then start pulsing
-      sequenceAnimation.start(() => {
-        pulseAnimation.start();
-      });
+      // Start the sequence without pulsing
+      sequenceAnimation.start();
       
       return () => {
         sequenceAnimation.stop();
-        pulseAnimation.stop();
+        // pulseAnimation.stop();
       };
     }
-  }, [missionCompleted, missionStampScale, blurOpacity, stampOpacity]);
+  }, [missionCompleted, missionStampScale, blurOpacity, stampOpacity, videoOpacity, videoScale]);
 
   // Flash and bounce animation for complete mission button when enabled
   useEffect(() => {
@@ -1395,8 +1727,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
 
 
         
-        {/* Complete Mission Button - appears when all animals are revealed, hidden if mission is completed or already completed */}
-        {showCompleteButton && !missionCompleted && !isLevelCompleted(levelName || '') && (
+        {/* Complete Mission Button - Shows when all animals are revealed */}
+        {showCompleteButton && !missionCompleted && (
           <View style={{
             alignItems: 'center',
             marginTop: 10,
@@ -1418,37 +1750,37 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               </View>
               <View>
                 <TouchableOpacity
-                  onPress={areAllAnimalsRevealed ? handleCompleteMission : undefined}
+                  onPress={handleCompleteMission}
                   disabled={!areAllAnimalsRevealed}
                   style={{
-                    backgroundColor: areAllAnimalsRevealed ? '#FF4500' : '#cccccc', // Bright orange-red when enabled for maximum attention
+                    backgroundColor: areAllAnimalsRevealed ? '#FF4500' : '#ccc',
                     paddingVertical: isTablet ? 22 : 18, // Larger padding for bigger button
                     paddingHorizontal: isTablet ? 40 : 30, // Wider button
                     borderRadius: isTablet ? 40 : 35, // Bigger border radius
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    elevation: areAllAnimalsRevealed ? 8 : 2, // Higher elevation for more dramatic shadow
-                    shadowColor: areAllAnimalsRevealed ? '#FF4500' : '#000', // Colored shadow when enabled
-                    shadowOffset: { width: 0, height: areAllAnimalsRevealed ? 5 : 1 },
-                    shadowOpacity: areAllAnimalsRevealed ? 0.6 : 0.2, // More dramatic shadow
-                    shadowRadius: areAllAnimalsRevealed ? 8 : 2,
-                    borderWidth: areAllAnimalsRevealed ? 4 : 3, // Thicker border when enabled
-                    borderColor: areAllAnimalsRevealed ? '#FFD700' : '#fff', // Gold border when enabled
+                    elevation: areAllAnimalsRevealed ? 8 : 2,
+                    shadowColor: areAllAnimalsRevealed ? '#FF4500' : '#000',
+                    shadowOffset: { width: 0, height: 5 },
+                    shadowOpacity: areAllAnimalsRevealed ? 0.6 : 0.2,
+                    shadowRadius: 8,
+                    borderWidth: areAllAnimalsRevealed ? 4 : 2,
+                    borderColor: areAllAnimalsRevealed ? '#FFD700' : '#999',
                   }}
                 >
                   <Ionicons 
                     name={areAllAnimalsRevealed ? "checkmark-circle" : "lock-closed"} 
                     size={isTablet ? 28 : 24} 
-                    color={areAllAnimalsRevealed ? "#fff" : "#999"} 
+                    color="#fff"
                     style={{ marginRight: 8 }} 
                   />
                   <Text style={{
-                    color: areAllAnimalsRevealed ? '#fff' : '#999',
+                    color: '#fff',
                     fontSize: isTablet ? 26 : 20, // Larger text
                     fontWeight: 'bold',
                     fontFamily: Platform.OS === 'ios' ? 'Marker Felt' : 'cursive',
-                    textShadowColor: areAllAnimalsRevealed ? 'rgba(0,0,0,0.5)' : 'transparent', // Text shadow when enabled
+                    textShadowColor: 'rgba(0,0,0,0.5)',
                     textShadowOffset: {width: 2, height: 2},
                     textShadowRadius: 3,
                   }}>
@@ -1537,15 +1869,179 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </Animated.View>
         )}
 
-        {/* Mission Completed Stamp - centered and appears after blur */}
+        {/* Balloon Container - Full screen coverage */}
+        {missionCompleted && (
+          <View
+            pointerEvents="box-none"
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0,
+              zIndex: 1100, // Higher than stamp (1000) to appear on top
+              elevation: 1100,
+            }}
+          >
+            {balloons.map((balloon) => {
+              if (!balloon.visible) return null;
+              
+              const translateY = balloon.animValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [balloon.y, balloon.targetY],
+              });
+
+              const riseScale = balloon.animValue.interpolate({
+                inputRange: [0, 0.05, 1],
+                outputRange: [0.8, 1, 1], // Start at 0.8 scale instead of 0 to prevent flicker
+              });
+              
+              const riseOpacity = balloon.animValue.interpolate({
+                inputRange: [0, 0.1, 1],
+                outputRange: [0, 1, 1], // Smooth fade in
+              });
+
+              const popScale = balloon.popAnimValue.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [1, 1.8, 0.1],
+              });
+
+              const popOpacity = balloon.popAnimValue.interpolate({
+                inputRange: [0, 0.3, 1],
+                outputRange: [1, 1, 0],
+              });
+
+              const finalScale = balloon.isPopping ? popScale : riseScale;
+
+              const pieceOpacity = balloon.popAnimValue.interpolate({
+                inputRange: [0, 0.1, 1],
+                outputRange: [0, 1, 0],
+              });
+
+              const pieceColor =
+                balloon.color === 'pink'
+                  ? 'rgba(255, 126, 184, 0.9)'
+                  : balloon.color === 'blue'
+                  ? 'rgba(121, 167, 255, 0.9)'
+                  : balloon.color === 'green'
+                  ? 'rgba(109, 209, 109, 0.9)'
+                  : 'rgba(255, 152, 0, 0.9)';
+
+              return (
+                <Animated.View
+                  key={balloon.id}
+                  style={{
+                    position: 'absolute',
+                    left: balloon.x,
+                    transform: [{ translateY }],
+                    zIndex: 1101,
+                    elevation: 1101,
+                  }}
+                >
+                  <Animated.View style={{ 
+                    transform: [{ scale: balloon.isPopping ? 1 : riseScale }], 
+                    opacity: balloon.isPopping ? 1 : riseOpacity,
+                    width: 220,
+                    height: 220,
+                  }}>
+                    {!balloon.isPopping && (
+                      <TouchableOpacity
+                        onPress={() => popBalloon(balloon.id)}
+                        activeOpacity={0.8}
+                        disabled={balloon.isPopping}
+                      >
+                        <Image
+                          source={balloon.source}
+                          style={{ width: 220, height: 220 }} // Bigger balloons
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                    )}
+
+                    {balloon.isPopping && (
+                    <>
+                      {/* Burst scale flash */}
+                      <Animated.View
+                        style={{
+                          position: 'absolute',
+                          left: 110, // Center horizontally on 220px balloon
+                          top: 110, // Center vertically on 220px balloon
+                          width: 24,
+                          height: 24,
+                          marginLeft: -12, // Half of width to center
+                          marginTop: -12, // Half of height to center
+                          borderRadius: 12,
+                          backgroundColor: 'rgba(255,255,255,0.7)',
+                          transform: [
+                            {
+                              scale: balloon.popAnimValue.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0.2, 2.8],
+                              }),
+                            },
+                          ],
+                          opacity: pieceOpacity,
+                        }}
+                      />
+
+                      {/* Shards */}
+                      {balloon.pieces?.map((p, i) => (
+                        <Animated.View
+                          key={`piece-${balloon.id}-${i}`}
+                          style={{
+                            position: 'absolute',
+                            left: 110, // Center on 220px balloon
+                            top: 110, // Center on 220px balloon
+                            width: 16,
+                            height: 16,
+                            borderRadius: 3,
+                            backgroundColor: pieceColor,
+                            transform: [
+                              {
+                                translateX: balloon.popAnimValue.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: [0, p.dx],
+                                }),
+                              },
+                              {
+                                translateY: balloon.popAnimValue.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: [0, p.dy],
+                                }),
+                              },
+                              {
+                                rotate: balloon.popAnimValue.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: ['0deg', `${p.rotation}deg`],
+                                }),
+                              },
+                              {
+                                scale: balloon.popAnimValue.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: [0.3, 1],
+                                }),
+                              },
+                            ],
+                            opacity: pieceOpacity,
+                          }}
+                        />
+                      ))}
+                    </>
+                    )}
+                  </Animated.View>
+                </Animated.View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Mission Completed Stamp - positioned higher to avoid video overlap */}
         {missionCompleted && (
           <Animated.View style={{
             position: 'absolute',
-            top: 0,
+            top: '20%', // Position stamp in upper portion of screen
             left: 0,
             right: 0,
-            bottom: 0,
-            justifyContent: 'center',
             alignItems: 'center',
             zIndex: 1000,
             opacity: stampOpacity,
@@ -1586,7 +2082,165 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                 {t('missionComplete')}
               </Text>
             </View>
+            
+            {/* Video Container centered on screen */}
+            {levelName && levelVideoMap[levelName.toLowerCase()] && (
+              <>
+                {/* Semi-transparent backdrop behind video */}
+                <Animated.View style={{
+                  position: 'absolute',
+                  top: '300%', // Positioned in lower portion of screen
+                  left: '50%',
+                  width: isTablet ? 450 : 340,
+                  height: isTablet ? 275 : 209,
+                  marginTop: isTablet ? -137.5 : -104.5,
+                  marginLeft: isTablet ? -225 : -170,
+                  backgroundColor: 'rgba(0,0,0,0.3)',
+                  borderRadius: 20,
+                  opacity: videoOpacity,
+                  transform: [{ scale: videoScale }],
+                }} />
+                
+                <Animated.View style={{
+                  position: 'absolute',
+                  top: '300%', // Positioned in lower portion of screen
+                  left: '50%',
+                  width: isTablet ? 400 : 300,
+                  height: isTablet ? 225 : 169, // 16:9 aspect ratio
+                  marginTop: isTablet ? -112.5 : -84.5, // half of height
+                  marginLeft: isTablet ? -200 : -150, // half of width
+                  borderRadius: 15,
+                  overflow: 'hidden',
+                  backgroundColor: '#000',
+                  shadowColor: '#4CAF50',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.5,
+                  shadowRadius: 20,
+                  elevation: 10,
+                  borderWidth: 3,
+                  borderColor: '#4CAF50',
+                  opacity: videoOpacity,
+                  transform: [{ scale: videoScale }],
+                }}>
+                <LevelVideoPlayer
+                  source={levelVideoMap[levelName.toLowerCase()]}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                  }}
+                  loop={true}
+                  muted={false}
+                  autoPlay={true}
+                  contentFit="cover"
+                  onVideoEnd={() => {}} // Empty handler to prevent any end detection logic
+                  renderVolumeButton={(isMuted, toggleVolume) => (
+                    <TouchableOpacity
+                      onPress={toggleVolume}
+                      style={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        borderRadius: 25,
+                        width: 45,
+                        height: 45,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderWidth: 2,
+                        borderColor: 'rgba(255,255,255,0.3)',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 3,
+                        elevation: 5,
+                      }}
+                    >
+                      <Ionicons 
+                        name={isMuted ? "volume-mute" : "volume-medium"} 
+                        size={24} 
+                        color="white" 
+                      />
+                    </TouchableOpacity>
+                  )}
+                />
+                <View style={{
+                  position: 'absolute',
+                  bottom: 10,
+                  left: 10,
+                  right: 10,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                  <View style={{
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                  }}>
+                    <Text style={{
+                      color: 'white',
+                      fontSize: 14,
+                      fontWeight: 'bold',
+                    }}>
+                      {levelName.charAt(0).toUpperCase() + levelName.slice(1)} Level
+                    </Text>
+                  </View>
+                  <View style={{
+                    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                  }}>
+                    <Text style={{
+                      color: 'white',
+                      fontSize: 12,
+                      fontWeight: 'bold',
+                    }}>
+                       Mission Completed
+                    </Text>
+                  </View>
+                </View>
+              </Animated.View>
+              </>
+            )}
 
+            {/* Close button below video */}
+            <Animated.View style={{
+              position: 'absolute',
+              top: '300%', // Same as video position
+              left: '50%',
+              marginTop: isTablet ? 180 : 140, // Position below video
+              marginLeft: isTablet ? -80 : -60, // Center the button
+              opacity: videoOpacity, // Fade in with video
+            }}>
+              <TouchableOpacity
+                onPress={handleCloseMissionComplete}
+                style={{
+                  backgroundColor: '#4CAF50',
+                  paddingVertical: isTablet ? 15 : 12,
+                  paddingHorizontal: isTablet ? 40 : 30,
+                  borderRadius: 25,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 5,
+                  elevation: 5,
+                  borderWidth: 2,
+                  borderColor: '#fff',
+                }}
+              >
+                <Text style={{
+                  color: '#fff',
+                  fontSize: isTablet ? 18 : 16,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                }}>
+                  CLOSE
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+            
             {/* Reset Mission Button removed */}
           </Animated.View>
         )}

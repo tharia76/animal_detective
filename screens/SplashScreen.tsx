@@ -271,90 +271,17 @@ export default function SplashScreen({ titleAnim, onLoadingComplete }: Props) {
         pointerEvents="auto"
       />
       
-      {/* Optimized loading interface */}
-      <Animated.View style={{
-        position: 'absolute',
-        bottom: 80,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        paddingHorizontal: 30,
-        opacity: fadeAnim,
-        transform: [{ scale: scaleAnim }]
-      }}>
 
-
-        {/* Enhanced activity indicator */}
-        <View style={{ marginBottom: 15 }}>
-          <ActivityIndicator size="large" color="#FF8C00" />
-        </View>
-        
-        {/* Simple loading message */}
-        <Text style={{
-          color: '#FF8C00',
-          fontSize: 18,
-          fontWeight: 'bold',
-          marginBottom: 8,
-          textAlign: 'center'
-        }}>
-          Loading... {totalLoadingProgress.percentage || 0}%
-        </Text>
         
 
         
 
         
         {/* Enhanced progress bar with animation */}
-        <View style={{
-          width: '100%',
-          height: 6,
-          backgroundColor: 'rgba(255, 140, 0, 0.2)',
-          borderRadius: 3,
-          marginBottom: 15,
-          overflow: 'hidden',
-        }}>
-          <Animated.View style={{
-            width: progressAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: ['0%', '100%'],
-            }),
-            height: '100%',
-            backgroundColor: '#FF8C00',
-            borderRadius: 3,
-            shadowColor: '#FF8C00',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.8,
-            shadowRadius: 4,
-            elevation: 4,
-          }} />
+      
         </View>
-        
 
         
-        {/* Skip option for impatient users */}
-        {showSkipOption && !totalLoadingProgress.isComplete && (
-          <TouchableOpacity
-            onPress={skipToPriority}
-            style={{
-              marginTop: 20,
-              paddingHorizontal: 20,
-              paddingVertical: 8,
-              backgroundColor: 'rgba(255, 140, 0, 0.2)',
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: '#FF8C00',
-            }}
-          >
-            <Text style={{
-              color: '#FF8C00',
-              fontSize: 14,
-              fontWeight: '600'
-            }}>
-              Skip to Game ⚡
-            </Text>
-          </TouchableOpacity>
-        )}
-      </Animated.View>
-    </View>
+       
   );
 }

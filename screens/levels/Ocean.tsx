@@ -193,8 +193,8 @@ export default function OceanScreen({ onBackToMenu, backgroundImageUri, skyBackg
     <ScreenLoadingWrapper
       assetsToLoad={oceanAssets}
       loadingText={t('loading') || 'Loading Ocean...'}
-      backgroundColor="#0077be"
-      minLoadingTime={1500}
+      backgroundColor="#006994" // Ocean blue to match Ocean level background
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

@@ -191,8 +191,8 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
     <ScreenLoadingWrapper
       assetsToLoad={insectsAssets}
       loadingText={t('loading') || 'Loading Insects...'}
-      backgroundColor="#8b4513"
-      minLoadingTime={1500}
+      backgroundColor="#87CEEB" // Sky blue to match Insects level background
+      minLoadingTime={800} // Short loading to prevent black flash
       onAssetsLoaded={() => {
         // Defer state update to avoid React lifecycle warnings
         requestAnimationFrame(() => {

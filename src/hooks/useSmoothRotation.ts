@@ -123,12 +123,7 @@ export function useSmoothRotation(config: SmoothRotationConfig = {}) {
           ) + 'deg'
         }] : [])
       ],
-      opacity: interpolate(
-        progress,
-        [0, 0.1, 0.9, 1],
-        [1, 0.95, 0.95, 1],
-        Extrapolate.CLAMP
-      ),
+      opacity: 1, // Keep full opacity to prevent flashing
     };
   }, []);
 
