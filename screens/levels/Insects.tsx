@@ -31,8 +31,8 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
   
   const insectsAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Insects');
   const [bgReady, setBgReady] = useState(false);
-  const [showVideo, setShowVideo] = useState(isLandscape); // Show video only in landscape
-  const [gameStarted, setGameStarted] = useState(!isLandscape); // Start game immediately in portrait
+  const [showVideo, setShowVideo] = useState(false); // Never show video
+  const [gameStarted, setGameStarted] = useState(true); // Always start game immediately
   const [showPostVideoLoading, setShowPostVideoLoading] = useState(false); // Show loading after video
   const [isVideoMuted, setIsVideoMuted] = useState(true); // Track video mute state
   const videoVolumeToggleRef = useRef<(() => void) | null>(null);
@@ -130,15 +130,11 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
     }
   }, [showVideo, isLandscape, fullText]);
 
-  // Handle orientation changes
+  // Handle orientation changes - removed video logic since we're skipping videos
   useEffect(() => {
-    if (isLandscape && !gameStarted) {
-      setShowVideo(true);
-      // Video will auto-play via RobustVideoPlayer
-    } else if (!isLandscape) {
-      setShowVideo(false);
-      setGameStarted(true);
-    }
+    // Always ensure game is started and visible
+    setShowVideo(false);
+    setGameStarted(true);
   }, [isLandscape]);
 
   const handleVideoEnd = () => {
@@ -174,21 +170,11 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
 
     // Video pause/play is now handled by RobustVideoPlayer
 
-  // Skip intro if any animal was already clicked for this level
+  // Always skip intro videos - removed video check logic
   useEffect(() => {
-    (async () => {
-      try {
-        const saved = await AsyncStorage.getItem('animalProgress_insects');
-        if (saved) {
-          const arr = JSON.parse(saved);
-          if (Array.isArray(arr) && arr.length > 0) {
-            // Skip video if level was already started
-            setShowVideo(false);
-            setGameStarted(true);
-          }
-        }
-      } catch (e) {}
-    })();
+    // Always ensure game starts immediately
+    setShowVideo(false);
+    setGameStarted(true);
   }, []);
 
     // Gather all assets to preload
@@ -331,17 +317,8 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
 
 const styles = StyleSheet.create({
   fullscreenContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000',
-    zIndex: 9999,
-    margin: 0,
-    padding: 0,
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   fullscreenVideo: {
     position: 'absolute',
@@ -351,7 +328,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: '100%',
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     margin: 0,
     padding: 0,
   },

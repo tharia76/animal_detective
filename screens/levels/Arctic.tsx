@@ -32,12 +32,12 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
   
   const arcticAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Arctic');
   const [bgReady, setBgReady] = useState(false);
-  const [showVideo, setShowVideo] = useState(isLandscape); // Show video only in landscape
-  const [gameStarted, setGameStarted] = useState(!isLandscape); // Start game immediately in portrait
+  const [showVideo, setShowVideo] = useState(false); // Never show video
+  const [gameStarted, setGameStarted] = useState(true); // Always start game immediately
   const [isVideoMuted, setIsVideoMuted] = useState(true); // Track video mute state
   const videoVolumeToggleRef = useRef<(() => void) | null>(null);
   const [videoFadeAnim] = useState(() => new Animated.Value(1)); // For smooth fade transition
-  const [gameFadeAnim] = useState(() => new Animated.Value(!isLandscape ? 1 : 0)); // Start at 1 if portrait
+  const [gameFadeAnim] = useState(() => new Animated.Value(1)); // Game always visible
   
   // Animation values for the level title
   const [titleScale] = useState(() => new Animated.Value(0));
@@ -132,39 +132,17 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
     }
   }, [showVideo, isLandscape, fullText]);
 
-  // Handle orientation changes
+  // Handle orientation changes - removed video logic since we're skipping videos
   useEffect(() => {
-    if (isLandscape && !gameStarted) {
-      setShowVideo(true);
-      // Video will auto-play via RobustVideoPlayer
-    } else if (!isLandscape) {
-      setShowVideo(false);
-      setGameStarted(true);
-      // Set game to full opacity immediately in portrait
-      gameFadeAnim.setValue(1);
-    }
+    // Always ensure game is started and visible
+    setShowVideo(false);
+    setGameStarted(true);
+    gameFadeAnim.setValue(1);
   }, [isLandscape, gameFadeAnim]);
 
   const handleVideoEnd = () => {
-    // Start fading out video and fading in game
-    Animated.parallel([
-      Animated.timing(videoFadeAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(gameFadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-        delay: 400, // Start game fade-in halfway through video fade-out
-      }),
-    ]).start(() => {
-      // After animation completes, update states
-      setShowVideo(false);
-    });
-    
-    // Start game immediately but it will fade in
+    // Since videos are disabled, this function is no longer used
+    setShowVideo(false);
     setGameStarted(true);
   };
 
@@ -191,26 +169,13 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
 
     // Video pause/play is now handled by RobustVideoPlayer
 
-  // Skip intro if any animal was already clicked for this level
+  // Always skip intro videos - removed video check logic
   useEffect(() => {
-    (async () => {
-      try {
-        const saved = await AsyncStorage.getItem('animalProgress_arctic');
-        if (saved) {
-          const arr = JSON.parse(saved);
-          if (Array.isArray(arr) && arr.length > 0) {
-            // Skip video if level was already started
-            setShowVideo(false);
-            setGameStarted(true);
-            // Ensure game is fully visible when skipping intro
-            gameFadeAnim.setValue(1);
-            videoFadeAnim.setValue(0);
-          }
-        }
-      } catch (e) {
-        // Optionally log or handle error
-      }
-    })();
+    // Always ensure game starts immediately
+    setShowVideo(false);
+    setGameStarted(true);
+    gameFadeAnim.setValue(1);
+    videoFadeAnim.setValue(0);
   }, [gameFadeAnim, videoFadeAnim]);
 
     // Gather all assets to preload
@@ -326,9 +291,9 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
       </Animated.View>
       ) : null}
       
-      {/* Show game with fade-in */}
+      {/* Show game directly */}
       {gameStarted ? (
-      <Animated.View style={[styles.fullscreenContainer, { opacity: gameFadeAnim }]}>
+      <View style={{ flex: 1 }}>
         <LevelScreenTemplate
         levelName="Arctic"
         animals={arcticAnimals}
@@ -336,8 +301,10 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
         backgroundImageUri={bgUri}
         skyBackgroundImageUri={skyBackgroundImageUri}
       />
-      </Animated.View>
+      </View>
       ) : null}
+      
+
       
       {/* Fallback loading state */}
       {!showVideo && !gameStarted && (
@@ -351,17 +318,8 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
 
 const styles = StyleSheet.create({
   fullscreenContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000',
-    zIndex: 9999,
-    margin: 0,
-    padding: 0,
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   fullscreenVideo: {
     position: 'absolute',
@@ -371,7 +329,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: '100%',
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     margin: 0,
     padding: 0,
   },

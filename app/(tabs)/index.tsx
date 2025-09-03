@@ -80,8 +80,7 @@ export default function App() {
     // ocean: null,
   });
 
-  // Animation state for screen transitions
-  const [screenOpacity] = useState(() => new Animated.Value(1));
+  // Animation state for screen transitions - removed to eliminate black transitions
 
   useEffect(() => {
     const preloadAssets = async () => {
@@ -172,20 +171,11 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Function to handle screen transitions with fade
-  const transitionScreen = useCallback((cb: () => void) => {
-    Animated.timing(screenOpacity, { toValue:0, duration:250, useNativeDriver:true })
-      .start(() => {
-        cb();
-        Animated.timing(screenOpacity, { toValue:1, duration:250, useNativeDriver:true }).start();
-      });
-  }, [screenOpacity]);
-
-  // Updated handlers using the transition function
+  // Updated handlers without transition animation
   const handleSelectLevel = useCallback((level: string) => {
-    // Use transition for smooth level selection
-    transitionScreen(() => setSelectedLevel(level));
-  }, [transitionScreen]);
+    // Direct level selection without transition
+    setSelectedLevel(level);
+  }, []);
 
   const handleBackToMenu = useCallback(() => {
     setSelectedLevel(null);
@@ -309,7 +299,7 @@ export default function App() {
         style={{ flex: 1 }}
         resizeMode="cover"
       >
-        <Animated.View style={{ flex: 1, opacity: screenOpacity }}>
+        <View style={{ flex: 1 }}>
           {selectedLevel == null ? (
             assetsReady ? (
               <MenuScreen
@@ -324,7 +314,7 @@ export default function App() {
           ) : (
             renderLevelScreen()
           )}
-        </Animated.View>
+        </View>
       </ImageBackground>
     </>
   );

@@ -514,11 +514,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const dynStyles = useDynamicStyles();
   const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
   
-  // Transition overlay to prevent flicker
-  const [transitionOpacity] = useState(() => new Animated.Value(0));
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  // Selected level state
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
-  const isTransitioningRef = useRef(false);
 
   // Get animals data for level tile subtitles
   const animals = getAnimals(lang);
@@ -821,10 +818,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   useEffect(() => {
     const onFocus = () => {
       try {
-        // Reset all transition states when coming back
-        isTransitioningRef.current = false;
-        transitionOpacity.setValue(0);
-        setIsTransitioning(false);
+        // Reset state when coming back
         if (playerRef.current) playerRef.current.play();
       } catch (e) {
         // Defensive: ignore
@@ -848,7 +842,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       } catch (e) {}
       stopAndUnload();
     };
-  }, [navigation, stopAndUnload, transitionOpacity]);
+  }, [navigation, stopAndUnload]);
 
   // IAP: Initialize and get products with Apple Pay support
   useEffect(() => {

@@ -19,7 +19,7 @@ export default function SplashScreen({ titleAnim, onLoadingComplete }: Props) {
   const dynamicStyles = useDynamicStyles();
   
   // Create video player directly
-  const videoSource = require('../src/assets/intro_videos/backup_videos/splash.mp4');
+  const videoSource = require('../src/assets/intro_videos/splash.mp4');
   const player = useVideoPlayer(videoSource, (player) => {
     player.loop = true;
     player.muted = false;
@@ -141,7 +141,7 @@ export default function SplashScreen({ titleAnim, onLoadingComplete }: Props) {
   useEffect(() => {
     const testVideoSource = async () => {
       try {
-        const videoSource = require('../src/assets/intro_videos/backup_videos/splash.mp4');
+        const videoSource = require('../src/assets/intro_videos/splash.mp4');
         console.log('🎬 Splash video source loaded:', videoSource);
       } catch (error) {
         console.error('❌ Failed to load splash video source:', error);

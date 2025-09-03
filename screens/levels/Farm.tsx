@@ -32,12 +32,12 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
   
   const farmAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Farm');
   const [bgReady, setBgReady] = useState(false);
-  const [showVideo, setShowVideo] = useState(isLandscape); // Show video only in landscape
-  const [gameStarted, setGameStarted] = useState(!isLandscape); // Start game immediately in portrait
+  const [showVideo, setShowVideo] = useState(false); // Never show video
+  const [gameStarted, setGameStarted] = useState(true); // Always start game immediately
   const [isVideoMuted, setIsVideoMuted] = useState(true); // Track video mute state
   const videoVolumeToggleRef = useRef<(() => void) | null>(null);
   const [videoOpacity] = useState(() => new Animated.Value(1)); // For smooth video fade out
-  const [gameFadeAnim] = useState(() => new Animated.Value(!isLandscape ? 1 : 0)); // For smooth game fade in
+  const [gameFadeAnim] = useState(() => new Animated.Value(1)); // Game always visible
   
   // Animation values for the level title
   const [titleScale] = useState(() => new Animated.Value(0));
@@ -132,40 +132,18 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
     }
   }, [showVideo, isLandscape, fullText]);
 
-  // Handle orientation changes
+  // Handle orientation changes - removed video logic since we're skipping videos
   useEffect(() => {
-    if (isLandscape && !gameStarted) {
-      setShowVideo(true);
-      // Video will auto-play via RobustVideoPlayer
-    } else if (!isLandscape) {
-      setShowVideo(false);
-      setGameStarted(true);
-      // Set game to full opacity immediately in portrait
-      gameFadeAnim.setValue(1);
-    }
+    // Always ensure game is started and visible
+    setShowVideo(false);
+    setGameStarted(true);
+    gameFadeAnim.setValue(1);
   }, [isLandscape, gameFadeAnim]);
 
   const handleVideoEnd = () => {
-    // Start game first but it will fade in
+    // Since videos are disabled, this function is no longer used
+    setShowVideo(false);
     setGameStarted(true);
-    
-    // Fade out video and fade in game simultaneously
-    Animated.parallel([
-      Animated.timing(videoOpacity, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(gameFadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-        delay: 400, // Start game fade-in halfway through video fade-out
-      }),
-    ]).start(() => {
-      setShowVideo(false);
-      videoOpacity.setValue(1); // Reset for next time
-    });
   };
 
   const skipVideo = () => {
@@ -202,31 +180,20 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
 
   // Video pause/play is now handled by RobustVideoPlayer
 
-  // Skip intro if any animal was already clicked for this level
+  // Always skip intro videos - removed video check logic
   useEffect(() => {
-    (async () => {
-      try {
-        const saved = await AsyncStorage.getItem('animalProgress_farm');
-        if (saved) {
-          const arr = JSON.parse(saved);
-          if (Array.isArray(arr) && arr.length > 0) {
-            // Skip video if level was already started
-            setShowVideo(false);
-            setGameStarted(true);
-            // Ensure game is fully visible when skipping intro
-            gameFadeAnim.setValue(1);
-            videoOpacity.setValue(0);
-          }
-        }
-      } catch (e) {}
-    })();
+    // Always ensure game starts immediately
+    setShowVideo(false);
+    setGameStarted(true);
+    gameFadeAnim.setValue(1);
+    videoOpacity.setValue(0);
   }, [gameFadeAnim, videoOpacity]);
 
   // Gather all assets to preload including animal sprites
   const farmAssets = useMemo(() => {
     const assets = [
       FARM_BG,
-      require('../../src/assets/intro_videos/backup_videos/farm-vid1.mp4')
+      require('../../src/assets/intro_videos/farm-vid1.mp4')
     ];
     
     // Add farm animal sprites to ensure they're loaded
@@ -257,7 +224,7 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
       {showVideo && isLandscape && allAssetsLoaded ? (
       <Animated.View style={[styles.fullscreenContainer, { opacity: videoOpacity }]}>
         <LevelVideoPlayer
-          source={require('../../src/assets/intro_videos/backup_videos/farm-vid1.mp4')}
+          source={require('../../src/assets/intro_videos/farm-vid1.mp4')}
           style={styles.fullscreenVideo}
           loop={false}
           muted={true}
@@ -353,9 +320,9 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
       </Animated.View>
       ) : null}
       
-      {/* Show game with fade-in */}
+      {/* Show game directly */}
       {gameStarted ? (
-      <Animated.View style={[styles.fullscreenContainer, { opacity: gameFadeAnim, backgroundColor: 'transparent' }]}>
+      <View style={{ flex: 1 }}>
         <LevelScreenTemplate
           levelName="Farm"
           animals={farmAnimals}
@@ -363,8 +330,10 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
           backgroundImageUri={bgUri}
           skyBackgroundImageUri={skyBackgroundImageUri}
         />
-      </Animated.View>
+      </View>
       ) : null}
+      
+
       
       {/* Fallback loading state */}
       {!showVideo && !gameStarted && (
@@ -378,17 +347,8 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
 
 const styles = StyleSheet.create({
   fullscreenContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000',
-    zIndex: 9999,
-    margin: 0,
-    padding: 0,
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   fullscreenVideo: {
     position: 'absolute',
@@ -398,7 +358,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: '100%',
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     margin: 0,
     padding: 0,
   },
@@ -450,7 +410,7 @@ const styles = StyleSheet.create({
   // Legacy styles (keeping for compatibility)
   videoContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
   },
