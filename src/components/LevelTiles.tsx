@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { View, TouchableOpacity, Image, Text, ScrollView, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import LazyImage from './LazyImage';
 
 type LevelTilesProps = {
   levels: string[];
@@ -28,25 +29,8 @@ type LevelTilesProps = {
  * Custom grid/row renderer for level tiles.
  * Avoids FlatList to prevent nested VirtualizedList warning when used inside ScrollView.
  */
-// Animated Tile Component with Glowing Border
-function AnimatedTile({ 
-  level, 
-  itemSize, 
-  margin, 
-  colIdx, 
-  columns, 
-  isLocked, 
-  LEVEL_BACKGROUNDS, 
-  styles, 
-  getLevelBackgroundColor, 
-  isLandscape, 
-  t, 
-  handleLevelSelect,
-  isCompleted,
-  onToggleCompletion,
-  animals,
-  visitedCount
-}: {
+
+interface AnimatedTileProps {
   level: string;
   itemSize: number;
   margin: number;
@@ -63,10 +47,30 @@ function AnimatedTile({
   onToggleCompletion?: (level: string, isCompleted: boolean) => void;
   animals?: any[];
   visitedCount?: number;
-}) {
-  const glowAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const pressAnim = useRef(new Animated.Value(1)).current;
+}
+
+// Animated Tile Component with Glowing Border - Memoized to prevent re-renders
+const AnimatedTile = React.memo(({ 
+  level, 
+  itemSize, 
+  margin, 
+  colIdx, 
+  columns, 
+  isLocked, 
+  LEVEL_BACKGROUNDS, 
+  styles, 
+  getLevelBackgroundColor, 
+  isLandscape, 
+  t, 
+  handleLevelSelect,
+  isCompleted,
+  onToggleCompletion,
+  animals,
+  visitedCount
+}: AnimatedTileProps) => {
+  const [glowAnim] = useState(() => new Animated.Value(0));
+  const [pulseAnim] = useState(() => new Animated.Value(1));
+  const [pressAnim] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     // Create a smooth, continuous glow animation with easing
@@ -101,13 +105,9 @@ function AnimatedTile({
       }),
     ]);
 
-    // Add a slight delay for each tile to create a wave effect
-    const delay = Math.random() * 1000;
-    
-    setTimeout(() => {
-      Animated.loop(glowSequence).start();
-      Animated.loop(pulseSequence).start();
-    }, delay);
+    // Start animations immediately for faster loading
+    Animated.loop(glowSequence).start();
+    Animated.loop(pulseSequence).start();
   }, [glowAnim, pulseAnim]);
 
   // Get level-specific glow colors
@@ -211,9 +211,10 @@ function AnimatedTile({
            }}
           activeOpacity={1}
         >
-          <Image
+          <LazyImage
             source={LEVEL_BACKGROUNDS[level]}
-                         style={{
+            cacheKey={`level_bg_${level}`}
+            style={{
                width: itemSize,
                height: itemSize,
                borderRadius: 24,
@@ -381,9 +382,11 @@ function AnimatedTile({
       </Animated.View>
     </Animated.View>
   );
-}
+});
 
-export default function LevelTiles({
+AnimatedTile.displayName = 'AnimatedTile';
+
+const LevelTiles = React.memo(({
   levels,
   numColumns,
   isLandscape,
@@ -400,49 +403,33 @@ export default function LevelTiles({
   onToggleCompletion,
   animals,
   visitedCounts,
-}: LevelTilesProps) {
+}: LevelTilesProps) => {
   // In both portrait and landscape, use 3 columns per row
   const columns = 3;
   
-  // Stabilize layout during rapid dimension changes
+  // Use item size immediately for instant rendering
   const stableItemSize = useRef(itemSize);
-  const stabilityTimer = useRef<NodeJS.Timeout | null>(null);
   
-  // Only update stable size if itemSize has been consistent for a short period
+  // Update stable size immediately
   useEffect(() => {
-    if (stabilityTimer.current) {
-      clearTimeout(stabilityTimer.current);
-    }
-    
-    stabilityTimer.current = setTimeout(() => {
-      stableItemSize.current = itemSize;
-    }, 100);
-    
-    return () => {
-      if (stabilityTimer.current) {
-        clearTimeout(stabilityTimer.current);
-      }
-    };
+    stableItemSize.current = itemSize;
   }, [itemSize]);
 
-  // Helper to chunk array into rows
-  function chunk<T>(arr: T[], size: number): T[][] {
-    const res: T[][] = [];
-    for (let i = 0; i < arr.length; i += size) {
-      res.push(arr.slice(i, i + size));
-    }
-    return res;
-  }
+  // Helper to chunk array into rows (memoized)
+  const rows = useMemo(() => {
+    const chunk = <T,>(arr: T[], size: number): T[][] => {
+      const res: T[][] = [];
+      for (let i = 0; i < arr.length; i += size) {
+        res.push(arr.slice(i, i + size));
+      }
+      return res;
+    };
+    return chunk(levels, columns);
+  }, [levels, columns]);
 
-  // Always render as grid, 3 in a row for both portrait and landscape
-  const rows = chunk(levels, columns);
-
-  // Use getIsLocked if provided, otherwise lock all except 'farm'
+  // Use getIsLocked if provided, otherwise lock all except 'farm' (optimized - no console logs)
   const safeGetIsLocked = (level: string) => {
-    console.log('LevelTiles safeGetIsLocked called for level:', level, 'getIsLocked type:', typeof getIsLocked);
-    const result = typeof getIsLocked === 'function' ? getIsLocked(level) : level !== 'farm';
-    console.log('safeGetIsLocked result for', level, ':', result);
-    return result;
+    return typeof getIsLocked === 'function' ? getIsLocked(level) : level !== 'farm';
   };
 
   return (
@@ -490,4 +477,8 @@ export default function LevelTiles({
       ))}
     </ScrollView>
   );
-}
+});
+
+LevelTiles.displayName = 'LevelTiles';
+
+export default LevelTiles;

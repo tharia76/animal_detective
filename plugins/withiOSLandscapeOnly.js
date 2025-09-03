@@ -8,7 +8,7 @@ module.exports = function withiOSLandscapeOnly(config) {
     
     // Add the orientation methods to AppDelegate
     const orientationMethods = `
-  // Force landscape orientation
+  // Force landscape orientation for all presentations including modals
   public override func application(
     _ application: UIApplication,
     supportedInterfaceOrientationsFor window: UIWindow?
@@ -24,6 +24,20 @@ module.exports = function withiOSLandscapeOnly(config) {
   // Force initial orientation
   public override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
     return .landscapeLeft
+  }
+  
+  // Override for modal presentations
+  public override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    
+    // Force landscape for any modal presentations
+    if let presentedVC = self.presentedViewController {
+      let orientationMask: UIInterfaceOrientationMask = [.landscapeLeft, .landscapeRight]
+      if #available(iOS 16.0, *) {
+        let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+        windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: orientationMask))
+      }
+    }
   }`;
 
     // Find where to insert the methods (before the last closing brace)

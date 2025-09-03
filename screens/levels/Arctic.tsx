@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { ActivityIndicator, View, useWindowDimensions, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { Asset } from 'expo-asset';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import { VideoView } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
+import LevelVideoPlayer from '../../src/components/LevelVideoPlayer';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate, { getGlobalVolume } from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ScreenLoadingWrapper from '../../src/components/ScreenLoadingWrapper';
 import { getAllLandscapeButtonPositions } from '../../src/utils/landscapeButtonPositioning';
 
 // Define Props for the screen
@@ -22,55 +24,35 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
   const { lang, t } = useLocalization();
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
+  const [allAssetsLoaded, setAllAssetsLoaded] = useState(false);
+  
+  // Load the arctic background image
+  const ARCTIC_BG = require('../../src/assets/images/level-backgrounds/arctic.webp');
+  const [bgUri, setBgUri] = useState<string | null>(null);
   
   const arcticAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Arctic');
   const [bgReady, setBgReady] = useState(false);
   const [showVideo, setShowVideo] = useState(isLandscape); // Show video only in landscape
   const [gameStarted, setGameStarted] = useState(!isLandscape); // Start game immediately in portrait
+  const [isVideoMuted, setIsVideoMuted] = useState(true); // Track video mute state
+  const videoVolumeToggleRef = useRef<(() => void) | null>(null);
+  const [videoFadeAnim] = useState(() => new Animated.Value(1)); // For smooth fade transition
+  const [gameFadeAnim] = useState(() => new Animated.Value(!isLandscape ? 1 : 0)); // Start at 1 if portrait
   
   // Animation values for the level title
-  const titleScale = useRef(new Animated.Value(0)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-  const titleGlow = useRef(new Animated.Value(0)).current;
+  const [titleScale] = useState(() => new Animated.Value(0));
+  const [titleOpacity] = useState(() => new Animated.Value(0));
+  const [titleGlow] = useState(() => new Animated.Value(0));
   
   // Typewriter effect state
   const [displayedText, setDisplayedText] = useState('');
   const [showCursor, setShowCursor] = useState(false);
   const fullText = useMemo(() => t('levelArctic'), [t, lang]);
-  const cursorOpacity = useRef(new Animated.Value(1)).current;
+  const [cursorOpacity] = useState(() => new Animated.Value(1));
   
-  // Video player setup
-  const player = useVideoPlayer(require('../../src/assets/intro_videos/arctic-vid.mp4'), player => {
-    player.loop = false;
-    player.muted = false;
-    player.volume = getGlobalVolume(); // Apply global volume setting
-  });
+    // Video handling is now managed by RobustVideoPlayer
 
-  // Listen for video end by checking currentTime vs duration
-  useEffect(() => {
-    if (!player || !showVideo) return;
-
-    const checkVideoEnd = () => {
-      if (player.currentTime && player.duration && 
-          player.currentTime >= player.duration - 0.1) {
-        // Video has finished playing (within 0.1 seconds of end)
-        handleVideoEnd();
-      }
-    };
-
-    // Check every 100ms
-    const interval = setInterval(checkVideoEnd, 100);
-
-    // Also set a backup timer for maximum video length (in case video is very long)
-    const maxTimer = setTimeout(() => {
-      handleVideoEnd();
-    }, 60000); // 60 seconds max
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(maxTimer);
-    };
-  }, [player, showVideo]);
+    // Video end handling is now managed by RobustVideoPlayer's onVideoEnd callback
 
   // Start typewriter effect when video shows
   useEffect(() => {
@@ -154,42 +136,60 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
   useEffect(() => {
     if (isLandscape && !gameStarted) {
       setShowVideo(true);
-      player.play();
+      // Video will auto-play via RobustVideoPlayer
     } else if (!isLandscape) {
       setShowVideo(false);
       setGameStarted(true);
+      // Set game to full opacity immediately in portrait
+      gameFadeAnim.setValue(1);
     }
-  }, [isLandscape]);
+  }, [isLandscape, gameFadeAnim]);
 
   const handleVideoEnd = () => {
-    setShowVideo(false);
+    // Start fading out video and fading in game
+    Animated.parallel([
+      Animated.timing(videoFadeAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(gameFadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+        delay: 400, // Start game fade-in halfway through video fade-out
+      }),
+    ]).start(() => {
+      // After animation completes, update states
+      setShowVideo(false);
+    });
+    
+    // Start game immediately but it will fade in
     setGameStarted(true);
   };
 
   const skipVideo = () => {
-    player.pause();
+    // Video pause handled by RobustVideoPlayer
     handleVideoEnd();
   };
 
   useEffect(() => {
     const load = async () => {
-      try {
-        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/arctic.png')).downloadAsync();
-      } catch (err) {
-        console.warn('Failed to preload arctic image', err);
-      }
+      // Load the background image immediately
+      const bgAsset = Asset.fromModule(ARCTIC_BG);
+      setBgUri(bgAsset.uri);
       setBgReady(true);
+      
+      // Optional: download for caching
+      bgAsset.downloadAsync().catch(() => {
+        // Ignore errors - image will still display
+      });
     };
 
     load();
   }, []);
 
-  // Ensure player pauses when video is hidden
-  useEffect(() => {
-    if (!showVideo) {
-      try { player.pause(); } catch (e) {}
-    }
-  }, [showVideo]);
+    // Video pause/play is now handled by RobustVideoPlayer
 
   // Skip intro if any animal was already clicked for this level
   useEffect(() => {
@@ -199,35 +199,67 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
         if (saved) {
           const arr = JSON.parse(saved);
           if (Array.isArray(arr) && arr.length > 0) {
-            try { player.pause(); } catch (e) {}
+            // Skip video if level was already started
             setShowVideo(false);
             setGameStarted(true);
+            // Ensure game is fully visible when skipping intro
+            gameFadeAnim.setValue(1);
+            videoFadeAnim.setValue(0);
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        // Optionally log or handle error
+      }
     })();
+  }, [gameFadeAnim, videoFadeAnim]);
+
+    // Gather all assets to preload
+  const arcticAssets = useMemo(() => {
+    const assets = [
+      ARCTIC_BG,
+      require('../../src/assets/intro_videos/arctic-vid.mp4')
+    ];
+    return assets;
   }, []);
 
-  if (!bgReady) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="orange" />
-      </View>
-    );
-  }
-
-  // Show video intro in landscape mode
-  if (showVideo && isLandscape) {
-    return (
-      <View style={styles.fullscreenContainer} pointerEvents="box-none">
-        <VideoView
+    // Wrap entire component with loading wrapper
+  return (
+    <ScreenLoadingWrapper
+      assetsToLoad={arcticAssets}
+      loadingText={t('loading') || 'Loading Arctic...'}
+      backgroundColor="#4682b4"
+      minLoadingTime={1500}
+      onAssetsLoaded={() => {
+        // Defer state update to avoid React lifecycle warnings
+        requestAnimationFrame(() => {
+          setAllAssetsLoaded(true);
+        });
+      }}
+    >
+      {/* Show video intro in landscape mode */}
+      {showVideo && isLandscape && allAssetsLoaded ? (
+      <Animated.View style={[styles.fullscreenContainer, { opacity: videoFadeAnim }]} pointerEvents="box-none">
+        <LevelVideoPlayer
+          source={require('../../src/assets/intro_videos/arctic-vid.mp4')}
           style={styles.fullscreenVideo}
-          player={player}
-          allowsFullscreen={false}
-          allowsPictureInPicture={false}
-          nativeControls={false}
+          loop={false}
+          muted={true}
+          autoPlay={true}
           contentFit="fill"
-          pointerEvents="none"
+          fallbackColor="#4a6b8b"
+          onLoad={() => console.log('✅ Arctic video loaded')}
+          onError={(error) => {
+            console.error('❌ Arctic video error:', error);
+            handleVideoEnd();
+          }}
+          onVideoEnd={() => {
+            console.log('🏁 Arctic video ended');
+            handleVideoEnd();
+          }}
+          onVolumeStateChange={setIsVideoMuted}
+          exposeVolumeToggle={(toggleFn) => {
+            videoVolumeToggleRef.current = toggleFn;
+          }}
         />
         
         {/* Level title overlay */}
@@ -265,6 +297,20 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
         
         {/* Right side button container */}
         <View style={getAllLandscapeButtonPositions(width, height, false).videoButtons.container}>
+          {/* Volume button */}
+          <TouchableOpacity 
+            style={[
+              getAllLandscapeButtonPositions(width, height, false).videoButtons.skipButton,
+              { backgroundColor: 'rgba(0, 0, 0, 0.7)' }
+            ]} 
+            onPress={() => {
+              videoVolumeToggleRef.current?.();
+            }}
+          >
+            <Ionicons name={isVideoMuted ? "volume-mute" : "volume-high"} size={24} color="#fff" />
+            <Text style={styles.rightButtonText}>{t('sound')}</Text>
+          </TouchableOpacity>
+
           {/* Skip button */}
           <TouchableOpacity style={getAllLandscapeButtonPositions(width, height, false).videoButtons.skipButton} onPress={skipVideo}>
             <Ionicons name="play-skip-forward" size={24} color="#fff" />
@@ -277,28 +323,29 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
             <Text style={styles.rightButtonText}>{t('home')}</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    );
-  }
-
-  // Show game when video ends or in portrait mode
-  if (gameStarted) {
-    return (
-      <LevelScreenTemplate
+      </Animated.View>
+      ) : null}
+      
+      {/* Show game with fade-in */}
+      {gameStarted ? (
+      <Animated.View style={[styles.fullscreenContainer, { opacity: gameFadeAnim }]}>
+        <LevelScreenTemplate
         levelName="Arctic"
         animals={arcticAnimals}
         onBackToMenu={onBackToMenu}
-        backgroundImageUri={backgroundImageUri}
+        backgroundImageUri={bgUri}
         skyBackgroundImageUri={skyBackgroundImageUri}
       />
-    );
-  }
-
-  // Fallback loading state
-  return (
-    <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color="orange" />
-    </View>
+      </Animated.View>
+      ) : null}
+      
+      {/* Fallback loading state */}
+      {!showVideo && !gameStarted && (
+        <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="orange" />
+        </View>
+      )}
+    </ScreenLoadingWrapper>
   );
 }
 

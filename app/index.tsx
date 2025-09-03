@@ -7,7 +7,10 @@ export const screenOptions = {
 };
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Animated, useWindowDimensions, ImageBackground, View, ActivityIndicator, Platform, Dimensions } from 'react-native';
+import { Animated, useWindowDimensions, ImageBackground, View, ActivityIndicator, Platform, Dimensions, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import RobustVideoPlayer from '../src/components/RobustVideoPlayer';
 import { StatusBar } from 'expo-status-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import MenuScreen from '../screens/MenuScreen';
@@ -24,14 +27,18 @@ import SavannahScreen from '../screens/levels/Savannah';
 import JungleScreen from '../screens/levels/Jungle';
 import InsectsScreen from '../screens/levels/Insects';
 import BirdsScreen from '../screens/levels/Birds';
+import { getAnimals } from '../src/data/animals';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
   const [showSplash, setShowSplash] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
-  const titleAnim = useRef(new Animated.Value(0)).current;
+  const [titleAnim] = useState(() => new Animated.Value(0));
   const [assetsReady, setAssetsReady] = useState(false);
+  const [fadeAnim] = useState(() => new Animated.Value(1));
+
+
   
   // Force landscape on mount - especially for iPad
   useEffect(() => {
@@ -62,99 +69,22 @@ export default function App() {
     
     forceOrientation();
   }, []);
-  const [farmBgUri, setFarmBgUri] = useState<string | null>(null);
-  const [menuBgUri, setMenuBgUri] = useState<string | null>(null);
-  const [forestBgUri, setForestBgUri] = useState<string | null>(null);
-  const [arcticBgUri, setArcticBgUri] = useState<string | null>(null);
-  const [oceanBgUri, setOceanBgUri] = useState<string | null>(null);
-  const [savannahBgUri, setSavannahBgUri] = useState<string | null>(null);
-  const [desertBgUri, setDesertBgUri] = useState<string | null>(null);
-  const [jungleBgUri, setJungleBgUri] = useState<string | null>(null);
-  const [insectsBgUri, setInsectsBgUri] = useState<string | null>(null);
-  const [birdsBgUri, setBirdsBgUri] = useState<string | null>(null);
-  // Store moving backgrounds for each level
-  const [movingBgUris, setMovingBgUris] = useState<Record<string, string | null>>({
-    farm: null,
-    forest: null,
-    // ocean: null,
-  });
 
-  // Animation state for screen transitions
-  const screenOpacity = useRef(new Animated.Value(1)).current;
 
+  // Handle splash completion - all images are now loaded
+  const handleSplashComplete = useCallback(() => {
+    console.log('🎉 Splash animation complete - all images loaded!');
+    setAssetsReady(true);
+    // Add a small delay to let users see the splash video, then transition to menu
+    setTimeout(() => {
+      setShowSplash(false);
+    }, 1500); // 1.5 second delay for smooth transition
+  }, []);
+
+  // Remove the massive preloading - everything loads during splash now
   useEffect(() => {
-    const preloadAssets = async () => {
-      try {
-        const farm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
-        const menu = Asset.fromModule(require('../src/assets/images/menu-screen.png'));
-        const forest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
-        // For moving backgrounds, you can use different images if you have them
-        const movingFarm = Asset.fromModule(require('../src/assets/images/level-backgrounds/farm.png'));
-        const movingForest = Asset.fromModule(require('../src/assets/images/level-backgrounds/forest.png'));
-        const movingJungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.png'));
-        const movingDesert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.png'));
-        const movingArctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.png'));
-        const movingOcean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.png'));
-        const arctic = Asset.fromModule(require('../src/assets/images/level-backgrounds/arctic.png'));
-        const ocean = Asset.fromModule(require('../src/assets/images/level-backgrounds/ocean.png'));
-        const savannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.png'));
-        const desert = Asset.fromModule(require('../src/assets/images/level-backgrounds/desert.png'));
-        const jungle = Asset.fromModule(require('../src/assets/images/level-backgrounds/jungle.png'));
-        const insects = Asset.fromModule(require('../src/assets/images/level-backgrounds/insect.png'));
-        const birds = Asset.fromModule(require('../src/assets/images/level-backgrounds/birds.png'));
-        // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
-        const movingSavannah = Asset.fromModule(require('../src/assets/images/level-backgrounds/savannah.png'));
-        // const movingOcean = Asset.fromModule(require('../src/assets/images/ocean.jpg'));
-
-        await Promise.all([
-          farm.downloadAsync(),
-          menu.downloadAsync(),
-          forest.downloadAsync(),
-          movingFarm.downloadAsync(),
-          movingForest.downloadAsync(),
-          movingJungle.downloadAsync(),
-          movingDesert.downloadAsync(),
-          ocean.downloadAsync(),
-          savannah.downloadAsync(),
-          desert.downloadAsync(),
-          jungle.downloadAsync(),
-          insects.downloadAsync(),
-          birds.downloadAsync(),
-          movingArctic.downloadAsync(),
-          // movingOcean.downloadAsync(),
-          movingSavannah.downloadAsync(),
-          
-        ]);
-
-        setFarmBgUri(farm.localUri || farm.uri);
-        setMenuBgUri(menu.localUri || menu.uri);
-        setForestBgUri(forest.localUri || forest.uri);
-        setArcticBgUri(arctic.localUri || arctic.uri);
-        setOceanBgUri(ocean.localUri || ocean.uri);
-        setSavannahBgUri(savannah.localUri || savannah.uri);
-        setDesertBgUri(desert.localUri || desert.uri);
-        setJungleBgUri(jungle.localUri || jungle.uri);
-        setInsectsBgUri(insects.localUri || insects.uri);
-        setBirdsBgUri(birds.localUri || birds.uri);
-        setMovingBgUris({
-          farm: movingFarm.localUri || movingFarm.uri,
-          forest: movingForest.localUri || movingForest.uri,
-          jungle: movingJungle.localUri || movingJungle.uri,
-          desert: movingDesert.localUri || movingDesert.uri,
-          arctic: movingArctic.localUri || movingArctic.uri,
-          ocean: movingOcean.localUri || movingOcean.uri,
-          savannah: movingSavannah.localUri || movingSavannah.uri,
-        });
-
-        // setOceanBgUri(ocean.localUri || ocean.uri);
-        setAssetsReady(true);
-      } catch (error) {
-        console.error("Error preloading assets:", error);
-        setAssetsReady(true);
-      }
-    };
-
-    preloadAssets();
+    // Assets are now loaded during splash animation
+    // Just mark as ready when splash completes
   }, []);
 
   useEffect(() => {
@@ -164,55 +94,111 @@ export default function App() {
       useNativeDriver: true,
     }).start();
 
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 8000);
+    // DEBUG: Disable automatic splash timeout to keep splash screen visible
+    // const timer = setTimeout(() => {
+    //   setShowSplash(false);
+    // }, 8000);
 
-    return () => clearTimeout(timer);
+    // return () => clearTimeout(timer);
   }, []);
 
-  // Function to handle screen transitions with fade
-  const transitionScreen = useCallback((cb: () => void) => {
-    Animated.timing(screenOpacity, { toValue:0, duration:250, useNativeDriver:true })
-      .start(() => {
-        cb();
-        Animated.timing(screenOpacity, { toValue:1, duration:250, useNativeDriver:true }).start();
-      });
-  }, [screenOpacity]);
-
-  // Updated handlers using the transition function
-  const handleSelectLevel = useCallback((level: string) => {
-    transitionScreen(() => setSelectedLevel(level));
-  }, [transitionScreen]);
+  // Instant loading overlay with asset preloading
+  const handleSelectLevel = useCallback(async (level: string) => {
+    // Fade out current screen
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      // Set selected level after fade out
+      setSelectedLevel(level);
+      // Fade back in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+    
+    // Preload level assets during loading
+    const preloadAssets = async () => {
+      try {
+        // Preload level progress from AsyncStorage
+        const progressKey = `animalProgress_${level.toLowerCase()}`;
+        const indexKey = `animalCurrentIndex_${level.toLowerCase()}`;
+        const visitedCountKey = `visitedCount_${level.toLowerCase()}`;
+        
+        await Promise.all([
+          AsyncStorage.getItem(progressKey),
+          AsyncStorage.getItem(indexKey),
+          AsyncStorage.getItem(visitedCountKey)
+        ]);
+        
+        // Preload animal data for the level (avoid hook calls in async functions)
+        // Just preload the AsyncStorage data, animal data will load normally
+        
+        // Store preloaded data in global cache for instant access
+        global._preloadedAssets = global._preloadedAssets || {};
+        global._preloadedAssets[level] = {
+          progressKey,
+          indexKey,
+          visitedCountKey,
+          // Animal data will be loaded by the level screen itself
+          preloadedAt: Date.now()
+        };
+        
+        // Assets preloaded silently
+      } catch (error) {
+        console.warn('Error preloading assets:', error);
+      }
+    };
+    
+    // Start preloading immediately
+    preloadAssets();
+  }, [fadeAnim]);
 
   const handleBackToMenu = useCallback(() => {
-    transitionScreen(() => setSelectedLevel(null));
-  }, [transitionScreen]);
+    // Fade out current screen
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      // Go back to menu after fade out
+      setSelectedLevel(null);
+      // Fade back in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [fadeAnim]);
 
   if (showSplash || !assetsReady) {
-    return <SplashScreen titleAnim={titleAnim} />;
+    return <SplashScreen titleAnim={titleAnim} onLoadingComplete={handleSplashComplete} />;
   }
 
   // Helper to get the correct moving background for the selected level
   const getMovingBgUri = (level: string | null) => {
     if (!level) return null;
-    return movingBgUris[level] || null;
+    return null; // No moving backgrounds for now, as they are preloaded
   };
 
   // Pick the right URI for the backdrop
   const bgUri = selectedLevel
     ? {
-        farm: farmBgUri,
-        forest: forestBgUri,
-        arctic: arcticBgUri,
-        ocean: oceanBgUri,
-        savannah: savannahBgUri,
-        desert: desertBgUri,
-        jungle: jungleBgUri,
-        insects: insectsBgUri,
-        birds: birdsBgUri,
+        farm: null, // No preloaded images for now
+        forest: null,
+        arctic: null,
+        ocean: null,
+        savannah: null,
+        desert: null,
+        jungle: null,
+        insects: null,
+        birds: null,
       }[selectedLevel] || null
-    : menuBgUri;
+    : null; // No preloaded menu image for now
 
   // Render the correct LevelScreen component
   const renderLevelScreen = () => {
@@ -293,7 +279,7 @@ export default function App() {
         return (
           <MenuScreen
             onSelectLevel={handleSelectLevel}
-            backgroundImageUri={menuBgUri}
+            backgroundImageUri={null} // No preloaded menu image for now
           />
         );
     }
@@ -307,12 +293,12 @@ export default function App() {
         style={{ flex: 1 }}
         resizeMode="cover"
       >
-        <Animated.View style={{ flex: 1, opacity: screenOpacity }}>
+        <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
           {selectedLevel == null ? (
             assetsReady ? (
               <MenuScreen
                 onSelectLevel={handleSelectLevel}
-                backgroundImageUri={menuBgUri}
+                backgroundImageUri={null} // No preloaded menu image for now
               />
             ) : (
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFDAB9' }}>
@@ -323,6 +309,8 @@ export default function App() {
             renderLevelScreen()
           )}
         </Animated.View>
+        
+
       </ImageBackground>
     </>
   );

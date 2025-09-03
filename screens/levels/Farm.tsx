@@ -1,76 +1,58 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { ActivityIndicator, View, useWindowDimensions, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { View, ActivityIndicator, useWindowDimensions, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Asset } from 'expo-asset';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import { VideoView } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
+import LevelVideoPlayer from '../../src/components/LevelVideoPlayer';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate, { getGlobalVolume } from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAllLandscapeButtonPositions } from '../../src/utils/landscapeButtonPositioning';
+import ScreenLoadingWrapper from '../../src/components/ScreenLoadingWrapper';
 
 // Define Props for the screen
 type FarmScreenProps = {
     onBackToMenu: () => void;
     backgroundImageUri: string | null; // Accept URI prop
     skyBackgroundImageUri: string | null;
-    
+    onScreenReady?: () => void;
 };
 
-export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: FarmScreenProps) {
-  const { lang, t } = useLocalization();
+export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri, onScreenReady }: FarmScreenProps) {
+  const { t, lang } = useLocalization();
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
+  const [allAssetsLoaded, setAllAssetsLoaded] = useState(false);
+  
+  // Load the farm background image
+  const FARM_BG = require('../../src/assets/images/level-backgrounds/farm.webp');
+  const [bgUri, setBgUri] = useState<string | null>(null);
   
   const farmAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Farm');
   const [bgReady, setBgReady] = useState(false);
   const [showVideo, setShowVideo] = useState(isLandscape); // Show video only in landscape
   const [gameStarted, setGameStarted] = useState(!isLandscape); // Start game immediately in portrait
+  const [isVideoMuted, setIsVideoMuted] = useState(true); // Track video mute state
+  const videoVolumeToggleRef = useRef<(() => void) | null>(null);
+  const [videoOpacity] = useState(() => new Animated.Value(1)); // For smooth video fade out
+  const [gameFadeAnim] = useState(() => new Animated.Value(!isLandscape ? 1 : 0)); // For smooth game fade in
   
   // Animation values for the level title
-  const titleScale = useRef(new Animated.Value(0)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-  const titleGlow = useRef(new Animated.Value(0)).current;
+  const [titleScale] = useState(() => new Animated.Value(0));
+  const [titleOpacity] = useState(() => new Animated.Value(0));
+  const [titleGlow] = useState(() => new Animated.Value(0));
   
   // Typewriter effect state
   const [displayedText, setDisplayedText] = useState('');
   const [showCursor, setShowCursor] = useState(false);
   const fullText = useMemo(() => t('levelFarm'), [t, lang]);
-  const cursorOpacity = useRef(new Animated.Value(1)).current;
+  const [cursorOpacity] = useState(() => new Animated.Value(1));
   
-  // Video player setup
-  const player = useVideoPlayer(require('../../src/assets/intro_videos/farm-vid1.mp4'), player => {
-    player.loop = false;
-    player.muted = false;
-    player.volume = getGlobalVolume(); // Apply global volume setting
-  });
+  // Video handling is now managed by LevelVideoPlayer
 
-  // Listen for video end by checking currentTime vs duration
-  useEffect(() => {
-    if (!player || !showVideo) return;
-
-    const checkVideoEnd = () => {
-      if (player.currentTime && player.duration && 
-          player.currentTime >= player.duration - 0.1) {
-        // Video has finished playing (within 0.1 seconds of end)
-        handleVideoEnd();
-      }
-    };
-
-    // Check every 100ms
-    const interval = setInterval(checkVideoEnd, 100);
-
-    // Also set a backup timer for maximum video length (in case video is very long)
-    const maxTimer = setTimeout(() => {
-      handleVideoEnd();
-    }, 60000); // 60 seconds max
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(maxTimer);
-    };
-  }, [player, showVideo]);
+  // Video end handling is now managed by LevelVideoPlayer's onVideoEnd callback
 
   // Start typewriter effect when video shows
   useEffect(() => {
@@ -154,42 +136,71 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
   useEffect(() => {
     if (isLandscape && !gameStarted) {
       setShowVideo(true);
-      player.play();
+      // Video will auto-play via RobustVideoPlayer
     } else if (!isLandscape) {
       setShowVideo(false);
       setGameStarted(true);
+      // Set game to full opacity immediately in portrait
+      gameFadeAnim.setValue(1);
     }
-  }, [isLandscape]);
+  }, [isLandscape, gameFadeAnim]);
 
   const handleVideoEnd = () => {
-    setShowVideo(false);
+    // Start game first but it will fade in
     setGameStarted(true);
+    
+    // Fade out video and fade in game simultaneously
+    Animated.parallel([
+      Animated.timing(videoOpacity, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(gameFadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+        delay: 400, // Start game fade-in halfway through video fade-out
+      }),
+    ]).start(() => {
+      setShowVideo(false);
+      videoOpacity.setValue(1); // Reset for next time
+    });
   };
 
   const skipVideo = () => {
-    player.pause();
+    // Video will be handled by RobustVideoPlayer's skip functionality
     handleVideoEnd();
   };
 
   useEffect(() => {
-    const load = async () => {
+    // Load the background image immediately
+    const loadBackground = async () => {
+      const bgAsset = Asset.fromModule(FARM_BG);
+      
       try {
-        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/farm.png')).downloadAsync();
-      } catch (err) {
-        console.warn('Failed to preload farm image', err);
+        // Ensure the background is downloaded before marking ready
+        await bgAsset.downloadAsync();
+      } catch (error) {
+        // Ignore errors - local assets will still work
       }
+      
+      setBgUri(bgAsset.uri);
       setBgReady(true);
+      
+      // Very small delay to ensure background is rendered
+      setTimeout(() => {
+        // Notify parent that screen is ready
+        if (onScreenReady) {
+          onScreenReady();
+        }
+      }, 10);
     };
+    
+    loadBackground();
+  }, [onScreenReady]);
 
-    load();
-  }, []);
-
-  // Ensure player pauses when video is hidden
-  useEffect(() => {
-    if (!showVideo) {
-      try { player.pause(); } catch (e) {}
-    }
-  }, [showVideo]);
+  // Video pause/play is now handled by RobustVideoPlayer
 
   // Skip intro if any animal was already clicked for this level
   useEffect(() => {
@@ -199,35 +210,83 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
         if (saved) {
           const arr = JSON.parse(saved);
           if (Array.isArray(arr) && arr.length > 0) {
-            try { player.pause(); } catch (e) {}
+            // Skip video if level was already started
             setShowVideo(false);
             setGameStarted(true);
+            // Ensure game is fully visible when skipping intro
+            gameFadeAnim.setValue(1);
+            videoOpacity.setValue(0);
           }
         }
       } catch (e) {}
     })();
-  }, []);
+  }, [gameFadeAnim, videoOpacity]);
 
-  if (!bgReady) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="orange" />
-      </View>
-    );
-  }
+  // Gather all assets to preload including animal sprites
+  const farmAssets = useMemo(() => {
+    const assets = [
+      FARM_BG,
+      require('../../src/assets/intro_videos/backup_videos/farm-vid1.mp4')
+    ];
+    
+    // Add farm animal sprites to ensure they're loaded
+    farmAnimals.forEach(animal => {
+      if (animal.source) {
+        assets.push(animal.source);
+      }
+    });
+    
+    return assets;
+  }, [farmAnimals]);
 
-  // Show video intro in landscape mode
-  if (showVideo && isLandscape) {
-    return (
-      <View style={styles.fullscreenContainer}>
-        <VideoView
+  // Wrap entire component with loading wrapper
+  return (
+    <ScreenLoadingWrapper
+      assetsToLoad={farmAssets}
+      loadingText={t('loading') || 'Loading Farm...'}
+      backgroundColor="#71592b"
+      minLoadingTime={1500}
+      onAssetsLoaded={() => {
+        // Defer state update to avoid React lifecycle warnings
+        requestAnimationFrame(() => {
+          setAllAssetsLoaded(true);
+        });
+      }}
+    >
+      {/* Show video when appropriate */}
+      {showVideo && isLandscape && allAssetsLoaded ? (
+      <Animated.View style={[styles.fullscreenContainer, { opacity: videoOpacity }]}>
+        <LevelVideoPlayer
+          source={require('../../src/assets/intro_videos/backup_videos/farm-vid1.mp4')}
           style={styles.fullscreenVideo}
-          player={player}
-          allowsFullscreen={false}
-          allowsPictureInPicture={false}
-          nativeControls={false}
+          loop={false}
+          muted={true}
+          autoPlay={true}
           contentFit="fill"
-          pointerEvents="none"
+          fallbackColor="#2d5016"
+          onLoad={() => {
+            console.log('✅ Farm video loaded');
+            // Fallback timeout to ensure transition happens
+            setTimeout(() => {
+              console.log('🕐 Farm video timeout reached, transitioning to game');
+              if (showVideo) { // Only transition if still showing video
+                handleVideoEnd();
+              }
+            }, 15000); // 15 second fallback to allow video to play
+          }}
+          onError={(error) => {
+            console.error('❌ Farm video error:', error);
+            // On error, show loading screen then game
+            handleVideoEnd();
+          }}
+          onVideoEnd={() => {
+            console.log('🏁 Farm video ended naturally');
+            handleVideoEnd();
+          }}
+          onVolumeStateChange={setIsVideoMuted}
+          exposeVolumeToggle={(toggleFn) => {
+            videoVolumeToggleRef.current = toggleFn;
+          }}
         />
         
         {/* Level title overlay */}
@@ -265,6 +324,20 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
         
         {/* Right side button container */}
         <View style={getAllLandscapeButtonPositions(width, height, false).videoButtons.container}>
+          {/* Volume button */}
+          <TouchableOpacity 
+            style={[
+              getAllLandscapeButtonPositions(width, height, false).videoButtons.skipButton,
+              { backgroundColor: 'rgba(0, 0, 0, 0.7)' }
+            ]} 
+            onPress={() => {
+              videoVolumeToggleRef.current?.();
+            }}
+          >
+            <Ionicons name={isVideoMuted ? "volume-mute" : "volume-high"} size={24} color="#fff" />
+            <Text style={styles.rightButtonText}>{t('sound')}</Text>
+          </TouchableOpacity>
+
           {/* Skip button */}
           <TouchableOpacity style={getAllLandscapeButtonPositions(width, height, false).videoButtons.skipButton} onPress={skipVideo}>
             <Ionicons name="play-skip-forward" size={24} color="#fff" />
@@ -277,28 +350,29 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
             <Text style={styles.rightButtonText}>{t('home')}</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    );
-  }
-
-  // Show game when video ends or in portrait mode
-  if (gameStarted) {
-    return (
-      <LevelScreenTemplate
-        levelName="Farm"
-        animals={farmAnimals}
-        onBackToMenu={onBackToMenu}
-        backgroundImageUri={backgroundImageUri}
-        skyBackgroundImageUri={skyBackgroundImageUri}
-      />
-    );
-  }
-
-  // Fallback loading state
-  return (
-    <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color="orange" />
-    </View>
+      </Animated.View>
+      ) : null}
+      
+      {/* Show game with fade-in */}
+      {gameStarted ? (
+      <Animated.View style={[styles.fullscreenContainer, { opacity: gameFadeAnim, backgroundColor: 'transparent' }]}>
+        <LevelScreenTemplate
+          levelName="Farm"
+          animals={farmAnimals}
+          onBackToMenu={onBackToMenu}
+          backgroundImageUri={bgUri}
+          skyBackgroundImageUri={skyBackgroundImageUri}
+        />
+      </Animated.View>
+      ) : null}
+      
+      {/* Fallback loading state */}
+      {!showVideo && !gameStarted && (
+        <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="orange" />
+        </View>
+      )}
+    </ScreenLoadingWrapper>
   );
 }
 

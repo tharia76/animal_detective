@@ -1,6 +1,6 @@
 import { View, Text, Animated, Image, ImageSourcePropType, useWindowDimensions } from 'react-native';
 import { useDynamicStyles } from '../styles/styles';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 
 // Device detection and responsive scaling functions
@@ -51,8 +51,8 @@ export default function InstructionBubble({
   const isLandscape = width > height;
 
   // Animation values
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const floatAnim = useRef(new Animated.Value(0)).current;
+  const [pulseAnim] = useState(() => new Animated.Value(1));
+  const [floatAnim] = useState(() => new Animated.Value(0));
 
   // Orange gradient colors
   const gradientColors = ['#FF8C00', '#FFA500', '#FFE4B5'] as const; // Dark orange to orange to moccasin

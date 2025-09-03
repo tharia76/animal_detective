@@ -2,7 +2,7 @@
 import { Asset } from 'expo-asset';
 import { AnimalType } from './AnimalType';
 
-const backgroundImage = require('../assets/images/level-backgrounds/farm.png');
+const backgroundImage = require('../assets/images/level-backgrounds/farm.webp');
 Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
   console.warn('Background image preload error:', error)
 );
@@ -2419,12 +2419,8 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
   }
   ];
 
-  // Preload all animal images regardless of type
-  animals.forEach(animal => {
-    if (typeof animal.source === 'number') {
-      Asset.fromModule(animal.source).downloadAsync();
-    }
-  });
+  // Remove massive preloading - this was causing performance issues
+  // Images will be loaded progressively by the ImageLoader utility when needed
 
   return animals;
 }

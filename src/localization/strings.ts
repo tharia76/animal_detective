@@ -89,6 +89,7 @@ export const strings = {
       levelDiscoveredBirds: 'Birds!',
       completeMission: 'Complete Mission',
       completeMissionCelebration: '🎉 COMPLETE MISSION! 🎉',
+      sound: 'Sound',
   
   
     animals: {
@@ -309,6 +310,7 @@ export const strings = {
     restored: 'Восстановлено',
     noPreviousPurchases: 'Покупок не найдено.',
     noPurchasesFound: 'Покупок не найдено.',
+    sound: 'Звук',
           defaultPrice: '$4.99',
       discovered: 'Найдено',
       levelDiscoveredAnimals: 'Зверюшек!',
@@ -540,8 +542,9 @@ export const strings = {
       levelDiscoveredAnimals: 'Hayvan dostları!',
       levelDiscoveredInsects: 'Böcekler!',
       levelDiscoveredBirds: 'Kuşlar!',
-      completeMission: 'Görevi Tamamla',
-      completeMissionCelebration: '🎉 GÖREV TAMAMLANDI! 🎉',
+        completeMission: 'Görevi Tamamla',
+        completeMissionCelebration: '🎉 GÖREV TAMAMLANDI! 🎉',
+        sound: 'Ses',
   
   
     animals: {

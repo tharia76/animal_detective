@@ -7,7 +7,7 @@ export const screenOptions = {
 };
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Animated, useWindowDimensions, ImageBackground, View, ActivityIndicator, Platform, Dimensions } from 'react-native';
+import { Animated, useWindowDimensions, ImageBackground, View, ActivityIndicator, Platform, Dimensions, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import MenuScreen from '../../screens/MenuScreen';
@@ -30,8 +30,9 @@ export default function App() {
   const isLandscape = width > height;
   const [showSplash, setShowSplash] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
-  const titleAnim = useRef(new Animated.Value(0)).current;
+  const [titleAnim] = useState(() => new Animated.Value(0));
   const [assetsReady, setAssetsReady] = useState(false);
+
   
   // Force landscape on mount - especially for iPad
   useEffect(() => {
@@ -80,7 +81,7 @@ export default function App() {
   });
 
   // Animation state for screen transitions
-  const screenOpacity = useRef(new Animated.Value(1)).current;
+  const [screenOpacity] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     const preloadAssets = async () => {
@@ -182,15 +183,16 @@ export default function App() {
 
   // Updated handlers using the transition function
   const handleSelectLevel = useCallback((level: string) => {
+    // Use transition for smooth level selection
     transitionScreen(() => setSelectedLevel(level));
   }, [transitionScreen]);
 
   const handleBackToMenu = useCallback(() => {
-    transitionScreen(() => setSelectedLevel(null));
-  }, [transitionScreen]);
+    setSelectedLevel(null);
+  }, []);
 
   if (showSplash || !assetsReady) {
-    return <SplashScreen titleAnim={titleAnim} />;
+    return <SplashScreen titleAnim={titleAnim} onLoadingComplete={() => {}} />;
   }
 
   // Helper to get the correct moving background for the selected level

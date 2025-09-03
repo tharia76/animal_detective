@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { ActivityIndicator, View, useWindowDimensions, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { Asset } from 'expo-asset';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import { VideoView } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
+import LevelVideoPlayer from '../../src/components/LevelVideoPlayer';
 import { getAnimals } from '../../src/data/animals';
 import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate, { getGlobalVolume } from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ScreenLoadingWrapper from '../../src/components/ScreenLoadingWrapper';
 
 // Define Props for the screen
 type SavannahScreenProps = {
@@ -21,55 +23,34 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
   const { lang, t } = useLocalization();
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
+  const [allAssetsLoaded, setAllAssetsLoaded] = useState(false);
+  
+  // Load the savannah background image
+  const SAVANNAH_BG = require('../../src/assets/images/level-backgrounds/savannah.webp');
+  const [bgUri, setBgUri] = useState<string | null>(null);
   
   const savannahAnimals = getAnimals(lang).filter((animal: AnimalType) => animal.animalType === 'Savannah');
   const [bgReady, setBgReady] = useState(false);
   const [showVideo, setShowVideo] = useState(isLandscape); // Show video only in landscape
   const [gameStarted, setGameStarted] = useState(!isLandscape); // Start game immediately in portrait
+  const [showPostVideoLoading, setShowPostVideoLoading] = useState(false); // Show loading after video
+  const [isVideoMuted, setIsVideoMuted] = useState(true); // Track video mute state
+  const videoVolumeToggleRef = useRef<(() => void) | null>(null);
   
   // Animation values for the level title
-  const titleScale = useRef(new Animated.Value(0)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-  const titleGlow = useRef(new Animated.Value(0)).current;
+  const [titleScale] = useState(() => new Animated.Value(0));
+  const [titleOpacity] = useState(() => new Animated.Value(0));
+  const [titleGlow] = useState(() => new Animated.Value(0));
   
   // Typewriter effect state
   const [displayedText, setDisplayedText] = useState('');
   const [showCursor, setShowCursor] = useState(false);
   const fullText = useMemo(() => t('levelSavannah'), [t, lang]);
-  const cursorOpacity = useRef(new Animated.Value(1)).current;
+  const [cursorOpacity] = useState(() => new Animated.Value(1));
   
-  // Video player setup
-  const player = useVideoPlayer(require('../../src/assets/intro_videos/savan-vid.mp4'), player => {
-    player.loop = false;
-    player.muted = false;
-    player.volume = getGlobalVolume(); // Apply global volume setting
-  });
+    // Video handling is now managed by RobustVideoPlayer
 
-  // Listen for video end by checking currentTime vs duration
-  useEffect(() => {
-    if (!player || !showVideo) return;
-
-    const checkVideoEnd = () => {
-      if (player.currentTime && player.duration && 
-          player.currentTime >= player.duration - 0.1) {
-        // Video has finished playing (within 0.1 seconds of end)
-        handleVideoEnd();
-      }
-    };
-
-    // Check every 100ms
-    const interval = setInterval(checkVideoEnd, 100);
-
-    // Also set a backup timer for maximum video length (in case video is very long)
-    const maxTimer = setTimeout(() => {
-      handleVideoEnd();
-    }, 60000); // 60 seconds max
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(maxTimer);
-    };
-  }, [player, showVideo]);
+    // Video end handling is now managed by RobustVideoPlayer's onVideoEnd callback
 
   // Start typewriter effect when video shows
   useEffect(() => {
@@ -153,7 +134,7 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
   useEffect(() => {
     if (isLandscape && !gameStarted) {
       setShowVideo(true);
-      player.play();
+      // Video will auto-play via RobustVideoPlayer
     } else if (!isLandscape) {
       setShowVideo(false);
       setGameStarted(true);
@@ -162,33 +143,36 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
 
   const handleVideoEnd = () => {
     setShowVideo(false);
-    setGameStarted(true);
+    setShowPostVideoLoading(true);
+    // Start game after loading time
+    setTimeout(() => {
+      setShowPostVideoLoading(false);
+      setGameStarted(true);
+    }, 1500); // Match the minLoadingTime
   };
 
   const skipVideo = () => {
-    player.pause();
+    // Video pause handled by RobustVideoPlayer
     handleVideoEnd();
   };
 
   useEffect(() => {
     const load = async () => {
-      try {
-        await Asset.fromModule(require('../../src/assets/images/level-backgrounds/savannah.png')).downloadAsync();
-      } catch (err) {
-        console.warn('Failed to preload savannah image', err);
-      }
+      // Load the background image immediately
+      const bgAsset = Asset.fromModule(SAVANNAH_BG);
+      setBgUri(bgAsset.uri);
       setBgReady(true);
+      
+      // Optional: download for caching
+      bgAsset.downloadAsync().catch(() => {
+        // Ignore errors - image will still display
+      });
     };
 
     load();
   }, []);
 
-  // Ensure player pauses when video is hidden
-  useEffect(() => {
-    if (!showVideo) {
-      try { player.pause(); } catch (e) {}
-    }
-  }, [showVideo]);
+    // Video pause/play is now handled by RobustVideoPlayer
 
   // Skip intro if any animal was already clicked for this level
   useEffect(() => {
@@ -198,7 +182,6 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
         if (saved) {
           const arr = JSON.parse(saved);
           if (Array.isArray(arr) && arr.length > 0) {
-            try { player.pause(); } catch (e) {}
             setShowVideo(false);
             setGameStarted(true);
           }
@@ -207,26 +190,53 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
     })();
   }, []);
 
-  if (!bgReady) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="orange" />
-      </View>
-    );
-  }
+    // Gather all assets to preload
+  const savannahAssets = useMemo(() => {
+    const assets = [
+      SAVANNAH_BG,
+      require('../../src/assets/intro_videos/savan-vid.mp4')
+    ];
+    return assets;
+  }, []);
 
-  // Show video intro in landscape mode
-  if (showVideo && isLandscape) {
-    return (
+    // Wrap entire component with loading wrapper
+  return (
+    <ScreenLoadingWrapper
+      assetsToLoad={savannahAssets}
+      loadingText={t('loading') || 'Loading Savannah...'}
+      backgroundColor="#d2691e"
+      minLoadingTime={1500}
+      onAssetsLoaded={() => {
+        // Defer state update to avoid React lifecycle warnings
+        requestAnimationFrame(() => {
+          setAllAssetsLoaded(true);
+        });
+      }}
+    >
+      {/* Show video intro in landscape mode */}
+      {showVideo && isLandscape && allAssetsLoaded ? (
       <View style={styles.fullscreenContainer}>
-        <VideoView
+        <LevelVideoPlayer
+          source={require('../../src/assets/intro_videos/savan-vid.mp4')}
           style={styles.fullscreenVideo}
-          player={player}
-          allowsFullscreen={false}
-          allowsPictureInPicture={false}
-          nativeControls={false}
+          loop={false}
+          muted={true}
+          onVolumeStateChange={setIsVideoMuted}
+          exposeVolumeToggle={(toggleFn) => {
+            videoVolumeToggleRef.current = toggleFn;
+          }}
+          autoPlay={true}
           contentFit="fill"
-          pointerEvents="none"
+          fallbackColor="#8b6b14"
+          onLoad={() => console.log('✅ Savannah video loaded')}
+          onError={(error) => {
+            console.error('❌ Savannah video error:', error);
+            handleVideoEnd();
+          }}
+          onVideoEnd={() => {
+            console.log('🏁 Savannah video ended');
+            handleVideoEnd();
+          }}
         />
         
         {/* Level title overlay */}
@@ -264,6 +274,20 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
         
         {/* Right side button container */}
         <View style={styles.rightButtonContainer}>
+          {/* Volume button */}
+          <TouchableOpacity 
+            style={[
+              styles.rightSkipButton,
+              { backgroundColor: 'rgba(0, 0, 0, 0.7)' }
+            ]} 
+            onPress={() => {
+              videoVolumeToggleRef.current?.();
+            }}
+          >
+            <Ionicons name={isVideoMuted ? "volume-mute" : "volume-high"} size={24} color="#fff" />
+            <Text style={styles.rightButtonText}>{t('sound')}</Text>
+          </TouchableOpacity>
+
           {/* Skip button */}
           <TouchableOpacity style={styles.rightSkipButton} onPress={skipVideo}>
             <Ionicons name="play-skip-forward" size={24} color="#fff" />
@@ -277,27 +301,30 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
           </TouchableOpacity>
         </View>
       </View>
-    );
-  }
-
-  // Show game when video ends or in portrait mode
-  if (gameStarted) {
-    return (
+            ) : showPostVideoLoading ? (
+        // Show loading screen after video
+        <View style={{ flex: 1, backgroundColor: '#f0e68c', justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#FF8C00" />
+          <Text style={{ marginTop: 20, fontSize: 18, color: '#FF8C00', fontWeight: 'bold' }}>
+            {t('loading') || 'Loading Savannah...'}
+          </Text>
+        </View>
+      ) : gameStarted ? (
+        // Show game when loading is done
       <LevelScreenTemplate
         levelName="Savannah"
         animals={savannahAnimals}
         onBackToMenu={onBackToMenu}
-        backgroundImageUri={backgroundImageUri}
+        backgroundImageUri={bgUri}
         skyBackgroundImageUri={skyBackgroundImageUri}
       />
-    );
-  }
-
-  // Fallback loading state
-  return (
-    <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color="orange" />
-    </View>
+      ) : (
+        // Fallback loading state
+        <View style={{ flex: 1, backgroundColor: '#FFDAB9', justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="orange" />
+        </View>
+      )}
+    </ScreenLoadingWrapper>
   );
 }
 

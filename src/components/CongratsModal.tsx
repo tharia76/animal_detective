@@ -40,10 +40,10 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
   const { markLevelCompleted } = useLevelCompletion();
 
   // Create refs for animations
-  const modalScale = useRef(new Animated.Value(0)).current;
-  const titleBounce = useRef(new Animated.Value(0)).current;
-  const buttonBounce1 = useRef(new Animated.Value(0)).current;
-  const buttonBounce2 = useRef(new Animated.Value(0)).current;
+  const [modalScale] = useState(() => new Animated.Value(0));
+  const [titleBounce] = useState(() => new Animated.Value(0));
+  const [buttonBounce1] = useState(() => new Animated.Value(0));
+  const [buttonBounce2] = useState(() => new Animated.Value(0));
 
   // Create ref for yay sound
   const yaySoundRef = useRef<any>(null);
@@ -284,17 +284,23 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
       try {
         const yayPlayer = createAudioPlayer(require('../assets/sounds/other/yay.mp3'));
         yaySoundRef.current = yayPlayer;
-        yayPlayer.play();
         
-        // Clean up sound when it finishes
+        // Add listener before playing
         yayPlayer.addListener('playbackStatusUpdate', (status: any) => {
           if (status.didJustFinish) {
-            yayPlayer.remove();
+            try {
+              yayPlayer.remove();
+            } catch (removeError) {
+              console.warn('Error removing yay sound:', removeError);
+            }
             if (yaySoundRef.current === yayPlayer) {
               yaySoundRef.current = null;
             }
           }
         });
+        
+        // Play after setting up listener
+        yayPlayer.play();
       } catch (error) {
         console.warn('Error playing yay sound:', error);
       }
@@ -351,30 +357,30 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
       // Clear balloons
       setBalloons([]);
       
-      // Stop and clean up yay sound
+      // Clean up sounds when modal is hidden
       if (yaySoundRef.current) {
         try {
           yaySoundRef.current.pause();
           yaySoundRef.current.remove();
-          yaySoundRef.current = null;
         } catch (error) {
-          console.warn('Error stopping yay sound:', error);
+          console.warn('Error cleaning up yay sound:', error);
         }
+        yaySoundRef.current = null;
       }
     }
   }, [showCongratsModal, modalScale, titleBounce, buttonBounce1, buttonBounce2]);
 
-  // Cleanup sound on component unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (yaySoundRef.current) {
         try {
           yaySoundRef.current.pause();
           yaySoundRef.current.remove();
-          yaySoundRef.current = null;
         } catch (error) {
           console.warn('Error cleaning up yay sound on unmount:', error);
         }
+        yaySoundRef.current = null;
       }
     };
   }, []);

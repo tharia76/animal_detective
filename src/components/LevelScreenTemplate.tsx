@@ -37,6 +37,7 @@ import NavigationButtons from './NavigationButtons';
 import CongratsModal from './CongratsModal';
 import DiscoverScreen from './DiscoverScreen';
 import MovingBg from './MovingBg';
+import ResponsiveMovingBg from './ResponsiveMovingBg';
 import AnimatedBubbles from './AnimatedBubbles';
 import AnimatedSand from './AnimatedSand';
 import AnimatedSnow from './AnimatedSnow';
@@ -50,12 +51,15 @@ import { useSmoothRotation } from '../hooks/useSmoothRotation';
 import AnimatedReanimated from 'react-native-reanimated';
   import { getResponsiveSpacing, getScaleFactor, isTablet } from '../utils/responsive';
 import { getBackgroundStyles, getLevelBackgroundColor } from '../utils/backgroundPositioning';
+import ResponsiveLevelBackground from './ResponsiveLevelBackground';
+import { getResponsiveBackgroundStyles, getDeviceInfo } from '../utils/responsiveBackgroundSystem';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
-    const waterHeight = useRef(new Animated.Value(0)).current;
+    const [waterHeight] = useState(() => new Animated.Value(0));
     const { width: screenW, height: screenH } = useWindowDimensions();
     const isLandscape = screenW > screenH;
     
@@ -233,8 +237,8 @@ import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPosition
 
   // Animated bubble component for water effect
   const WaterBubble = ({ delay, color, containerHeight }: { delay: number; color: string; containerHeight: number }) => {
-    const bubbleAnim = useRef(new Animated.Value(0)).current;
-    const opacityAnim = useRef(new Animated.Value(0)).current;
+    const [bubbleAnim] = useState(() => new Animated.Value(0));
+    const [opacityAnim] = useState(() => new Animated.Value(0));
     
     useEffect(() => {
       const animateBubble = () => {
@@ -295,7 +299,7 @@ const BG_MUSIC_MAP: Record<string, string | number | undefined> = {
   desert: require('../assets/sounds/background_sounds/desert_bg.mp3'),
   ocean: require('../assets/sounds/background_sounds/ocean_bg.mp3'),
   savannah: require('../assets/sounds/background_sounds/savannah_bg.mp3'),
-
+  arctic: require('../assets/sounds/background_sounds/arctic_bg.mp3'),
   birds: require('../assets/sounds/background_sounds/birds_bg.mp3'),
   insects: require('../assets/sounds/background_sounds/insects_bg.mp3'),
 };
@@ -314,11 +318,15 @@ export const getGlobalVolume = () => {
 
 // --- MOVING BG MAP: Map levelName to moving background asset/uri ---
 const MOVING_BG_MAP: Record<string, string | number | undefined> = {
-  // Example: 'farm': require('../../../assets/images/sky_farm.png'),
-  // Example: 'jungle': require('../../../assets/images/sky_jungle.png'),
-  // Example: 'desert': require('../../../assets/images/sky_desert.png'),
-  // Add your levelName: asset/uri pairs here (all lowercase)
-  // If you want to use a remote uri, just use a string URL
+  'farm': require('../assets/images/level-backgrounds/farm.webp'),
+  'forest': require('../assets/images/level-backgrounds/forest.webp'),
+  'ocean': require('../assets/images/level-backgrounds/ocean.webp'),
+  'desert': require('../assets/images/level-backgrounds/desert.webp'),
+  'arctic': require('../assets/images/level-backgrounds/arctic.webp'),
+  'insects': require('../assets/images/level-backgrounds/insect.webp'),
+  'savannah': require('../assets/images/level-backgrounds/savannah.webp'),
+  'jungle': require('../assets/images/level-backgrounds/jungle.webp'),
+  'birds': require('../assets/images/level-backgrounds/birds.webp'),
 };
 
 type Animal = {
@@ -360,6 +368,7 @@ export default function LevelScreenTemplate({
   // --- Use localization hook ---
   const { t } = useLocalization();
     const { isLevelCompleted } = useLevelCompletion();
+  const safeAreaInsets = useSafeAreaInsets();
 
   // 1️⃣ Hoist your hook: only call it once, at the top level
   const dynamicStyles = useDynamicStyles();
@@ -379,9 +388,9 @@ export default function LevelScreenTemplate({
   const [showInstruction, setShowInstruction] = useState(true);
   const [bgLoading, setBgLoading] = useState(!!backgroundImageUri);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const arrowAnim = useRef(new Animated.Value(0)).current;
-  const animalFadeAnim = useRef(new Animated.Value(1)).current;
-  const contentFade = useRef(new Animated.Value(1)).current;
+  const [arrowAnim] = useState(() => new Animated.Value(0));
+  const [animalFadeAnim] = useState(() => new Animated.Value(1));
+  const [contentFade] = useState(() => new Animated.Value(1));
   const soundRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const isSoundPlayingRef = useRef<boolean>(false);
   const confettiAnimRefs = useRef<Animated.Value[]>([]);
@@ -398,6 +407,7 @@ export default function LevelScreenTemplate({
   const labelShowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickFlagClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canRenderLabel, setCanRenderLabel] = useState(false);
+  const [allAssetsReady, setAllAssetsReady] = useState(false);
   const [initialIndexHydrated, setInitialIndexHydrated] = useState(false);
   
   // Update hasClickedCurrentAnimal and show/hide label when navigating between animals
@@ -451,8 +461,27 @@ export default function LevelScreenTemplate({
     }
   }, [levelName]);
 
-  // Load visited animals progress from AsyncStorage
+  // Load visited animals progress from AsyncStorage (optimized for instant rendering)
   const loadProgress = useCallback(async () => {
+    // Check if data was preloaded during loading screen
+    const preloadedData = (global as any)._preloadedAssets?.[levelName.toLowerCase()];
+    
+    // Set defaults immediately for instant rendering
+    if (animals.length > 0) {
+      const defaultIndex = typeof initialIndex === 'number' ? initialIndex : 0;
+      setCurrentAnimalIndex(defaultIndex);
+      setVisitedAnimals(new Set());
+      setHasClickedCurrentAnimal(false);
+      setShowName(false);
+      setInitialIndexHydrated(true); // Mark as hydrated immediately
+      // If data was preloaded, use it immediately for even faster loading
+      if (preloadedData) {
+        // Mark all assets as ready immediately since they were preloaded
+        setAllAssetsReady(true);
+      }
+    }
+
+    // Then load actual progress in background and update if needed
     try {
       const progressKey = `animalProgress_${levelName.toLowerCase()}`;
       const savedProgress = await AsyncStorage.getItem(progressKey);
@@ -462,51 +491,39 @@ export default function LevelScreenTemplate({
         setVisitedAnimals(visitedSet);
         console.log(`📂 Loaded progress for ${levelName}:`, visitedArray);
 
-        // Determine index to show: first unvisited if any; otherwise fall back to saved or 0
-        let indexToShow = 0;
-        if (animals.length > 0) {
-          if (visitedSet.size < animals.length) {
-            for (let i = 0; i < animals.length; i++) {
-              if (!visitedSet.has(i)) { indexToShow = i; break; }
-            }
-          } else {
-            // All visited: try to restore saved index if available
-            const indexKey = `animalCurrentIndex_${levelName.toLowerCase()}`;
-            const savedIndexStr = await AsyncStorage.getItem(indexKey);
-            const parsed = parseInt(savedIndexStr ?? '', 10);
-            if (!isNaN(parsed) && parsed >= 0 && parsed < animals.length) {
-              indexToShow = parsed;
+        // Only update index if no initialIndex was provided
+        if (typeof initialIndex !== 'number') {
+          let indexToShow = 0;
+          if (animals.length > 0) {
+            if (visitedSet.size < animals.length) {
+              for (let i = 0; i < animals.length; i++) {
+                if (!visitedSet.has(i)) { indexToShow = i; break; }
+              }
+            } else {
+              // All visited: try to restore saved index if available
+              const indexKey = `animalCurrentIndex_${levelName.toLowerCase()}`;
+              const savedIndexStr = await AsyncStorage.getItem(indexKey);
+              const parsed = parseInt(savedIndexStr ?? '', 10);
+              if (!isNaN(parsed) && parsed >= 0 && parsed < animals.length) {
+                indexToShow = parsed;
+              }
             }
           }
-        }
-        // If initialIndex was provided, do not override the current index on hydration
-        if (typeof initialIndex !== 'number') {
           setCurrentAnimalIndex(indexToShow);
         }
 
-        // Update UI flags based on the actual current animal index (which might be initialIndex)
-        const actualIndex = typeof initialIndex === 'number' ? initialIndex : indexToShow;
+        // Update UI flags based on the actual current animal index
+        const actualIndex = typeof initialIndex === 'number' ? initialIndex : currentAnimalIndex;
         const isIndexVisited = visitedSet.has(actualIndex);
         setHasClickedCurrentAnimal(isIndexVisited);
-        // Do not auto-show the label on load; only show after an explicit click
-        setShowName(false);
-      } else {
-        // No saved progress yet: start from the first animal
-        setVisitedAnimals(new Set());
-        const indexToShow = animals.length > 0 ? 0 : -1;
-        if (indexToShow !== -1 && typeof initialIndex !== 'number') {
-          setCurrentAnimalIndex(indexToShow);
-        }
-        setHasClickedCurrentAnimal(false);
-        setShowName(false);
       }
-      // Mark hydration complete regardless of whether we had saved data
-      setInitialIndexHydrated(true);
     } catch (error) {
       console.error('Error loading animal progress:', error);
-      setInitialIndexHydrated(true);
     }
-  }, [levelName, animals.length]);
+    
+    // Always mark assets as ready after loading (whether preloaded or not)
+    setAllAssetsReady(true);
+  }, [levelName, animals.length, initialIndex]);
 
   // Load progress when component mounts or level changes (layout effect to avoid hook order change warnings)
   useEffect(() => {
@@ -551,13 +568,13 @@ export default function LevelScreenTemplate({
 
   
   // Glow animation values
-  const glowAnim = useRef(new Animated.Value(0)).current;
-  const nameScaleAnim = useRef(new Animated.Value(0)).current;
-  const clickBounceAnim = useRef(new Animated.Value(1)).current;
+  const [glowAnim] = useState(() => new Animated.Value(0));
+  const [nameScaleAnim] = useState(() => new Animated.Value(0));
+  const [clickBounceAnim] = useState(() => new Animated.Value(1));
   const glowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
     
     // Bouncing hand animation for unclicked animals
-    const handBounceAnim = useRef(new Animated.Value(0)).current;
+    const [handBounceAnim] = useState(() => new Animated.Value(0));
 
     // Ensure label scale reflects visibility even when returning to a level on the first animal
     useEffect(() => {
@@ -608,14 +625,14 @@ export default function LevelScreenTemplate({
 
     
     // Completion celebration animation values
-    const celebrationScaleAnim = useRef(new Animated.Value(0)).current;
-    const celebrationOpacityAnim = useRef(new Animated.Value(0)).current;
-    const badgePulseAnim = useRef(new Animated.Value(1)).current;
-    const badgeGiantAnim = useRef(new Animated.Value(1)).current;
-    const badgeSlideX = useRef(new Animated.Value(0)).current;
-    const badgeSlideY = useRef(new Animated.Value(0)).current;
-    const celebrationPulseAnim = useRef(new Animated.Value(1)).current;
-    const arrowPulseAnim = useRef(new Animated.Value(1)).current;
+    const [celebrationScaleAnim] = useState(() => new Animated.Value(0));
+    const [celebrationOpacityAnim] = useState(() => new Animated.Value(0));
+    const [badgePulseAnim] = useState(() => new Animated.Value(1));
+    const [badgeGiantAnim] = useState(() => new Animated.Value(1));
+    const [badgeSlideX] = useState(() => new Animated.Value(0));
+    const [badgeSlideY] = useState(() => new Animated.Value(0));
+    const [celebrationPulseAnim] = useState(() => new Animated.Value(1));
+    const [arrowPulseAnim] = useState(() => new Animated.Value(1));
     // Badge measurement for centering animation
     const badgeRef = useRef<View | null>(null);
     const [badgeWindowLayout, setBadgeWindowLayout] = useState<{
@@ -778,6 +795,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   const duckBackgroundMusic = useCallback(() => {
     if (bgMusicRef.current && !isMuted) {
       try {
+        // Set volume directly to avoid blocking the main thread
         bgMusicRef.current.volume = DUCKED_BG_VOLUME * globalVolumeMultiplier;
         console.log('Background music ducked to', DUCKED_BG_VOLUME * globalVolumeMultiplier);
       } catch (error) {
@@ -789,6 +807,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   const restoreBackgroundMusic = useCallback(() => {
     if (bgMusicRef.current && !isMuted) {
       try {
+        // Set volume directly to avoid blocking the main thread
         bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
         console.log('Background music restored to', NORMAL_BG_VOLUME * globalVolumeMultiplier);
       } catch (error) {
@@ -798,21 +817,22 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   }, [isMuted]);
 
   const currentAnimal = useMemo(() => {
-    if (animals.length > 0 && currentAnimalIndex >= 0 && currentAnimalIndex < animals.length) {
+    // Only return animal when all assets are ready (ensures simultaneous loading)
+    if (allAssetsReady && animals.length > 0 && currentAnimalIndex >= 0 && currentAnimalIndex < animals.length) {
       return animals[currentAnimalIndex];
     }
     return null;
-  }, [animals, currentAnimalIndex]);
+  }, [animals, currentAnimalIndex, allAssetsReady]);
   const hasAnimals = animals.length > 0;
 
-  const roadAnimation = useRef(new Animated.Value(0)).current;
+  const [roadAnimation] = useState(() => new Animated.Value(0));
   const { width: screenW, height: screenH } = useWindowDimensions();
   const isLandscape = screenW > screenH;
 
   // Track which background is currently visible
   const [wasMoving, setWasMoving] = useState(currentAnimal?.isMoving ?? false);
-  const movingBgOpacity = useRef(new Animated.Value(currentAnimal?.isMoving ? 1 : 0)).current;
-  const imageBgOpacity = useRef(new Animated.Value(currentAnimal?.isMoving ? 0 : 1)).current;
+  const [movingBgOpacity] = useState(() => new Animated.Value(currentAnimal?.isMoving ? 1 : 0));
+  const [imageBgOpacity] = useState(() => new Animated.Value(currentAnimal?.isMoving ? 0 : 1));
 
   // --- Determine which moving background to use based on levelName ---
   // Priority: MOVING_BG_MAP[levelName] > skyBackgroundImageUri > undefined
@@ -873,20 +893,32 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
           // Pause but do not remove to preserve position
           try { bgMusicRef.current.pause(); } catch {}
         } else {
-          // Resume from paused position
+          // Resume from paused position with safety checks
           try {
             const p: any = bgMusicRef.current;
-            // Attempt to seek to last position before playing
-            if (typeof p.setPosition === 'function') {
-              p.setPosition(bgLastPositionMsRef.current);
-            } else if (typeof p.seek === 'function') {
-              p.seek(bgLastPositionMsRef.current / 1000);
-            } else if ('currentTime' in p) {
-              p.currentTime = bgLastPositionMsRef.current / 1000;
-            }
+            // Set volume first to avoid blocking
             p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
+            
+            // Attempt to seek to last position before playing (with safety checks)
+            if (bgLastPositionMsRef.current > 0) {
+              try {
+                if (typeof p.setPosition === 'function') {
+                  p.setPosition(bgLastPositionMsRef.current);
+                } else if (typeof p.seek === 'function') {
+                  p.seek(bgLastPositionMsRef.current / 1000);
+                } else if ('currentTime' in p) {
+                  p.currentTime = bgLastPositionMsRef.current / 1000;
+                }
+              } catch (seekError) {
+                console.warn('Error seeking background music:', seekError);
+              }
+            }
+            
+            // Play after setting properties
             p.play();
-          } catch {}
+          } catch (playError) {
+            console.warn('Error resuming background music:', playError);
+          }
         }
       }
       return;
@@ -897,6 +929,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     if (bgMusicRef.current) {
       try {
         const p: any = bgMusicRef.current;
+        // Safely get status without blocking
         if (typeof p.getStatusAsync === 'function') {
           p.getStatusAsync?.().then((status: any) => {
             if (status && typeof status.positionMillis === 'number') {
@@ -918,10 +951,11 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         const p = createAudioPlayer(source);
         p.loop = true;
         p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier; // Apply global volume setting
-        // Seek to last position if we have one and the new player supports it
-        try {
-          const anyP: any = p;
-          if (bgLastPositionMsRef.current > 0) {
+        
+        // Seek to last position if we have one and the new player supports it (with safety checks)
+        if (bgLastPositionMsRef.current > 0) {
+          try {
+            const anyP: any = p;
             if (typeof anyP.setPosition === 'function') {
               anyP.setPosition(bgLastPositionMsRef.current);
             } else if (typeof anyP.seek === 'function') {
@@ -929,20 +963,29 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
             } else if ('currentTime' in anyP) {
               anyP.currentTime = bgLastPositionMsRef.current / 1000;
             }
+          } catch (seekError) {
+            console.warn('Error seeking new background music:', seekError);
           }
-        } catch {}
+        }
+        
+        // Play first, then add listener to avoid blocking
         p.play();
-        // Track playback position to support seamless resume
+        
+        // Track playback position to support seamless resume (with safety checks)
         try {
           (p as any).addListener?.('playbackStatusUpdate', (status: any) => {
             if (status && typeof status.positionMillis === 'number') {
               bgLastPositionMsRef.current = status.positionMillis;
             }
           });
-        } catch {}
+        } catch (listenerError) {
+          console.warn('Error adding background music listener:', listenerError);
+        }
+        
         bgMusicRef.current = p;
         setCurrentBgMusicKey(String(source));
       } catch (e) {
+        console.warn('Error creating background music player:', e);
         bgMusicRef.current = null;
         setCurrentBgMusicKey(undefined);
       }
@@ -1108,6 +1151,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   const stopSound = useCallback(async (unload = false) => {
     if (soundRef.current) {
       try {
+        // Use synchronous pause to avoid blocking
         soundRef.current.pause();
         if (unload) {
           soundRef.current.remove();
@@ -1115,24 +1159,27 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         }
       } catch (error) {
         console.warn('Error stopping/unloading sound:', error);
+        // Clean up reference even if error occurs
+        if (unload) {
+          soundRef.current = null;
+        }
       } finally {
         isSoundPlayingRef.current = false;
       }
     }
   }, []);
 
-  // remove the `isSoundPlayingRef` check so it always goes through
-  // 3) in your playSounds() playbackStatusUpdate, after it finally finishes, restore background music volume
+  // Safe audio playback with proper error handling
   const playSounds = useCallback(async () => {
-      if (isMuted || !currentAnimal?.sound) {
-        // If muted or no sound, check for celebration immediately
-        console.log('🔇 No sound - checking for celebration:', { levelCompleted, showCompletionCelebration, isMuted, hasSound: !!currentAnimal?.sound });
-        if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
-          console.log('🔇 No sound playing, starting celebration immediately');
-          startCelebration();
-        }
-        return;
+    if (isMuted || !currentAnimal?.sound) {
+      // If muted or no sound, check for celebration immediately
+      console.log('🔇 No sound - checking for celebration:', { levelCompleted, showCompletionCelebration, isMuted, hasSound: !!currentAnimal?.sound });
+      if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
+        console.log('🔇 No sound playing, starting celebration immediately');
+        startCelebration();
       }
+      return;
+    }
 
     // Additional safety checks to prevent crashes during navigation
     if (isTransitioning) {
@@ -1146,7 +1193,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     }
 
     try {
-      // stop whatever was playing before
+      // Stop whatever was playing before
       await stopSound(true);
 
       // Add additional safety check here after async operation
@@ -1160,62 +1207,114 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
       isSoundPlayingRef.current = true;
 
-      const animalPlayer = createAudioPlayer(currentAnimal.sound);
-      soundRef.current = animalPlayer;
+      // Create audio player with proper error handling
+      let animalPlayer;
+      try {
+        animalPlayer = createAudioPlayer(currentAnimal.sound);
+        soundRef.current = animalPlayer;
+      } catch (error) {
+        console.warn('Error creating audio player:', error);
+        isSoundPlayingRef.current = false;
+        restoreBackgroundMusic();
+        return;
+      }
 
+      // Add listener with proper error handling
       animalPlayer.addListener('playbackStatusUpdate', (status: any) => {
-        if (status.didJustFinish) {
-          animalPlayer.remove();
-          if (soundRef.current === animalPlayer) soundRef.current = null;
+        try {
+          if (status.didJustFinish) {
+            // Safely remove the player
+            try {
+              animalPlayer.remove();
+            } catch (error) {
+              console.warn('Error removing animal player:', error);
+            }
+            
+            if (soundRef.current === animalPlayer) {
+              soundRef.current = null;
+            }
 
-          // then optionally play the label sound - with additional safety check
-          if (!isMuted && currentAnimal?.labelSound) {
-            const labelPlayer = createAudioPlayer(currentAnimal.labelSound);
-            soundRef.current = labelPlayer;
-            labelPlayer.play();
-            labelPlayer.addListener('playbackStatusUpdate', (labelStatus: any) => {
-              if (labelStatus.didJustFinish) {
-                labelPlayer.remove();
-                if (soundRef.current === labelPlayer) soundRef.current = null;
-                isSoundPlayingRef.current = false;
+            // Then optionally play the label sound - with additional safety check
+            if (!isMuted && currentAnimal?.labelSound) {
+              try {
+                const labelPlayer = createAudioPlayer(currentAnimal.labelSound);
+                soundRef.current = labelPlayer;
+                
+                // Add listener for label sound
+                labelPlayer.addListener('playbackStatusUpdate', (labelStatus: any) => {
+                  try {
+                    if (labelStatus.didJustFinish) {
+                      labelPlayer.remove();
+                      if (soundRef.current === labelPlayer) {
+                        soundRef.current = null;
+                      }
+                      isSoundPlayingRef.current = false;
 
-                // Restore background music volume instead of resuming playback
-                restoreBackgroundMusic();
-                  
-                  // Check if we should start celebration after label sound finishes
-                  console.log('🔊 Label sound finished, checking celebration:', { levelCompleted, showCompletionCelebration });
-                  if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
-                    startCelebration();
+                      // Restore background music volume
+                      restoreBackgroundMusic();
+                      
+                      // Check if we should start celebration after label sound finishes
+                      console.log('🔊 Label sound finished, checking celebration:', { levelCompleted, showCompletionCelebration });
+                      if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
+                        startCelebration();
+                      }
+                    }
+                  } catch (error) {
+                    console.warn('Error in label sound listener:', error);
+                    isSoundPlayingRef.current = false;
+                    restoreBackgroundMusic();
                   }
+                });
+                
+                // Play the label sound
+                labelPlayer.play();
+              } catch (error) {
+                console.warn('Error playing label sound:', error);
+                isSoundPlayingRef.current = false;
+                restoreBackgroundMusic();
+                
+                // Check for celebration even if label sound fails
+                if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
+                  startCelebration();
+                }
               }
-            });
-          } else {
-            isSoundPlayingRef.current = false;
+            } else {
+              isSoundPlayingRef.current = false;
 
-            // Restore background music volume instead of resuming playback
-            restoreBackgroundMusic();
+              // Restore background music volume
+              restoreBackgroundMusic();
               
               // Check if we should start celebration after animal sound finishes (no label)
               console.log('🔊 Animal sound finished (no label), checking celebration:', { levelCompleted, showCompletionCelebration });
               if (levelCompleted && !showCompletionCelebration && !wasAlreadyCompleted) {
                 startCelebration();
               }
+            }
           }
+        } catch (error) {
+          console.warn('Error in animal sound listener:', error);
+          isSoundPlayingRef.current = false;
+          restoreBackgroundMusic();
         }
       });
 
+      // Play the animal sound
       animalPlayer.play();
     } catch (error) {
       console.warn('Error playing sounds:', error);
       isSoundPlayingRef.current = false;
       if (soundRef.current) {
-        soundRef.current.remove();
+        try {
+          soundRef.current.remove();
+        } catch (unloadError) {
+          console.warn('Error removing sound after play error:', unloadError);
+        }
         soundRef.current = null;
       }
       // Restore background music volume in case of error
       restoreBackgroundMusic();
     }
-    }, [currentAnimal, isMuted, stopSound, isTransitioning, duckBackgroundMusic, restoreBackgroundMusic, levelCompleted, showCompletionCelebration, startCelebration]);
+  }, [currentAnimal, isMuted, stopSound, isTransitioning, duckBackgroundMusic, restoreBackgroundMusic, levelCompleted, showCompletionCelebration, startCelebration]);
 
   // --- REWRITE: handleAnimalPress as the single tap handler for animal card ---
   // 2) tweak your handleAnimalPress to use volume ducking instead of pause/resume
@@ -1785,7 +1884,13 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   const onLoadEnd = useCallback(() => {
     setBgLoading(false);
-  }, []);
+    // When background loads, check if we can show everything together
+    if (allAssetsReady) {
+      console.log('🎬 Background loaded, animals already ready - showing everything');
+    } else {
+      console.log('🎬 Background loaded, waiting for animals...');
+    }
+  }, [allAssetsReady]);
 
   // Ensure content is visible immediately; no fade-in dependency on currentAnimal
   useEffect(() => {
@@ -1984,155 +2089,45 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   return (
     <View style={dynamicStyles.container}>
       <AnimatedReanimated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
-        {/* Background container */}
-        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
+        {/* Background container - show when assets are ready */}
+        <View style={[StyleSheet.absoluteFillObject, { 
+          backgroundColor: allAssetsReady ? getLevelBackgroundColor(levelName) : 'transparent' 
+        }]}>
         <View style={StyleSheet.absoluteFillObject}>
-          {/* Moving background (sky) */}
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              { opacity: movingBgOpacity, backgroundColor: 'transparent' },
-                getBackgroundStyles(true, levelName, screenW, screenH, isLandscape),
-
-            ]}
-          >
-            <MovingBg
-              backgroundImageUri={movingBgSource as string | null}
-              movingDirection={currentAnimal?.movingDirection ?? 'left'}
-              containerHeight={undefined}
-              containerWidth={undefined}
-            />
-          </Animated.View>
-
-          {/* Static image background */}
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              { opacity: imageBgOpacity, backgroundColor: 'transparent' }
-            ]}
-          >
-            <ImageBackground
-              source={backgroundImageUri ? { uri: backgroundImageUri } : undefined}
+          {/* Responsive moving background (sky) */}
+          {allAssetsReady && (
+            <Animated.View
+              pointerEvents="none"
               style={[
                 StyleSheet.absoluteFillObject,
-                getBackgroundStyles(false, levelName, screenW, screenH, isLandscape),
-                // Force arctic background positioning on landscape phones
-                levelName.toLowerCase() === 'arctic' && isLandscape && Math.min(screenW, screenH) < 768 && {
-                  top: -(screenH * 0.8),
-                  height: screenH + (screenH * 0.8),
-                },
-                // Level-specific landscape fixes - separate values for iPad and iPhone
-                // TEMPORARILY DISABLED TO TEST BACKGROUND MOVEMENT
-                  /*
-                  isLandscape && Platform.OS === 'ios' && (() => {
-                    const isIPad = screenW >= 1000;
-                    console.log('SCREEN WIDTH:', screenW, isIPad ? '(iPad)' : '(iPhone)');
-                    console.log('iOS landscape fixes running for level:', levelName.toLowerCase());
-                    
-                    switch (levelName.toLowerCase()) {
-                      case 'ocean':
-                        return isIPad ? {
-                          height: '100%',
-                          top: 1,
-                          bottom: 1,
-                        } : {
-                          height: '120%',
-                          top: -100,
-                          bottom: 1,
-                        };
-                      case 'desert':
-                        return isIPad ? {
-                          height: '120%',
-                          top: -250,
-                          bottom: 1,
-                        } : {
-                          height: '115%',
-                          top: -80,
-                          bottom: 1,
-                        };
-
-                      case 'forest':
-                        // Remove all negative margins for forest bg
-                        return isIPad ? {
-                          height: '120%',
-                          top: 0,
-                          bottom: 1,
-                        } : {
-                          height: '120%',
-                          top: 0,
-                          bottom: 1,
-                        };
-                      case 'jungle':
-                        return isIPad ? {
-                          height: '130%',
-                          top: -400,
-                          bottom: 1,
-                        } : {
-                          height: '145%',
-                          top: -350,
-                          bottom: 1,
-                        };
-                      case 'savannah':
-                        return isIPad ? {
-                          height: '118%',
-                          top: -300,
-                          bottom: 1,
-                        } : {
-                          height: '120%',
-                          top: -180,
-                          bottom: 1,
-                        };
-                      case 'insects':
-                        return isIPad ? {
-                          height: '120%',
-                          top: -115,
-                          bottom: 1,
-                        } : {
-                          height: '115%',
-                          top: -90,
-                          bottom: 1,
-                        };
-                      case 'farm':
-                        return isIPad ? {
-                          height: '120%',
-                          top: -120,
-                          bottom: 1,
-                        } : {
-                          height: '115%',
-                          top: -70,
-                          bottom: 1,
-                        };
-                      case 'birds':
-                        return isIPad ? {
-                          height: '120%',
-                          top: -150,
-                          bottom: 1,
-                        } : {
-                          height: '115%',
-                          top: -40,
-                          bottom: 1,
-                        };
-                      default:
-                        return isIPad ? {
-                          height: '120%',
-                          top: -180,
-                          bottom: 1,
-                        } : {
-                          height: '115%',
-                          top: -90,
-                          bottom: 1,
-                        };
-                    }
-                  })(),
-                  */
+                { opacity: movingBgOpacity, backgroundColor: 'transparent' }
               ]}
-              resizeMode="cover"
-              onLoadEnd={onLoadEnd}
-              onError={onLoadEnd}
+            >
+              <ResponsiveMovingBg
+                backgroundImageUri={movingBgSource as string | null}
+              movingDirection={currentAnimal?.movingDirection ?? 'left'}
+              levelName={levelName}
             />
-          </Animated.View>
+            </Animated.View>
+          )}
+
+          {/* Responsive static background */}
+          {allAssetsReady && (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFillObject,
+                { opacity: imageBgOpacity, backgroundColor: 'transparent' }
+              ]}
+            >
+              <ResponsiveLevelBackground
+                levelName={levelName}
+                backgroundSource={backgroundImageUri ? { uri: backgroundImageUri } : undefined}
+                isMoving={false}
+                fallbackColor={getLevelBackgroundColor(levelName)}
+              />
+            </Animated.View>
+          )}
         </View>
       </View>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import {
   View,
   Image,
@@ -36,8 +36,8 @@ export default function SpriteAnimation({
   const isMountedRef = useRef(true);
   
   // Use Animated values for smooth transforms
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
+  const [translateX] = useState(() => new Animated.Value(0));
+  const [translateY] = useState(() => new Animated.Value(0));
 
   // Calculate max dimensions for the container view based on frame sizes
   const { w: maxW, h: maxH } = useMemo(() => {

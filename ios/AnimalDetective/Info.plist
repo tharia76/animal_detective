@@ -36,6 +36,10 @@
     <string>1</string>
     <key>EXDefaultScreenOrientationMask</key>
     <string>UIInterfaceOrientationMaskLandscape</string>
+    <key>UIModalPresentationCapturesStatusBarAppearance</key>
+    <true/>
+    <key>UIModalPresentationStyle</key>
+    <string>UIModalPresentationOverFullScreen</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSRequiresIPhoneOS</key>
@@ -87,5 +91,12 @@
     <false/>
     <key>UIViewControllerBasedStatusBarAppearance~ipad</key>
     <false/>
+    <key>UISupportedInterfaceOrientations~modal</key>
+    <array>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UIModalPresentationStyle~default</key>
+    <string>UIModalPresentationOverFullScreen</string>
   </dict>
 </plist>

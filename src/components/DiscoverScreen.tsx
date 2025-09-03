@@ -625,22 +625,7 @@ const LevelAnimalGrid: React.FC<{
         const realImage = stillImageMap[englishKey];
         const displayImage = isRevealed ? realImage : silhouetteImage;
         
-        // Enhanced debugging for missing images
-        if (!silhouetteImage || !realImage) {
-          console.warn(`❌ Missing images for "${animal.name}" (ID: ${animal.id})`);
-          console.warn(`   English key: "${englishKey}"`);
-          console.warn(`   Silhouette found: ${!!silhouetteImage}`);
-          console.warn(`   Real image found: ${!!realImage}`);
-          console.warn(`   Available silhouette keys:`, Object.keys(silhouetteImageMap).filter(k => k.includes('cat')));
-        } else {
-          console.log(`✅ Images found for "${animal.name}" → "${englishKey}"`);
-        }
-        
-        // Debug name-image mismatch for cats specifically
-        if (animal.name.toLowerCase().includes('кошк') || animal.name.toLowerCase().includes('cat')) {
-          console.log(`🐱 CAT DEBUG: "${animal.name}" (ID: ${animal.id}) → key: "${englishKey}"`);
-          console.log(`   Silhouette: ${!!silhouetteImage}, Real: ${!!realImage}`);
-        }
+
         
         // Get the animation value for this specific animal card
         const animValue = animalAnimRefs.current[index];
@@ -902,22 +887,32 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         try { currentAnimalPlayerRef.current.remove?.(); } catch {}
         currentAnimalPlayerRef.current = null;
       }
+      
       const token = ++playTokenRef.current;
       setTimeout(() => {
         if (playTokenRef.current !== token) return;
-        const p = createAudioPlayer(source);
-        currentAnimalPlayerRef.current = p;
-        activePlayersRef.current.add(p);
-        p.play();
-        p.addListener('playbackStatusUpdate', (status: any) => {
-          if (status?.didJustFinish) {
-            try { p.remove(); } catch {}
-            if (currentAnimalPlayerRef.current === p) {
-              currentAnimalPlayerRef.current = null;
+        
+        try {
+          const p = createAudioPlayer(source);
+          currentAnimalPlayerRef.current = p;
+          activePlayersRef.current.add(p);
+          
+          // Add listener before playing
+          p.addListener('playbackStatusUpdate', (status: any) => {
+            if (status?.didJustFinish) {
+              try { p.remove(); } catch {}
+              if (currentAnimalPlayerRef.current === p) {
+                currentAnimalPlayerRef.current = null;
+              }
+              activePlayersRef.current.delete(p);
             }
-            activePlayersRef.current.delete(p);
-          }
-        });
+          });
+          
+          // Play after setting up listener
+          p.play();
+        } catch (error) {
+          console.warn('Error creating or playing animal sound:', error);
+        }
       }, 50);
     } catch (error) {
       console.warn('Error playing animal sound:', error);
@@ -999,27 +994,27 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   
   // State for magnifying glass guide animation
   const [currentGuideIndex, setCurrentGuideIndex] = useState(0);
-  const magnifyingGlassRotation = useRef(new Animated.Value(0)).current;
-  const magnifyingGlassScale = useRef(new Animated.Value(1)).current;
+  const [magnifyingGlassRotation] = useState(() => new Animated.Value(0));
+  const [magnifyingGlassScale] = useState(() => new Animated.Value(1));
   
   // Animation for mission completed stamp pulse
-  const missionStampScale = useRef(new Animated.Value(1)).current;
+  const [missionStampScale] = useState(() => new Animated.Value(1));
   
   // Fade in animation for content
-  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const [contentOpacity] = useState(() => new Animated.Value(0));
   
   // Blur overlay fade animation
-  const blurOpacity = useRef(new Animated.Value(0)).current;
+  const [blurOpacity] = useState(() => new Animated.Value(0));
   
   // Mission stamp fade animation (shows after blur)
-  const stampOpacity = useRef(new Animated.Value(0)).current;
+  const [stampOpacity] = useState(() => new Animated.Value(0));
   
   // Complete mission button bounce animation
-  const buttonBounceScale = useRef(new Animated.Value(1)).current;
+  const [buttonBounceScale] = useState(() => new Animated.Value(1));
   
   // Hand pop animations flanking the button
-  const leftHandScale = useRef(new Animated.Value(1)).current;
-  const rightHandScale = useRef(new Animated.Value(1)).current;
+  const [leftHandScale] = useState(() => new Animated.Value(1));
+  const [rightHandScale] = useState(() => new Animated.Value(1));
 
   // Initialize guide to first available unrevealed animal when screen mounts
   useEffect(() => {

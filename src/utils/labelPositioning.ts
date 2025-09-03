@@ -31,7 +31,7 @@ export const LANDSCAPE_LABEL_CONFIG = {
     borderRadius: 16
   },
   tablet: {
-    topOffset: 0.1,
+    topOffset: -0.15,
     fontSize: 25,
     paddingVertical: 16,
     paddingHorizontal: 16,

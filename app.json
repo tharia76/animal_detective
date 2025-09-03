@@ -11,6 +11,9 @@
     "resizeMode": "contain",
     "backgroundColor": "#ffffff"
   },
+  "assetBundlePatterns": [
+    "src/assets/**/*"
+  ],
   "ios": {
     "bundleIdentifier": "com.metaltorchlabs.pixieplay",
     "buildNumber": "1",
@@ -78,6 +81,6 @@
     ]
   ],
   "experiments": {
-    "typedRoutes": true
+     "typedRoutes": true
   }
 }

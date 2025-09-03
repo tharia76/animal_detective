@@ -36,7 +36,7 @@ const MovingBg = ({
   // Default to screen size, but update after image loads
   const [imgWidth, setImgWidth] = useState<number>(screenW);
   const [imgHeight, setImgHeight] = useState<number>(screenH);
-  const scrollX = useRef(new Animated.Value(0)).current;
+  const [scrollX] = useState(() => new Animated.Value(0));
 
   // Helper function to determine image source format
   const getImageSource = () => {

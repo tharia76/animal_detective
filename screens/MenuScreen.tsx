@@ -48,10 +48,14 @@ import AnimatedFireflies from '../src/components/AnimatedFireflies';
 import { setGlobalVolume } from '../src/components/LevelScreenTemplate';
 import { useLevelCompletion } from '../src/hooks/useLevelCompletion';
 import { getAnimals } from '../src/data/animals';
+import { ImageCache } from '../src/utils/ImageCache';
+import { ImageRegistry } from '../src/utils/PersistentImageRegistry';
+import { preloadImages } from '../src/utils/preloadImages';
+import ScreenLoadingWrapper from '../src/components/ScreenLoadingWrapper';
 
 
 const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
-const BG_IMAGE = require('../src/assets/images/menu-screen.png');
+const BG_IMAGE = require('../src/assets/images/menu-screen.webp');
 const LEVELS = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
 
 // Responsive tile size constants for different orientations
@@ -65,15 +69,15 @@ const RESPONSIVE_MARGIN = 6;
 const APPLE_PRODUCT_ID = 'animalDetective'; // Replace with your actual product id
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
-  farm: require('../src/assets/images/level-backgrounds/farm.png'),
-  forest: require('../src/assets/images/level-backgrounds/forest.png'),
-  ocean: require('../src/assets/images/level-backgrounds/ocean.png'),
-  desert: require('../src/assets/images/level-backgrounds/desert.png'),
-  arctic: require('../src/assets/images/level-backgrounds/arctic.png'),
-  insects: require('../src/assets/images/level-backgrounds/insect.png'),
-  savannah: require('../src/assets/images/level-backgrounds/savannah.png'),
-  jungle: require('../src/assets/images/level-backgrounds/jungle.png'),
-  birds: require('../src/assets/images/level-backgrounds/birds.png'),
+  farm: require('../src/assets/images/level-backgrounds/farm.webp'),
+  forest: require('../src/assets/images/level-backgrounds/forest.webp'),
+  ocean: require('../src/assets/images/level-backgrounds/ocean.webp'),
+  desert: require('../src/assets/images/level-backgrounds/desert.webp'),
+  arctic: require('../src/assets/images/level-backgrounds/arctic.webp'),
+  insects: require('../src/assets/images/level-backgrounds/insect.webp'),
+  savannah: require('../src/assets/images/level-backgrounds/savannah.webp'),
+  jungle: require('../src/assets/images/level-backgrounds/jungle.webp'),
+  birds: require('../src/assets/images/level-backgrounds/birds.webp'),
 };
 
 const getLevelBackgroundColor = (level: string): string => {
@@ -471,15 +475,23 @@ const playButtonSound = (volume: number) => {
   if (volume > 0) {
     try {
       const buttonPlayer = createAudioPlayer(require('../src/assets/sounds/other/button.mp3'));
-      buttonPlayer.volume = volume;
-      buttonPlayer.play();
       
-      // Clean up sound when it finishes
+      // Set volume before playing to avoid blocking
+      buttonPlayer.volume = volume;
+      
+      // Add listener before playing
       buttonPlayer.addListener('playbackStatusUpdate', (status: any) => {
         if (status.didJustFinish) {
-          buttonPlayer.remove();
+          try {
+            buttonPlayer.remove();
+          } catch (removeError) {
+            console.warn('Error removing button sound:', removeError);
+          }
         }
       });
+      
+      // Play after setting up listener
+      buttonPlayer.play();
     } catch (error) {
       console.warn('Error playing button sound:', error);
     }
@@ -489,9 +501,10 @@ const playButtonSound = (volume: number) => {
 interface MenuScreenProps {
   onSelectLevel: (level: string) => void;
   backgroundImageUri?: string | null;
+  onScreenReady?: () => void;
 }
 
-export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuScreenProps) {
+export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreenReady }: MenuScreenProps) {
   const { isLevelCompleted, unmarkLevelCompleted, clearAllCompletions } = useLevelCompletion();
   // IMPORTANT: All hooks must be at the top level and in consistent order
   const navigation = useNavigation();
@@ -502,18 +515,59 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
   
   // Transition overlay to prevent flicker
-  const transitionOpacity = useRef(new Animated.Value(0)).current;
+  const [transitionOpacity] = useState(() => new Animated.Value(0));
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const isTransitioningRef = useRef(false);
-  const [showInstantOverlay, setShowInstantOverlay] = useState(false);
 
   // Get animals data for level tile subtitles
   const animals = getAnimals(lang);
 
-  // Calculate responsive values
-  const scaleFactor = getScaleFactor(width, height);
-  const numColumns = getResponsiveColumns(width, isLandscape);
+  // Calculate responsive values (memoized for performance)
+  const scaleFactor = useMemo(() => getScaleFactor(width, height), [width, height]);
+  const numColumns = useMemo(() => getResponsiveColumns(width, isLandscape), [width, isLandscape]);
+
+  // Create responsive styles (memoized)
+  const responsiveStyles = useMemo(() => 
+    createResponsiveStyles(scaleFactor, width, height, isLandscape),
+    [scaleFactor, width, height, isLandscape]
+  );
+
+  // sizing logic - Force landscape dimensions (memoized)
+  const { currentWidth, currentHeight, currentIsLandscape, isTablet, currentNumColumns, itemSize } = useMemo(() => {
+    const currentWidth = width;
+    const currentHeight = height;
+    const currentIsLandscape = true; // Always force landscape layout
+    const isTablet = currentWidth >= 900;
+    
+    // Calculate responsive tile size with min/max constraints
+    const currentNumColumns = getResponsiveColumns(currentWidth, currentIsLandscape);
+    const availableWidth = currentIsLandscape 
+      ? currentWidth * 0.75  // More space in landscape
+      : currentWidth * 0.70; // Less space in portrait for smaller tiles
+    const calculatedSize = (availableWidth / currentNumColumns) - (RESPONSIVE_MARGIN * 2);
+    
+    // Use different tile size constraints based on orientation and device
+    let minTileSize, maxTileSize;
+    
+    if (currentIsLandscape && currentWidth >= 900) {
+      // Tablet landscape - bigger tiles
+      minTileSize = 280;
+      maxTileSize = 380;
+    } else if (currentIsLandscape) {
+      // Phone landscape
+      minTileSize = MIN_TILE_SIZE_LANDSCAPE;
+      maxTileSize = MAX_TILE_SIZE_LANDSCAPE;
+    } else {
+      // Portrait mode
+      minTileSize = MIN_TILE_SIZE_PORTRAIT;
+      maxTileSize = MAX_TILE_SIZE_PORTRAIT;
+    }
+    
+    const itemSize = Math.max(minTileSize, Math.min(maxTileSize, calculatedSize));
+    
+    return { currentWidth, currentHeight, currentIsLandscape, isTablet, currentNumColumns, itemSize };
+  }, [width, height]);
   
 
 
@@ -522,11 +576,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   const pulseScale = useSharedValue(1);
 
   // Use dimensions directly for more stable layouts
-  const [layoutReady, setLayoutReady] = useState(false);
+  const [layoutReady, setLayoutReady] = useState(true); // Set to true since wrapper handles loading
 
-  const [bgReady, setBgReady] = useState(false);
+  const [bgReady, setBgReady] = useState(true); // Set to true since wrapper handles loading
   const [bgUri, setBgUri] = useState<string | null>(null);
-  const [imgsReady, setImgsReady] = useState(false);
+  const [imgsReady, setImgsReady] = useState(true); // Set to true since wrapper handles loading
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [visitedCounts, setVisitedCounts] = useState<Record<string, number>>({});
 
   // Payment state
@@ -632,9 +687,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
   // Use a ref to always get the latest player instance
   const playerRef = useRef<any>(null);
   const player = useAudioPlayer(menuBgSound);
-
-  // Create responsive styles
-  const responsiveStyles = createResponsiveStyles(scaleFactor, width, height, isLandscape);
   
 
 
@@ -656,12 +708,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     };
   };
 
-  // Handle layout ready state to prevent black screen during rotation
+  // Handle layout ready state - instant
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLayoutReady(true);
-    }, 100);
-    return () => clearTimeout(timer);
+    setLayoutReady(true);
   }, [width, height, isLandscape]);
 
   // Keep playerRef in sync with player
@@ -727,66 +776,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     }
   }, []);
 
-  // preload images
+  // Notify parent when screen is ready
   useEffect(() => {
-    (async () => {
-      try {
-        const bgAsset = Asset.fromModule(BG_IMAGE);
-        await bgAsset.downloadAsync();
-        setBgUri(bgAsset.localUri ?? bgAsset.uri);
-        setBgReady(true);
+    if (assetsLoaded && onScreenReady) {
+      onScreenReady();
+    }
+  }, [onScreenReady, assetsLoaded]);
 
-        // preload each level background
-        await Promise.all(
-          LEVELS.map((l) => {
-            let file;
-            switch (l) {
-              case 'ocean':
-                file = require('../src/assets/images/level-backgrounds/ocean.png');
-                break;
-              case 'desert':
-                file = require('../src/assets/images/level-backgrounds/desert.png');
-                break;
-              case 'arctic':
-                file = require('../src/assets/images/level-backgrounds/arctic.png');
-                break;
-              case 'savannah':
-                file = require('../src/assets/images/level-backgrounds/savannah.png');
-                break;
-              case 'jungle':
-                file = require('../src/assets/images/level-backgrounds/jungle.png');
-                break;
-              case 'birds':
-                file = require('../src/assets/images/level-backgrounds/birds.png');
-                break;
-              case 'insects':
-                file = require('../src/assets/images/level-backgrounds/insect.png');
-                break;
-              case 'farm':
-                file = require('../src/assets/images/level-backgrounds/farm.png');
-                break;
-              case 'forest':
-                file = require('../src/assets/images/level-backgrounds/forest.png');
-                break;
-              default:
-                file = require('../src/assets/images/level-backgrounds/farm.png');
-            }
-            return Asset.fromModule(file).downloadAsync();
-          })
-        );
-        setImgsReady(true);
-      } catch (e) {
-        console.warn('Error preloading images:', e);
-        setBgReady(true);
-        setImgsReady(true);
-      }
-    })();
-  }, []);
-
-  // Load visited counts for each level from AsyncStorage
+  // Load visited counts for each level from AsyncStorage (optimized)
   useEffect(() => {
-    (async () => {
+    const loadVisitedCounts = async () => {
       try {
+        // Load all at once for instant results
         const entries = await Promise.all(
           LEVELS.map(async (lvl) => {
             try {
@@ -800,11 +801,20 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
             }
           })
         );
+        
         const map: Record<string, number> = {};
-        for (const [lvl, count] of entries) map[lvl] = count;
+        for (const [lvl, count] of entries) {
+          map[lvl] = count;
+        }
+        
         setVisitedCounts(map);
-      } catch (e) {}
-    })();
+      } catch (e) {
+        console.warn('Error loading visited counts:', e);
+      }
+    };
+
+    // Load immediately - no delays
+    loadVisitedCounts();
   }, []);
 
   // play on focus, stop on blur
@@ -812,7 +822,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     const onFocus = () => {
       try {
         // Reset all transition states when coming back
-        setShowInstantOverlay(false);
         isTransitioningRef.current = false;
         transitionOpacity.setValue(0);
         setIsTransitioning(false);
@@ -1080,24 +1089,22 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     }
   }, [t, clearAllCompletions]);
 
-  // also stop when you select a level
+  // also stop when you select a level - instant navigation
   const handleSelect = useCallback(
     (level, isLocked) => {
       playButtonSound(volume);
       
       // Show destination background immediately
       setSelectedLevel(level);
-      setShowInstantOverlay(true);
       
-      // Navigate on next tick
-      setTimeout(() => {
-        if (typeof onSelectLevel === 'function') {
-          onSelectLevel(level);
-        }
-        setTimeout(() => {
-          try { stopAndUnload(); } catch {}
-        }, 0);
-      }, 0);
+      // Instant navigation - no delays
+      try { 
+        stopAndUnload(); 
+      } catch {}
+      
+      if (typeof onSelectLevel === 'function') {
+        onSelectLevel(level);
+      }
     },
     [onSelectLevel, stopAndUnload, volume]
   );
@@ -1256,59 +1263,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     );
   };
 
-  if (!bgReady || !imgsReady || !iapInitialized || !layoutReady) {
-    return (
-      <View
-        style={[
-          dynStyles.menuContainer,
-          { 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            backgroundColor: '#ffdab9',
-            flex: 1,
-            width: '100%',
-            height: '100%'
-          },
-        ]}
-      >
-        <ActivityIndicator size="large" color="orange" />
-      </View>
-    );
-  }
+  // Remove the loading check since ScreenLoadingWrapper handles it
+  // The wrapper will show loading state until all assets are loaded
 
-  // sizing logic - Force landscape dimensions
-  const currentWidth = width;
-  const currentHeight = height;
-  const currentIsLandscape = true; // Always force landscape layout
-  const isTablet = currentWidth >= 900;
-  
-  // Calculate responsive tile size with min/max constraints
-  const currentNumColumns = getResponsiveColumns(currentWidth, currentIsLandscape);
-  const availableWidth = currentIsLandscape 
-    ? currentWidth * 0.75  // More space in landscape
-    : currentWidth * 0.70; // Less space in portrait for smaller tiles
-  const calculatedSize = (availableWidth / currentNumColumns) - (RESPONSIVE_MARGIN * 2);
-  
-  // Use different tile size constraints based on orientation and device
-  let minTileSize, maxTileSize;
-  
-  if (currentIsLandscape && currentWidth >= 900) {
-    // Tablet landscape - bigger tiles
-    minTileSize = 280;
-    maxTileSize = 380;
-  } else if (currentIsLandscape) {
-    // Phone landscape
-    minTileSize = MIN_TILE_SIZE_LANDSCAPE;
-    maxTileSize = MAX_TILE_SIZE_LANDSCAPE;
-  } else {
-    // Portrait mode
-    minTileSize = MIN_TILE_SIZE_PORTRAIT;
-    maxTileSize = MAX_TILE_SIZE_PORTRAIT;
-  }
-  
-  const itemSize = Math.max(minTileSize, Math.min(maxTileSize, calculatedSize));
- 
-   const languages = [
+  const languages = [
      { code: 'en', name: 'English' },
      { code: 'ru', name: 'Русский' },
      { code: 'tr', name: 'Türkçe' },
@@ -1332,69 +1290,46 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
     return true;
   };
 
+  // Gather all assets that need to be preloaded
+  const menuAssets = useMemo(() => {
+    const assets = [
+      BG_IMAGE,
+      ...Object.values(LEVEL_BACKGROUNDS)
+    ];
+    return assets;
+  }, []);
+
   return (
-    <View style={{
-      flex: 1, 
-      backgroundColor: '#ffdab9',
-      width: '100%',
-      height: '100%'
-    }}>
-      {/* Instant loading overlay that appears immediately on tap */}
-      {showInstantOverlay && (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 999999,
-            backgroundColor: '#ffdab9',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <ActivityIndicator size="large" color="#FF8C00" />
-          <Text
-            style={{
-              marginTop: 20,
-              fontSize: 18,
-              fontWeight: '600',
-              color: '#612915',
-              textAlign: 'center',
-            }}
-          >
-            {t('loading') || 'Loading...'}
-          </Text>
-        </View>
-      )}
-      
+    <ScreenLoadingWrapper
+      assetsToLoad={menuAssets}
+      loadingText={t('loading') || 'Loading...'}
+      backgroundColor="#FFDAB9"
+      minLoadingTime={500}
+      onAssetsLoaded={() => setAssetsLoaded(true)}
+    >
+      <View style={{
+        flex: 1, 
+        backgroundColor: '#FFDAB9',
+        width: '100%',
+        height: '100%'
+      }}>
       {/* Menu content */}
-      {!showInstantOverlay ? (
+      {(
         <ImageBackground
-          key={`${currentIsLandscape ? 'landscape' : 'portrait'}-${currentWidth}x${currentHeight}`}
-          source={
-            backgroundImageUri
-              ? { uri: backgroundImageUri }
-              : bgUri
-              ? { uri: bgUri }
-              : BG_IMAGE
-          }
+          source={backgroundImageUri ? { uri: backgroundImageUri } : BG_IMAGE}
           style={{ 
             flex: 1, 
-            backgroundColor: 'transparent',
+            backgroundColor: '#ffdab9', // Solid fallback color
             width: '100%',
             height: '100%',
-            opacity: 1,
           }}
           imageStyle={{ opacity: 0.65 }}
-          fadeDuration={0}
+          fadeDuration={0} // No fade animation
           resizeMode="cover"
         >
         <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-          {/* Animated Fireflies Background */}
-          <AnimatedFireflies />
-
+          {/* Animated Fireflies Background - only render after layout is ready */}
+          {layoutReady && <AnimatedFireflies />}
 
 
           {currentIsLandscape ? (
@@ -1508,7 +1443,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
 
                   
                   <LevelTiles
-                    key={`landscape-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
+                    key="landscape-tiles-stable"
                     levels={LEVELS}
                     numColumns={currentNumColumns}
                     isLandscape={currentIsLandscape}
@@ -1607,7 +1542,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
                       )}
                     </View>
                   <LevelTiles
-                    key={`portrait-tiles-${currentWidth}x${currentHeight}-${itemSize}`}
+                    key="portrait-tiles-stable"
                     levels={LEVELS}
                     numColumns={currentNumColumns}
                     isLandscape={currentIsLandscape}
@@ -1643,13 +1578,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
               zIndex: 1000,
             }}>
               <ImageBackground
-                source={
-                  backgroundImageUri
-                    ? { uri: backgroundImageUri }
-                    : bgUri
-                    ? { uri: bgUri }
-                    : BG_IMAGE
-                }
+                source={backgroundImageUri ? { uri: backgroundImageUri } : BG_IMAGE}
                 style={{ 
                   flex: 1, 
                   backgroundColor: 'transparent',
@@ -1998,7 +1927,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri }: MenuSc
           {/* Close the top-level transparent View opened after ImageBackground start */}
         </View>
       </ImageBackground>
-      ) : null}
+      )}
     </View>
+    </ScreenLoadingWrapper>
   );
 }
