@@ -6,7 +6,7 @@
 	<string>development</string>
 	<key>com.apple.developer.in-app-payments</key>
 	<array>
-		<string>merchant.com.kido.animaldetective</string>
+		<string>merchant.com.metaltorchlabs.pixieplay</string>
 	</array>
 </dict>
 </plist>

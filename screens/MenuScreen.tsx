@@ -15,7 +15,6 @@ import {
   Pressable,
   PanResponder,
   Animated,
-  Easing,
   InteractionManager,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
@@ -37,7 +36,8 @@ import ReAnimated, {
   interpolate,
   Extrapolate,
   withRepeat,
-  withSequence
+  withSequence,
+  Easing
 } from 'react-native-reanimated';
 import { useDynamicStyles } from '../src/styles/styles';
 import { useLocalization } from '../src/hooks/useLocalization';
@@ -66,7 +66,7 @@ const MAX_TILE_SIZE_PORTRAIT = 180; // Slightly bigger maximum for portrait
 const RESPONSIVE_MARGIN = 6;
 
 // Apple App Store product id for unlocking all levels except Farm
-const APPLE_PRODUCT_ID = 'animalDetective'; // Replace with your actual product id
+const APPLE_PRODUCT_ID = 'animalDetectiveUnlock'; // Replace with your actual product id
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.webp'),
@@ -290,7 +290,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       fontSize: getResponsiveFontSize(isLandscape && width >= 900 ? 14 : 9, scaleFactor), // Bigger font on tablet landscape
       textAlign: 'center',
       letterSpacing: 0.3,
-      textShadowColor: 'rgba(0,0,0,0.3)',
+      textShadowColor: 'rgba(255,255,255,0.3)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 2,
     },
@@ -362,7 +362,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       fontSize: getResponsiveFontSize(18, scaleFactor),
       textAlign: 'center',
       letterSpacing: 0.8,
-      textShadowColor: 'rgba(0,0,0,0.4)',
+      textShadowColor: 'rgba(255,255,255,0.4)',
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 4,
     },
@@ -571,6 +571,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   // Animated gradient values
   const gradientPosition = useSharedValue(0);
   const pulseScale = useSharedValue(1);
+  
+  // Bounce animation values
+  const bounceScale = useSharedValue(1);
+  const bounceScale2 = useSharedValue(1);
 
   // Use dimensions directly for more stable layouts
   const [layoutReady, setLayoutReady] = useState(true); // Set to true since wrapper handles loading
@@ -694,6 +698,19 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     };
   });
   
+  // Bounce animation styles
+  const bounceStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: bounceScale.value }],
+    };
+  });
+  
+  const bounceStyle2 = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: bounceScale2.value }],
+    };
+  });
+  
 
 
   // Get gradient start/end positions based on animation
@@ -736,6 +753,30 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       -1,
       false
     );
+    
+    // Bounce animations for unlock buttons
+    bounceScale.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 800, easing: Easing.out(Easing.quad) }),
+        withTiming(0.98, { duration: 400, easing: Easing.in(Easing.quad) }),
+        withTiming(1, { duration: 600, easing: Easing.out(Easing.bounce) })
+      ),
+      -1,
+      false
+    );
+    
+    // Second bounce animation with slight delay
+    setTimeout(() => {
+      bounceScale2.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 800, easing: Easing.out(Easing.quad) }),
+          withTiming(0.98, { duration: 400, easing: Easing.in(Easing.quad) }),
+          withTiming(1, { duration: 600, easing: Easing.out(Easing.bounce) })
+        ),
+        -1,
+        false
+      );
+    }, 1000);
   }, []);
 
   // Play immediately on mount, and cleanup on unmount
@@ -1103,11 +1144,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     [onSelectLevel, stopAndUnload, volume]
   );
 
-  // Get price string for unlock button
+  // Get price string for unlock button with sale pricing
   const unlockPrice =
     products && products.length > 0 && products[0].localizedPrice
       ? products[0].localizedPrice
-      : t('defaultPrice');
+      : t('salePrice');
+  
+  const originalPrice = t('originalPrice');
+  const salePrice = t('salePrice');
 
 
 
@@ -1139,7 +1183,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
               <>
                 <ReAnimated.View style={animatedGradientStyle}>
                   <TouchableOpacity
-                    style={[responsiveStyles.modalUnlockButton, { backgroundColor: 'transparent' }]}
+                    style={[responsiveStyles.modalUnlockButton, { backgroundColor: '#FF8C00' }]}
                     onPress={() => {
                       playButtonSound(volume);
                       setShowUnlockModal(false);
@@ -1147,19 +1191,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                     }}
                     disabled={purchaseInProgress}
                   >
-                    <LinearGradient
-                      colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderRadius: getResponsiveSpacing(35, scaleFactor),
-                      }}
-                    />
                     {purchaseInProgress ? (
                       // Show loading indicator during Apple Pay processing
                       <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
@@ -1176,9 +1207,97 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                           size={responsiveStyles.modalUnlockButtonText.fontSize + 2} 
                           color="#FFFFFF" 
                         />
-                        <Text style={[responsiveStyles.modalUnlockButtonText, { marginTop: 2, fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                          ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
-                        </Text>
+                        <View style={{ alignItems: 'center', paddingVertical: 4 }}>
+                          {/* Sale Badge */}
+                          <View style={{
+                            backgroundColor: '#FF4444',
+                            paddingHorizontal: 12,
+                            paddingVertical: 3,
+                            borderRadius: 12,
+                            marginBottom: 6,
+                            shadowColor: '#FF4444',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 4,
+                            elevation: 4,
+                          }}>
+                            <Text style={{
+                              color: 'white',
+                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 4,
+                              fontWeight: '800',
+                              letterSpacing: 0.5,
+                            }}>
+{t('limitedSale')}
+                            </Text>
+                          </View>
+                          
+                          {/* Main Title */}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+                            <Image
+                              source={require('../src/assets/images/unlock.png')}
+                              style={{
+                                width: responsiveStyles.modalUnlockButtonText.fontSize + 8,
+                                height: responsiveStyles.modalUnlockButtonText.fontSize + 8,
+                                marginRight: 8,
+                              }}
+                              resizeMode="contain"
+                              fadeDuration={0}
+                            />
+                            <Text style={[responsiveStyles.modalUnlockButtonText, { 
+                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize,
+                              fontWeight: '700',
+                              color: 'white',
+                              textAlign: 'center',
+                              textShadowColor: 'rgba(0,0,0,0.3)',
+                              textShadowRadius: 2,
+                            }]}>
+                              {t('unlockAllMissions')}
+                            </Text>
+                          </View>
+                          
+                          {/* Pricing Section */}
+                          <View style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'baseline', 
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(255,255,255,0.15)',
+                            paddingHorizontal: 16,
+                            paddingVertical: 8,
+                            borderRadius: 20,
+                            marginTop: 2,
+                          }}>
+                            <Text style={{ 
+                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize + 4, 
+                              fontWeight: '900',
+                              color: '#000000',
+                              textShadowColor: 'rgba(0,0,0,0.5)', 
+                              textShadowRadius: 3,
+                              letterSpacing: 0.5,
+                            }}>
+                              {salePrice}
+                            </Text>
+                            <View style={{ marginLeft: 8, alignItems: 'center' }}>
+                              <Text style={{ 
+                                fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 3, 
+                                textDecorationLine: 'line-through',
+                                color: '#000000',
+                                fontWeight: '600',
+                                textShadowColor: 'rgba(0,0,0,0.3)', 
+                                textShadowRadius: 1,
+                              }}>
+                                {originalPrice}
+                              </Text>
+                              <Text style={{
+                                fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 5,
+                                color: '#4CAF50',
+                                fontWeight: '700',
+                                marginTop: 1,
+                              }}>
+{t('save40')}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
                       </View>
                     ) : (
                       // Other orientations: Keep original horizontal layout
@@ -1188,9 +1307,97 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                           size={responsiveStyles.modalUnlockButtonText.fontSize} 
                           color="#FFFFFF" 
                         />
-                        <Text style={[responsiveStyles.modalUnlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                          ✨ {t('unlockAllLevels')} ({unlockPrice}) ✨
-                        </Text>
+                        <View style={{ alignItems: 'center', paddingVertical: 4 }}>
+                          {/* Sale Badge */}
+                          <View style={{
+                            backgroundColor: '#FF4444',
+                            paddingHorizontal: 12,
+                            paddingVertical: 3,
+                            borderRadius: 12,
+                            marginBottom: 6,
+                            shadowColor: '#FF4444',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 4,
+                            elevation: 4,
+                          }}>
+                            <Text style={{
+                              color: 'white',
+                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 4,
+                              fontWeight: '800',
+                              letterSpacing: 0.5,
+                            }}>
+{t('limitedSale')}
+                            </Text>
+                          </View>
+                          
+                          {/* Main Title */}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+                            <Image
+                              source={require('../src/assets/images/unlock.png')}
+                              style={{
+                                width: responsiveStyles.modalUnlockButtonText.fontSize + 8,
+                                height: responsiveStyles.modalUnlockButtonText.fontSize + 8,
+                                marginRight: 8,
+                              }}
+                              resizeMode="contain"
+                              fadeDuration={0}
+                            />
+                            <Text style={[responsiveStyles.modalUnlockButtonText, { 
+                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize,
+                              fontWeight: '700',
+                              color: 'white',
+                              textAlign: 'center',
+                              textShadowColor: 'rgba(0,0,0,0.3)',
+                              textShadowRadius: 2,
+                            }]}>
+                              {t('unlockAllMissions')}
+                            </Text>
+                          </View>
+                          
+                          {/* Pricing Section */}
+                          <View style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'baseline', 
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(255,255,255,0.15)',
+                            paddingHorizontal: 16,
+                            paddingVertical: 8,
+                            borderRadius: 20,
+                            marginTop: 2,
+                          }}>
+                            <Text style={{ 
+                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize + 4, 
+                              fontWeight: '900',
+                              color: '#000000',
+                              textShadowColor: 'rgba(0,0,0,0.5)', 
+                              textShadowRadius: 3,
+                              letterSpacing: 0.5,
+                            }}>
+                              {salePrice}
+                            </Text>
+                            <View style={{ marginLeft: 8, alignItems: 'center' }}>
+                              <Text style={{ 
+                                fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 3, 
+                                textDecorationLine: 'line-through',
+                                color: '#000000',
+                                fontWeight: '600',
+                                textShadowColor: 'rgba(0,0,0,0.3)', 
+                                textShadowRadius: 1,
+                              }}>
+                                {originalPrice}
+                              </Text>
+                              <Text style={{
+                                fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 5,
+                                color: '#4CAF50',
+                                fontWeight: '700',
+                                marginTop: 1,
+                              }}>
+{t('save40')}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -1402,39 +1609,97 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                         {t('pickWorldMessage')}
                       </Text>
                       {Platform.OS === 'ios' && !unlocked && (
-                        <TouchableOpacity
-                          onPress={() => {
-                            playButtonSound(volume);
-                            handleUnlock();
-                          }}
-                          disabled={purchaseInProgress}
-                          activeOpacity={0.9}
-                          style={{ marginLeft: getResponsiveSpacing(10, scaleFactor), borderRadius: getResponsiveSpacing(18, scaleFactor), overflow: 'hidden' }}
-                        >
-                          <LinearGradient
-                            colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{
-                              paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
-                              paddingVertical: getResponsiveSpacing(6, scaleFactor),
-                              borderRadius: getResponsiveSpacing(18, scaleFactor),
-                              elevation: 2,
-                              shadowColor: '#000',
-                              shadowOffset: { width: 0, height: 1 },
-                              shadowOpacity: 0.2,
-                              shadowRadius: 2,
-                            }}
-                          >
-                            <Text style={{ color: 'white', fontWeight: '800', fontSize: getResponsiveFontSize(12, scaleFactor), textShadowColor: 'rgba(0,0,0,0.25)', textShadowRadius: 2 }}>
-                              {t('unlockAllLevels')}
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: getResponsiveSpacing(10, scaleFactor) }}>
+                        
+                          <ReAnimated.View style={bounceStyle}>
+                            <TouchableOpacity
+                              onPress={() => {
+                                playButtonSound(volume);
+                                handleUnlock();
+                              }}
+                              disabled={purchaseInProgress}
+                              activeOpacity={0.9}
+                              style={{ 
+                                borderRadius: getResponsiveSpacing(18, scaleFactor),
+                                backgroundColor: '#FF8C00',
+                                paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
+                                paddingVertical: getResponsiveSpacing(6, scaleFactor),
+                                elevation: 2,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.2,
+                                shadowRadius: 2,
+                              }}
+                            >
+                            <View style={{ alignItems: 'center', paddingVertical: 2 }}>
+                              {/* Compact Sale Badge */}
+                              <View style={{
+                                backgroundColor: '#FF4444',
+                                paddingHorizontal: 6,
+                                paddingVertical: 1,
+                                borderRadius: 8,
+                                marginBottom: 2,
+                              }}>
+                                <Text style={{
+                                  color: 'white',
+                                  fontSize: getResponsiveFontSize(7, scaleFactor),
+                                  fontWeight: '800',
+                                  letterSpacing: 0.3,
+                                }}>
+                                  {t('sale')}
+                                </Text>
+                              </View>
+                              
+                              {/* Compact Title */}
+                              <Text style={{ 
+                                color: 'white', 
+                                fontWeight: '700', 
+                                fontSize: getResponsiveFontSize(8, scaleFactor), 
+                                textShadowColor: 'rgba(0,0,0,0.4)', 
+                                textShadowRadius: 2,
+                                textAlign: 'center',
+                                marginBottom: 1,
+                              }}>
+                                {t('unlockAllMissions')}
+                              </Text>
+                              
+                              {/* Compact Pricing */}
+                              <View style={{ 
+                                flexDirection: 'row', 
+                                alignItems: 'center',
+                                backgroundColor: 'rgba(255,255,255,0.2)',
+                                paddingHorizontal: 6,
+                                paddingVertical: 2,
+                                borderRadius: 10,
+                              }}>
+                                <Text style={{ 
+                                  color: '#000000', 
+                                  fontWeight: '900', 
+                                  fontSize: getResponsiveFontSize(10, scaleFactor), 
+                                  textShadowColor: 'rgba(0,0,0,0.5)', 
+                                  textShadowRadius: 2,
+                                }}>
+                                  {salePrice}
+                                </Text>
+                                <Text style={{ 
+                                  color: '#000000', 
+                                  fontWeight: '600', 
+                                  fontSize: getResponsiveFontSize(7, scaleFactor), 
+                                  textDecorationLine: 'line-through', 
+                                  marginLeft: 4,
+                                  textShadowColor: 'rgba(0,0,0,0.3)', 
+                                  textShadowRadius: 1,
+                                }}>
+                                  {originalPrice}
+                                </Text>
+                              </View>
+                            </View>
 
+                          </TouchableOpacity>
+                        </ReAnimated.View>
+                        </View>
+                      )}
+                  </View>
                   
                   <LevelTiles
                     key="landscape-tiles-stable"
@@ -1454,7 +1719,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                     animals={animals}
                     visitedCounts={visitedCounts}
                   />
-                  
                 </View>
               </ScrollView>
             </>
@@ -1504,35 +1768,104 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                         {t('pickWorldMessage')}
                       </Text>
                       {Platform.OS === 'ios' && !unlocked && (
-                        <TouchableOpacity
-                          onPress={() => {
-                            playButtonSound(volume);
-                            handleUnlock();
-                          }}
-                          disabled={purchaseInProgress}
-                          activeOpacity={0.9}
-                          style={{ marginLeft: getResponsiveSpacing(12, scaleFactor), borderRadius: getResponsiveSpacing(20, scaleFactor), overflow: 'hidden' }}
-                        >
-                          <LinearGradient
-                            colors={['#4CAF50', '#66BB6A', '#FF8C00', '#FFA500', '#66BB6A', '#4CAF50']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: getResponsiveSpacing(12, scaleFactor) }}>
+                          <Image
+                            source={require('../src/assets/images/unlock.png')}
                             style={{
-                              paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
-                              paddingVertical: getResponsiveSpacing(8, scaleFactor),
-                              borderRadius: getResponsiveSpacing(20, scaleFactor),
-                              elevation: 2,
-                              shadowColor: '#000',
-                              shadowOffset: { width: 0, height: 1 },
-                              shadowOpacity: 0.2,
-                              shadowRadius: 2,
+                              width: 56,
+                              height: 56,
+                              marginRight: getResponsiveSpacing(14, scaleFactor),
                             }}
-                          >
-                            <Text style={{ color: 'white', fontWeight: '800', fontSize: getResponsiveFontSize(14, scaleFactor), textShadowColor: 'rgba(0,0,0,0.25)', textShadowRadius: 2 }}>
-                              {t('unlockAllLevels')}
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
+                            resizeMode="contain"
+                            fadeDuration={0}
+                          />
+                          <ReAnimated.View style={bounceStyle2}>
+                            <TouchableOpacity
+                              onPress={() => {
+                                playButtonSound(volume);
+                                handleUnlock();
+                              }}
+                              disabled={purchaseInProgress}
+                              activeOpacity={0.9}
+                              style={{ 
+                                borderRadius: getResponsiveSpacing(20, scaleFactor),
+                                backgroundColor: '#FF8C00',
+                                paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
+                                paddingVertical: getResponsiveSpacing(8, scaleFactor),
+                                elevation: 2,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.2,
+                                shadowRadius: 2,
+                              }}
+                            >
+                            <View style={{ alignItems: 'center', paddingVertical: 3 }}>
+                              {/* Compact Sale Badge */}
+                              <View style={{
+                                backgroundColor: '#FF4444',
+                                paddingHorizontal: 8,
+                                paddingVertical: 2,
+                                borderRadius: 10,
+                                marginBottom: 3,
+                              }}>
+                                <Text style={{
+                                  color: 'white',
+                                  fontSize: getResponsiveFontSize(8, scaleFactor),
+                                  fontWeight: '800',
+                                  letterSpacing: 0.3,
+                                }}>
+                                  {t('sale')}
+                                </Text>
+                              </View>
+                              
+                              {/* Compact Title */}
+                              <Text style={{ 
+                                color: 'white', 
+                                fontWeight: '700', 
+                                fontSize: getResponsiveFontSize(10, scaleFactor), 
+                                textShadowColor: 'rgba(0,0,0,0.4)', 
+                                textShadowRadius: 2,
+                                textAlign: 'center',
+                                marginBottom: 2,
+                              }}>
+                                {t('unlockAllMissions')}
+                              </Text>
+                              
+                              {/* Compact Pricing */}
+                              <View style={{ 
+                                flexDirection: 'row', 
+                                alignItems: 'center',
+                                backgroundColor: 'rgba(255,255,255,0.2)',
+                                paddingHorizontal: 8,
+                                paddingVertical: 3,
+                                borderRadius: 12,
+                              }}>
+                                <Text style={{ 
+                                  color: '#000000', 
+                                  fontWeight: '900', 
+                                  fontSize: getResponsiveFontSize(12, scaleFactor), 
+                                  textShadowColor: 'rgba(0,0,0,0.5)', 
+                                  textShadowRadius: 2,
+                                }}>
+                                  {salePrice}
+                                </Text>
+                                <Text style={{ 
+                                  color: '#000000', 
+                                  fontWeight: '600', 
+                                  fontSize: getResponsiveFontSize(9, scaleFactor), 
+                                  textDecorationLine: 'line-through', 
+                                  marginLeft: 6,
+                                  textShadowColor: 'rgba(0,0,0,0.3)', 
+                                  textShadowRadius: 1,
+                                }}>
+                                  {originalPrice}
+                                </Text>
+                              </View>
+                            </View>
+
+                            </TouchableOpacity>
+                          </ReAnimated.View>
+                        </View>
                       )}
                     </View>
                   <LevelTiles

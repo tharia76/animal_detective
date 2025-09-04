@@ -38,12 +38,12 @@ export const LANDSCAPE_PRESETS = {
   // Arctic level
   arctic: {
     phone: {
-      static: { topOffset: -0.5, heightMultiplier: 1.5, basePixels: 200 },
-      moving: { topOffset: -0.5, heightMultiplier: 1.5, basePixels: 300 }
+      static: { topOffset: -0.1, heightMultiplier: 1.1, basePixels: 350 },
+      moving: { topOffset: -0.1, heightMultiplier: 1.1, basePixels: 350 }
     },
     tablet: {
-      static: { topOffset: -1, heightMultiplier: 1, basePixels: 250 },
-      moving: { topOffset: -0.2, heightMultiplier: 0.8, basePixels: 150 }
+      static: { topOffset: 0, heightMultiplier: 1.0, basePixels: 200 },
+      moving: { topOffset: 0, heightMultiplier: 1.0, basePixels: 200 }
     }
   },
   
@@ -62,12 +62,12 @@ export const LANDSCAPE_PRESETS = {
   // Jungle level
   jungle: {
     phone: {
-      static: { topOffset: -3, heightMultiplier: 0, basePixels: 300 },
-      moving: { topOffset: -0.5, heightMultiplier: 1.8, basePixels: 400 }
+      static: { topOffset: -0.1, heightMultiplier: 1.1, basePixels: 350 },
+      moving: { topOffset: -0.1, heightMultiplier: 1.1, basePixels: 350 }
     },
     tablet: {
-      static: { topOffset: -1.5, heightMultiplier: -2, basePixels: 200 },
-      moving: { topOffset: -0.1, heightMultiplier: 0.8, basePixels: 400 }
+      static: { topOffset: 0, heightMultiplier: 1.0, basePixels: 200 },
+      moving: { topOffset: 0, heightMultiplier: 1.0, basePixels: 200 }
     }
   },
   

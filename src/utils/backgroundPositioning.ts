@@ -36,10 +36,10 @@ const LEVEL_CONFIGS = {
     movingBasePixels: { tablet: 400, phone: 300 }
   },
   arctic: {
-    adjustments: { tablet: -0.2, phone: 0.5 },
-    basePixels: { tablet: 150, phone: 200 },
-    movingAdjustments: { tablet: 0.8, phone: 0.5 },
-    movingBasePixels: { tablet: 250, phone: 300 }
+    adjustments: { tablet: 0, phone: 0.1 },
+    basePixels: { tablet: 200, phone: 350 },
+    movingAdjustments: { tablet: 0, phone: 0.1 },
+    movingBasePixels: { tablet: 200, phone: 350 }
   },
   savannah: {
     adjustments: { tablet: -0.1, phone: 0.3 },
@@ -48,10 +48,10 @@ const LEVEL_CONFIGS = {
     movingBasePixels: { tablet: 250, phone: 400 }
   },
   jungle: {
-    adjustments: { tablet: -0.2, phone: 0.5 },
-    basePixels: { tablet: 400, phone: 600 },
-    movingAdjustments: { tablet: 0.8, phone: 0.8 },
-    movingBasePixels: { tablet: 400, phone: 400 }
+    adjustments: { tablet: 0, phone: 0.1 },
+    basePixels: { tablet: 200, phone: 350 },
+    movingAdjustments: { tablet: 0, phone: 0.1 },
+    movingBasePixels: { tablet: 200, phone: 350 }
   },
   birds: {
     adjustments: { tablet: 0.1, phone: 0.1 },
