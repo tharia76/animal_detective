@@ -66,7 +66,7 @@ const MAX_TILE_SIZE_PORTRAIT = 180; // Slightly bigger maximum for portrait
 const RESPONSIVE_MARGIN = 6;
 
 // Apple App Store product id for unlocking all levels except Farm
-const APPLE_PRODUCT_ID = 'animalDetectiveUnlock'; // Replace with your actual product id
+const APPLE_PRODUCT_ID = 'animalDetectiveUnclock'; // Replace with your actual product id
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.webp'),
