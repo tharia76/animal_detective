@@ -84,18 +84,23 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
     const baseStyle = {
       ...StyleSheet.absoluteFillObject,
       backgroundColor,
+      // Extend beyond safe areas to cover notch area
+      top: -safeAreaInsets.top,
+      bottom: -safeAreaInsets.bottom,
+      left: -safeAreaInsets.left,
+      right: -safeAreaInsets.right,
     };
 
     // Handle status bar on Android
     if (Platform.OS === 'android') {
       const statusBarHeight = StatusBar.currentHeight || 0;
       if (!deviceInfo.isLandscape && statusBarHeight > 0) {
-        baseStyle.paddingTop = statusBarHeight;
+        baseStyle.top = Math.min(baseStyle.top, -statusBarHeight);
       }
     }
 
     return [baseStyle, style];
-  }, [backgroundColor, style, deviceInfo.isLandscape]);
+  }, [backgroundColor, style, deviceInfo.isLandscape, safeAreaInsets]);
 
 
 

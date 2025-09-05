@@ -530,6 +530,7 @@ export default function LevelScreenTemplate({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [levelName]);
 
+
   // Prefetch current animal sprite to avoid pop-in when returning to the level
   const prefetchCurrentAnimal = useCallback(() => {
     try {
@@ -631,6 +632,67 @@ export default function LevelScreenTemplate({
     const [badgeSlideY] = useState(() => new Animated.Value(0));
     const [celebrationPulseAnim] = useState(() => new Animated.Value(1));
     const [arrowPulseAnim] = useState(() => new Animated.Value(1));
+    
+    // Counter pop and glow animations
+    const [counterPopAnim] = useState(() => new Animated.Value(1));
+    const [counterGlowAnim] = useState(() => new Animated.Value(0));
+    const [counterButtonGlowAnim] = useState(() => new Animated.Value(0.5));
+    
+    // Track previous visited count to detect increments
+    const prevVisitedCount = useRef(0);
+    
+    // Trigger counter animation when visitedAnimals increments
+    useEffect(() => {
+      if (visitedAnimals.size > prevVisitedCount.current && prevVisitedCount.current !== 0) {
+        // Pop animation
+        Animated.sequence([
+          Animated.timing(counterPopAnim, {
+            toValue: 1.4,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+          Animated.timing(counterPopAnim, {
+            toValue: 1,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+        ]).start();
+
+        // Glow animation
+        Animated.sequence([
+          Animated.timing(counterGlowAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(counterGlowAnim, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+      prevVisitedCount.current = visitedAnimals.size;
+    }, [visitedAnimals.size]);
+    
+    // Start continuous glow animation for counter button
+    useEffect(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(counterButtonGlowAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(counterButtonGlowAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }, []);
+    
     // Badge measurement for centering animation
     const badgeRef = useRef<View | null>(null);
     const [badgeWindowLayout, setBadgeWindowLayout] = useState<{
@@ -1807,32 +1869,48 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
             return initialIndexHydrated && !isTransitioning && isCurrentAnimalUnclicked;
           })() && (
             <Animated.View
-              style={{
-                position: 'absolute',
-                top: Math.min(screenW, screenH) >= 768 ? '35%' : '50%', // Move up on tablets
-                left: '5%',
-                transform: [
-                  {
-                    translateY: handBounceAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, -15],
-                    }),
-                  },
-                  {
-                    scale: handBounceAnim.interpolate({
-                      inputRange: [0, 0.5, 1],
-                      outputRange: [1, 1.1, 1],
-                    }),
-                  },
-                  {
-                    rotate: '15deg',
-                  },
-                ],
-                opacity: handBounceAnim.interpolate({
-                  inputRange: [0, 0.5, 1],
-                  outputRange: [0.7, 1, 0.7],
-                }),
-              }}
+              style={(() => {
+                const isTablet = Math.min(screenW, screenH) >= 768;
+                const topPosition = isTablet ? '35%' : '40%';
+                const leftPosition = isTablet ? '10%' : '30%';
+                
+                console.log('🤚 HAND POSITIONING:', {
+                  isTablet,
+                  screenW,
+                  screenH,
+                  minDimension: Math.min(screenW, screenH),
+                  topPosition,
+                  leftPosition,
+                  deviceType: isTablet ? 'tablet' : 'phone'
+                });
+                
+                return {
+                  position: 'absolute',
+                  top: topPosition,
+                  left: leftPosition,
+                  transform: [
+                    {
+                      translateY: handBounceAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, -15],
+                      }),
+                    },
+                    {
+                      scale: handBounceAnim.interpolate({
+                        inputRange: [0, 0.5, 1],
+                        outputRange: [1, 1.1, 1],
+                      }),
+                    },
+                    {
+                      rotate: '15deg',
+                    },
+                  ],
+                  opacity: handBounceAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0.7, 1, 0.7],
+                  }),
+                };
+              })()}
             >
               <Image
                 source={require('../assets/images/hand.png')}
@@ -1894,13 +1972,37 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       baseMargin,
       isPhone: Math.min(screenW, screenH) < 768
     });
-    // Forest: push animals down by 10px, but move up 30% in phone landscape
+    // Forest: Special positioning for tablets and phones
     if (levelName.toLowerCase() === 'forest') {
-      const isPhone = Math.min(screenW, screenH) < 768;
-      if (isPhone && isLandscape) {
-        // Move animals up by 30% of screen height in phone landscape
-        return baseMargin + 100 - (screenH * 0.3);
+      const isTablet = Math.min(screenW, screenH) >= 768;
+      if (isTablet) {
+        // Move Forest animals up by 10% on tablets
+        return baseMargin - (screenH * 0.1);
+      } else {
+        // Phone positioning
+        if (isLandscape) {
+          // Move animals up by 30% of screen height in phone landscape
+          return baseMargin + 40 - (screenH * 0.3);
+        } else {
+          // Move animals up by 10% of screen height in phone portrait
+          return baseMargin + 100 - (screenH * 0.1);
+        }
       }
+    }
+
+    // Other levels: move animals up on phones, push down on tablets
+    if (levelName.toLowerCase() === 'farm' || levelName.toLowerCase() === 'arctic' || levelName.toLowerCase() === 'jungle' ||  levelName.toLowerCase() === 'ocean' || levelName.toLowerCase() === 'desert' || levelName.toLowerCase() === 'insects' || levelName.toLowerCase() === 'birds') {
+      const isPhone = Math.min(screenW, screenH) < 768;
+      if (isPhone) {
+        if (isLandscape) {
+          // Move animals up by 30% of screen height in phone landscape
+          return baseMargin + 40 - (screenH * 0.3);
+        } else {
+          // Move animals up by 10% of screen height in phone portrait
+          return baseMargin + 100 - (screenH * 0.1);
+        }
+      }
+      // Tablets: push down by 100px (existing behavior)
       return baseMargin + 100;
     }
     
@@ -1984,19 +2086,30 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
           return baseMargin + (screenH * 0.1);
         }
       } else {
-          // On phones, move animals down by 20%
-          return baseMargin + (screenH * 0.01);
+          // On phones, move animals up by 20%
+          return baseMargin - (screenH * 0.2);
       }
     }
     
-    // Savannah level - move all animals up by 20%
+    // Savannah level - move animals up on phones
     if (levelName.toLowerCase() === 'savannah') {
-      return baseMargin - (screenH * 0.2);
+      const isPhone = Math.min(screenW, screenH) < 768;
+      if (isPhone) {
+        // Move animals up by 10% on phones
+        return baseMargin - (screenH * 0.1);
+      }
+      // Tablets keep default positioning
+      return baseMargin;
     }
     
-          // Ocean level - move animals down by 20%
+          // Ocean level - move animals up by 20% on iPhones, down by 10% on tablets
     if (levelName.toLowerCase() === 'ocean') {
-      return baseMargin + (screenH * 0.1);
+      const isPhone = Math.min(screenW, screenH) < 768;
+      if (isPhone) {
+        return baseMargin - (screenH * 0.2); // Move up 20% on iPhones
+      } else {
+        return baseMargin + (screenH * 0.1); // Move down 10% on tablets (existing behavior)
+      }
     }
     
     // Insects level - move animals up by 20% on tablets
@@ -2057,7 +2170,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     return (
       <View style={[dynamicStyles.container, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
         <TouchableOpacity style={[dynamicStyles.backToMenuButton]} onPress={goToHome}>
-           <Ionicons name="home" size={24} color="#fff" />
+           <Ionicons name="home" size={24} color="black" />
         </TouchableOpacity>
         <View style={dynamicStyles.content}>
            <Text style={[dynamicStyles.animalName, { fontSize: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 15, marginTop: 100, color: '#fff' }]}>
@@ -2105,7 +2218,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
             >
               <ResponsiveLevelBackground
                 levelName={levelName}
-                backgroundSource={backgroundImageUri ? { uri: backgroundImageUri } : undefined}
+                backgroundSource={MOVING_BG_MAP[levelName.toLowerCase()] || (backgroundImageUri ? { uri: backgroundImageUri } : undefined)}
                 isMoving={false}
                 fallbackColor={getLevelBackgroundColor(levelName)}
               />
@@ -2128,199 +2241,150 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         )}
 
         {/* Foreground content */}
-      <View style={StyleSheet.absoluteFillObject}>
+      <View style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'transparent' }}>
         <Animated.View style={{ flex: 1, opacity: contentFade }}>
           <View style={{ flex: 1 }}>
             {!showDiscoverScreen && (
-              <TouchableOpacity style={[
-                isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, false).homeButton : dynamicStyles.homeButton,
-              ]} onPress={() => {
-                try {
-                  const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
-                  clickPlayer.play();
-                  clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
-                    if (status?.didJustFinish) clickPlayer.remove();
-                  });
-                } catch {}
-                goToHome();
+              <View style={{
+                position: 'absolute',
+                top: Math.min(screenW, screenH) < 768 
+                  ? (isLandscape ? screenH * 0.05 : screenH * 0.05) // 5% from top on phones
+                  : (isLandscape ? 60 : 100), // Keep original for tablets
+                right: 15,
+                backgroundColor: '#FF4444',
+                borderRadius: 30,
+                paddingHorizontal: 20,
+                paddingVertical: 20,
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 5,
+                zIndex: 1000,
+                minWidth: 120,
               }}>
-              <Ionicons name="home" size={isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, false).iconSize : (isLandscape && screenW >= 900 ? 40 : 30)} color="#fff" />
-            </TouchableOpacity>
-            )}
-            
-            {!showDiscoverScreen && (
-              <TouchableOpacity style={[
-                isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, false).documentButton : dynamicStyles.backToMenuButton,
-              ]} onPress={() => {
-                try {
-                  const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
-                  clickPlayer.play();
-                  clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
-                    if (status?.didJustFinish) clickPlayer.remove();
-                  });
-                } catch {}
-                // Navigate to discovery screen for this level
-                setShowDiscoverScreen(true);
-              }}>
-                
-                
-                <Ionicons name="document-text" size={isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, false).iconSize : (isLandscape && screenW >= 900 ? 40 : 30)} color="#fff" />
-                
-                                                  {/* Super Cute Progress Badge */}
-                 <Animated.View
-                   ref={badgeRef}
-                   onLayout={() => {
-                     // Measure in window to compute translation to screen center when needed
-                     try {
-                       badgeRef.current?.measureInWindow?.((x, y, width, height) => {
-                         setBadgeWindowLayout({ x, y, width, height });
-                       });
-                     } catch (e) {
-                       // ignore measure errors
-                     }
-                   }}
-                   style={{
-                     // Use landscape positioning utility for badge
-                     ...(isLandscape ? getAllLandscapeButtonPositions(screenW, screenH, visitedAnimals.size === animals.length).badge : {
-                       position: 'absolute',
-                       top: (dynamicStyles.backToMenuButton.top || 50) + 
-                            getResponsiveSpacing(isTablet() && isLandscape ? 50 : isTablet() ? 80 : 120, getScaleFactor(screenW, screenH)) +
-                            (screenW >= 1000 ? -(screenH * 0.1) : 5) - 50,
-                       right: Math.min(screenW, screenH) < 768 ? -10 : -5,
-                     }),
-                     backgroundColor: 'yellow', // Always yellow
-                     borderRadius: Math.min(screenW, screenH) < 768 ? 32 : 48,
-                     minWidth: Math.min(screenW, screenH) < 768 ? 95 : 130,
-                     height: Math.min(screenW, screenH) < 768 ? 54 : 78,
-                     justifyContent: 'center',
-                     alignItems: 'center',
-                     borderWidth: Math.min(screenW, screenH) < 768 ? 4 : 6,
-                     borderColor: '#FFF',
-                     shadowColor: '#000',
-                     shadowOffset: { width: 0, height: 8 },
-                     shadowOpacity: 0.45,
-                     shadowRadius: 14,
-                     elevation: 18,
-                     opacity: 1, // Always visible
-                     transform: [{
-                       // When completed, use pulse scale (also used during celebration overlay)
-                       scale: (visitedAnimals.size === animals.length || showCompletionCelebration)
-                         ? badgePulseAnim
-                         : Animated.multiply(
-                             badgeGiantAnim,
-                             nameScaleAnim.interpolate({
-                               inputRange: [0, 1, 1.1],
-                               outputRange: [1, 1.1, 1.2],
-                             })
-                           ),
-                     }],
-                   }}>
+                {/* Home Button */}
+                <TouchableOpacity onPress={() => {
+                  try {
+                    const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
+                    clickPlayer.play();
+                    clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                      if (status?.didJustFinish) clickPlayer.remove();
+                    });
+                  } catch {}
+                  goToHome();
+                }} style={{ 
+                  backgroundColor: '#FFD4A3', // Same orange as counter
+                  borderRadius: 30,
+                  padding: 15,
+                  width: 70,
+                  height: 70,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Ionicons name="home" size={36} color="black" />
+                </TouchableOpacity>
 
-                  
-                  {/* Cute sparkle effects */}
-                  {visitedAnimals.size > 0 && (
-                    <>
-                      <Animated.View style={{
-                        position: 'absolute',
-                        top: -10,
-                        right: -8,
-                        opacity: glowAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.6, 1],
-                        }),
-                        transform: [{
-                          rotate: glowAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '360deg'],
-                          }),
-                        }],
-                      }}>
-                        <Text style={{ fontSize: 18, color: '#FFD700' }}>✨</Text>
-                      </Animated.View>
-                      
-                      <Animated.View style={{
-                        position: 'absolute',
-                        top: -8,
-                        left: -10,
-                        opacity: glowAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.4, 0.9],
-                        }),
-                        transform: [{
-                          rotate: glowAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['180deg', '-180deg'],
-                          }),
-                        }],
-                      }}>
-                        <Text style={{ fontSize: 16, color: '#FFF' }}>⭐</Text>
-                      </Animated.View>
-                    </>
-                  )}
-                  
-
-                  
-                  {/* Main counter text with enhanced styling */}
-                  <Text style={{
-                     color: '#000',
-                     fontSize: Math.min(screenW, screenH) < 768 ? 18 : 26,
-                     fontWeight: '900',
-                     fontFamily: Platform.OS === 'ios' ? 'Arial Rounded MT Bold' : 'Roboto',
-                     textShadowColor: 'rgba(255,255,255,0.8)',
-                     textShadowOffset: { width: 1, height: 1 },
-                     textShadowRadius: 2,
-                     letterSpacing: 0.8,
-                   }}>
-                    {visitedAnimals.size}/{animals.length}
-                  </Text>
-                  
-                  {/* Enhanced gradient overlays */}
-                  <View style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '60%',
-                    backgroundColor: 'rgba(255,255,255,0.3)',
-                    borderTopLeftRadius: 44,
-                    borderTopRightRadius: 44,
-                  }} />
-                  
-                  {/* Extra shimmer effect */}
+                {/* Counter Display */}
+                <View style={{ position: 'relative' }}>
+                  {/* Outer glow ring */}
                   <Animated.View style={{
                     position: 'absolute',
-                    top: 6,
-                    left: 6,
-                    right: 6,
-                    height: 18,
-                    backgroundColor: 'rgba(255,255,255,0.4)',
-                    borderRadius: 18,
-                    opacity: glowAnim.interpolate({
+                    top: -5,
+                    left: -5,
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                    backgroundColor: counterButtonGlowAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0.3, 0.7],
+                      outputRange: ['rgba(255, 200, 150, 0)', 'rgba(255, 200, 150, 0.2)'],
                     }),
+                    transform: [{
+                      scale: counterButtonGlowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 1.2],
+                      })
+                    }],
                   }} />
                   
-                  {/* Outer glow ring when active */}
-                  {showName && (
-                    <Animated.View style={{
-                      position: 'absolute',
-                      top: -4,
-                      left: -4,
-                      right: -4,
-                      bottom: -4,
-                      borderRadius: 52,
-                      borderWidth: 3,
-                      borderColor: '#FFD700',
-                      opacity: glowAnim.interpolate({
+                  <Animated.View style={{
+                    backgroundColor: '#FFD4A3', // Light orange color
+                    borderRadius: 30,
+                    width: 70,
+                    height: 70,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: [{ scale: counterPopAnim }],
+                    borderWidth: 2,
+                    borderColor: counterButtonGlowAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['rgba(255, 200, 150, 0)', 'rgba(183, 169, 155, 1)'], // Lighter orange glow
+                    }),
+                    shadowColor: '#FFAB70', // Lighter orange shadow
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: Animated.add(
+                      counterGlowAnim,
+                      counterButtonGlowAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [0, 0.8],
+                        outputRange: [0.3, 0.6],
+                      })
+                    ),
+                    shadowRadius: Animated.add(
+                      counterGlowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 30],
                       }),
-                    }} />
-                  )}
-                </Animated.View>
-              </TouchableOpacity>
+                      counterButtonGlowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [10, 25],
+                      })
+                    ),
+                    elevation: 12,
+                  }}>
+                  <Text style={{
+                    color: '#2B5E34', // Dark green
+                    fontSize: 22,
+                    fontWeight: '900',
+                    fontFamily: Platform.OS === 'ios' ? 'Arial Rounded MT Bold' : 'Roboto',
+                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                    textShadowOffset: { width: 1, height: 1 },
+                    textShadowRadius: 2,
+                  }}>
+                    {visitedAnimals.size}/{animals.length}
+                  </Text>
+                  </Animated.View>
+                </View>
+
+                {/* Notebook Button */}
+                <TouchableOpacity onPress={() => {
+                  try {
+                    const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
+                    clickPlayer.play();
+                    clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                      if (status?.didJustFinish) clickPlayer.remove();
+                    });
+                  } catch {}
+                  setShowDiscoverScreen(true);
+                }} style={{
+                  backgroundColor: '#FFD4A3', // Same orange as other buttons
+                  borderRadius: 30,
+                  padding: 15,
+                  width: 70,
+                  height: 70,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative'
+                }}>
+                  <Ionicons name="document-text" size={36} color="black" />
+                </TouchableOpacity>
+              </View>
             )}
+            
+            {/* Remove old separate counter display - it's now in the red container above */}
 
 
                           {hasAnimals && !showDiscoverScreen && (
@@ -2401,6 +2465,10 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                       dynamicStyles.animalNameWrapper,
                       // Use the new label positioning utility
                       getLabelPositioning(levelName, screenW, screenH, isLandscape),
+                      // Override top position for Desert/Ocean iPhone adjustments
+                      ...(getLabelPositioning(levelName, screenW, screenH, isLandscape).marginTop ? [{
+                        top: getLabelPositioning(levelName, screenW, screenH, isLandscape).marginTop
+                      }] : []),
 
                       {
                         opacity: 1,
@@ -2572,7 +2640,9 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                          marginBottom: 1,
                          transform: [{ scale: celebrationPulseAnim }],
                        }}>
-                         {t('discovered')}
+                         {t('discovered')} {levelName.toLowerCase() === 'birds' ? t('levelDiscoveredBirds') :
+                          levelName.toLowerCase() === 'insects' ? t('levelDiscoveredInsects') :
+                          t('levelDiscoveredAnimals')}
                        </Animated.Text>
                        
                        {/* x/x count in its own pill */}
@@ -2581,7 +2651,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                          borderRadius: 25,
                          paddingHorizontal: 20,
                          paddingVertical: 8,
-                         marginBottom: 10,
+                         marginBottom: 50,
                          borderWidth: 2,
                          borderColor: '#333',
                          transform: [{ scale: celebrationPulseAnim }],
@@ -2601,27 +2671,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                          </Text>
                        </Animated.View>
 
-                       <Animated.Text style={{
-                         fontSize: 30,
-                         fontWeight: 'bold',
-                         textAlign: 'center',
-                         color: levelName.toLowerCase() === 'ocean' ? 'rgba(15, 82, 83, 0.8)' :
-                                levelName.toLowerCase() === 'birds' ? 'rgba(63, 148, 37, 0.8)' :
-                                levelName.toLowerCase() === 'farm' ? 'rgba(255, 165, 0, 0.8)' :
-
-                                levelName.toLowerCase() === 'desert' ? 'rgba(36, 45, 213, 0.8)' :
-                                levelName.toLowerCase() === 'forest' ? 'rgba(0, 128, 0, 0.8)' :
-                                levelName.toLowerCase() === 'jungle' ? 'rgba(0, 128, 0, 0.8)' :
-                                levelName.toLowerCase() === 'insects' ? 'rgba(143, 22, 42, 0.8)' :
-                                levelName.toLowerCase() === 'savannah' ? 'rgba(255, 165, 0, 0.8)' :
-                                'rgba(0, 128, 0, 0.8)',
-                         marginBottom: 20,
-                         transform: [{ scale: celebrationPulseAnim }],
-                                                }}>
-                         {levelName.toLowerCase() === 'birds' ? t('levelDiscoveredBirds') :
-                          levelName.toLowerCase() === 'insects' ? t('levelDiscoveredInsects') :
-                          t('levelDiscoveredAnimals')}
-                       </Animated.Text>
+                     
                        
                        {/* Continue arrow button with pulsing animation */}
                        <Animated.View style={{

@@ -24,14 +24,14 @@ export const getLandscapeDeviceType = () => {
 // Universal label positioning configuration for landscape mode
 export const LANDSCAPE_LABEL_CONFIG = {
   phone: {
-    topOffset: -0.1,
+    topOffset: -0.01,
     fontSize: 18,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 16
   },
   tablet: {
-    topOffset: -0.15,
+    topOffset: 0.1,
     fontSize: 25,
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -49,6 +49,7 @@ export interface LabelPositioningConfig {
 
 export interface LabelPositioningResult {
   top: number;
+  marginTop?: number; // Additional top position override for specific level adjustments
   fontSize: number;
   paddingVertical: number;
   paddingHorizontal: number;
@@ -65,6 +66,21 @@ export const getLabelPositioning = (
   screenH: number,
   isLandscape: boolean
 ): LabelPositioningResult => {
+  // Check if this is an iPhone (not tablet) for portrait mode adjustments
+  const isPhoneDevice = Math.min(screenW, screenH) < 768;
+  
+  // Special adjustments for Desert and Ocean levels on iPhones
+  if (!isLandscape && isPhoneDevice && (levelName.toLowerCase() === 'desert' || levelName.toLowerCase() === 'ocean')) {
+    return {
+      top: 0,
+      marginTop: screenH * 0.8, // Override top position to push label down by 80% on iPhone Desert/Ocean
+      fontSize: 18,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 16
+    };
+  }
+  
   // Only apply landscape positioning when in landscape mode
   if (!isLandscape) {
     return {
@@ -79,11 +95,12 @@ export const getLabelPositioning = (
   const { isTablet, isPhone } = getLandscapeDeviceType();
   const deviceType = isTablet ? 'tablet' : 'phone';
   
+  
   // Get the configuration for the device type
   const config = LANDSCAPE_LABEL_CONFIG[deviceType];
   
   // Calculate top position based on screen height and offset
-  const top = screenH * config.topOffset;
+  const top = - screenH * config.topOffset;
   
   return {
     top,

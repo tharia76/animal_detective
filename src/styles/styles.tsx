@@ -191,7 +191,9 @@ export function useDynamicStyles() {
         paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 20 : 15, scaleFactor), // Add horizontal padding
       },
       animalImage: {
-        width: Math.min(screenW * (isTabletDevice ? 0.85 : 0.8), screenH * 0.95), // Better proportions
+        width: isTabletDevice 
+          ? Math.min(screenW * 0.85, screenH * 0.95) 
+          : screenW * 0.95, // Make images much wider on phones
         height: screenH * (isTabletDevice ? 0.9 : 0.85), // Better proportions
         resizeMode: 'contain',
         marginTop: isTabletDevice ? '5%' : '8%', // Better spacing
@@ -244,7 +246,7 @@ export function useDynamicStyles() {
         zIndex: 10001, // Increased to be higher than navigation buttons (10000)
       },
       backToMenuButton: {
-        backgroundColor: '#9370DB', // Purple instead of light green
+        backgroundColor: '#FFD4A3', // Orange to match the new button colors
         paddingVertical: getResponsiveSpacing(isTabletDevice ? 20 : 18, scaleFactor), // Better sizing
         paddingHorizontal: getResponsiveSpacing(isTabletDevice ? 30 : 25, scaleFactor), // Better sizing
         borderRadius: getResponsiveSpacing(isTabletDevice ? 40 : 35, scaleFactor), // Better border radius

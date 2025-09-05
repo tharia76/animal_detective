@@ -22,7 +22,7 @@ export interface BackgroundStyles {
   top: number;
   left: number;
   right: number;
-  width?: number;
+  width: number;
   height: number;
   resizeMode: 'cover' | 'contain' | 'stretch' | 'repeat';
   transform?: Array<{ scale?: number; translateX?: number; translateY?: number; }>;
@@ -89,12 +89,12 @@ const LEVEL_BACKGROUND_CONFIGS = {
       phone: {
         portrait: { 
           topOffset: 0.15, 
-          scale: 1.1,
+          scale: 1.2,
           verticalAlignment: 'top',
         },
         landscape: { 
           topOffset: -0.2, 
-          scale: 1.05,
+          scale: 1.15,
           verticalAlignment: 'center',
         }
       },
@@ -157,8 +157,8 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.1, scale: 1.05, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.1, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.1, scale: 1.15, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.1, scale: 1.1, verticalAlignment: 'center' }
       },
       tablet: {
         portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
@@ -226,16 +226,16 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.15, scale: 1.1, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.15, scale: 1.05, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.4, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: 0.3, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
         portrait: { topOffset: 0.05, scale: 1.0, verticalAlignment: 'center' },
         landscape: { topOffset: -0.1, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.1, scale: 1.15, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.1, scale: 1.1, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.1, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.8, scale: 1.05, verticalAlignment: 'center' }
       }
     }
   },
@@ -249,8 +249,8 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.1, scale: 1.05, verticalAlignment: 'bottom' },
-        landscape: { topOffset: -0.1, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.1, scale: 1.15, verticalAlignment: 'bottom' },
+        landscape: { topOffset: -0.1, scale: 1.1, verticalAlignment: 'center' }
       },
       tablet: {
         portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'bottom' },
@@ -319,6 +319,10 @@ export const getResponsiveBackgroundStyles = (
   const level = levelName.toLowerCase();
   const config = LEVEL_BACKGROUND_CONFIGS[level as keyof typeof LEVEL_BACKGROUND_CONFIGS];
   
+  if (level === 'savannah') {
+    console.log('🦁 SAVANNAH PROCESSING:', { level, configExists: !!config, deviceType: deviceInfo.deviceType, isLandscape: deviceInfo.isLandscape });
+  }
+  
   if (!config) {
     console.warn(`No configuration found for level: ${level}`);
     return getDefaultBackgroundStyles(deviceInfo);
@@ -333,25 +337,26 @@ export const getResponsiveBackgroundStyles = (
   
   // Apply device overrides or use base config
   const topOffset = deviceOverride?.topOffset || 0;
-  const scale = (deviceOverride?.scale || 1.0) * (isMovingBg ? 1.05 : 1.0);
+  const scale = deviceOverride?.scale || 1.0;
   const verticalAlignment = deviceOverride?.verticalAlignment || config.baseConfig.verticalAlignment;
   
   // Calculate positioning based on alignment and safe areas
   let top = 0;
   let calculatedHeight = height + safeAreaTop + safeAreaBottom;
   
-  // Apply vertical alignment
+  // Apply vertical alignment - ensure notch area is covered
   switch (verticalAlignment) {
     case 'top':
       top = -safeAreaTop + (height * topOffset);
+      calculatedHeight = height + safeAreaTop + safeAreaBottom + Math.abs(height * topOffset);
       break;
     case 'bottom':
       top = height * topOffset;
-      calculatedHeight = height + safeAreaBottom + Math.abs(height * topOffset);
+      calculatedHeight = height + safeAreaTop + safeAreaBottom + Math.abs(height * topOffset);
       break;
     case 'center':
     default:
-      top = (height * topOffset);
+      top = -safeAreaTop + (height * topOffset);
       calculatedHeight = height + Math.abs(height * topOffset) + safeAreaTop + safeAreaBottom;
       break;
   }
@@ -373,6 +378,7 @@ export const getResponsiveBackgroundStyles = (
     top: Math.round(top),
     left: leftOffset,
     right: rightOffset,
+    width: width + leftOffset + rightOffset, // Ensure full width coverage
     height: Math.round(calculatedHeight),
     resizeMode: 'cover',
   };
@@ -382,12 +388,14 @@ export const getResponsiveBackgroundStyles = (
     styles.transform = [{ scale }];
   }
   
-  console.log(`📱 Background styles for ${level} (${deviceInfo.deviceType} ${orientation}):`, {
+  console.log(`🦁 SAVANNAH DEBUG - Background styles for ${level} (${deviceInfo.deviceType} ${orientation}):`, {
     top: styles.top,
     height: styles.height,
     scale,
     topOffset,
     verticalAlignment,
+    configFound: !!config,
+    deviceOverride: deviceOverride,
     deviceInfo: {
       width,
       height,
@@ -405,6 +413,7 @@ const getDefaultBackgroundStyles = (deviceInfo: DeviceInfo): BackgroundStyles =>
   top: -deviceInfo.safeAreaTop,
   left: deviceInfo.isLandscape ? deviceInfo.safeAreaLeft : 0,
   right: deviceInfo.isLandscape ? deviceInfo.safeAreaRight : 0,
+  width: deviceInfo.width + (deviceInfo.isLandscape ? deviceInfo.safeAreaLeft + deviceInfo.safeAreaRight : 0),
   height: deviceInfo.height + deviceInfo.safeAreaTop + deviceInfo.safeAreaBottom,
   resizeMode: 'cover',
 });

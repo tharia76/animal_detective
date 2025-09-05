@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -10,28 +10,265 @@ import {
   ScrollView,
   ImageBackground,
   ActivityIndicator,
-  Modal
+  Modal,
+  Dimensions
 } from 'react-native';
 
 import { createAudioPlayer } from 'expo-audio';
-import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useLevelCompletion } from '../hooks/useLevelCompletion';
 import { useLocalization } from '../hooks/useLocalization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import LevelVideoPlayer from './LevelVideoPlayer';
+// import LevelVideoPlayer from './LevelVideoPlayer';
 
-// Mapping of level names to their completion videos
-const levelVideoMap: { [key: string]: any } = {
-  'arctic': require('../assets/intro_videos/arctic-vid.mp4'),
-  'birds': require('../assets/intro_videos/birds-vid.mp4'),
-  'desert': require('../assets/intro_videos/desert-vid.mp4'),
-  'farm': require('../assets/intro_videos/farm-vid1.mp4'),
-  'forest': require('../assets/intro_videos/forest.mp4'),
-  'insects': require('../assets/intro_videos/insects-vid.mp4'),
-  'jungle': require('../assets/intro_videos/jungless.mp4'),
-  'ocean': require('../assets/intro_videos/water.mp4'),
-  'savannah': require('../assets/intro_videos/savan-vid.mp4'),
+// Mapping of level names to their completion videos - REMOVED
+// const levelVideoMap: { [key: string]: any } = {
+//   'arctic': require('../assets/intro_videos/arctic-vid.mp4'),
+//   'birds': require('../assets/intro_videos/birds-vid.mp4'),
+//   'desert': require('../assets/intro_videos/desert-vid.mp4'),
+//   'farm': require('../assets/intro_videos/farm-vid1.mp4'),
+//   'forest': require('../assets/intro_videos/forest.mp4'),
+//   'insects': require('../assets/intro_videos/insects-vid.mp4'),
+//   'jungle': require('../assets/intro_videos/jungless.mp4'),
+//   'ocean': require('../assets/intro_videos/water.mp4'),
+//   'savannah': require('../assets/intro_videos/savan-vid.mp4'),
+// };
+
+// Function to get animal images for a level
+const getAnimalImagesForLevel = (levelName: string) => {
+  switch (levelName) {
+    case 'Arctic':
+      return [
+        require('../assets/images/still-animals/ping.png'),
+        require('../assets/images/still-animals/reindeer.png'),
+        require('../assets/images/still-animals/seal.png'),
+        require('../assets/images/still-animals/snowyowl.png'),
+        require('../assets/images/still-animals/walrus.png'),
+        require('../assets/images/still-animals/whitebear.png'),
+        require('../assets/images/still-animals/whitefox.png'),
+      ];
+    case 'Farm':
+      return [
+        require('../assets/images/still-animals/cat.png'),
+        require('../assets/images/still-animals/chicken.png'),
+        require('../assets/images/still-animals/cow.png'),
+        require('../assets/images/still-animals/dog.png'),
+        require('../assets/images/still-animals/duck.png'),
+        require('../assets/images/still-animals/goat.png'),
+        require('../assets/images/still-animals/horse.png'),
+        require('../assets/images/still-animals/pig.png'),
+        require('../assets/images/still-animals/sheep.png'),
+      ];
+    case 'Forest':
+      return [
+        require('../assets/images/still-animals/bear.png'),
+        require('../assets/images/still-animals/fox.png'),
+        require('../assets/images/still-animals/owl.png'),
+        require('../assets/images/still-animals/rabbit.png'),
+        require('../assets/images/still-animals/squirrel.png'),
+        require('../assets/images/still-animals/wolf.png'),
+        require('../assets/images/still-animals/deer.png'),
+      ];
+    case 'Ocean':
+      return [
+        require('../assets/images/still-animals/dolphin.png'),
+        require('../assets/images/still-animals/fish.png'),
+        require('../assets/images/still-animals/octopus.png'),
+        require('../assets/images/still-animals/shark.png'),
+        require('../assets/images/still-animals/whale.png'),
+        require('../assets/images/still-animals/crab.png'),
+        require('../assets/images/still-animals/jellyfish.png'),
+      ];
+    case 'Savannah':
+      return [
+        require('../assets/images/still-animals/elephant.png'),
+        require('../assets/images/still-animals/giraffe.png'),
+        require('../assets/images/still-animals/leon.png'),
+        require('../assets/images/still-animals/zebra.png'),
+        require('../assets/images/still-animals/rhinoceros.png'),
+        require('../assets/images/still-animals/hippopotamus.png'),
+      ];
+    case 'Desert':
+      return [
+        require('../assets/images/still-animals/camel.png'),
+        require('../assets/images/still-animals/snake.png'),
+        require('../assets/images/still-animals/lizard.png'),
+        require('../assets/images/still-animals/scorpion.png'),
+        require('../assets/images/still-animals/fennecfox.png'),
+      ];
+    case 'Insects':
+      return [
+        require('../assets/images/still-animals/ant.png'),
+        require('../assets/images/still-animals/bee.png'),
+        require('../assets/images/still-animals/butterfly.png'),
+        require('../assets/images/still-animals/spider.png'),
+        require('../assets/images/still-animals/ladybag.png'),
+        require('../assets/images/still-animals/grasshopper.png'),
+      ];
+    case 'Birds':
+      return [
+        require('../assets/images/still-animals/parrot.png'),
+        require('../assets/images/still-animals/eagle.png'),
+        require('../assets/images/still-animals/owl.png'),
+        require('../assets/images/still-animals/flamingo.png'),
+        require('../assets/images/still-animals/pelican.png'),
+      ];
+    case 'Jungle':
+      return [
+        require('../assets/images/still-animals/gorilla.png'),
+        require('../assets/images/still-animals/chimpanzee.png'),
+        require('../assets/images/still-animals/sloth.png'),
+        require('../assets/images/still-animals/toucan.png'),
+        require('../assets/images/still-animals/frog.png'),
+        require('../assets/images/still-animals/panther.png'),
+      ];
+    default:
+      return [];
+  }
+};
+
+// Mapping of level names to their still animal images
+const levelAnimalsMap: { [key: string]: any[] } = {
+  'Arctic': [
+    require('../assets/images/still-animals-organized/Arctic/ping.png'),
+    require('../assets/images/still-animals-organized/Arctic/reindeer.png'),
+    require('../assets/images/still-animals-organized/Arctic/seal.png'),
+    require('../assets/images/still-animals-organized/Arctic/snowyowl.png'),
+    require('../assets/images/still-animals-organized/Arctic/walrus.png'),
+    require('../assets/images/still-animals-organized/Arctic/whitebear.png'),
+    require('../assets/images/still-animals-organized/Arctic/whitefox.png'),
+  ],
+  'Birds': [
+    require('../assets/images/still-animals-organized/Birds/canary.png'),
+    require('../assets/images/still-animals-organized/Birds/dove.png'),
+    require('../assets/images/still-animals-organized/Birds/parrot.png'),
+    require('../assets/images/still-animals-organized/Birds/pelican.png'),
+    require('../assets/images/still-animals-organized/Birds/raven.png'),
+    require('../assets/images/still-animals-organized/Birds/seagull.png'),
+    require('../assets/images/still-animals-organized/Birds/sparrow.png'),
+    require('../assets/images/still-animals-organized/Birds/stork.png'),
+    require('../assets/images/still-animals-organized/Birds/swan.png'),
+    require('../assets/images/still-animals-organized/Birds/woodpecker.png'),
+  ],
+  'Desert': [
+    require('../assets/images/still-animals-organized/Desert/camel.png'),
+    require('../assets/images/still-animals-organized/Desert/caracal.png'),
+    require('../assets/images/still-animals-organized/Desert/dtortoise.png'),
+    require('../assets/images/still-animals-organized/Desert/fennecfox.png'),
+    require('../assets/images/still-animals-organized/Desert/iguana.png'),
+    require('../assets/images/still-animals-organized/Desert/jackal.png'),
+    require('../assets/images/still-animals-organized/Desert/jerboa.png'),
+    require('../assets/images/still-animals-organized/Desert/lizard.png'),
+    require('../assets/images/still-animals-organized/Desert/meerkat.png'),
+    require('../assets/images/still-animals-organized/Desert/oryx.png'),
+    require('../assets/images/still-animals-organized/Desert/sandcat.png'),
+    require('../assets/images/still-animals-organized/Desert/scorpion.png'),
+    require('../assets/images/still-animals-organized/Desert/snake.png'),
+  ],
+  'Farm': [
+    require('../assets/images/still-animals-organized/Farm/cat.png'),
+    require('../assets/images/still-animals-organized/Farm/chick.png'),
+    require('../assets/images/still-animals-organized/Farm/chicken.png'),
+    require('../assets/images/still-animals-organized/Farm/cow.png'),
+    require('../assets/images/still-animals-organized/Farm/dog.png'),
+    require('../assets/images/still-animals-organized/Farm/donkey.png'),
+    require('../assets/images/still-animals-organized/Farm/duck.png'),
+    require('../assets/images/still-animals-organized/Farm/goat.png'),
+    require('../assets/images/still-animals-organized/Farm/goose.png'),
+    require('../assets/images/still-animals-organized/Farm/horse.png'),
+    require('../assets/images/still-animals-organized/Farm/llama.png'),
+    require('../assets/images/still-animals-organized/Farm/pig.png'),
+    require('../assets/images/still-animals-organized/Farm/rabbit.png'),
+    require('../assets/images/still-animals-organized/Farm/rooster.png'),
+    require('../assets/images/still-animals-organized/Farm/sheep.png'),
+    require('../assets/images/still-animals-organized/Farm/turkey.png'),
+  ],
+  'Forest': [
+    require('../assets/images/still-animals-organized/Forest/badger.png'),
+    require('../assets/images/still-animals-organized/Forest/bat.png'),
+    require('../assets/images/still-animals-organized/Forest/bear.png'),
+    require('../assets/images/still-animals-organized/Forest/beaver.png'),
+    require('../assets/images/still-animals-organized/Forest/boar.png'),
+    require('../assets/images/still-animals-organized/Forest/deer.png'),
+    require('../assets/images/still-animals-organized/Forest/fox.png'),
+    require('../assets/images/still-animals-organized/Forest/hedgehog.png'),
+    require('../assets/images/still-animals-organized/Forest/moose.png'),
+    require('../assets/images/still-animals-organized/Forest/mouse.png'),
+    require('../assets/images/still-animals-organized/Forest/otter.png'),
+    require('../assets/images/still-animals-organized/Forest/owl.png'),
+    require('../assets/images/still-animals-organized/Forest/raccoon.png'),
+    require('../assets/images/still-animals-organized/Forest/skunk.png'),
+    require('../assets/images/still-animals-organized/Forest/squirrel.png'),
+    require('../assets/images/still-animals-organized/Forest/wolf.png'),
+  ],
+  'Insects': [
+    require('../assets/images/still-animals-organized/Insects/ant.png'),
+    require('../assets/images/still-animals-organized/Insects/bee.png'),
+    require('../assets/images/still-animals-organized/Insects/butterfly.png'),
+    require('../assets/images/still-animals-organized/Insects/caterpillar.png'),
+    require('../assets/images/still-animals-organized/Insects/cockroach.png'),
+    require('../assets/images/still-animals-organized/Insects/dragonfly.png'),
+    require('../assets/images/still-animals-organized/Insects/fly.png'),
+    require('../assets/images/still-animals-organized/Insects/grasshopper.png'),
+    require('../assets/images/still-animals-organized/Insects/ladybag.png'),
+    require('../assets/images/still-animals-organized/Insects/mantis.png'),
+    require('../assets/images/still-animals-organized/Insects/mosquito.png'),
+    require('../assets/images/still-animals-organized/Insects/snail.png'),
+    require('../assets/images/still-animals-organized/Insects/spider.png'),
+    require('../assets/images/still-animals-organized/Insects/worm.png'),
+  ],
+  'Jungle': [
+    require('../assets/images/still-animals-organized/Jungle/anteater.png'),
+    require('../assets/images/still-animals-organized/Jungle/capybara.png'),
+    require('../assets/images/still-animals-organized/Jungle/chameleon.png'),
+    require('../assets/images/still-animals-organized/Jungle/chimpanzee.png'),
+    require('../assets/images/still-animals-organized/Jungle/crocodile.png'),
+    require('../assets/images/still-animals-organized/Jungle/frog.png'),
+    require('../assets/images/still-animals-organized/Jungle/gorilla.png'),
+    require('../assets/images/still-animals-organized/Jungle/jaguar.png'),
+    require('../assets/images/still-animals-organized/Jungle/koala.png'),
+    require('../assets/images/still-animals-organized/Jungle/lemur.png'),
+    require('../assets/images/still-animals-organized/Jungle/orangutan.png'),
+    require('../assets/images/still-animals-organized/Jungle/panda.png'),
+    require('../assets/images/still-animals-organized/Jungle/panther.png'),
+    require('../assets/images/still-animals-organized/Jungle/sloth.png'),
+    require('../assets/images/still-animals-organized/Jungle/toucan.png'),
+    require('../assets/images/still-animals-organized/Jungle/turtle.png'),
+  ],
+  'Ocean': [
+    require('../assets/images/still-animals-organized/Ocean/crab.png'),
+    require('../assets/images/still-animals-organized/Ocean/dolphin.png'),
+    require('../assets/images/still-animals-organized/Ocean/fish.png'),
+    require('../assets/images/still-animals-organized/Ocean/jellyfish.png'),
+    require('../assets/images/still-animals-organized/Ocean/lobster.png'),
+    require('../assets/images/still-animals-organized/Ocean/octopus.png'),
+    require('../assets/images/still-animals-organized/Ocean/seahorse.png'),
+    require('../assets/images/still-animals-organized/Ocean/seaturtle.png'),
+    require('../assets/images/still-animals-organized/Ocean/shark.png'),
+    require('../assets/images/still-animals-organized/Ocean/shrimp.png'),
+    require('../assets/images/still-animals-organized/Ocean/starfish.png'),
+    require('../assets/images/still-animals-organized/Ocean/stringray.png'),
+    require('../assets/images/still-animals-organized/Ocean/whale.png'),
+  ],
+  'Savannah': [
+    require('../assets/images/still-animals-organized/Savannah/aelephant.png'),
+    require('../assets/images/still-animals-organized/Savannah/antelope.png'),
+    require('../assets/images/still-animals-organized/Savannah/bizon.png'),
+    require('../assets/images/still-animals-organized/Savannah/btiger.png'),
+    require('../assets/images/still-animals-organized/Savannah/eagle.png'),
+    require('../assets/images/still-animals-organized/Savannah/elephant.png'),
+    require('../assets/images/still-animals-organized/Savannah/flamingo.png'),
+    require('../assets/images/still-animals-organized/Savannah/gepard.png'),
+    require('../assets/images/still-animals-organized/Savannah/giraffe.png'),
+    require('../assets/images/still-animals-organized/Savannah/hippopotamus.png'),
+    require('../assets/images/still-animals-organized/Savannah/hyena.png'),
+    require('../assets/images/still-animals-organized/Savannah/leon.png'),
+    require('../assets/images/still-animals-organized/Savannah/ostrich.png'),
+    require('../assets/images/still-animals-organized/Savannah/rhinoceros.png'),
+    require('../assets/images/still-animals-organized/Savannah/tiger.png'),
+    require('../assets/images/still-animals-organized/Savannah/wildboar.png'),
+    require('../assets/images/still-animals-organized/Savannah/zebra.png'),
+  ],
 };
 
 // Fallback to using the translated name for now - this will restore the original behavior 
@@ -1017,8 +1254,6 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   // Fade in animation for content
   const [contentOpacity] = useState(() => new Animated.Value(0));
   
-  // Blur overlay fade animation
-  const [blurOpacity] = useState(() => new Animated.Value(0));
   
   // Mission stamp fade animation (shows after blur)
   const [stampOpacity] = useState(() => new Animated.Value(0));
@@ -1034,6 +1269,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     id: number;
     x: number;
     y: number;
+    targetX: number;
     targetY: number;
     color: string;
     source: any;
@@ -1041,9 +1277,10 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     popAnimValue: Animated.Value;
     visible: boolean;
     isPopping: boolean;
-    pieces?: Array<{ dx: number; dy: number; rotation: number }>
+    pieces?: Array<{ dx: number; dy: number; rotation: number }>;
   }>>([]);
   const balloonIdRef = useRef(0);
+  
   
   // Complete mission button bounce animation
   const [buttonBounceScale] = useState(() => new Animated.Value(1));
@@ -1051,6 +1288,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   // Hand pop animations flanking the button
   const [leftHandScale] = useState(() => new Animated.Value(1));
   const [rightHandScale] = useState(() => new Animated.Value(1));
+
 
   // Initialize guide to first available unrevealed animal when screen mounts
   useEffect(() => {
@@ -1082,7 +1320,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       console.log('Effect check - Total available animals:', availableAnimals.size);
       
       // Show button when there are available animals, but enable only when all are revealed
-      if (!showCompleteButton) {
+      if (!showCompleteButton && availableAnimals.size > 0) {
         console.log('Showing complete button (will be enabled when all animals revealed)...');
         setShowCompleteButton(true);
       }
@@ -1140,11 +1378,10 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       magnifyingGlassRotation.setValue(0);
       magnifyingGlassScale.setValue(1);
       
-      // Reset blur animation
-      blurOpacity.setValue(0);
       
       // Reset stamp animation
       stampOpacity.setValue(0);
+      
     };
   }, []);
 
@@ -1152,6 +1389,15 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   const handleAllAnimalsRevealed = () => {
     setAllAnimalsRevealed(true);
     setShowCompleteButton(true);
+  };
+
+
+
+
+  // Start balloon generation (only initial batch)
+  const startBalloons = () => {
+    // Generate initial balloons only
+    generateBalloons();
   };
 
   // Balloon functions
@@ -1165,48 +1411,38 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
 
     const newBalloons: typeof balloons = [];
     
-    // Create 6 balloons with staggered animations
-    for (let i = 0; i < 6; i++) {
+    // Create 12 balloons for more celebration
+    const numBalloons = 12;
+    
+    for (let i = 0; i < numBalloons; i++) {
       const id = balloonIdRef.current++;
       const balloonAsset = balloonAssets[i % balloonAssets.length];
       
       // Position balloons along the sides and corners to avoid center
       let x, targetY;
       
-      switch(i) {
-        case 0: // Top-left
-          x = 50;
-          targetY = 150;
-          break;
-        case 1: // Top-right
-          x = screenW - 270; // Adjusted for 220px balloon width
-          targetY = 150;
-          break;
-        case 2: // Left-middle
-          x = 30;
-          targetY = screenH / 2 - 100;
-          break;
-        case 3: // Right-middle
-          x = screenW - 250; // Adjusted for 220px balloon width
-          targetY = screenH / 2 - 100;
-          break;
-        case 4: // Bottom-left
-          x = 50;
-          targetY = screenH - 350;
-          break;
-        case 5: // Bottom-right
-          x = screenW - 270; // Adjusted for 220px balloon width
-          targetY = screenH - 350;
-          break;
-        default:
-          x = 50;
-          targetY = 200;
-      }
+      // Calculate balloon size based on device type
+      const balloonSize = isTablet ? 300 : 220;
+      const balloonOffset = balloonSize + 20; // Add some padding
+      
+      // Calculate position below mission complete sign (which is at 20% of screen height)
+      const missionSignBottom = screenH * 0.2 + 100; // 20% + some padding for the sign
+      
+      // Random positioning across the screen
+      // Ensure balloons stay below mission sign and within screen bounds
+      const minX = balloonSize / 2; // Half balloon width from left edge
+      const maxX = screenW - balloonSize / 2; // Half balloon width from right edge
+      const minY = missionSignBottom + 50; // Below mission sign
+      const maxY = screenH - 200; // Leave more space at bottom to keep balloons visible
+      
+      x = minX + Math.random() * (maxX - minX);
+      targetY = minY + Math.random() * (maxY - minY);
       
       const balloon = {
         id,
-        x,
-        y: screenH + 50, // Start closer to visible area
+        x: screenW / 2, // Start from center horizontally
+        y: screenH + 50, // Start from bottom
+        targetX: x, // Move to random position
         targetY,
         color: balloonAsset.color,
         source: balloonAsset.source,
@@ -1238,38 +1474,58 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           // Stop rise animation
           try { balloon.animValue.stopAnimation(); } catch {}
 
-          // Play pop sound
-          try {
-            const popPlayer = createAudioPlayer(require('../assets/sounds/other/balloon-pop.mp3'));
-            popPlayer.play();
-            popPlayer.addListener('playbackStatusUpdate', (status: any) => {
-              if (status.didJustFinish) popPlayer.remove();
-            });
-          } catch (error) {
-            console.warn('Error playing balloon pop sound:', error);
-          }
+          // Instant bounce for maximum responsiveness
+          Animated.sequence([
+            Animated.timing(balloon.popAnimValue, {
+              toValue: 0.1, // Quick bounce
+              duration: 20, // Ultra fast bounce
+              useNativeDriver: true,
+            }),
+            Animated.timing(balloon.popAnimValue, {
+              toValue: 0, // Reset
+              duration: 10, // Ultra fast reset
+              useNativeDriver: true,
+            })
+          ]).start();
 
-          // Generate pieces
-          const pieces = Array.from({ length: 6 }).map((_, idx) => {
-            const angle = (idx / 6) * Math.PI * 2;
+          // Play pop sound instantly
+          setTimeout(() => {
+            try {
+              const popPlayer = createAudioPlayer(require('../assets/sounds/other/balloon-pop.mp3'));
+              popPlayer.play();
+              popPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                if (status.didJustFinish) popPlayer.remove();
+              });
+            } catch (error) {
+              console.warn('Error playing balloon pop sound:', error);
+            }
+          }, 30); // Instant sound trigger
+
+          // Generate more realistic pieces with varied sizes and trajectories
+          const pieces = Array.from({ length: 8 }).map((_, idx) => {
+            const angle = (idx / 8) * Math.PI * 2;
+            const velocity = 60 + Math.random() * 40; // Varying velocities
+            const gravity = 0.3 + Math.random() * 0.4; // Varying gravity effects
             return {
-              dx: Math.cos(angle) * 80, // Larger spread for bigger balloons
-              dy: Math.sin(angle) * 80,
-              rotation: Math.floor(Math.random() * 180) - 90,
+              dx: Math.cos(angle) * velocity,
+              dy: Math.sin(angle) * velocity * gravity,
+              rotation: Math.floor(Math.random() * 360) - 180, // Full rotation range
             };
           });
 
-          // Start pop animation
-          Animated.timing(balloon.popAnimValue, {
-            toValue: 1,
-            duration: 350,
-            useNativeDriver: true,
-          }).start(() => {
-            // Remove balloon after animation
-            setBalloons(current => current.filter(b => b.id !== balloonId));
-            // Generate new balloon
-            setTimeout(() => generateNewBalloon(), 1000);
-          });
+          // Start the main pop animation instantly
+          setTimeout(() => {
+            Animated.timing(balloon.popAnimValue, {
+              toValue: 1,
+              duration: 300, // Ultra fast pop animation
+              useNativeDriver: true,
+            }).start(() => {
+              // Remove balloon after animation
+              setBalloons(current => current.filter(b => b.id !== balloonId));
+              // Generate new balloon quickly
+              setTimeout(() => generateNewBalloon(), 400 + Math.random() * 200); // Ultra fast regeneration
+            });
+          }, 40); // Instant start after bounce
           
           return { ...balloon, isPopping: true, pieces };
         }
@@ -1293,40 +1549,28 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     const position = Math.floor(Math.random() * 6);
     let x, targetY;
     
-    switch(position) {
-      case 0: // Top-left
-        x = 50 + Math.random() * 50;
-        targetY = 150 + Math.random() * 50;
-        break;
-      case 1: // Top-right
-        x = screenW - 270 - Math.random() * 50;
-        targetY = 150 + Math.random() * 50;
-        break;
-      case 2: // Left-middle
-        x = 30 + Math.random() * 30;
-        targetY = screenH / 2 - 100 + Math.random() * 100;
-        break;
-      case 3: // Right-middle
-        x = screenW - 250 - Math.random() * 30;
-        targetY = screenH / 2 - 100 + Math.random() * 100;
-        break;
-      case 4: // Bottom-left
-        x = 50 + Math.random() * 50;
-        targetY = screenH - 350 - Math.random() * 50;
-        break;
-      case 5: // Bottom-right
-        x = screenW - 270 - Math.random() * 50;
-        targetY = screenH - 350 - Math.random() * 50;
-        break;
-      default:
-        x = 50;
-        targetY = 200;
-    }
+    // Calculate balloon size based on device type
+    const balloonSize = isTablet ? 300 : 220;
+    const balloonOffset = balloonSize + 20; // Add some padding
+    
+    // Calculate position below mission complete sign (which is at 20% of screen height)
+    const missionSignBottom = screenH * 0.2 + 100; // 20% + some padding for the sign
+    
+    // Random positioning across the screen
+    // Ensure balloons stay below mission sign and within screen bounds
+    const minX = balloonSize / 2; // Half balloon width from left edge
+    const maxX = screenW - balloonSize / 2; // Half balloon width from right edge
+    const minY = missionSignBottom + 50; // Below mission sign
+    const maxY = screenH - 200; // Leave more space at bottom to keep balloons visible
+    
+    x = minX + Math.random() * (maxX - minX);
+    targetY = minY + Math.random() * (maxY - minY);
     
     const newBalloon = {
       id,
-      x,
-      y: screenH + 50, // Start closer to visible area
+      x: screenW / 2, // Start from center horizontally
+      y: screenH + 50, // Start from bottom
+      targetX: x, // Move to random position
       targetY,
       color: balloonAsset.color,
       source: balloonAsset.source,
@@ -1422,16 +1666,6 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           duration: 500,
           useNativeDriver: true,
         }),
-        Animated.timing(videoOpacity, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(blurOpacity, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
       ]).start(() => {
         // After fade out completes, reset states
         setTimeout(() => {
@@ -1461,8 +1695,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     
     // Generate balloons when mission is completed
     setTimeout(() => {
-      generateBalloons();
-    }, 1200); // Start sooner for better effect
+      startBalloons();
+    }, 1200); // Start initial balloons
     
     // Note: Level completion is now handled in handleCloseMissionComplete
     // when the user clicks CLOSE button
@@ -1489,53 +1723,26 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         console.warn('Error playing success sound:', error);
       }
 
-      // Sequence: First blur, then stamp appears, then video - total 1.6 seconds
-      const sequenceAnimation = Animated.sequence([
-        // First fade in the blur (0.6s)
-        Animated.timing(blurOpacity, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        // Then show the mission stamp after blur is visible (0.4s)
-        Animated.timing(stampOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        // Finally fade in the video container (0.6s)
-        Animated.timing(videoOpacity, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]);
-
-      // Disable pulse animation to prevent bouncing
-      // const pulseAnimation = Animated.loop(
-      //   Animated.sequence([
-      //     Animated.timing(missionStampScale, {
-      //       toValue: 1.2,
-      //       duration: 800,
-      //       useNativeDriver: true,
-      //     }),
-      //     Animated.timing(missionStampScale, {
-      //       toValue: 1,
-      //       duration: 800,
-      //       useNativeDriver: true,
-      //     }),
-      //   ])
-      // );
+      // Show the mission stamp immediately
+      const sequenceAnimation = Animated.timing(stampOpacity, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      });
 
       // Start the sequence without pulsing
       sequenceAnimation.start();
       
+      // Generate balloons with animals after stamp appears
+      setTimeout(() => {
+        generateBalloons();
+      }, 1200);
+      
       return () => {
         sequenceAnimation.stop();
-        // pulseAnimation.stop();
       };
     }
-  }, [missionCompleted, missionStampScale, blurOpacity, stampOpacity, videoOpacity, videoScale]);
+  }, [missionCompleted, missionStampScale, stampOpacity, videoOpacity, videoScale]);
 
   // Flash and bounce animation for complete mission button when enabled
   useEffect(() => {
@@ -1599,6 +1806,264 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     // Use the same discover background for all levels
     return require('../assets/images/discover/discover_bg.png');
   };
+
+  // If mission is completed, show the separate mission complete screen
+  if (missionCompleted) {
+    return (
+      <View style={{ flex: 1 }}>
+        <ImageBackground
+          source={require('../assets/images/mission_complete_bg.png')}
+          resizeMode="cover"
+          style={{
+            flex: 1,
+            width: '100%',
+            height: '100%',
+          }}
+        >
+          {/* Mission Complete Content */}
+          <Animated.View style={{
+            flex: 1,
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            paddingTop: isTablet ? 60 : 40,
+            opacity: stampOpacity,
+          }}>
+            {/* Mission Completed Stamp */}
+            <Animated.View style={{
+              alignItems: 'center',
+              transform: [{ scale: missionStampScale }],
+            }}>
+              <View
+                style={{
+                  paddingVertical: isTablet ? 24 : 14,
+                  paddingHorizontal: isTablet ? 36 : 20,
+                  borderWidth: isTablet ? 8 : 5,
+                  borderColor: '#D32F2F',
+                  borderStyle: 'dashed',
+                  borderRadius: 18,
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                  shadowColor: '#FFD700',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.8,
+                  shadowRadius: 20,
+                  elevation: 15,
+                }}
+              >
+                <Text
+                  style={{
+                    color: '#D32F2F',
+                    fontSize: isTablet ? 36 : 20,
+                    fontWeight: '900',
+                    letterSpacing: 2,
+                    textTransform: 'uppercase',
+                    textAlign: 'center',
+                    textShadowColor: '#FFD700',
+                    textShadowOffset: { width: 0, height: 0 },
+                    textShadowRadius: 15,
+                  }}
+                >
+                  {t('missionComplete')}
+                </Text>
+              </View>
+            </Animated.View>
+
+            {/* Balloons */}
+            {balloons.map((balloon) => {
+              const translateX = balloon.animValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [balloon.x, balloon.targetX],
+              });
+
+              const translateY = balloon.animValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [balloon.y, balloon.targetY],
+              });
+
+              // More realistic balloon popping animation
+              const balloonScale = balloon.popAnimValue.interpolate({
+                inputRange: [0, 0.1, 0.3, 0.6, 1],
+                outputRange: [1, 1.15, 1.3, 0.8, 0],
+                extrapolate: 'clamp',
+              });
+
+              const balloonOpacity = balloon.popAnimValue.interpolate({
+                inputRange: [0, 0.2, 0.4, 1],
+                outputRange: [1, 1, 0.7, 0],
+                extrapolate: 'clamp',
+              });
+
+              // More realistic balloon deformation using rotation
+              const balloonRotation = balloon.popAnimValue.interpolate({
+                inputRange: [0, 0.1, 0.3, 1],
+                outputRange: ['0deg', '5deg', '10deg', '0deg'],
+                extrapolate: 'clamp',
+              });
+
+              // Piece colors based on balloon color with more realistic shades
+              const pieceColor = balloon.color === 'pink' ? '#FF1493' : 
+                               balloon.color === 'blue' ? '#1E90FF' : 
+                               balloon.color === 'green' ? '#00FF7F' : '#FF8C00';
+
+              // More realistic piece opacity with fade-in and fade-out
+              const pieceOpacity = balloon.popAnimValue.interpolate({
+                inputRange: [0, 0.05, 0.7, 1],
+                outputRange: [0, 1, 0.8, 0],
+                extrapolate: 'clamp',
+              });
+
+              // Add gravity effect to pieces
+              const pieceGravity = balloon.popAnimValue.interpolate({
+                inputRange: [0, 0.3, 1],
+                outputRange: [0, 0.5, 1],
+                extrapolate: 'clamp',
+              });
+
+              return (
+                <Animated.View
+                  key={balloon.id}
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    transform: [
+                      { translateX },
+                      { translateY }
+                    ],
+                    zIndex: 1101,
+                    elevation: 1101,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => popBalloon(balloon.id)}
+                    style={{
+                      width: isTablet ? 300 : 220,
+                      height: isTablet ? 300 : 220,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Animated.Image
+                      source={balloon.source}
+                      style={{
+                        width: isTablet ? 300 : 220,
+                        height: isTablet ? 300 : 220,
+                        resizeMode: 'contain',
+                        transform: [
+                          { scale: balloonScale },
+                          { rotate: balloonRotation }
+                        ],
+                        opacity: balloonOpacity,
+                      }}
+                    />
+                  </TouchableOpacity>
+
+                  {/* Balloon pieces (shards) with realistic physics */}
+                  {balloon.pieces?.map((piece, i) => {
+                    // More realistic piece sizes and shapes
+                    const pieceSize = 8 + (i % 3) * 4; // Varying sizes 8, 12, 16
+                    const pieceShape = i % 2 === 0 ? pieceSize / 2 : pieceSize / 4; // Round vs square-ish
+                    
+                    // Add slight delay for each piece for more realistic effect
+                    const pieceDelay = i * 0.02;
+                    const adjustedAnimValue = balloon.popAnimValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 1],
+                      extrapolate: 'clamp',
+                    });
+
+                    return (
+                      <Animated.View
+                        key={`piece-${balloon.id}-${i}`}
+                        style={{
+                          position: 'absolute',
+                          left: isTablet ? 150 : 110, // Center on balloon
+                          top: isTablet ? 150 : 110, // Center on balloon
+                          width: pieceSize,
+                          height: pieceSize,
+                          borderRadius: pieceShape,
+                          backgroundColor: pieceColor,
+                          shadowColor: pieceColor,
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.6,
+                          shadowRadius: 4,
+                          elevation: 3,
+                          transform: [
+                            {
+                              translateX: adjustedAnimValue.interpolate({
+                                inputRange: [0, 0.3, 1],
+                                outputRange: [0, piece.dx * 0.7, piece.dx],
+                                extrapolate: 'clamp',
+                              }),
+                            },
+                            {
+                              translateY: adjustedAnimValue.interpolate({
+                                inputRange: [0, 0.3, 1],
+                                outputRange: [0, piece.dy * 0.7, piece.dy],
+                                extrapolate: 'clamp',
+                              }),
+                            },
+                            {
+                              rotate: adjustedAnimValue.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ['0deg', `${piece.rotation + (i * 15)}deg`],
+                                extrapolate: 'clamp',
+                              }),
+                            },
+                            {
+                              scale: adjustedAnimValue.interpolate({
+                                inputRange: [0, 0.1, 0.8, 1],
+                                outputRange: [0, 0.5, 1, 0.7],
+                                extrapolate: 'clamp',
+                              }),
+                            },
+                          ],
+                          opacity: pieceOpacity,
+                        }}
+                      />
+                    );
+                  })}
+                </Animated.View>
+              );
+            })}
+
+            {/* Close Button */}
+            <Animated.View style={{
+              position: 'absolute',
+              top: isTablet ? 20 : 20,
+              right: isTablet ? 30 : 20,
+              opacity: stampOpacity,
+              zIndex: 2000,
+            }}>
+              <TouchableOpacity
+                onPress={handleCloseMissionComplete}
+                style={{
+                  width: isTablet ? 80 : 60,
+                  height: isTablet ? 80 : 60,
+                  borderRadius: isTablet ? 40 : 30,
+                  backgroundColor: '#FF4444',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 5,
+                }}
+              >
+                <Text style={{
+                  color: 'white',
+                  fontSize: isTablet ? 40 : 30,
+                  fontWeight: 'bold',
+                }}>
+                  ×
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </Animated.View>
+        </ImageBackground>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -1846,405 +2311,35 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
             />
           </View>
         </ScrollView>
-        
-        {/* Blur overlay when mission is completed */}
-        {missionCompleted && (
-          <Animated.View
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 999,
-              opacity: blurOpacity,
-            }}
-          >
-            <BlurView
-              intensity={80}
-              style={{
-                flex: 1,
-              }}
-            />
-          </Animated.View>
-        )}
-
-        {/* Balloon Container - Full screen coverage */}
-        {missionCompleted && (
-          <View
-            pointerEvents="box-none"
-            style={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              right: 0, 
-              bottom: 0,
-              zIndex: 1100, // Higher than stamp (1000) to appear on top
-              elevation: 1100,
-            }}
-          >
-            {balloons.map((balloon) => {
-              if (!balloon.visible) return null;
-              
-              const translateY = balloon.animValue.interpolate({
-                inputRange: [0, 1],
-                outputRange: [balloon.y, balloon.targetY],
-              });
-
-              const riseScale = balloon.animValue.interpolate({
-                inputRange: [0, 0.05, 1],
-                outputRange: [0.8, 1, 1], // Start at 0.8 scale instead of 0 to prevent flicker
-              });
-              
-              const riseOpacity = balloon.animValue.interpolate({
-                inputRange: [0, 0.1, 1],
-                outputRange: [0, 1, 1], // Smooth fade in
-              });
-
-              const popScale = balloon.popAnimValue.interpolate({
-                inputRange: [0, 0.5, 1],
-                outputRange: [1, 1.8, 0.1],
-              });
-
-              const popOpacity = balloon.popAnimValue.interpolate({
-                inputRange: [0, 0.3, 1],
-                outputRange: [1, 1, 0],
-              });
-
-              const finalScale = balloon.isPopping ? popScale : riseScale;
-
-              const pieceOpacity = balloon.popAnimValue.interpolate({
-                inputRange: [0, 0.1, 1],
-                outputRange: [0, 1, 0],
-              });
-
-              const pieceColor =
-                balloon.color === 'pink'
-                  ? 'rgba(255, 126, 184, 0.9)'
-                  : balloon.color === 'blue'
-                  ? 'rgba(121, 167, 255, 0.9)'
-                  : balloon.color === 'green'
-                  ? 'rgba(109, 209, 109, 0.9)'
-                  : 'rgba(255, 152, 0, 0.9)';
-
-              return (
-                <Animated.View
-                  key={balloon.id}
-                  style={{
-                    position: 'absolute',
-                    left: balloon.x,
-                    transform: [{ translateY }],
-                    zIndex: 1101,
-                    elevation: 1101,
-                  }}
-                >
-                  <Animated.View style={{ 
-                    transform: [{ scale: balloon.isPopping ? 1 : riseScale }], 
-                    opacity: balloon.isPopping ? 1 : riseOpacity,
-                    width: 220,
-                    height: 220,
-                  }}>
-                    {!balloon.isPopping && (
-                      <TouchableOpacity
-                        onPress={() => popBalloon(balloon.id)}
-                        activeOpacity={0.8}
-                        disabled={balloon.isPopping}
-                      >
-                        <Image
-                          source={balloon.source}
-                          style={{ width: 220, height: 220 }} // Bigger balloons
-                          resizeMode="contain"
-                        />
-                      </TouchableOpacity>
-                    )}
-
-                    {balloon.isPopping && (
-                    <>
-                      {/* Burst scale flash */}
-                      <Animated.View
-                        style={{
-                          position: 'absolute',
-                          left: 110, // Center horizontally on 220px balloon
-                          top: 110, // Center vertically on 220px balloon
-                          width: 24,
-                          height: 24,
-                          marginLeft: -12, // Half of width to center
-                          marginTop: -12, // Half of height to center
-                          borderRadius: 12,
-                          backgroundColor: 'rgba(255,255,255,0.7)',
-                          transform: [
-                            {
-                              scale: balloon.popAnimValue.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0.2, 2.8],
-                              }),
-                            },
-                          ],
-                          opacity: pieceOpacity,
-                        }}
-                      />
-
-                      {/* Shards */}
-                      {balloon.pieces?.map((p, i) => (
-                        <Animated.View
-                          key={`piece-${balloon.id}-${i}`}
-                          style={{
-                            position: 'absolute',
-                            left: 110, // Center on 220px balloon
-                            top: 110, // Center on 220px balloon
-                            width: 16,
-                            height: 16,
-                            borderRadius: 3,
-                            backgroundColor: pieceColor,
-                            transform: [
-                              {
-                                translateX: balloon.popAnimValue.interpolate({
-                                  inputRange: [0, 1],
-                                  outputRange: [0, p.dx],
-                                }),
-                              },
-                              {
-                                translateY: balloon.popAnimValue.interpolate({
-                                  inputRange: [0, 1],
-                                  outputRange: [0, p.dy],
-                                }),
-                              },
-                              {
-                                rotate: balloon.popAnimValue.interpolate({
-                                  inputRange: [0, 1],
-                                  outputRange: ['0deg', `${p.rotation}deg`],
-                                }),
-                              },
-                              {
-                                scale: balloon.popAnimValue.interpolate({
-                                  inputRange: [0, 1],
-                                  outputRange: [0.3, 1],
-                                }),
-                              },
-                            ],
-                            opacity: pieceOpacity,
-                          }}
-                        />
-                      ))}
-                    </>
-                    )}
-                  </Animated.View>
-                </Animated.View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Mission Completed Stamp - positioned higher to avoid video overlap */}
-        {missionCompleted && (
-          <Animated.View style={{
-            position: 'absolute',
-            top: '20%', // Position stamp in upper portion of screen
-            left: 0,
-            right: 0,
-            alignItems: 'center',
-            zIndex: 1000,
-            opacity: stampOpacity,
-            transform: [
-              { scale: missionStampScale }
-            ],
-          }}>
-            <View
-              style={{
-                paddingVertical: isTablet ? 24 : 14,
-                paddingHorizontal: isTablet ? 36 : 20,
-                borderWidth: isTablet ? 8 : 5,
-                borderColor: '#D32F2F',
-                borderStyle: 'dashed',
-                borderRadius: 18,
-                backgroundColor: 'rgba(255,255,255,0.9)',
-                transform: [{ rotate: '-12deg' }],
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.25,
-                shadowRadius: 6,
-                elevation: 8,
-              }}
-            >
-              <Text
-                style={{
-                  color: '#D32F2F',
-                  fontSize: isTablet ? 36 : 20,
-                  fontWeight: '900',
-                  letterSpacing: 2,
-                  textTransform: 'uppercase',
-                  textAlign: 'center',
-                  textShadowColor: 'rgba(0,0,0,0.15)',
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 2,
-                }}
-              >
-                {t('missionComplete')}
-              </Text>
-            </View>
-            
-            {/* Video Container centered on screen */}
-            {levelName && levelVideoMap[levelName.toLowerCase()] && (
-              <>
-                {/* Semi-transparent backdrop behind video */}
-                <Animated.View style={{
-                  position: 'absolute',
-                  top: '300%', // Positioned in lower portion of screen
-                  left: '50%',
-                  width: isTablet ? 450 : 340,
-                  height: isTablet ? 275 : 209,
-                  marginTop: isTablet ? -137.5 : -104.5,
-                  marginLeft: isTablet ? -225 : -170,
-                  backgroundColor: 'rgba(0,0,0,0.3)',
-                  borderRadius: 20,
-                  opacity: videoOpacity,
-                  transform: [{ scale: videoScale }],
-                }} />
-                
-                <Animated.View style={{
-                  position: 'absolute',
-                  top: '300%', // Positioned in lower portion of screen
-                  left: '50%',
-                  width: isTablet ? 400 : 300,
-                  height: isTablet ? 225 : 169, // 16:9 aspect ratio
-                  marginTop: isTablet ? -112.5 : -84.5, // half of height
-                  marginLeft: isTablet ? -200 : -150, // half of width
-                  borderRadius: 15,
-                  overflow: 'hidden',
-                  backgroundColor: '#000',
-                  shadowColor: '#4CAF50',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.5,
-                  shadowRadius: 20,
-                  elevation: 10,
-                  borderWidth: 3,
-                  borderColor: '#4CAF50',
-                  opacity: videoOpacity,
-                  transform: [{ scale: videoScale }],
-                }}>
-                <LevelVideoPlayer
-                  source={levelVideoMap[levelName.toLowerCase()]}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                  }}
-                  loop={true}
-                  muted={false}
-                  autoPlay={true}
-                  contentFit="cover"
-                  onVideoEnd={() => {}} // Empty handler to prevent any end detection logic
-                  renderVolumeButton={(isMuted, toggleVolume) => (
-                    <TouchableOpacity
-                      onPress={toggleVolume}
-                      style={{
-                        position: 'absolute',
-                        top: 10,
-                        right: 10,
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        borderRadius: 25,
-                        width: 45,
-                        height: 45,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderWidth: 2,
-                        borderColor: 'rgba(255,255,255,0.3)',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 3,
-                        elevation: 5,
-                      }}
-                    >
-                      <Ionicons 
-                        name={isMuted ? "volume-mute" : "volume-medium"} 
-                        size={24} 
-                        color="white" 
-                      />
-                    </TouchableOpacity>
-                  )}
-                />
-                <View style={{
-                  position: 'absolute',
-                  bottom: 10,
-                  left: 10,
-                  right: 10,
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}>
-                  <View style={{
-                    backgroundColor: 'rgba(0,0,0,0.7)',
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 20,
-                  }}>
-                    <Text style={{
-                      color: 'white',
-                      fontSize: 14,
-                      fontWeight: 'bold',
-                    }}>
-                      {levelName.charAt(0).toUpperCase() + levelName.slice(1)} Level
-                    </Text>
-                  </View>
-                  <View style={{
-                    backgroundColor: 'rgba(76, 175, 80, 0.9)',
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 20,
-                  }}>
-                    <Text style={{
-                      color: 'white',
-                      fontSize: 12,
-                      fontWeight: 'bold',
-                    }}>
-                       Mission Completed
-                    </Text>
-                  </View>
-                </View>
-              </Animated.View>
-              </>
-            )}
-
-            {/* Close button below video */}
-            <Animated.View style={{
-              position: 'absolute',
-              top: '300%', // Same as video position
-              left: '50%',
-              marginTop: isTablet ? 180 : 140, // Position below video
-              marginLeft: isTablet ? -80 : -60, // Center the button
-              opacity: videoOpacity, // Fade in with video
-            }}>
-              <TouchableOpacity
-                onPress={handleCloseMissionComplete}
-                style={{
-                  backgroundColor: '#4CAF50',
-                  paddingVertical: isTablet ? 15 : 12,
-                  paddingHorizontal: isTablet ? 40 : 30,
-                  borderRadius: 25,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 5,
-                  elevation: 5,
-                  borderWidth: 2,
-                  borderColor: '#fff',
-                }}
-              >
-                <Text style={{
-                  color: '#fff',
-                  fontSize: isTablet ? 18 : 16,
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                }}>
-                  CLOSE
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-            
-            {/* Reset Mission Button removed */}
-          </Animated.View>
-        )}
       </Animated.View>
+
+
+
+
+
+      {/* Mission Complete Background - subtle overlay behind mission elements */}
+      {missionCompleted && (
+        <Animated.View style={{
+          position: 'absolute',
+          top: '15%', // Start below the stamp area
+          left: '10%', // Add some margin from edges
+          right: '10%',
+          bottom: '10%', // Leave some space at bottom
+          zIndex: 1,
+          opacity: 0.3, // Make it more subtle
+          borderRadius: 20,
+          overflow: 'hidden',
+        }}>
+          <ImageBackground
+            source={require('../assets/images/mission_complete_bg.png')}
+            style={{
+              width: '100%',
+              height: '100%',
+            }}
+            resizeMode="cover"
+          />
+        </Animated.View>
+      )}
       
       {/* Loading indicator while background loads */}
       {!backgroundLoaded && (
@@ -2386,7 +2481,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                    {t('goBack')}
                  </Text>
                </TouchableOpacity>
-                         </View>
+             </View>
            </View>
          </View>
        </Modal>

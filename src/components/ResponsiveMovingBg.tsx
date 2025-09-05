@@ -75,7 +75,7 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
         // Scale image to cover the entire screen
         const scaleX = containerWidth / originalWidth;
         const scaleY = containerHeight / originalHeight;
-        const scale = Math.max(scaleX, scaleY) * 1.1; // Slight overscan to ensure coverage
+        const scale = Math.max(scaleX, scaleY); // Remove extra overscan - scaling is handled by background system
         
         const scaledWidth = originalWidth * scale;
         const scaledHeight = originalHeight * scale;
@@ -185,9 +185,56 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
   const getImageStyle = (baseTransform: any) => {
     const overlap = 2; // Small overlap to hide seams
     
-    // Center the image on the screen
-    const leftOffset = -(imgWidth - deviceInfo.width) / 2;
-    const topOffset = -(imgHeight - deviceInfo.height) / 2;
+    // Center the image on the screen, accounting for safe areas
+    const totalWidth = deviceInfo.width + safeAreaInsets.left + safeAreaInsets.right;
+    const totalHeight = deviceInfo.height + safeAreaInsets.top + safeAreaInsets.bottom;
+    
+    let leftOffset = -(imgWidth - totalWidth) / 2;
+    let topOffset = -(imgHeight - totalHeight) / 2;
+    
+    // Apply custom positioning for Savannah level to show more ground
+    if (levelName?.toLowerCase() === 'savannah') {
+      const isMobileDevice = deviceInfo.deviceType === 'phone' || deviceInfo.deviceType === 'foldable';
+      
+      if (isMobileDevice) {
+        // Move background - treat foldable same as phone
+        const groundOffset = deviceInfo.isLandscape ? 
+          deviceInfo.height * -0.4 :  // 50% up in landscape
+          deviceInfo.height * 0.4;    // 40% down in portrait
+        topOffset = topOffset + groundOffset;
+        
+        console.log('🦁🦁🦁 SAVANNAH MOVING BG - Mobile positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          groundOffset,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height }
+        });
+      }
+    }
+
+    // Apply custom positioning for Forest level to show more ground
+    if (levelName?.toLowerCase() === 'forest') {
+      const isMobileDevice = deviceInfo.deviceType === 'phone' || deviceInfo.deviceType === 'foldable';
+      
+      if (isMobileDevice) {
+        // Move background down more noticeably - treat foldable same as phone
+        const groundOffset = deviceInfo.isLandscape ? 
+          deviceInfo.height * - 0.1 :   // 40% down in landscape
+          deviceInfo.height * 0.5;    // 50% down in portrait
+        topOffset = topOffset + groundOffset;
+        
+        console.log('🌲🌲🌲 FOREST MOVING BG - Mobile positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          groundOffset,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height }
+        });
+      }
+    }
     
     return {
       position: 'absolute' as const,
@@ -203,11 +250,32 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
     imageSource: !!imageSource,
     deviceInfo: { width: deviceInfo.width, height: deviceInfo.height },
     imgDimensions: { width: imgWidth, height: imgHeight },
+    safeAreaInsets,
     positioning: {
-      leftOffset: -(imgWidth - deviceInfo.width) / 2,
-      topOffset: -(imgHeight - deviceInfo.height) / 2
+      leftOffset: -(imgWidth - (deviceInfo.width + safeAreaInsets.left + safeAreaInsets.right)) / 2,
+      topOffset: -(imgHeight - (deviceInfo.height + safeAreaInsets.top + safeAreaInsets.bottom)) / 2
     }
   });
+
+  // Add extra debug for Savannah
+  if (levelName?.toLowerCase() === 'savannah') {
+    console.log('🦁🦁🦁 SAVANNAH LEVEL DETECTED IN MOVING BG!', {
+      levelName,
+      deviceType: deviceInfo.deviceType,
+      isPhone: deviceInfo.deviceType === 'phone',
+      screenDimensions: { width: deviceInfo.width, height: deviceInfo.height }
+    });
+  }
+
+  // Add extra debug for Forest
+  if (levelName?.toLowerCase() === 'forest') {
+    console.log('🌲🌲🌲 FOREST LEVEL DETECTED IN MOVING BG!', {
+      levelName,
+      deviceType: deviceInfo.deviceType,
+      isMobileDevice: deviceInfo.deviceType === 'phone' || deviceInfo.deviceType === 'foldable',
+      screenDimensions: { width: deviceInfo.width, height: deviceInfo.height }
+    });
+  }
 
   // Don't render anything if no image source (after all hooks are called)
   if (!imageSource) {
@@ -220,6 +288,11 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
       {
         overflow: 'hidden',
         backgroundColor: 'transparent',
+        // Extend beyond safe areas to cover notch area
+        top: -safeAreaInsets.top,
+        bottom: -safeAreaInsets.bottom,
+        left: -safeAreaInsets.left,
+        right: -safeAreaInsets.right,
       }
     ]}>
       {/* First scrolling image */}
