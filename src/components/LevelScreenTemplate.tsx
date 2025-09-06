@@ -55,7 +55,6 @@ import { getResponsiveBackgroundStyles, getDeviceInfo } from '../utils/responsiv
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
-import LevelIntroVideo from './LevelIntroVideo';
 import { getLevelVideo } from '../utils/levelVideoMapping';
 
   // Water Progress Bar Component
@@ -382,7 +381,7 @@ export default function LevelScreenTemplate({
   });
 
   const [currentAnimalIndex, setCurrentAnimalIndex] = useState(
-    typeof initialIndex === 'number' ? initialIndex : -1
+    typeof initialIndex === 'number' ? initialIndex : 0
   );
   const [showName, setShowName] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -428,9 +427,9 @@ export default function LevelScreenTemplate({
 
   const labelShowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickFlagClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [canRenderLabel, setCanRenderLabel] = useState(false);
+  const [canRenderLabel, setCanRenderLabel] = useState(animals.length > 0);
   const [allAssetsReady, setAllAssetsReady] = useState(true); // Start as ready
-  const [initialIndexHydrated, setInitialIndexHydrated] = useState(false);
+  const [initialIndexHydrated, setInitialIndexHydrated] = useState(animals.length > 0);
   
   // Update hasClickedCurrentAnimal and show/hide label when navigating between animals
   useEffect(() => {
@@ -490,8 +489,11 @@ export default function LevelScreenTemplate({
     
     // Set defaults immediately for instant rendering
     if (animals.length > 0) {
-      const defaultIndex = typeof initialIndex === 'number' ? initialIndex : 0;
-      setCurrentAnimalIndex(defaultIndex);
+      // Only set currentAnimalIndex if it's not already valid (0 or initialIndex)
+      if (currentAnimalIndex < 0 || currentAnimalIndex >= animals.length) {
+        const defaultIndex = typeof initialIndex === 'number' ? initialIndex : 0;
+        setCurrentAnimalIndex(defaultIndex);
+      }
       setVisitedAnimals(new Set());
       setHasClickedCurrentAnimal(false);
       setShowName(false);
@@ -513,13 +515,17 @@ export default function LevelScreenTemplate({
         setVisitedAnimals(visitedSet);
         console.log(`📂 Loaded progress for ${levelName}:`, visitedArray);
 
-        // Only update index if no initialIndex was provided
+        // Only update index if no initialIndex was provided and we found a better index
         if (typeof initialIndex !== 'number') {
-          let indexToShow = 0;
+          let indexToShow = currentAnimalIndex; // Start with current index
           if (animals.length > 0) {
             if (visitedSet.size < animals.length) {
+              // Find first unvisited animal
               for (let i = 0; i < animals.length; i++) {
-                if (!visitedSet.has(i)) { indexToShow = i; break; }
+                if (!visitedSet.has(i)) { 
+                  indexToShow = i; 
+                  break; 
+                }
               }
             } else {
               // All visited: try to restore saved index if available
@@ -531,7 +537,10 @@ export default function LevelScreenTemplate({
               }
             }
           }
-          setCurrentAnimalIndex(indexToShow);
+          // Only update if we found a different index
+          if (indexToShow !== currentAnimalIndex) {
+            setCurrentAnimalIndex(indexToShow);
+          }
         }
 
         // Update UI flags based on the actual current animal index
@@ -2211,45 +2220,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   return (
     <View style={[dynamicStyles.container, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
       {/* Level intro video overlay */}
-      {showIntroVideo && videoSource && (
-        <LevelIntroVideo
-          source={videoSource}
-          onVideoEnd={() => {
-            setShowIntroVideo(false);
-            // Make animals appear instantly when video ends
-            try { animalFadeAnim.setValue(1); } catch {}
-          }}
-          onSkip={() => {
-            setShowIntroVideo(false);
-            // Make animals appear instantly when video is skipped
-            try { animalFadeAnim.setValue(1); } catch {}
-          }}
-          levelName={levelName}
-          isVisible={showIntroVideo}
-          onMuteBackgroundMusic={() => {
-            if (bgMusicRef.current) {
-              try {
-                bgMusicRef.current.pause();
-                console.log('🔇 Background music paused for video');
-              } catch (error) {
-                console.warn('Error pausing background music for video:', error);
-              }
-            }
-          }}
-          onUnmuteBackgroundMusic={() => {
-            if (bgMusicRef.current && !isMuted) {
-              try {
-                bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
-                bgMusicRef.current.play();
-                console.log('🔊 Background music resumed after video');
-              } catch (error) {
-                console.warn('Error resuming background music after video:', error);
-              }
-            }
-          }}
-        />
-      )}
-      
+     
       <AnimatedReanimated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
         {/* Background container - show immediately */}
         <View style={[StyleSheet.absoluteFillObject, { 
