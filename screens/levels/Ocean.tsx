@@ -180,18 +180,11 @@ export default function OceanScreen({ onBackToMenu, backgroundImageUri, skyBackg
   }, []);
 
   // Gather all assets to preload
-  const oceanAssets = useMemo(() => {
-    const assets = [
-      OCEAN_BG,
-      require('../../src/assets/intro_videos/water.mp4')
-    ];
-    return assets;
-  }, []);
+  
 
   // Wrap entire component with loading wrapper
   return (
     <ScreenLoadingWrapper
-      assetsToLoad={oceanAssets}
       loadingText={t('loading') || 'Loading Ocean...'}
       backgroundColor="#006994" // Ocean blue to match Ocean level background
       minLoadingTime={800} // Short loading to prevent black flash
