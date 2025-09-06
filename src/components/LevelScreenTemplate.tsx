@@ -55,6 +55,8 @@ import { getResponsiveBackgroundStyles, getDeviceInfo } from '../utils/responsiv
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
+import LevelIntroVideo from './LevelIntroVideo';
+import { getLevelVideo } from '../utils/levelVideoMapping';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
@@ -397,11 +399,33 @@ export default function LevelScreenTemplate({
     const [visitedAnimals, setVisitedAnimals] = useState<Set<number>>(new Set());
   const [levelCompleted, setLevelCompleted] = useState(false);
     const [wasAlreadyCompleted, setWasAlreadyCompleted] = useState(false); // Track if level was already completed when entering
+  
+  // Video overlay state
+  const [showIntroVideo, setShowIntroVideo] = useState(true); // Start as true to hide UI immediately
+  const [videoSource, setVideoSource] = useState<any>(null);
     const [showCompletionCelebration, setShowCompletionCelebration] = useState(false);
     const [screenLocked, setScreenLocked] = useState(false);
       const [hasClickedCurrentAnimal, setHasClickedCurrentAnimal] = useState(false); // Track if user clicked current animal
   const [buttonsDisabledManually, setButtonsDisabledManually] = useState(false);
   const isClickingRef = useRef(false);
+
+  // Initialize video source for the level
+  useEffect(() => {
+    const video = getLevelVideo(levelName);
+    if (video) {
+      setVideoSource(video);
+      // Set video to show immediately to hide UI elements
+      setShowIntroVideo(visitedAnimals.size === 0 && !levelCompleted);
+    } else {
+      // If no video available, hide video overlay and show UI
+      setVideoSource(null);
+      setShowIntroVideo(false);
+    }
+  }, [levelName, visitedAnimals.size, levelCompleted]);
+
+  // Note: Video show/hide logic is now handled in the video source initialization useEffect above
+
+
   const labelShowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickFlagClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canRenderLabel, setCanRenderLabel] = useState(false);
@@ -2169,9 +2193,11 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   if (!backgroundImageUri) {
     return (
       <View style={[dynamicStyles.container, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
-        <TouchableOpacity style={[dynamicStyles.backToMenuButton]} onPress={goToHome}>
-           <Ionicons name="home" size={24} color="black" />
-        </TouchableOpacity>
+        {!showIntroVideo && (
+          <TouchableOpacity style={[dynamicStyles.backToMenuButton]} onPress={goToHome}>
+             <Ionicons name="home" size={24} color="black" />
+          </TouchableOpacity>
+        )}
         <View style={dynamicStyles.content}>
            <Text style={[dynamicStyles.animalName, { fontSize: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 15, marginTop: 100, color: '#fff' }]}>
              {t('backgroundNotAvailable') || 'Background image not available for this level.'}
@@ -2184,6 +2210,46 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   // --- RENDER: Crossfade both backgrounds ---
   return (
     <View style={[dynamicStyles.container, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
+      {/* Level intro video overlay */}
+      {showIntroVideo && videoSource && (
+        <LevelIntroVideo
+          source={videoSource}
+          onVideoEnd={() => {
+            setShowIntroVideo(false);
+            // Make animals appear instantly when video ends
+            try { animalFadeAnim.setValue(1); } catch {}
+          }}
+          onSkip={() => {
+            setShowIntroVideo(false);
+            // Make animals appear instantly when video is skipped
+            try { animalFadeAnim.setValue(1); } catch {}
+          }}
+          levelName={levelName}
+          isVisible={showIntroVideo}
+          onMuteBackgroundMusic={() => {
+            if (bgMusicRef.current) {
+              try {
+                bgMusicRef.current.pause();
+                console.log('🔇 Background music paused for video');
+              } catch (error) {
+                console.warn('Error pausing background music for video:', error);
+              }
+            }
+          }}
+          onUnmuteBackgroundMusic={() => {
+            if (bgMusicRef.current && !isMuted) {
+              try {
+                bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
+                bgMusicRef.current.play();
+                console.log('🔊 Background music resumed after video');
+              } catch (error) {
+                console.warn('Error resuming background music after video:', error);
+              }
+            }
+          }}
+        />
+      )}
+      
       <AnimatedReanimated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
         {/* Background container - show immediately */}
         <View style={[StyleSheet.absoluteFillObject, { 
@@ -2244,7 +2310,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       <View style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'transparent' }}>
         <Animated.View style={{ flex: 1, opacity: contentFade }}>
           <View style={{ flex: 1 }}>
-            {!showDiscoverScreen && (
+            {!showDiscoverScreen && !showIntroVideo && (
               <View style={{
                 position: 'absolute',
                 top: Math.min(screenW, screenH) < 768 
@@ -2387,7 +2453,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
             {/* Remove old separate counter display - it's now in the red container above */}
 
 
-                          {hasAnimals && !showDiscoverScreen && (
+                          {hasAnimals && !showDiscoverScreen && !showIntroVideo && (
                 <TouchableOpacity style={[
                   dynamicStyles.soundButton,
                   // Move up 10% on iPad
@@ -2404,11 +2470,11 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
 
               {/* Level-specific animations */}
-                              {levelName.toLowerCase() === 'ocean' && showInstruction && !showDiscoverScreen && <AnimatedBubbles />}
-                {levelName.toLowerCase() === 'desert' && showInstruction && !showDiscoverScreen && <AnimatedSand />}
-                {levelName.toLowerCase() === 'arctic' && showInstruction && !showDiscoverScreen && <AnimatedSnow />}
-                {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedFireflies />}
-                {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && <AnimatedLeaves />}
+                              {levelName.toLowerCase() === 'ocean' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedBubbles />}
+                {levelName.toLowerCase() === 'desert' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedSand />}
+                {levelName.toLowerCase() === 'arctic' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedSnow />}
+                {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedFireflies />}
+                {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedLeaves />}
 
 
 
@@ -2553,7 +2619,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
             </View>
           )}
 
-              {!hasAnimals && !showDiscoverScreen && (
+              {!hasAnimals && !showDiscoverScreen && !showIntroVideo && (
             <View style={dynamicStyles.content}>
               <Text style={[dynamicStyles.animalName, { fontSize: 24, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }]}>
                 {t('noAnimalsForLevel')}
