@@ -57,7 +57,7 @@ The app now includes Apple Pay integration through `react-native-iap` library, w
    - Log into [App Store Connect](https://appstoreconnect.apple.com)
    - Go to your app → Features → In-App Purchases
    - Create new IAP with:
-     - Product ID: `animalDetective` (matches the code)
+     - Product ID: `animalDetectiveUnclock` (matches the code)
      - Type: Non-Consumable
      - Reference Name: "Unlock All Levels"
      - Price: Set your desired price

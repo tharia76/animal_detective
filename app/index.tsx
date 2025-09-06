@@ -104,6 +104,16 @@ export default function App() {
 
   // Instant loading overlay with asset preloading
   const handleSelectLevel = useCallback(async (level: string) => {
+    // Safety check: Only allow farm level or if user has unlocked all levels
+    // This prevents locked levels from being accessed even if they somehow get through
+    const isFarmLevel = level === 'farm';
+    const hasUnlockedAll = await AsyncStorage.getItem('unlocked_all_levels') === 'true';
+    
+    if (!isFarmLevel && !hasUnlockedAll) {
+      console.warn('Attempted to access locked level:', level, '- blocking access');
+      return; // Don't open locked levels
+    }
+    
     // Set selected level immediately to avoid black flash
     setSelectedLevel(level);
     // Reset fade animation to ensure smooth transition

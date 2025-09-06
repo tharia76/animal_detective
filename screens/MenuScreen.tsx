@@ -309,77 +309,98 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
     },
     modalContent: {
       backgroundColor: '#FFF8DC',
-      borderRadius: getResponsiveSpacing(35, scaleFactor),
-      padding: getResponsiveSpacing(35, scaleFactor),
+      borderRadius: getResponsiveSpacing(25, scaleFactor),
+      padding: getResponsiveSpacing(20, scaleFactor),
       alignItems: 'center',
       width: '100%',
-      maxWidth: Math.min(400, width * 0.9),
-      shadowColor: '#FF6B9D',
+      maxWidth: Math.min(450, width * 0.9), // Wider for better phone display
+      maxHeight: Math.min(400, height * 0.7), // Less tall - limit height
+      shadowColor: '#FF8C00',
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.35,
       shadowRadius: 15,
       elevation: 15,
-      borderWidth: 4,
-      borderColor: '#FFB4C6',
+      borderWidth: 3,
+      borderColor: '#FF8C00',
+      overflow: 'visible', // Allow shadows to show
     },
     modalTitle: {
-      fontSize: getResponsiveFontSize(26, scaleFactor),
+      fontSize: getResponsiveFontSize(10, scaleFactor), // Smaller for phones
       fontWeight: '900',
-      marginBottom: getResponsiveSpacing(15, scaleFactor),
-      color: '#FF6B9D',
+      marginBottom: getResponsiveSpacing(8, scaleFactor), // Even less spacing
+      color: 'black',
       textAlign: 'center',
       textShadowColor: 'rgba(0,0,0,0.2)',
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 3,
     },
     modalText: {
-      fontSize: getResponsiveFontSize(18, scaleFactor),
+      fontSize: getResponsiveFontSize(12, scaleFactor), // Smaller for phones
       color: '#8B4513',
-      marginBottom: getResponsiveSpacing(25, scaleFactor),
+      marginBottom: getResponsiveSpacing(12, scaleFactor), // Even less spacing
       textAlign: 'center',
-      lineHeight: getResponsiveFontSize(24, scaleFactor),
+      lineHeight: getResponsiveFontSize(18, scaleFactor), // Even more reduced line height
       fontWeight: '600',
     },
     modalUnlockButton: {
       backgroundColor: '#4CAF50',
-      paddingHorizontal: getResponsiveSpacing(28, scaleFactor),
-      paddingVertical: getResponsiveSpacing(18, scaleFactor),
-      borderRadius: getResponsiveSpacing(35, scaleFactor),
-      marginBottom: getResponsiveSpacing(15, scaleFactor),
+      paddingHorizontal: getResponsiveSpacing(8, scaleFactor), // Much smaller padding
+      paddingVertical: getResponsiveSpacing(4, scaleFactor), // Much smaller padding
+      borderRadius: getResponsiveSpacing(8, scaleFactor), // Much smaller radius
+      marginBottom: getResponsiveSpacing(3, scaleFactor), // Much less margin
       width: '100%',
-      minHeight: getResponsiveSpacing(60, scaleFactor),
+      maxWidth: '100%', // Ensure button doesn't exceed container width
+      minHeight: getResponsiveSpacing(22, scaleFactor), // Much smaller height
       shadowColor: '#4CAF50',
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.4,
       shadowRadius: 12,
-      elevation: 12,
+      elevation: 8,
       justifyContent: 'center',
       alignItems: 'center',
+      overflow: 'visible', // Allow shadows to show
     },
     modalUnlockButtonText: {
       color: '#FFFFFF',
-      fontWeight: '900',
-      fontSize: getResponsiveFontSize(18, scaleFactor),
+      fontWeight: '500', // Lighter weight
+      fontSize: getResponsiveFontSize(10, scaleFactor), // Much smaller text
       textAlign: 'center',
-      letterSpacing: 0.8,
-      textShadowColor: 'rgba(255,255,255,0.4)',
-      textShadowOffset: { width: 0, height: 2 },
-      textShadowRadius: 4,
+      letterSpacing: 0.1, // Minimal letter spacing
+      textShadowColor: 'rgba(255,255,255,0.1)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 1,
     },
     modalCloseButton: {
-      marginTop: getResponsiveSpacing(10, scaleFactor),
-      padding: getResponsiveSpacing(12, scaleFactor),
-      minHeight: getResponsiveSpacing(50, scaleFactor),
+      marginTop: getResponsiveSpacing(6, scaleFactor), // Even less margin
+      padding: getResponsiveSpacing(8, scaleFactor), // Even less padding
+      minHeight: getResponsiveSpacing(35, scaleFactor), // Even smaller height
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: 'rgba(255, 192, 203, 0.3)',
-      borderRadius: getResponsiveSpacing(25, scaleFactor),
+      borderRadius: getResponsiveSpacing(20, scaleFactor), // Smaller radius
     },
     modalCloseButtonText: {
-      color: '#8B4513',
-      fontSize: getResponsiveFontSize(16, scaleFactor),
+      color: 'black',
+      fontSize: getResponsiveFontSize(14, scaleFactor), // Smaller for phones
       textAlign: 'center',
       fontWeight: '700',
+    },
+    modalTopRightCloseButton: {
+      position: 'absolute',
+      top: getResponsiveSpacing(10, scaleFactor),
+      right: getResponsiveSpacing(10, scaleFactor),
+      width: getResponsiveSpacing(30, scaleFactor),
+      height: getResponsiveSpacing(30, scaleFactor),
+      borderRadius: getResponsiveSpacing(15, scaleFactor),
+      backgroundColor: 'rgba(255, 107, 107, 0.8)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 5,
     },
       controlPanelContainer: {
         width: '80%',
@@ -680,6 +701,30 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
   const [unlocked, setUnlocked] = useState<boolean>(false);
   
+  // Load unlocked state from storage on mount
+  useEffect(() => {
+    const loadUnlockedState = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('unlocked_all_levels');
+        if (stored === 'true') {
+          setUnlocked(true);
+        }
+      } catch (error) {
+        console.warn('Error loading unlocked state:', error);
+      }
+    };
+    loadUnlockedState();
+  }, []);
+  
+  // Save unlocked state to storage when it changes
+  const saveUnlockedState = useCallback(async (isUnlocked: boolean) => {
+    try {
+      await AsyncStorage.setItem('unlocked_all_levels', isUnlocked.toString());
+    } catch (error) {
+      console.warn('Error saving unlocked state:', error);
+    }
+  }, []);
+  
 
 
   // Modal state for locked level
@@ -897,12 +942,32 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       }
       
       try {
+        console.log('Initializing IAP connection...');
         await RNIap.initConnection();
+        console.log('IAP connection successful');
         setIapInitialized(true);
 
         // Get product info
-        const products = await RNIap.getProducts({ skus: [APPLE_PRODUCT_ID] });
-        setProducts(products);
+        console.log('Requesting products for SKU:', APPLE_PRODUCT_ID);
+        try {
+          const products = await RNIap.getProducts({ skus: [APPLE_PRODUCT_ID] });
+          console.log('Received products:', products);
+          if (products && products.length > 0) {
+            setProducts(products);
+          } else {
+            console.warn('No products found for SKU:', APPLE_PRODUCT_ID);
+            Alert.alert(
+              'Product Not Found',
+              `Product "${APPLE_PRODUCT_ID}" not found in App Store. Please check your App Store Connect configuration.`
+            );
+          }
+        } catch (productError) {
+          console.error('Error fetching products:', productError);
+          Alert.alert(
+            'Product Error',
+            `Failed to fetch product information: ${productError.message || 'Unknown error'}`
+          );
+        }
 
         // Check if already purchased
         const purchases = await RNIap.getAvailablePurchases();
@@ -911,7 +976,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
             purchase.productId === APPLE_PRODUCT_ID ||
             purchase.productId === APPLE_PRODUCT_ID.replace('.unlockall', '.unlockall') // fallback
         );
-        if (hasUnlock) setUnlocked(true);
+        if (hasUnlock) {
+          setUnlocked(true);
+          saveUnlockedState(true);
+        }
 
         // Listen for purchase updates
         purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(async (purchase) => {
@@ -922,6 +990,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
               await RNIap.finishTransaction({ purchase, isConsumable: false });
               if (purchase.productId === APPLE_PRODUCT_ID) {
                 setUnlocked(true);
+                saveUnlockedState(true);
                 setPurchaseInProgress(false);
                 Alert.alert(
                   t('thankYou') || 'Thank You!',
@@ -981,6 +1050,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       );
       if (hasUnlock) {
         setUnlocked(true);
+        saveUnlockedState(true);
         Alert.alert(
           t('restored') || 'Purchases Restored',
           t('allLevelsNowUnlocked') || 'All levels are now unlocked!'
@@ -1129,6 +1199,16 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     (level, isLocked) => {
       playButtonSound(volume);
       
+      // If level is locked and user hasn't unlocked all levels, show unlock modal and STOP
+      if (isLocked && !unlocked) {
+        console.log('Level is locked, showing unlock modal instead of opening level:', level);
+        setShowUnlockModal(true);
+        return; // CRITICAL: Don't proceed to open the level
+      }
+      
+      // Only proceed if level is unlocked
+      console.log('Level is unlocked, proceeding to open:', level);
+      
       // Show destination background immediately
       setSelectedLevel(level);
       
@@ -1141,7 +1221,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         onSelectLevel(level);
       }
     },
-    [onSelectLevel, stopAndUnload, volume]
+    [onSelectLevel, stopAndUnload, volume, unlocked]
   );
 
   // Get price string for unlock button with sale pricing
@@ -1162,6 +1242,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     // Detect landscape mode where we want vertical button layout
     const isPhoneLandscape = isLandscape; // Use landscape orientation regardless of device size
     
+    // Detect if this is a phone (smaller screen)
+    const isPhone = Math.min(width, height) < 600; // Phones typically have smaller dimensions
+    
     return (
       <Modal
         visible={showUnlockModal}
@@ -1174,16 +1257,82 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         supportedOrientations={['landscape', 'landscape-left', 'landscape-right', 'portrait', 'portrait-upside-down']}
       >
         <View style={responsiveStyles.modalOverlay} pointerEvents="auto">
-          <View style={responsiveStyles.modalContent}>
-            <Text style={responsiveStyles.modalTitle}>🔓 {t('unlockAllLevelsToPlay')} 🔓</Text>
-                          <Text style={responsiveStyles.modalText}>
-                🐾 {t('thisLevelIsLocked')} 🐾
-              </Text>
+          <ScrollView 
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={[
+              responsiveStyles.modalContent,
+              isPhone && {
+                maxWidth: Math.min(380, width * 0.95), // Wider for phones
+                maxHeight: Math.min(350, height * 0.8), // Less tall for phones
+                padding: getResponsiveSpacing(15, scaleFactor), // Less padding for phones
+              }
+            ]}>
+            {/* Top Right Close Button */}
+            <TouchableOpacity
+              style={[
+                responsiveStyles.modalTopRightCloseButton,
+                isPhone && {
+                  width: getResponsiveSpacing(25, scaleFactor),
+                  height: getResponsiveSpacing(25, scaleFactor),
+                  top: getResponsiveSpacing(8, scaleFactor),
+                  right: getResponsiveSpacing(8, scaleFactor),
+                }
+              ]}
+              onPress={() => {
+                playButtonSound(volume);
+                setShowUnlockModal(false);
+              }}
+            >
+              <Text style={{
+                color: '#FFFFFF',
+                fontSize: isPhone ? getResponsiveFontSize(14, scaleFactor) : getResponsiveFontSize(16, scaleFactor),
+                fontWeight: 'bold',
+              }}>×</Text>
+            </TouchableOpacity>
+            
+            <Text style={[
+              responsiveStyles.modalTitle,
+              isPhone && { fontSize: getResponsiveFontSize(12, scaleFactor) } // Much smaller title for phones
+            ]}>{t('unlockAllLevelsToPlay')}</Text>
+            <Text style={[
+              responsiveStyles.modalText,
+              isPhone && { 
+                fontSize: getResponsiveFontSize(10, scaleFactor), // Much smaller text for phones
+                marginBottom: getResponsiveSpacing(10, scaleFactor), // Even less spacing for phones
+                lineHeight: getResponsiveFontSize(12, scaleFactor) // Tighter line height for phones
+              } // Smaller text for phones
+            ]}>
+              {t('thisLevelIsLocked')}
+            </Text>
             {Platform.OS === 'ios' && !unlocked && (
               <>
-                <ReAnimated.View style={animatedGradientStyle}>
-                  <TouchableOpacity
-                    style={[responsiveStyles.modalUnlockButton, { backgroundColor: '#FF8C00' }]}
+                <TouchableOpacity
+                  style={[
+                    responsiveStyles.modalUnlockButton, 
+                    { 
+                      backgroundColor: '#FF8C00',
+                      shadowColor: '#FF8C00',
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.6,
+                      shadowRadius: 15,
+                      elevation: 12,
+                      borderWidth: 3,
+                      borderColor: '#FF6B00',
+                      borderRadius: getResponsiveSpacing(15, scaleFactor),
+                      minHeight: getResponsiveSpacing(45, scaleFactor),
+                      paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
+                      paddingVertical: getResponsiveSpacing(12, scaleFactor),
+                    },
+                    isPhone && {
+                      paddingHorizontal: getResponsiveSpacing(6, scaleFactor), // Much smaller padding
+                      paddingVertical: getResponsiveSpacing(3, scaleFactor), // Much smaller vertical padding
+                      minHeight: getResponsiveSpacing(20, scaleFactor), // Much smaller height
+                      marginBottom: getResponsiveSpacing(2, scaleFactor), // Much less margin
+                    }
+                  ]}
                     onPress={() => {
                       playButtonSound(volume);
                       setShowUnlockModal(false);
@@ -1195,7 +1344,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                       // Show loading indicator during Apple Pay processing
                       <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                         <ActivityIndicator size="small" color="#FFFFFF" />
-                        <Text style={[responsiveStyles.modalUnlockButtonText, { marginTop: 4, fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
+                        <Text style={[responsiveStyles.modalUnlockButtonText, { 
+                          marginTop: 1, 
+                          fontSize: isPhone ? getResponsiveFontSize(8, scaleFactor) : responsiveStyles.modalUnlockButtonText.fontSize - 1, 
+                          textShadowColor: 'rgba(0,0,0,0.7)', 
+                          textShadowRadius: 1 
+                        }]}>
                           {t('processing') || 'Processing...'}
                         </Text>
                       </View>
@@ -1204,17 +1358,17 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                       <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                         <Ionicons 
                           name="lock-open" 
-                          size={responsiveStyles.modalUnlockButtonText.fontSize + 2} 
+                          size={isPhone ? getResponsiveFontSize(10, scaleFactor) : responsiveStyles.modalUnlockButtonText.fontSize + 2} 
                           color="#FFFFFF" 
                         />
-                        <View style={{ alignItems: 'center', paddingVertical: 4 }}>
+                        <View style={{ alignItems: 'center', paddingVertical: isPhone ? 1 : 4 }}>
                           {/* Sale Badge */}
                           <View style={{
                             backgroundColor: '#FF4444',
-                            paddingHorizontal: 12,
-                            paddingVertical: 3,
-                            borderRadius: 12,
-                            marginBottom: 6,
+                            paddingHorizontal: isPhone ? 6 : 12,
+                            paddingVertical: isPhone ? 1 : 3,
+                            borderRadius: isPhone ? 6 : 12,
+                            marginBottom: isPhone ? 3 : 6,
                             shadowColor: '#FF4444',
                             shadowOffset: { width: 0, height: 2 },
                             shadowOpacity: 0.3,
@@ -1233,16 +1387,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                           
                           {/* Main Title */}
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-                            <Image
-                              source={require('../src/assets/images/unlock.png')}
-                              style={{
-                                width: responsiveStyles.modalUnlockButtonText.fontSize + 8,
-                                height: responsiveStyles.modalUnlockButtonText.fontSize + 8,
-                                marginRight: 8,
-                              }}
-                              resizeMode="contain"
-                              fadeDuration={0}
-                            />
+                           
                             <Text style={[responsiveStyles.modalUnlockButtonText, { 
                               fontSize: responsiveStyles.modalUnlockButtonText.fontSize,
                               fontWeight: '700',
@@ -1307,14 +1452,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                           size={responsiveStyles.modalUnlockButtonText.fontSize} 
                           color="#FFFFFF" 
                         />
-                        <View style={{ alignItems: 'center', paddingVertical: 4 }}>
+                        <View style={{ alignItems: 'center', paddingVertical: isPhone ? 1 : 4 }}>
                           {/* Sale Badge */}
                           <View style={{
                             backgroundColor: '#FF4444',
-                            paddingHorizontal: 12,
-                            paddingVertical: 3,
-                            borderRadius: 12,
-                            marginBottom: 6,
+                            paddingHorizontal: isPhone ? 6 : 12,
+                            paddingVertical: isPhone ? 1 : 3,
+                            borderRadius: isPhone ? 6 : 12,
+                            marginBottom: isPhone ? 3 : 6,
                             shadowColor: '#FF4444',
                             shadowOffset: { width: 0, height: 2 },
                             shadowOpacity: 0.3,
@@ -1401,64 +1546,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                       </View>
                     )}
                   </TouchableOpacity>
-                </ReAnimated.View>
                 
-                {/* Restore Purchases Button in Modal */}
-                <TouchableOpacity
-                  style={[responsiveStyles.modalUnlockButton, { 
-                    backgroundColor: '#FF8C00',
-                    marginTop: getResponsiveSpacing(12, scaleFactor),
-                    shadowColor: '#FF8C00',
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.4,
-                    shadowRadius: 12,
-                    elevation: 12,
-                  }]}
-                  onPress={() => {
-                    playButtonSound(volume);
-                    setShowUnlockModal(false);
-                    handleRestore();
-                  }}
-                  disabled={purchaseInProgress}
-                >
-                  {isPhoneLandscape ? (
-                    // Phone landscape: Stack icon and text vertically, centered
-                    <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                      <Ionicons 
-                        name="refresh-circle" 
-                        size={responsiveStyles.modalUnlockButtonText.fontSize + 2} 
-                        color="#FFFFFF" 
-                      />
-                      <Text style={[responsiveStyles.modalUnlockButtonText, { marginTop: 2, fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 1, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                        🔄 {t('restorePurchases') || 'Restore Purchases'} 🔄
-                      </Text>
-                    </View>
-                  ) : (
-                    // Other orientations: Keep original horizontal layout
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 1 }}>
-                      <Ionicons 
-                        name="refresh-circle" 
-                        size={responsiveStyles.modalUnlockButtonText.fontSize} 
-                        color="#FFFFFF" 
-                      />
-                      <Text style={[responsiveStyles.modalUnlockButtonText, { textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 }]}>
-                        🔄 {t('restorePurchases') || 'Restore Purchases'} 🔄
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
               </>
             )}
-            <Pressable
-              style={responsiveStyles.modalCloseButton}
-              onPress={() => {
-                playButtonSound(volume);
-                setShowUnlockModal(false);
-              }}
-            >
-              <Text style={responsiveStyles.modalCloseButtonText}>❌ {t('close')} ❌</Text>
-            </Pressable>
           </View>
+          </ScrollView>
         </View>
       </Modal>
     );
@@ -1481,12 +1573,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const settingsModalTop = Math.max(0, Math.round((currentHeight - settingsModalHeight) / 2));
   const settingsModalLeft = Math.max(0, Math.round((currentWidth - settingsModalWidth) / 2));
  
-  // Determine locked state for each level (visual only, not functional)
+  // Determine locked state for each level
   const getIsLocked = (level: string) => {
-    console.log('getIsLocked called for level:', level);
+    console.log('getIsLocked called for level:', level, 'unlocked:', unlocked);
     if (level === 'farm') return false;
     
-    // Show locked styling for all other levels but keep them functional
+    // If user has purchased unlock, all levels are unlocked
+    if (unlocked) {
+      console.log('User has unlocked all levels, returning false for:', level);
+      return false;
+    }
+    
+    // Show locked styling for all other levels when not unlocked
     console.log('Returning true (locked) for level:', level);
     return true;
   };

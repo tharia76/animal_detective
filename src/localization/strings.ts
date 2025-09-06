@@ -84,7 +84,7 @@ export const strings = {
       error: 'Oops!',
       resetError: 'Something went wrong. Try again.',
       gameProgress: 'Your Adventure',
-      thankYou: 'Thank you! 💖',
+      thankYou: 'Thank you!',
       allLevelsNowUnlocked: 'All missions are now open!',
       purchaseError: 'Purchase Error',
       somethingWentWrong: 'Something went wrong.',
