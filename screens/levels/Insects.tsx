@@ -177,19 +177,11 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
     setGameStarted(true);
   }, []);
 
-    // Gather all assets to preload
-  const insectsAssets = useMemo(() => {
-    const assets = [
-      INSECTS_BG,
-      require('../../src/assets/intro_videos/insects-vid.mp4')
-    ];
-    return assets;
-  }, []);
+
 
     // Wrap entire component with loading wrapper
   return (
     <ScreenLoadingWrapper
-      assetsToLoad={insectsAssets}
       loadingText={t('loading') || 'Loading Insects...'}
       backgroundColor="#87CEEB" // Sky blue to match Insects level background
       minLoadingTime={800} // Short loading to prevent black flash
@@ -204,7 +196,7 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
       {showVideo && isLandscape && allAssetsLoaded ? (
       <View style={styles.fullscreenContainer}>
         <LevelVideoPlayer
-          source={require('../../src/assets/intro_videos/insects-vid.mp4')}
+          source={''}
           style={styles.fullscreenVideo}
           loop={false}
           muted={true}

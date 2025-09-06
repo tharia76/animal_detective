@@ -16,24 +16,26 @@ export interface VideoPreloadProgress {
 const CRITICAL_VIDEOS = [
   // Essential videos that must load first
   require('../assets/intro_videos/splash.mp4'),
-  require('../assets/intro_videos/farm-vid1.mp4'), // Most common level
+  // require('../assets/intro_videos/farm-vid1.mp4'), // Most common level
 ];
 
 const PRIORITY_VIDEOS = [
+  require('../assets/intro_videos/splash.mp4'),
   // Common level videos
-  require('../assets/intro_videos/forest.mp4'),
-  require('../assets/intro_videos/water.mp4'),
-  require('../assets/intro_videos/farm-vid2.mp4'),
+  // require('../assets/intro_videos/forest.mp4'),
+  // require('../assets/intro_videos/water.mp4'),
+  // require('../assets/intro_videos/farm-vid2.mp4'),
 ];
 
 const BACKGROUND_VIDEOS = [
+  require('../assets/intro_videos/splash.mp4'),
   // Less frequently accessed videos
-  require('../assets/intro_videos/arctic-vid.mp4'),
-  require('../assets/intro_videos/desert-vid.mp4'),
-  require('../assets/intro_videos/birds-vid.mp4'),
-  require('../assets/intro_videos/insects-vid.mp4'),
-  require('../assets/intro_videos/jungless.mp4'),
-  require('../assets/intro_videos/savan-vid.mp4'),
+  // require('../assets/intro_videos/arctic-vid.mp4'),
+  // require('../assets/intro_videos/desert-vid.mp4'),
+  // require('../assets/intro_videos/birds-vid.mp4'),
+  // require('../assets/intro_videos/insects-vid.mp4'),
+  // require('../assets/intro_videos/jungless.mp4'),
+  // require('../assets/intro_videos/savan-vid.mp4'),
 ];
 
 class SmartVideoPreloader {
@@ -182,14 +184,14 @@ class SmartVideoPreloader {
       await this.loadVideoBatch(CRITICAL_VIDEOS, 1, onProgress, 'critical');
       
       // Allow UI breathing room
-      await new Promise(resolve => InteractionManager.runAfterInteractions(resolve));
+      await new Promise(resolve => InteractionManager.runAfterInteractions(() => resolve(undefined)));
       
       // Phase 2: Priority videos
       console.log('📽️ Phase 2: Loading priority videos...');
       await this.loadVideoBatch(PRIORITY_VIDEOS, 1, onProgress, 'priority');
       
       // UI update opportunity
-      await new Promise(resolve => InteractionManager.runAfterInteractions(resolve));
+      await new Promise(resolve => InteractionManager.runAfterInteractions(() => resolve(undefined)));
       
       // Phase 3: Background videos
       console.log('🎞️ Phase 3: Loading background videos...');

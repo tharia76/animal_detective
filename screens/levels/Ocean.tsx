@@ -207,7 +207,7 @@ export default function OceanScreen({ onBackToMenu, backgroundImageUri, skyBackg
       ) : showVideo && isLandscape && allAssetsLoaded ? (
       <Animated.View style={[styles.fullscreenContainer, { opacity: videoOpacity }]}>
         <LevelVideoPlayer
-          source={require('../../src/assets/intro_videos/water.mp4')}
+          source={''}
           style={styles.fullscreenVideo}
           loop={false}
           muted={true}

@@ -193,7 +193,6 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
   const farmAssets = useMemo(() => {
     const assets = [
       FARM_BG,
-      require('../../src/assets/intro_videos/farm-vid1.mp4')
     ];
     
     // Add farm animal sprites to ensure they're loaded
@@ -224,7 +223,7 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
       {showVideo && isLandscape && allAssetsLoaded ? (
       <Animated.View style={[styles.fullscreenContainer, { opacity: videoOpacity }]}>
         <LevelVideoPlayer
-          source={require('../../src/assets/intro_videos/farm-vid1.mp4')}
+          source={''}
           style={styles.fullscreenVideo}
           loop={false}
           muted={true}

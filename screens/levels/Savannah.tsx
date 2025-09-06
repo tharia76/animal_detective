@@ -177,19 +177,10 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
     setGameStarted(true);
   }, []);
 
-    // Gather all assets to preload
-  const savannahAssets = useMemo(() => {
-    const assets = [
-      SAVANNAH_BG,
-      require('../../src/assets/intro_videos/savan-vid.mp4')
-    ];
-    return assets;
-  }, []);
 
     // Wrap entire component with loading wrapper
   return (
     <ScreenLoadingWrapper
-      assetsToLoad={savannahAssets}
       loadingText={t('loading') || 'Loading Savannah...'}
       backgroundColor="#f4e4bc" // Beige to match Savannah level background
       minLoadingTime={800} // Short loading to prevent black flash
@@ -204,7 +195,7 @@ export default function SavannahScreen({ onBackToMenu, backgroundImageUri, skyBa
       {showVideo && isLandscape && allAssetsLoaded ? (
       <View style={styles.fullscreenContainer}>
         <LevelVideoPlayer
-          source={require('../../src/assets/intro_videos/savan-vid.mp4')}
+          source={''}
           style={styles.fullscreenVideo}
           loop={false}
           muted={true}

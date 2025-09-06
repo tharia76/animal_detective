@@ -216,19 +216,11 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
     })();
   }, [forestAnimals.length]);
 
-    // Gather all assets to preload
-  const forestAssets = useMemo(() => {
-    const assets = [
-      FOREST_BG,
-      require('../../src/assets/intro_videos/forest.mp4')
-    ];
-    return assets;
-  }, []);
+
 
     // Wrap entire component with loading wrapper
   return (
     <ScreenLoadingWrapper
-      assetsToLoad={forestAssets}
       loadingText={t('loading') || 'Loading Forest...'}
       backgroundColor="#87CEEB" // Sky blue to match Forest level background
       minLoadingTime={800} // Short loading to prevent black flash
@@ -243,7 +235,7 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
       {showVideo && isLandscape && allAssetsLoaded ? (
       <View style={styles.fullscreenContainer} pointerEvents="box-none">
         <LevelVideoPlayer
-          source={require('../../src/assets/intro_videos/forest.mp4')}
+          source={''}
           style={styles.fullscreenVideo}
           loop={false}
           muted={true}

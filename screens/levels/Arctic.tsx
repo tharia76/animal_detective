@@ -179,18 +179,11 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
   }, [gameFadeAnim, videoFadeAnim]);
 
     // Gather all assets to preload
-  const arcticAssets = useMemo(() => {
-    const assets = [
-      ARCTIC_BG,
-      require('../../src/assets/intro_videos/arctic-vid.mp4')
-    ];
-    return assets;
-  }, []);
+ 
 
     // Wrap entire component with loading wrapper
   return (
     <ScreenLoadingWrapper
-      assetsToLoad={arcticAssets}
       loadingText={t('loading') || 'Loading Arctic...'}
       backgroundColor="#87CEEB" // Sky blue to match Arctic level background
       minLoadingTime={800} // Short loading to prevent black flash
@@ -205,7 +198,7 @@ export default function ArcticScreen({ onBackToMenu, backgroundImageUri, skyBack
       {showVideo && isLandscape && allAssetsLoaded ? (
       <Animated.View style={[styles.fullscreenContainer, { opacity: videoFadeAnim }]} pointerEvents="box-none">
         <LevelVideoPlayer
-          source={require('../../src/assets/intro_videos/arctic-vid.mp4')}
+          source={''}
           style={styles.fullscreenVideo}
           loop={false}
           muted={true}

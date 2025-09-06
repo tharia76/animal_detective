@@ -172,19 +172,11 @@ export default function BirdsScreen({ onBackToMenu, backgroundImageUri, skyBackg
     setGameStarted(true);
   }, []);
 
-    // Gather all assets to preload
-  const birdsAssets = useMemo(() => {
-    const assets = [
-      BIRDS_BG,
-      require('../../src/assets/intro_videos/birds-vid.mp4')
-    ];
-    return assets;
-  }, []);
+
 
     // Wrap entire component with loading wrapper
   return (
     <ScreenLoadingWrapper
-      assetsToLoad={birdsAssets}
       loadingText={t('loading') || 'Loading Birds...'}
       backgroundColor="#87ceeb"
       minLoadingTime={800} // Short loading to prevent black flash
@@ -199,7 +191,7 @@ export default function BirdsScreen({ onBackToMenu, backgroundImageUri, skyBackg
       {showVideo && isLandscape && allAssetsLoaded ? (
       <View style={styles.fullscreenContainer}>
         <LevelVideoPlayer
-          source={require('../../src/assets/intro_videos/birds-vid.mp4')}
+          source={''}
           style={styles.fullscreenVideo}
           loop={false}
           muted={true}
