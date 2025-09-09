@@ -52,6 +52,7 @@ import { ImageCache } from '../src/utils/ImageCache';
 import { ImageRegistry } from '../src/utils/PersistentImageRegistry';
 import { preloadImages } from '../src/utils/preloadImages';
 import ScreenLoadingWrapper from '../src/components/ScreenLoadingWrapper';
+import ParentalGate from '../src/components/ParentalGate';
 
 
 const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
@@ -700,6 +701,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const [products, setProducts] = useState<RNIap.Product[]>([]);
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
   const [unlocked, setUnlocked] = useState<boolean>(false);
+  const [showParentalGate, setShowParentalGate] = useState(false);
   
   // Load unlocked state from storage on mount
   useEffect(() => {
@@ -1071,8 +1073,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     setPurchaseInProgress(false);
   }, [t]);
 
-  // Purchase handler with Apple Pay integration
-  const handleUnlock = useCallback(async () => {
+  // Show parental gate before purchase
+  const handleUnlock = useCallback(() => {
     if (purchaseInProgress) {
       return;
     }
@@ -1085,6 +1087,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       return;
     }
     
+    // Show parental gate first
+    setShowParentalGate(true);
+  }, [purchaseInProgress, iapInitialized]);
+
+  // Actual purchase handler (called after parental gate success)
+  const handlePurchase = useCallback(async () => {
     setPurchaseInProgress(true);
     
     try {
@@ -1108,7 +1116,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         t('couldNotCompletePurchase') || 'Could not complete purchase. Please try again.'
       );
     }
-  }, [purchaseInProgress, t, iapInitialized, products]);
+  }, [t, products]);
+
+  // Handle parental gate success
+  const handleParentalGateSuccess = useCallback(() => {
+    setShowParentalGate(false);
+    handlePurchase();
+  }, [handlePurchase]);
+
+  // Handle parental gate cancel
+  const handleParentalGateCancel = useCallback(() => {
+    setShowParentalGate(false);
+  }, []);
 
   // Handle toggling level completion status
   const handleToggleCompletion = useCallback(
@@ -2354,6 +2373,15 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       </ImageBackground>
       )}
     </View>
+    
+    {/* Parental Gate Modal */}
+    <ParentalGate
+      visible={showParentalGate}
+      onSuccess={handleParentalGateSuccess}
+      onCancel={handleParentalGateCancel}
+      title="Parental Permission Required"
+      message="Please complete this challenge to access the store:"
+    />
     </ScreenLoadingWrapper>
   );
 }
