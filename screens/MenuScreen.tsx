@@ -2379,8 +2379,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       visible={showParentalGate}
       onSuccess={handleParentalGateSuccess}
       onCancel={handleParentalGateCancel}
-      title="Parental Permission Required"
-      message="Please complete this challenge to access the store:"
     />
     </ScreenLoadingWrapper>
   );

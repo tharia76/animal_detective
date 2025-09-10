@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,13 @@ import {
   StyleSheet,
   Platform,
   Alert,
+  ScrollView,
+  Keyboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalization } from '../hooks/useLocalization';
+import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 
 interface ParentalGateProps {
   visible: boolean;
@@ -22,17 +26,20 @@ interface ParentalGateProps {
 
 type ChallengeType = 'math' | 'word' | 'hold';
 
-const ParentalGate: React.FC<ParentalGateProps> = ({
-  visible,
-  onSuccess,
-  onCancel,
-  title = "Parental Permission Required",
-  message = "Please complete this challenge to continue:"
+const ParentalGate: React.FC<ParentalGateProps> = ({ 
+  visible, 
+  onSuccess, 
+  onCancel, 
+  title, 
+  message 
 }) => {
+  const { t } = useLocalization();
+  const { isTablet } = useDeviceDimensions();
   const [challengeType, setChallengeType] = useState<ChallengeType>('math');
   const [userInput, setUserInput] = useState('');
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [currentChallenge, setCurrentChallenge] = useState<{
     question: string;
     answer: string;
@@ -78,8 +85,8 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
   const generateWordChallenge = useCallback(() => {
     const words = ['SUN', 'MOON', 'STAR', 'TREE', 'BIRD', 'FISH', 'CAT', 'DOG', 'BEAR', 'LION'];
     const word = words[Math.floor(Math.random() * words.length)];
-    return { question: `Type the word: ${word}`, answer: word };
-  }, []);
+    return { question: `${t('typeTheWord')} ${word}`, answer: word };
+  }, [t]);
 
   // Initialize challenge when modal opens
   React.useEffect(() => {
@@ -96,6 +103,21 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
     }
   }, [visible, challengeType, generateMathChallenge, generateWordChallenge]);
 
+  // Keyboard visibility tracking
+  React.useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setIsKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
+
   // Handle math/word input submission
   const handleSubmit = useCallback(() => {
     if (!currentChallenge) return;
@@ -104,9 +126,9 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
       onSuccess();
     } else {
       Alert.alert(
-        'Incorrect Answer',
-        'Please try again or ask a parent for help.',
-        [{ text: 'Try Again', onPress: () => setUserInput('') }]
+        t('incorrectAnswer'),
+        t('tryAgainMessage'),
+        [{ text: t('tryAgain'), onPress: () => setUserInput('') }]
       );
     }
   }, [userInput, currentChallenge, onSuccess]);
@@ -154,35 +176,28 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
       case 'math':
       case 'word':
         return (
-          <View style={styles.challengeContainer}>
+          <View style={isKeyboardVisible && !isTablet ? styles.challengeContainerKeyboard : styles.challengeContainer}>
             <Text style={styles.challengeQuestion}>
               {currentChallenge?.question}
             </Text>
-            <View style={styles.inputContainer}>
+            <View style={styles.inputRow}>
               <TextInput
                 style={styles.textInput}
                 value={userInput}
                 onChangeText={setUserInput}
-                placeholder="Your answer..."
+                placeholder={t('yourAnswer')}
                 autoCapitalize="characters"
                 autoCorrect={false}
                 onSubmitEditing={handleSubmit}
                 returnKeyType="done"
+                blurOnSubmit={false}
               />
-            </View>
-            <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[styles.button, styles.submitButton]}
                 onPress={handleSubmit}
                 disabled={!userInput.trim()}
               >
-                <Text style={styles.buttonText}>Submit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.newChallengeButton]}
-                onPress={generateNewChallenge}
-              >
-                <Text style={styles.buttonText}>New Question</Text>
+                <Text style={styles.buttonText}>{t('submit')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -190,9 +205,9 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
       
       case 'hold':
         return (
-          <View style={styles.challengeContainer}>
+          <View style={isKeyboardVisible && !isTablet ? styles.challengeContainerKeyboard : styles.challengeContainer}>
             <Text style={styles.challengeQuestion}>
-              Hold the button for 3 seconds
+              {t('holdFor3Seconds')}
             </Text>
             <View style={styles.holdContainer}>
               <TouchableOpacity
@@ -205,7 +220,7 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
                 activeOpacity={0.9}
               >
                 <Text style={styles.holdButtonText}>
-                  {isHolding ? 'Hold...' : 'Hold Me!'}
+                  {isHolding ? t('holding') : t('holdButton')}
                 </Text>
                 {isHolding && (
                   <View style={styles.progressBar}>
@@ -236,21 +251,56 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
       supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
     >
       <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <LinearGradient
-            colors={['#FFE4B5', '#FFDAB9', '#FFE4B5']}
-            style={styles.gradientContainer}
-          >
-            <View style={styles.header}>
-              <Ionicons name="shield-checkmark" size={32} color="#2B5E34" />
-              <Text style={styles.title}>{title}</Text>
+        <ScrollView 
+          contentContainerStyle={
+            isTablet 
+              ? styles.scrollContainerTablet 
+              : isKeyboardVisible 
+                ? styles.scrollContainerKeyboard 
+                : styles.scrollContainer
+          }
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+          keyboardDismissMode="interactive"
+        >
+          <View style={isTablet ? styles.modalContainerTablet : styles.modalContainer}>
+              <LinearGradient
+                colors={['#FFE4B5', '#FFDAB9', '#FFE4B5']}
+                style={
+                  isTablet 
+                    ? styles.gradientContainerTablet 
+                    : isKeyboardVisible 
+                      ? styles.gradientContainerKeyboard 
+                      : styles.gradientContainer
+                }
+              >
+            <View style={isKeyboardVisible && !isTablet ? styles.headerKeyboard : styles.header}>
+              <Ionicons name="shield-checkmark" size={18} color="#2B5E34" />
+              <Text style={styles.title}>{title || t('parentalPermissionRequired')}</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={onCancel}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={20} color="#2B5E34" />
+              </TouchableOpacity>
             </View>
             
-            <Text style={styles.message}>{message}</Text>
+            <Text style={isKeyboardVisible && !isTablet ? styles.messageKeyboard : styles.message}>{message || t('parentalGateMessage')}</Text>
+            
+            {/* New Question Button */}
+            <TouchableOpacity
+              style={[styles.button, styles.newChallengeButton]}
+              onPress={generateNewChallenge}
+            >
+              <Text style={styles.buttonText}>{t('newQuestion')}</Text>
+            </TouchableOpacity>
             
             {/* Challenge Type Selector */}
-            <View style={styles.challengeTypeContainer}>
-              <Text style={styles.challengeTypeLabel}>Choose Challenge Type:</Text>
+            <View style={isKeyboardVisible && !isTablet ? styles.challengeTypeContainerKeyboard : styles.challengeTypeContainer}>
+              <Text style={styles.challengeTypeLabel}>{t('chooseChallengeType')}</Text>
               <View style={styles.challengeTypeButtons}>
                 <TouchableOpacity
                   style={[
@@ -263,7 +313,7 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
                     styles.challengeTypeText,
                     challengeType === 'math' && styles.challengeTypeTextActive
                   ]}>
-                    Math
+                    {t('math')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -277,7 +327,7 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
                     styles.challengeTypeText,
                     challengeType === 'word' && styles.challengeTypeTextActive
                   ]}>
-                    Word
+                    {t('word')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -291,24 +341,16 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
                     styles.challengeTypeText,
                     challengeType === 'hold' && styles.challengeTypeTextActive
                   ]}>
-                    Hold
+                    {t('hold')}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
             
             {renderChallenge()}
-            
-            <View style={styles.footer}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
-                onPress={onCancel}
-              >
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
           </LinearGradient>
         </View>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -318,13 +360,45 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    minHeight: '100%',
+  },
+  scrollContainerTablet: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  scrollContainerKeyboard: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    paddingTop: 20,
   },
   modalContainer: {
+    width: '95%',
+    maxWidth: 320,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  modalContainerTablet: {
     width: '90%',
     maxWidth: 500,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
     elevation: 10,
     shadowColor: '#000',
@@ -333,46 +407,81 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   gradientContainer: {
-    padding: 30,
+    padding: 12,
+    alignItems: 'center',
+  },
+  gradientContainerKeyboard: {
+    padding: 6,
+    alignItems: 'center',
+  },
+  gradientContainerTablet: {
+    padding: 25,
     alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    justifyContent: 'space-between',
+    marginBottom: 6,
+    width: '100%',
+  },
+  headerKeyboard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+    width: '100%',
   },
   title: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#2B5E34',
-    marginLeft: 10,
     textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    padding: 4,
+    borderRadius: 15,
+    backgroundColor: 'rgba(43, 94, 52, 0.1)',
   },
   message: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#2B5E34',
     textAlign: 'center',
-    marginBottom: 25,
-    lineHeight: 22,
+    marginBottom: 12,
+    lineHeight: 16,
+  },
+  messageKeyboard: {
+    fontSize: 12,
+    color: '#2B5E34',
+    textAlign: 'center',
+    marginBottom: 8,
+    lineHeight: 14,
   },
   challengeTypeContainer: {
-    marginBottom: 25,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  challengeTypeContainerKeyboard: {
+    marginBottom: 8,
     alignItems: 'center',
   },
   challengeTypeLabel: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
     color: '#2B5E34',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   challengeTypeButtons: {
     flexDirection: 'row',
-    gap: 10,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6,
   },
   challengeTypeButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
     backgroundColor: 'rgba(43, 94, 52, 0.1)',
     borderWidth: 2,
     borderColor: 'transparent',
@@ -382,7 +491,7 @@ const styles = StyleSheet.create({
     borderColor: '#2B5E34',
   },
   challengeTypeText: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '600',
     color: '#2B5E34',
   },
@@ -392,32 +501,40 @@ const styles = StyleSheet.create({
   challengeContainer: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 12,
+  },
+  challengeContainerKeyboard: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   challengeQuestion: {
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#2B5E34',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   inputContainer: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 10,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
   },
   textInput: {
     borderWidth: 2,
     borderColor: '#2B5E34',
-    borderRadius: 10,
-    padding: 15,
-    fontSize: 18,
+    borderRadius: 6,
+    padding: 8,
+    fontSize: 14,
     textAlign: 'center',
     backgroundColor: 'white',
     color: '#2B5E34',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 15,
+    flex: 1,
   },
   holdContainer: {
     alignItems: 'center',
@@ -425,24 +542,24 @@ const styles = StyleSheet.create({
   },
   holdButton: {
     backgroundColor: '#FF8C00',
-    paddingVertical: 20,
-    paddingHorizontal: 40,
-    borderRadius: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
     alignItems: 'center',
-    minWidth: 200,
+    minWidth: 120,
     position: 'relative',
   },
   holdButtonText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   progressBar: {
     position: 'absolute',
-    bottom: 5,
-    left: 10,
-    right: 10,
-    height: 4,
+    bottom: 3,
+    left: 8,
+    right: 8,
+    height: 3,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 2,
     overflow: 'hidden',
@@ -453,11 +570,11 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 6,
     alignItems: 'center',
-    minWidth: 100,
+    minWidth: 60,
   },
   submitButton: {
     backgroundColor: '#2B5E34',
@@ -465,16 +582,10 @@ const styles = StyleSheet.create({
   newChallengeButton: {
     backgroundColor: '#FF8C00',
   },
-  cancelButton: {
-    backgroundColor: '#CCCCCC',
-  },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 11,
     fontWeight: 'bold',
-  },
-  footer: {
-    marginTop: 10,
   },
 });
 
