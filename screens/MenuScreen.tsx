@@ -281,7 +281,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       elevation: 6,
       justifyContent: 'center',
       alignItems: 'center',
-      // Apple Pay specific styling
+      // Purchase button styling
       borderWidth: 1,
       borderColor: 'rgba(255, 255, 255, 0.2)',
     },
@@ -932,16 +932,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     };
   }, [navigation, stopAndUnload]);
 
-  // IAP: Initialize and get products with Apple Pay support
+  // IAP: Initialize and get products
   useEffect(() => {
     let purchaseUpdateSubscription: any;
     let purchaseErrorSubscription: any;
 
     async function initIAP() {
-      if (Platform.OS !== 'ios') {
-        setIapInitialized(true);
-        return;
-      }
       
       try {
         console.log('Initializing IAP connection...');
@@ -988,7 +984,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
           const receipt = purchase.transactionReceipt;
           if (receipt) {
             try {
-              // For Apple Pay transactions, we need to finish them properly
+              // For iOS transactions, we need to finish them properly
               await RNIap.finishTransaction({ purchase, isConsumable: false });
               if (purchase.productId === APPLE_PRODUCT_ID) {
                 setUnlocked(true);
@@ -1010,9 +1006,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
           setPurchaseInProgress(false);
           console.warn('Purchase error:', error);
           
-          // Handle specific Apple Pay errors
+          // Handle specific purchase errors
           if (error.code === 'E_USER_CANCELLED') {
-            // User cancelled Apple Pay - no need to show error
+            // User cancelled purchase - no need to show error
             return;
           }
           
@@ -1040,7 +1036,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Restore purchases with Apple Pay support
+  // Restore purchases
   const handleRestore = useCallback(async () => {
     setPurchaseInProgress(true);
     try {
@@ -1097,14 +1093,13 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     
     try {
       if (Platform.OS === 'ios') {
-        // For iOS, use Apple Pay through react-native-iap
-        // This will automatically present Apple Pay if available
+        // For iOS, use standard In-App Purchase through react-native-iap
         await RNIap.requestPurchase({ 
           sku: APPLE_PRODUCT_ID,
           andDangerouslyFinishTransactionAutomaticallyIOS: false // Let us handle transaction completion
         });
       } else {
-        // For other platforms, use standard IAP
+        // For Android, use Google Play Billing
         await RNIap.requestPurchase({ sku: APPLE_PRODUCT_ID });
       }
     } catch (e) {
@@ -1360,7 +1355,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                     disabled={purchaseInProgress}
                   >
                     {purchaseInProgress ? (
-                      // Show loading indicator during Apple Pay processing
+                      // Show loading indicator during purchase processing
                       <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                         <ActivityIndicator size="small" color="#FFFFFF" />
                         <Text style={[responsiveStyles.modalUnlockButtonText, { 
@@ -1884,104 +1879,141 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                       >
                         {t('pickWorldMessage')}
                       </Text>
-                      {Platform.OS === 'ios' && !unlocked && (
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: getResponsiveSpacing(12, scaleFactor) }}>
-                          <Image
-                            source={require('../src/assets/images/unlock.png')}
-                            style={{
-                              width: 56,
-                              height: 56,
-                              marginRight: getResponsiveSpacing(14, scaleFactor),
-                            }}
-                            resizeMode="contain"
-                            fadeDuration={0}
-                          />
-                          <ReAnimated.View style={bounceStyle2}>
-                            <TouchableOpacity
-                              onPress={() => {
-                                playButtonSound(volume);
-                                handleUnlock();
+                      {!unlocked && (
+                                                <View style={{ flexDirection: 'column', alignItems: 'center', marginLeft: getResponsiveSpacing(12, scaleFactor) }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Image
+                              source={require('../src/assets/images/unlock.png')}
+                              style={{
+                                width: 56,
+                                height: 56,
+                                marginRight: getResponsiveSpacing(14, scaleFactor),
                               }}
-                              disabled={purchaseInProgress}
-                              activeOpacity={0.9}
-                              style={{ 
-                                borderRadius: getResponsiveSpacing(20, scaleFactor),
-                                backgroundColor: '#FF8C00',
-                                paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
-                                paddingVertical: getResponsiveSpacing(8, scaleFactor),
-                                elevation: 2,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 1 },
-                                shadowOpacity: 0.2,
-                                shadowRadius: 2,
-                              }}
-                            >
-                            <View style={{ alignItems: 'center', paddingVertical: 3 }}>
-                              {/* Compact Sale Badge */}
-                              <View style={{
-                                backgroundColor: '#FF4444',
-                                paddingHorizontal: 8,
-                                paddingVertical: 2,
-                                borderRadius: 10,
-                                marginBottom: 3,
-                              }}>
-                                <Text style={{
-                                  color: 'white',
-                                  fontSize: getResponsiveFontSize(8, scaleFactor),
-                                  fontWeight: '800',
-                                  letterSpacing: 0.3,
+                              resizeMode="contain"
+                              fadeDuration={0}
+                            />
+                            <ReAnimated.View style={bounceStyle2}>
+                              <TouchableOpacity
+                                onPress={() => {
+                                  playButtonSound(volume);
+                                  handleUnlock();
+                                }}
+                                disabled={purchaseInProgress}
+                                activeOpacity={0.9}
+                                style={{ 
+                                  borderRadius: getResponsiveSpacing(20, scaleFactor),
+                                  backgroundColor: '#FF8C00',
+                                  paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
+                                  paddingVertical: getResponsiveSpacing(8, scaleFactor),
+                                  elevation: 2,
+                                  shadowColor: '#000',
+                                  shadowOffset: { width: 0, height: 1 },
+                                  shadowOpacity: 0.2,
+                                  shadowRadius: 2,
+                                }}
+                              >
+                              <View style={{ alignItems: 'center', paddingVertical: 3 }}>
+                                {/* Compact Sale Badge */}
+                                <View style={{
+                                  backgroundColor: '#FF4444',
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 2,
+                                  borderRadius: 10,
+                                  marginBottom: 3,
                                 }}>
-                                  {t('sale')}
-                                </Text>
-                              </View>
-                              
-                              {/* Compact Title */}
-                              <Text style={{ 
-                                color: 'white', 
-                                fontWeight: '700', 
-                                fontSize: getResponsiveFontSize(10, scaleFactor), 
-                                textShadowColor: 'rgba(0,0,0,0.4)', 
-                                textShadowRadius: 2,
-                                textAlign: 'center',
-                                marginBottom: 2,
-                              }}>
-                                {t('unlockAllMissions')}
-                              </Text>
-                              
-                              {/* Compact Pricing */}
-                              <View style={{ 
-                                flexDirection: 'row', 
-                                alignItems: 'center',
-                                backgroundColor: 'rgba(255,255,255,0.2)',
-                                paddingHorizontal: 8,
-                                paddingVertical: 3,
-                                borderRadius: 12,
-                              }}>
+                                  <Text style={{
+                                    color: 'white',
+                                    fontSize: getResponsiveFontSize(8, scaleFactor),
+                                    fontWeight: '800',
+                                    letterSpacing: 0.3,
+                                  }}>
+                                    {t('sale')}
+                                  </Text>
+                                </View>
+                                
+                                {/* Compact Title */}
                                 <Text style={{ 
-                                  color: '#000000', 
-                                  fontWeight: '900', 
-                                  fontSize: getResponsiveFontSize(12, scaleFactor), 
-                                  textShadowColor: 'rgba(0,0,0,0.5)', 
+                                  color: 'white', 
+                                  fontWeight: '700', 
+                                  fontSize: getResponsiveFontSize(10, scaleFactor), 
+                                  textShadowColor: 'rgba(0,0,0,0.4)', 
                                   textShadowRadius: 2,
+                                  textAlign: 'center',
+                                  marginBottom: 2,
                                 }}>
-                                  {salePrice}
+                                  {t('unlockAllMissions')}
                                 </Text>
-                                <Text style={{ 
-                                  color: '#000000', 
-                                  fontWeight: '600', 
-                                  fontSize: getResponsiveFontSize(9, scaleFactor), 
-                                  textDecorationLine: 'line-through', 
-                                  marginLeft: 6,
-                                  textShadowColor: 'rgba(0,0,0,0.3)', 
-                                  textShadowRadius: 1,
+                                
+                                {/* Compact Pricing */}
+                                <View style={{ 
+                                  flexDirection: 'row', 
+                                  alignItems: 'center',
+                                  backgroundColor: 'rgba(255,255,255,0.2)',
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 3,
+                                  borderRadius: 12,
                                 }}>
-                                  {originalPrice}
-                                </Text>
+                                  <Text style={{ 
+                                    color: '#000000', 
+                                    fontWeight: '900', 
+                                    fontSize: getResponsiveFontSize(12, scaleFactor), 
+                                    textShadowColor: 'rgba(0,0,0,0.5)', 
+                                    textShadowRadius: 2,
+                                  }}>
+                                    {salePrice}
+                                  </Text>
+                                  <Text style={{ 
+                                    color: '#000000', 
+                                    fontWeight: '600', 
+                                    fontSize: getResponsiveFontSize(9, scaleFactor), 
+                                    textDecorationLine: 'line-through', 
+                                    marginLeft: 6,
+                                    textShadowColor: 'rgba(0,0,0,0.3)', 
+                                    textShadowRadius: 1,
+                                  }}>
+                                    {originalPrice}
+                                  </Text>
+                                </View>
                               </View>
-                            </View>
 
-                            </TouchableOpacity>
-                          </ReAnimated.View>
+                              </TouchableOpacity>
+                            </ReAnimated.View>
+                          </View>
+                          
+                          {/* Restore Purchases Button */}
+                          <TouchableOpacity
+                            onPress={() => {
+                              playButtonSound(volume);
+                              handleRestore();
+                            }}
+                            disabled={purchaseInProgress}
+                            activeOpacity={0.8}
+                            style={{ 
+                              marginTop: getResponsiveSpacing(8, scaleFactor),
+                              borderRadius: getResponsiveSpacing(15, scaleFactor),
+                              backgroundColor: '#6C7B7F',
+                              paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
+                              paddingVertical: getResponsiveSpacing(6, scaleFactor),
+                              elevation: 1,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.15,
+                              shadowRadius: 1,
+                              borderWidth: 1,
+                              borderColor: 'rgba(255, 255, 255, 0.3)',
+                            }}
+                          >
+                            <Text style={{ 
+                              color: 'white', 
+                              fontWeight: '600', 
+                              fontSize: getResponsiveFontSize(8, scaleFactor), 
+                              textShadowColor: 'rgba(0,0,0,0.3)', 
+                              textShadowRadius: 1,
+                              textAlign: 'center',
+                            }}>
+                              {purchaseInProgress ? t('processing') : t('restorePurchases')}
+                            </Text>
+                          </TouchableOpacity>
                         </View>
                       )}
                     </View>
@@ -2262,6 +2294,74 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                       </TouchableOpacity>
                     </View>
                   </View>
+
+                  {/* Restore Purchases Section */}
+                  {!unlocked && (
+                    <View style={{ marginBottom: 40 }}>
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 20,
+                        paddingHorizontal: 8,
+                      }}>
+                        <View style={{
+                          width: 4,
+                          height: 20,
+                          backgroundColor: '#4CAF50',
+                          borderRadius: 2,
+                          marginRight: 12,
+                        }} />
+                        <Text style={{
+                          fontSize: 18,
+                          fontWeight: '700',
+                          color: '#612915',
+                          textShadowColor: 'rgba(76, 175, 80, 0.2)',
+                          textShadowOffset: { width: 0, height: 1 },
+                          textShadowRadius: 1,
+                        }}>
+                          {t('restorePurchases') || 'Restore Purchases'}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          playButtonSound(volume);
+                          handleRestore();
+                        }}
+                        disabled={purchaseInProgress}
+                        style={{
+                          backgroundColor: purchaseInProgress ? '#9E9E9E' : '#4CAF50',
+                          borderRadius: 18,
+                          padding: 16,
+                          alignItems: 'center',
+                          minHeight: 50,
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                          shadowColor: '#4CAF50',
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: purchaseInProgress ? 0.2 : 0.4,
+                          shadowRadius: 6,
+                          elevation: 5,
+                          borderWidth: 1,
+                          borderColor: 'rgba(76, 175, 80, 0.3)',
+                          opacity: purchaseInProgress ? 0.7 : 1,
+                        }}
+                      >
+                        <Ionicons 
+                          name="refresh-circle" 
+                          size={20} 
+                          color="white" 
+                          style={{ marginRight: 8 }}
+                        />
+                        <Text style={{
+                          color: 'white',
+                          fontSize: 16,
+                          fontWeight: 'bold',
+                        }}>
+                          {purchaseInProgress ? t('processing') : t('restorePurchases')}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
 
                   {/* Reset All Levels Section */}
                   <View style={{ marginBottom: 40 }}>
