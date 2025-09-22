@@ -132,12 +132,13 @@ export function useDynamicStyles() {
         color: '#612915',
       },
       animalName: {
-        fontSize: getResponsiveFontSize(isTabletDevice ? 42 : 36, scaleFactor), // Bigger on tablets
+        fontSize: getResponsiveFontSize(isTabletDevice ? 56 : 30, scaleFactor), // Match labelPositioning config
         marginTop: 0,
-        fontWeight: '700' as const,
-        backgroundColor: 'rgba(255, 255, 0, 0.95)', // Semi-transparent yellow
-        paddingVertical: getResponsivePadding(isTabletDevice ? 20 : 16, scaleFactor), // Better padding
-        paddingHorizontal: getResponsivePadding(isTabletDevice ? 40 : 32, scaleFactor), // Better padding
+        fontWeight: Platform.OS === 'ios' ? ('800' as const) : ('700' as const),
+        fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto', // High-quality fonts
+        backgroundColor: '#FFEA00', // Solid yellow for crisp rendering
+        paddingVertical: getResponsivePadding(isTabletDevice ? 24 : 20, scaleFactor), // Increased padding for larger font
+        paddingHorizontal: getResponsivePadding(isTabletDevice ? 48 : 40, scaleFactor), // Increased padding for larger font
         borderRadius: getResponsiveSpacing(isTabletDevice ? 35 : 28, scaleFactor), // Better border radius
         textAlign: 'center' as const,
         elevation: 6,
@@ -145,10 +146,12 @@ export function useDynamicStyles() {
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,
-        opacity: 0.95,
         borderWidth: isTabletDevice ? 6 : 5,
         borderColor: '#FFD700',
         minWidth: getResponsiveSpacing(isTabletDevice ? 200 : 150, scaleFactor), // Ensure minimum width
+        ...(Platform.OS === 'ios' ? {
+          textRendering: 'optimizeLegibility' as any,
+        } : {}),
       },
       loadingText: {
         marginTop: getResponsiveMargin(10, scaleFactor),

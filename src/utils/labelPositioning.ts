@@ -25,17 +25,17 @@ export const getLandscapeDeviceType = () => {
 export const LANDSCAPE_LABEL_CONFIG = {
   phone: {
     topOffset: -0.01,
-    fontSize: 18,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 16
+    fontSize: 30,  // Increased from 18
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 18
   },
   tablet: {
     topOffset: 0.1,
-    fontSize: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 16
+    fontSize: 56,  // Increased to match phone size
+    paddingVertical: 24,
+    paddingHorizontal: 32,
+    borderRadius: 24
   }
 };
 
@@ -74,10 +74,10 @@ export const getLabelPositioning = (
     return {
       top: 0,
       marginTop: screenH * 0.8, // Override top position to push label down by 80% on iPhone Desert/Ocean
-      fontSize: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 16
+      fontSize: 50,  // Increased to match landscape
+      paddingVertical: 20,
+      paddingHorizontal: 32,
+      borderRadius: 24
     };
   }
   
@@ -85,10 +85,10 @@ export const getLabelPositioning = (
   if (!isLandscape) {
     return {
       top: 0,
-      fontSize: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 16
+      fontSize: 50,  // Increased to match landscape
+      paddingVertical: 20,
+      paddingHorizontal: 32,
+      borderRadius: 24
     };
   }
 

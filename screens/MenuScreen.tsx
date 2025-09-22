@@ -66,8 +66,8 @@ const MIN_TILE_SIZE_PORTRAIT = 140;  // Slightly bigger minimum for portrait
 const MAX_TILE_SIZE_PORTRAIT = 180; // Slightly bigger maximum for portrait
 const RESPONSIVE_MARGIN = 6;
 
-// Apple App Store product id for unlocking all levels except Farm
-const APPLE_PRODUCT_ID = 'animalDetectiveUnclock'; // Replace with your actual product id
+// Product ID for unlocking all levels except Farm (used for both iOS App Store and Google Play)
+const PRODUCT_ID = 'animalDetectiveUnclock'; // Used for both iOS and Android
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.webp'),
@@ -707,6 +707,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   useEffect(() => {
     const loadUnlockedState = async () => {
       try {
+        
         const stored = await AsyncStorage.getItem('unlocked_all_levels');
         if (stored === 'true') {
           setUnlocked(true);
@@ -946,17 +947,17 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         setIapInitialized(true);
 
         // Get product info
-        console.log('Requesting products for SKU:', APPLE_PRODUCT_ID);
+        console.log('Requesting products for SKU:', PRODUCT_ID);
         try {
-          const products = await RNIap.getProducts({ skus: [APPLE_PRODUCT_ID] });
+          const products = await RNIap.getProducts({ skus: [PRODUCT_ID] });
           console.log('Received products:', products);
           if (products && products.length > 0) {
             setProducts(products);
           } else {
-            console.warn('No products found for SKU:', APPLE_PRODUCT_ID);
+            console.warn('No products found for SKU:', PRODUCT_ID);
             Alert.alert(
               'Product Not Found',
-              `Product "${APPLE_PRODUCT_ID}" not found in App Store. Please check your App Store Connect configuration.`
+              `Product "${PRODUCT_ID}" not found in App Store. Please check your App Store Connect configuration.`
             );
           }
         } catch (productError) {
@@ -971,8 +972,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         const purchases = await RNIap.getAvailablePurchases();
         const hasUnlock = purchases.some(
           (purchase) =>
-            purchase.productId === APPLE_PRODUCT_ID ||
-            purchase.productId === APPLE_PRODUCT_ID.replace('.unlockall', '.unlockall') // fallback
+            purchase.productId === PRODUCT_ID ||
+            purchase.productId === PRODUCT_ID.replace('.unlockall', '.unlockall') // fallback
         );
         if (hasUnlock) {
           setUnlocked(true);
@@ -986,7 +987,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
             try {
               // For iOS transactions, we need to finish them properly
               await RNIap.finishTransaction({ purchase, isConsumable: false });
-              if (purchase.productId === APPLE_PRODUCT_ID) {
+              if (purchase.productId === PRODUCT_ID) {
                 setUnlocked(true);
                 saveUnlockedState(true);
                 setPurchaseInProgress(false);
@@ -1043,8 +1044,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       const purchases = await RNIap.getAvailablePurchases();
       const hasUnlock = purchases.some(
         (purchase) =>
-          purchase.productId === APPLE_PRODUCT_ID ||
-          purchase.productId === APPLE_PRODUCT_ID.replace('.unlockall', '.unlockall')
+          purchase.productId === PRODUCT_ID ||
+          purchase.productId === PRODUCT_ID.replace('.unlockall', '.unlockall')
       );
       if (hasUnlock) {
         setUnlocked(true);
@@ -1095,12 +1096,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       if (Platform.OS === 'ios') {
         // For iOS, use standard In-App Purchase through react-native-iap
         await RNIap.requestPurchase({ 
-          sku: APPLE_PRODUCT_ID,
+          sku: PRODUCT_ID,
           andDangerouslyFinishTransactionAutomaticallyIOS: false // Let us handle transaction completion
         });
       } else {
         // For Android, use Google Play Billing
-        await RNIap.requestPurchase({ sku: APPLE_PRODUCT_ID });
+        await RNIap.requestPurchase({ sku: PRODUCT_ID });
       }
     } catch (e) {
       console.warn('Purchase error:', e);
@@ -1321,7 +1322,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
             ]}>
               {t('thisLevelIsLocked')}
             </Text>
-            {Platform.OS === 'ios' && !unlocked && (
+            {!unlocked && (
               <>
                 <TouchableOpacity
                   style={[
@@ -1720,7 +1721,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                       >
                         {t('pickWorldMessage')}
                       </Text>
-                      {Platform.OS === 'ios' && !unlocked && (
+                      {!unlocked && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: getResponsiveSpacing(10, scaleFactor) }}>
                         
                           <ReAnimated.View style={bounceStyle}>

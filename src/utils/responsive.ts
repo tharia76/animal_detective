@@ -71,8 +71,8 @@ export const getResponsiveSpacing = (baseSpacing: number, scaleFactor: number): 
 
 export const getResponsiveFontSize = (baseSize: number, scaleFactor: number): number => {
   const scaledSize = baseSize * scaleFactor;
-  // Ensure minimum and maximum font sizes
-  return Math.max(Math.min(scaledSize, baseSize * 1.5), baseSize * 0.7);
+  // Ensure minimum and maximum font sizes, and round to integer for crisp rendering
+  return Math.round(Math.max(Math.min(scaledSize, baseSize * 1.5), baseSize * 0.7));
 };
 
 export const getResponsiveIconSize = (baseSize: number, scaleFactor: number): number => {

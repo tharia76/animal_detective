@@ -1075,17 +1075,19 @@ const LevelAnimalGrid: React.FC<{
               {isRevealed && (
                 <Text 
                   style={{
-                    fontSize: isTablet ? 24 : (isMobile ? 20 : 18), // Smaller text for mobile
-                    fontFamily: Platform.OS === 'ios' ? 'Marker Felt' : 'cursive', // Handwritten font
-                    fontWeight: Platform.OS === 'ios' ? 'normal' : 'bold',
+                    fontSize: isTablet ? 28 : (isMobile ? 24 : 22), // Increased font sizes
+                    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif', // Use system font for crisp rendering
+                    fontWeight: '700', // Bold weight for better clarity
                     color: 'black', // Black text for better contrast
                     textAlign: 'center',
                     marginTop: -20,
                     textShadowColor: 'rgba(255,255,255,0.8)',
                     textShadowOffset: {width: 1, height: 1},
                     textShadowRadius: 2,
+                    textRendering: 'optimizeLegibility' as any, // Optimize text rendering
                   }}
                   numberOfLines={1}
+                  allowFontScaling={false} // Prevent font scaling issues
                 >
                   {animal.name}
                 </Text>

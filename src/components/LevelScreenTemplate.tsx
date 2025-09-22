@@ -2519,46 +2519,41 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
                           {
                             scale: nameScaleAnim.interpolate({
                               inputRange: [0, 1, 1.1],
-                              outputRange: [0, 1.3, 1.3],
+                              outputRange: [0, 1, 1],
                             }),
                           },
                         ],
                       }
                     ]}>
-                      <Animated.Text style={[
-                        dynamicStyles.animalName,
-                        // Apply label styling from positioning utility
-                        {
-                          fontSize: getLabelPositioning(levelName, screenW, screenH, isLandscape).fontSize,
-                          paddingVertical: getLabelPositioning(levelName, screenW, screenH, isLandscape).paddingVertical,
-                          paddingHorizontal: getLabelPositioning(levelName, screenW, screenH, isLandscape).paddingHorizontal,
-                          borderRadius: getLabelPositioning(levelName, screenW, screenH, isLandscape).borderRadius,
-                        },
-                        {
-                          transform: [{
-                            scale: nameScaleAnim.interpolate({
-                              inputRange: [0, 1, 1.1],
-                              outputRange: [0, 1.3, 1.3],
-                            }),
-                          }],
-                          shadowColor: '#000',
-                          shadowOpacity: nameScaleAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.25, 0.5],
-                          }),
-                          shadowRadius: nameScaleAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [3, 8],
-                          }),
-                        }
-                      ]}>
-                        {currentAnimal?.name}
-                          {hasClickedCurrentAnimal && (
-                            <Text style={{ color: '#4CAF50' }}>
-                              {' ✓'}
-                            </Text>
-                          )}
-                      </Animated.Text>
+                      <View style={{ backgroundColor: 'transparent' }}>
+                        <Animated.Text 
+                          allowFontScaling={false}
+                          adjustsFontSizeToFit={false}
+                          style={[
+                          dynamicStyles.animalName,
+                          // Apply label styling from positioning utility
+                          {
+                            fontSize: Math.round(getLabelPositioning(levelName, screenW, screenH, isLandscape).fontSize),
+                            paddingVertical: Math.round(getLabelPositioning(levelName, screenW, screenH, isLandscape).paddingVertical),
+                            paddingHorizontal: Math.round(getLabelPositioning(levelName, screenW, screenH, isLandscape).paddingHorizontal),
+                            borderRadius: Math.round(getLabelPositioning(levelName, screenW, screenH, isLandscape).borderRadius),
+                            // Force layer backing on iOS for better rendering
+                            ...(Platform.OS === 'ios' ? { shouldRasterizeIOS: true } : {}),
+                          },
+                          {
+                            shadowColor: '#000',
+                            shadowOpacity: 0.3,
+                            shadowRadius: 4,
+                          }
+                        ]}>
+                          {currentAnimal?.name}
+                            {hasClickedCurrentAnimal && (
+                              <Text style={{ color: '#4CAF50' }}>
+                                {' ✓'}
+                              </Text>
+                            )}
+                        </Animated.Text>
+                      </View>
                     </Animated.View>
                     )}
               </View>

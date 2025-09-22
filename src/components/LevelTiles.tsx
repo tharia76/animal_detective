@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { View, TouchableOpacity, Image, Text, ScrollView, Animated, Easing } from 'react-native';
+import { View, TouchableOpacity, Image, Text, ScrollView, Animated, Easing, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -298,12 +298,15 @@ const AnimatedTile = React.memo(({
               }}
             >
               <Text
+                allowFontScaling={false}
                 style={{
-                  fontSize: isLandscape && itemSize >= 280 ? 26 : isLandscape ? 18 : 20, // Slightly smaller mission names
+                  fontSize: isLandscape && itemSize >= 280 ? 30 : isLandscape ? 22 : 24, // Increased font sizes
                   fontWeight: 'bold',
+                  fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
                   color: 'white',
                   textAlign: 'center',
                   width: Math.floor(itemSize * 0.8),
+                  textRendering: 'optimizeLegibility' as any,
                 }}
               >
                 {t(level)}
@@ -313,12 +316,15 @@ const AnimatedTile = React.memo(({
               {levelAnimalCount > 0 && (
                 <Text
                   numberOfLines={1}
+                  allowFontScaling={false}
                   style={{
-                    fontSize: isLandscape && itemSize >= 280 ? 16 : isLandscape ? 12 : 14,
+                    fontSize: isLandscape && itemSize >= 280 ? 18 : isLandscape ? 14 : 16,
                     fontWeight: '500',
+                    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
                     color: 'rgba(255, 255, 255, 0.9)',
                     marginTop: 4,
                     textAlign: 'center',
+                    textRendering: 'optimizeLegibility' as any,
                   }}
                 >
                   {isCompleted ? t('missionComplete') : t('animalsToDiscover').replace('{count}', levelAnimalCount.toString())}
