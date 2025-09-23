@@ -56,6 +56,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
 import { getLevelVideo } from '../utils/levelVideoMapping';
+import BackgroundMusicManager from '../services/BackgroundMusicManager';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
@@ -290,25 +291,15 @@ import { getLevelVideo } from '../utils/levelVideoMapping';
   );
   };
 
-// --- BG MUSIC MAP: Map levelName to bg music asset/uri ---
-// Make sure all keys are lowercase for bulletproof matching
-const BG_MUSIC_MAP: Record<string, string | number | undefined> = {
-  farm: require('../assets/sounds/background_sounds/farm_bg.mp3'),
-  forest: require('../assets/sounds/background_sounds/forest_bg.mp3'),
-  jungle: require('../assets/sounds/background_sounds/jungle_bg.mp3'),
-  desert: require('../assets/sounds/background_sounds/desert_bg.mp3'),
-  ocean: require('../assets/sounds/background_sounds/ocean_bg.mp3'),
-  savannah: require('../assets/sounds/background_sounds/savannah_bg.mp3'),
-  arctic: require('../assets/sounds/background_sounds/arctic_bg.mp3'),
-  birds: require('../assets/sounds/background_sounds/birds_bg.mp3'),
-  insects: require('../assets/sounds/background_sounds/insects_bg.mp3'),
-};
+// Background music is now managed globally by BackgroundMusicManager
 
 let globalVolumeMultiplier = 1.0; // Global volume setting from settings
 
 // Function to set global volume (called from settings)
 export const setGlobalVolume = (volume: number) => {
   globalVolumeMultiplier = volume;
+  // Update the background music manager's volume too
+  BackgroundMusicManager.setGlobalVolume(volume);
 };
 
 // Function to get current global volume (for video players)
@@ -875,47 +866,20 @@ export default function LevelScreenTemplate({
     };
   }, [showName, glowAnim]);
 
-  // --- BG MUSIC STATE ---
-  const bgMusicRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
-  const [currentBgMusicKey, setCurrentBgMusicKey] = useState<string | undefined>(undefined);
-  const bgLastPositionMsRef = useRef<number>(0);
-  
   // Audio ducking constants
   const NORMAL_BG_VOLUME = 0.8; // Reduced by 20% from 1.0
-const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
+  const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
 
   // Helper functions for audio ducking
   const duckBackgroundMusic = useCallback(() => {
-    if (bgMusicRef.current && !isMuted) {
-      try {
-        // Set volume directly to avoid blocking the main thread
-        bgMusicRef.current.volume = DUCKED_BG_VOLUME * globalVolumeMultiplier;
-        // console.log('Background music ducked to', DUCKED_BG_VOLUME * globalVolumeMultiplier);
-      } catch (error) {
-        console.warn('Error ducking background music:', error);
-      }
-    }
-  }, [isMuted]);
+    // Audio ducking is not needed with global manager as it handles cross-fade
+    // Keeping function for compatibility
+  }, []);
 
   const restoreBackgroundMusic = useCallback(() => {
-    if (bgMusicRef.current && !isMuted) {
-      try {
-        // Set volume directly to avoid blocking the main thread
-        bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
-        // console.log('Background music restored to', NORMAL_BG_VOLUME * globalVolumeMultiplier);
-        // Double-check the volume was set
-        if (bgMusicRef.current) {
-          setTimeout(() => {
-            if (bgMusicRef.current) {
-              bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
-            }
-          }, 100);
-        }
-      } catch (error) {
-        console.warn('Error restoring background music:', error);
-      }
-    }
-  }, [isMuted]);
+    // Audio restoration is not needed with global manager
+    // Keeping function for compatibility
+  }, []);
 
   const currentAnimal = useMemo(() => {
     // Return animal immediately when available, don't wait for allAssetsReady
@@ -956,184 +920,21 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
   // --- BG MUSIC EFFECT (only play if instruction bubble is visible) ---
   // NOTE: Do NOT depend on isMuted here to avoid tearing down/recreating the player and losing position
   useEffect(() => {
-    // Always use lowercase for lookup
-    const key = levelName.trim().toLowerCase();       // e.g. "Forest" ➞ "forest"
-
-    // --- FIX: Always use require for local assets, don't coerce to string ---
-    // If bgMusic is provided as a prop, use it, else use BG_MUSIC_MAP
-    let source: string | number | undefined = undefined;
-    if (typeof bgMusic !== 'undefined') {
-      source = bgMusic;
-    } else if (BG_MUSIC_MAP.hasOwnProperty(key)) {
-      source = BG_MUSIC_MAP[key];
-    }
-
-    // Stop music if no source; if just hidden by instruction bubble, pause but keep player
-    if (!source) {
-      if (bgMusicRef.current) {
-        try {
-          bgMusicRef.current.pause();
-          bgMusicRef.current.remove();
-        } catch (e) {}
-        bgMusicRef.current = null;
-        setCurrentBgMusicKey(undefined);
-      }
-      return;
-    }
-    if (!showInstruction) {
-      if (bgMusicRef.current) {
-        try { bgMusicRef.current.pause(); } catch (e) {}
-      }
-      return;
-    }
-
-    // If already playing the right track, just honor mute/unmute without recreating the player
-    // For require() assets, String(require(...)) is "[object Module]" or "[object Object]", so compare by reference
-    if (bgMusicRef.current && currentBgMusicKey && currentBgMusicKey === String(source)) {
-      if (bgMusicRef.current) {
-        if (isMuted) {
-          // Pause but do not remove to preserve position
-          try { bgMusicRef.current.pause(); } catch {}
-        } else {
-          // Resume from paused position with safety checks
-          try {
-            const p: any = bgMusicRef.current;
-            // Set volume first to avoid blocking
-            p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
-            
-            // Attempt to seek to last position before playing (with safety checks)
-            if (bgLastPositionMsRef.current > 0) {
-              try {
-                if (typeof p.setPosition === 'function') {
-                  p.setPosition(bgLastPositionMsRef.current);
-                } else if (typeof p.seek === 'function') {
-                  p.seek(bgLastPositionMsRef.current / 1000);
-                } else if ('currentTime' in p) {
-                  p.currentTime = bgLastPositionMsRef.current / 1000;
-                }
-              } catch (seekError) {
-                console.warn('Error seeking background music:', seekError);
-              }
-            }
-            
-            // Play after setting properties
-            p.play();
-          } catch (playError) {
-            console.warn('Error resuming background music:', playError);
-          }
-        }
-      }
-      return;
-    }
-
-    // else swap out the old player (only when source changes)
-    // Before removing, capture last position to resume on the new source if identical assets on some platforms
-    if (bgMusicRef.current) {
-      try {
-        const p: any = bgMusicRef.current;
-        // Safely get status without blocking
-        if (typeof p.getStatusAsync === 'function') {
-          p.getStatusAsync?.().then((status: any) => {
-            if (status && typeof status.positionMillis === 'number') {
-              bgLastPositionMsRef.current = status.positionMillis;
-            }
-          }).catch(() => {});
-        }
-      } catch {}
-      try {
-        bgMusicRef.current.pause();
-        bgMusicRef.current.remove();
-      } catch (e) {}
-      bgMusicRef.current = null;
-      setCurrentBgMusicKey(undefined);
-    }
-
-    if (!isMuted && source) {
-      try {
-        const p = createAudioPlayer(source);
-        p.loop = true;
-        p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier; // Apply global volume setting
-        
-        // Seek to last position if we have one and the new player supports it (with safety checks)
-        if (bgLastPositionMsRef.current > 0) {
-          try {
-            const anyP: any = p;
-            if (typeof anyP.setPosition === 'function') {
-              anyP.setPosition(bgLastPositionMsRef.current);
-            } else if (typeof anyP.seek === 'function') {
-              anyP.seek(bgLastPositionMsRef.current / 1000);
-            } else if ('currentTime' in anyP) {
-              anyP.currentTime = bgLastPositionMsRef.current / 1000;
-            }
-          } catch (seekError) {
-            console.warn('Error seeking new background music:', seekError);
-          }
-        }
-        
-        // Play first, then add listener to avoid blocking
-        p.play();
-        
-        // Track playback position to support seamless resume (with safety checks)
-        try {
-          (p as any).addListener?.('playbackStatusUpdate', (status: any) => {
-            if (status && typeof status.positionMillis === 'number') {
-              bgLastPositionMsRef.current = status.positionMillis;
-            }
-          });
-        } catch (listenerError) {
-          console.warn('Error adding background music listener:', listenerError);
-        }
-        
-        bgMusicRef.current = p;
-        setCurrentBgMusicKey(String(source));
-      } catch (e) {
-        console.warn('Error creating background music player:', e);
-        bgMusicRef.current = null;
-        setCurrentBgMusicKey(undefined);
-      }
+    // Use global background music manager
+    if (showInstruction && !isMuted) {
+      BackgroundMusicManager.playBackgroundMusic(levelName);
+    } else if (isMuted) {
+      BackgroundMusicManager.setMuted(true);
+    } else if (!showInstruction) {
+      BackgroundMusicManager.pause();
     }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [levelName, bgMusic, showInstruction]);
+  }, [levelName, bgMusic, showInstruction, isMuted]);
 
-  // Cleanup bg music strictly on unmount
-  useEffect(() => {
-    return () => {
-      if (bgMusicRef.current) {
-        try {
-          bgMusicRef.current.pause();
-          bgMusicRef.current.remove();
-        } catch (e) {}
-        bgMusicRef.current = null;
-        setCurrentBgMusicKey(undefined);
-      }
-    };
-  }, []);
+  // No cleanup needed - background music is managed globally and persists across levels
 
-  // Respond to mute/unmute without recreating the bg player (preserve position)
-  useEffect(() => {
-    const p = bgMusicRef.current;
-    if (!p) return;
-    try {
-      if (isMuted) {
-        p.pause();
-      } else if (showInstruction) {
-        const anyP: any = p;
-        // Seek back to stored position before resuming to avoid restarting
-        try {
-          if (typeof anyP.setPosition === 'function') {
-            anyP.setPosition(bgLastPositionMsRef.current);
-          } else if (typeof anyP.seek === 'function') {
-            anyP.seek(bgLastPositionMsRef.current / 1000);
-          } else if ('currentTime' in anyP) {
-            anyP.currentTime = bgLastPositionMsRef.current / 1000;
-          }
-        } catch {}
-        anyP.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
-        anyP.play();
-      }
-    } catch (e) {}
-  }, [isMuted, showInstruction]);
+  // Mute/unmute is now handled by the background music effect above
 
   const isHydrated = initialIndexHydrated;
 
@@ -1223,15 +1024,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
         soundRef.current = null;
         isSoundPlayingRef.current = false;
       }
-      // Also stop bg music on unmount
-      if (bgMusicRef.current) {
-        try {
-          bgMusicRef.current.pause();
-          bgMusicRef.current.remove();
-        } catch (e) {}
-        bgMusicRef.current = null;
-        setCurrentBgMusicKey(undefined);
-      }
+      // Background music is now managed globally - no cleanup needed
     };
   }, []);
 
@@ -1501,16 +1294,9 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
           setLevelCompleted(true);
           setScreenLocked(true); // Lock screen until modal appears
           
-          // Stop background music completely when level is completed
-          if (bgMusicRef.current) {
-              try {
-                bgMusicRef.current.pause();
-                bgMusicRef.current.remove();
-              } catch (e) {}
-              bgMusicRef.current = null;
-              setCurrentBgMusicKey(undefined);
-              console.log('🎵 Background music stopped for level completion');
-            }
+          // Pause background music when level is completed
+          BackgroundMusicManager.pause();
+          console.log('🎵 Background music paused for level completion');
             
             // Pulse in place 3 times (no movement)
             Animated.loop(
@@ -1740,44 +1526,27 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
     // Persist current progress before leaving the level
     try { void saveProgress(visitedAnimals); } catch (e) { /* noop */ }
     stopSound(false);
-    // Stop bg music when going home
-    if (bgMusicRef.current) {
-      try {
-        bgMusicRef.current.pause();
-        bgMusicRef.current.remove();
-      } catch (e) {}
-      bgMusicRef.current = null;
-      setCurrentBgMusicKey(undefined);
-    }
+    // Background music will persist and be handled by menu screen
     onBackToMenu();
   }, [stopSound, onBackToMenu, saveProgress, visitedAnimals]);
 
   const toggleMute = () => {
     const changingToMuted = !isMuted;
     setIsMuted(changingToMuted);
+    BackgroundMusicManager.setMuted(changingToMuted);
+    
     if (changingToMuted) {
-      // Pause, don't unload, so we can resume seamlessly
+      // Pause animal sound
       try {
         if (soundRef.current) {
           soundRef.current.pause();
         }
       } catch (e) {}
-      // Pause bg music too
-      if (bgMusicRef.current) {
-        try { bgMusicRef.current.pause(); } catch (e) {}
-      }
     } else {
       // Unmuting: resume animal sound from its paused position if present
       if (soundRef.current) {
         try {
-          duckBackgroundMusic();
           soundRef.current.play();
-        } catch (e) {}
-      } else if (bgMusicRef.current && showInstruction) {
-        // Otherwise resume background music if appropriate
-        try {
-          bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
-          bgMusicRef.current.play();
         } catch (e) {}
       }
     }
@@ -1849,27 +1618,8 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       
       // Resume background music when returning to level after 7/7 completion
       if (levelCompleted && !isMuted) {
-        const key = levelName.trim().toLowerCase();
-        let source: string | number | undefined = undefined;
-        if (typeof bgMusic !== 'undefined') {
-          source = bgMusic;
-        } else if (BG_MUSIC_MAP.hasOwnProperty(key)) {
-          source = BG_MUSIC_MAP[key];
-        }
-        
-        if (source) {
-          try {
-            const p = createAudioPlayer(source);
-            p.loop = true;
-            p.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
-            p.play();
-            bgMusicRef.current = p;
-            setCurrentBgMusicKey(String(source));
-            console.log('🎵 Background music resumed after returning from discover screen');
-          } catch (e) {
-            console.warn('Error resuming background music:', e);
-          }
-        }
+        BackgroundMusicManager.resume();
+        console.log('🎵 Background music resumed after returning from discover screen');
       }
       
       // Don't show congrats modal - just return to level
