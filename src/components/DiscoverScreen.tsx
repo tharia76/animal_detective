@@ -11,7 +11,8 @@ import {
   ImageBackground,
   ActivityIndicator,
   Modal,
-  Dimensions
+  Dimensions,
+  InteractionManager
 } from 'react-native';
 
 import { createAudioPlayer } from 'expo-audio';
@@ -417,8 +418,8 @@ const getAnimalEnglishKey = (animal: any): string => {
   
   // Debug specific mapping issues
   if (translatedKey.includes('кошк') || translatedKey.includes('кошка') || translatedKey.includes('cat')) {
-    console.log(`🔍 CAT MAPPING DEBUG: "${translatedKey}" → "${result}"`);
-    console.log('Available mappings for cats:', Object.keys(nameToKeyMap).filter(k => k.includes('кошк') || k.includes('кошка') || k.includes('cat')));
+    // console.log(`🔍 CAT MAPPING DEBUG: "${translatedKey}" → "${result}"`);
+    // console.log('Available mappings for cats:', Object.keys(nameToKeyMap).filter(k => k.includes('кошк') || k.includes('кошка') || k.includes('cat')));
   }
   
   return result;
@@ -457,9 +458,16 @@ const LevelAnimalGrid: React.FC<{
   const levelAnimals = animals.filter((animal: any) => 
     animal.animalType.toLowerCase() === levelName.toLowerCase()
   );
-  console.log(`${levelName} animals found:`, levelAnimals.length);
-  console.log('All animals:', animals.length);
-  console.log(`${levelName} animal names:`, levelAnimals.map(a => a.name));
+  console.log('DISCOVER SCREEN - Animal sizes:', { 
+    width: isTablet ? 150 : (isMobile ? 140 : 120),
+    height: isTablet ? 170 : (isMobile ? 160 : 135),
+    isTablet,
+    isMobile,
+    totalAnimals: levelAnimals.length
+  });
+  // console.log(`${levelName} animals found:`, levelAnimals.length);
+  // console.log('All animals:', animals.length);
+  // console.log(`${levelName} animal names:`, levelAnimals.map(a => a.name));
   
 
   
@@ -806,7 +814,7 @@ const LevelAnimalGrid: React.FC<{
       const rotationAnimation = Animated.loop(
         Animated.timing(magnifyingGlassRotation, {
           toValue: 1,
-          duration: 3000, // 3 seconds for full circle
+          duration: 5000, // Increased to 5 seconds for smoother, less battery-intensive animation
           useNativeDriver: true,
         })
       );
@@ -814,15 +822,16 @@ const LevelAnimalGrid: React.FC<{
       const scaleAnimation = Animated.loop(
         Animated.sequence([
           Animated.timing(magnifyingGlassScale, {
-            toValue: 1.2,
-            duration: 800,
+            toValue: 1.15, // Reduced scale for less dramatic effect
+            duration: 1500, // Increased duration for smoother animation
             useNativeDriver: true,
           }),
           Animated.timing(magnifyingGlassScale, {
             toValue: 1,
-            duration: 800,
+            duration: 1500,
             useNativeDriver: true,
           }),
+          Animated.delay(500), // Add delay between cycles to reduce CPU usage
         ])
       );
 
@@ -832,6 +841,9 @@ const LevelAnimalGrid: React.FC<{
       return () => {
         rotationAnimation.stop();
         scaleAnimation.stop();
+        // Reset values to prevent memory leaks
+        magnifyingGlassRotation.setValue(0);
+        magnifyingGlassScale.setValue(1);
       };
     }
   }, [currentGuideIndex, revealedAnimals.size, levelAnimals.length, magnifyingGlassRotation, magnifyingGlassScale]);
@@ -932,10 +944,10 @@ const LevelAnimalGrid: React.FC<{
                 return availableEnglishKeys.has(englishKeyRevealed);
               }).length;
               
-              console.log('Revealed available count:', revealedAvailableCount);
-              console.log('Total available animals:', availableAnimals.size);
-              console.log('Available animals:', Array.from(availableAnimals));
-              console.log('All revealed animals:', Array.from(newSet));
+              // console.log('Revealed available count:', revealedAvailableCount);
+              // console.log('Total available animals:', availableAnimals.size);
+              // console.log('Available animals:', Array.from(availableAnimals));
+              // console.log('All revealed animals:', Array.from(newSet));
               
               // Convert available animals count to match English key counting
               const availableEnglishKeysCount = new Set();
@@ -946,7 +958,7 @@ const LevelAnimalGrid: React.FC<{
               });
               
               if (revealedAvailableCount === availableEnglishKeysCount.size && availableEnglishKeysCount.size > 0 && onAllRevealed) {
-                console.log('All available animals revealed! Triggering completion...');
+                // console.log('All available animals revealed! Triggering completion...');
                 // Wait a moment to let the user see the last reveal, then trigger callback
                 setTimeout(() => {
                   onAllRevealed();
@@ -966,7 +978,13 @@ const LevelAnimalGrid: React.FC<{
               ],
             }}
           >
-            <View style={{ margin: isTablet ? 6 : (isMobile ? 8 : 4) }}>
+            <View style={{ 
+              marginTop: isTablet ? 5 : (isMobile ? 2 : 4),
+              marginHorizontal: isTablet ? 5 : (isMobile ? 2 : 4),
+              marginBottom: isTablet ? 20 : (isMobile ? 15 : 18), // Increased bottom margin
+              position: 'relative', 
+              overflow: 'visible' 
+            }}>
               <TouchableOpacity 
                 activeOpacity={0.8}
                 onPress={handleAnimalPress}
@@ -978,8 +996,8 @@ const LevelAnimalGrid: React.FC<{
                 <Image
                   source={getStickerForAnimal(animal.name)}
                   style={{
-                    width: isTablet ? 160 : (isMobile ? 95 : 120), // 3 per row on mobile
-                    height: isTablet ? 180 : (isMobile ? 115 : 140),
+                    width: isTablet ? 150 : (isMobile ? 140 : 120), // Mobile sized for 5 per row
+                    height: isTablet ? 170 : (isMobile ? 160 : 135),
                   }}
                   resizeMode="contain"
                 />
@@ -991,10 +1009,10 @@ const LevelAnimalGrid: React.FC<{
                       position: 'absolute',
                       top: '50%',
                       left: '50%',
-                      width: 70,
-                      height: 70,
-                      marginLeft: -35,
-                      marginTop: -35,
+                      width: 60,
+                      height: 60,
+                      marginLeft: -30,
+                      marginTop: -30,
                       zIndex: 1,
                       transform: [
                         {
@@ -1029,14 +1047,14 @@ const LevelAnimalGrid: React.FC<{
                     position: 'absolute',
                     top: '50%',
                     left: '50%',
-                    width: 60,
-                    height: 60,
-                    marginLeft: -30,
-                    marginTop: -30,
+                    width: 50,
+                    height: 50,
+                    marginLeft: -25,
+                    marginTop: -25,
                     justifyContent: 'center',
                     alignItems: 'center',
                     backgroundColor: 'rgba(255, 165, 0, 0.9)', // Orange background like home button
-                    borderRadius: 30,
+                    borderRadius: 25,
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.3,
@@ -1044,7 +1062,7 @@ const LevelAnimalGrid: React.FC<{
                     elevation: 3,
                     zIndex: 2,
                   }}>
-                    <Ionicons name="lock-closed" size={28} color="#fff" />
+                    <Ionicons name="lock-closed" size={24} color="#fff" />
                   </View>
                 )}
                 
@@ -1073,24 +1091,42 @@ const LevelAnimalGrid: React.FC<{
               
               {/* Show animal name when revealed */}
               {isRevealed && (
-                <Text 
-                  style={{
-                    fontSize: isTablet ? 28 : (isMobile ? 24 : 22), // Increased font sizes
-                    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif', // Use system font for crisp rendering
-                    fontWeight: '700', // Bold weight for better clarity
-                    color: 'black', // Black text for better contrast
-                    textAlign: 'center',
-                    marginTop: -20,
-                    textShadowColor: 'rgba(255,255,255,0.8)',
-                    textShadowOffset: {width: 1, height: 1},
-                    textShadowRadius: 2,
-                    textRendering: 'optimizeLegibility' as any, // Optimize text rendering
-                  }}
-                  numberOfLines={1}
-                  allowFontScaling={false} // Prevent font scaling issues
-                >
-                  {animal.name}
-                </Text>
+                <View style={{
+                  position: 'absolute',
+                  bottom: -30,
+                  left: -10,
+                  right: -10,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <View style={{
+                    backgroundColor: 'rgba(255,255,255,0.9)', // Semi-transparent white background
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: 10,
+                    maxWidth: isTablet ? 140 : (isMobile ? 135 : 115), // Adjusted for 5 per row on mobile
+                  }}>
+                    <Text 
+                      style={{
+                        fontSize: isTablet ? 22 : (isMobile ? 15 : 14), // Smaller font sizes for 4 per row
+                        fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif', // Use system font for crisp rendering
+                        fontWeight: '700', // Bold weight for better clarity
+                        color: 'black', // Black text for better contrast
+                        textAlign: 'center',
+                        textShadowColor: 'rgba(255,255,255,0.8)',
+                        textShadowOffset: {width: 1, height: 1},
+                        textShadowRadius: 1,
+                        textRendering: 'optimizeLegibility' as any, // Optimize text rendering
+                      }}
+                      numberOfLines={1}
+                      allowFontScaling={false} // Prevent font scaling issues
+                      adjustsFontSizeToFit={true} // Allow text to shrink if needed
+                      minimumFontScale={0.5} // But not smaller than 50% of original size
+                    >
+                      {animal.name}
+                    </Text>
+                  </View>
+                </View>
               )}
             </View>
           </Animated.View>
@@ -1318,12 +1354,12 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         availableAnimals.has(name)
       ).length;
       
-      console.log('Effect check - Revealed available count:', revealedAvailableCount);
-      console.log('Effect check - Total available animals:', availableAnimals.size);
+      // console.log('Effect check - Revealed available count:', revealedAvailableCount);
+      // console.log('Effect check - Total available animals:', availableAnimals.size);
       
       // Show button when there are available animals, but enable only when all are revealed
       if (!showCompleteButton && availableAnimals.size > 0) {
-        console.log('Showing complete button (will be enabled when all animals revealed)...');
+        // console.log('Showing complete button (will be enabled when all animals revealed)...');
         setShowCompleteButton(true);
       }
     }
@@ -1336,14 +1372,14 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     );
     
     if (levelAnimals.length === 0) {
-      console.log('No animals in level, button disabled');
+      // console.log('No animals in level, button disabled');
       return false;
     }
     
     const allRevealed = revealedAnimals.size === levelAnimals.length;
-    console.log('Button state check - Revealed:', revealedAnimals.size, 'Total in level:', levelAnimals.length, 'All revealed:', allRevealed);
-    console.log('Level animals:', levelAnimals.map(a => a.name));
-    console.log('Revealed animals:', Array.from(revealedAnimals));
+    // console.log('Button state check - Revealed:', revealedAnimals.size, 'Total in level:', levelAnimals.length, 'All revealed:', allRevealed);
+    // console.log('Level animals:', levelAnimals.map(a => a.name));
+    // console.log('Revealed animals:', Array.from(revealedAnimals));
     
     return allRevealed;
   }, [revealedAnimals, animals, levelName]);
@@ -1610,7 +1646,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     if (levelName) {
       try {
         await markLevelCompleted(levelName);
-        console.log(`Level ${levelName} marked as completed!`);
+        // console.log(`Level ${levelName} marked as completed!`);
       } catch (error) {
         console.warn('Error marking level as completed:', error);
       }
@@ -1750,36 +1786,37 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   useEffect(() => {
     if (areAllAnimalsRevealed && showCompleteButton) {
        // Hand pop animations (left and right) with slight phase offset
+       // Optimized for better battery life
        const leftHandPop = Animated.loop(
          Animated.sequence([
            Animated.timing(leftHandScale, {
-             toValue: 1.25,
-             duration: 500,
+             toValue: 1.15, // Reduced scale for less dramatic effect
+             duration: 800, // Increased duration for smoother animation
              useNativeDriver: true,
            }),
            Animated.timing(leftHandScale, {
              toValue: 1,
-             duration: 500,
+             duration: 800,
              useNativeDriver: true,
            }),
-           Animated.delay(200),
+           Animated.delay(1200), // Much longer delay to reduce battery usage
          ])
        );
  
        const rightHandPop = Animated.loop(
          Animated.sequence([
-           Animated.delay(250),
+           Animated.delay(400),
            Animated.timing(rightHandScale, {
-             toValue: 1.25,
-             duration: 500,
+             toValue: 1.15, // Reduced scale
+             duration: 800,
              useNativeDriver: true,
            }),
            Animated.timing(rightHandScale, {
              toValue: 1,
-             duration: 500,
+             duration: 800,
              useNativeDriver: true,
            }),
-           Animated.delay(200),
+           Animated.delay(1200), // Much longer delay
          ])
        );
  
@@ -2088,7 +2125,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         alignItems: 'center',
         paddingTop: Platform.OS === 'ios' ? 60 : 40,
         paddingBottom: 20,
-        paddingHorizontal: isTablet ? 40 : 20,
+        paddingHorizontal: isTablet ? 40 : 10, // Reduced padding for phones
         opacity: contentOpacity,
       }}>
         {/* Header */}
@@ -2274,14 +2311,27 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         {/* Reset Mission section removed */}
 
         {/* Level Animals Grid */}
+        <View style={{
+          flex: 1,
+          backgroundColor: 'transparent', // Transparent background
+          borderRadius: 20,
+          marginHorizontal: isTablet ? 20 : 10,
+          marginTop: 10,
+          marginBottom: 20,
+          padding: isTablet ? 15 : 10,
+          overflow: 'hidden',
+        }}>
         <ScrollView
           style={{ 
-            width: '80%',
-            marginTop: isMobile ? 20 : 30,
+            width: '100%',
+            marginTop: 0, // No margin needed inside container
+            overflow: 'visible',
+            flex: 1, // Allow ScrollView to take available space
           }}
           contentContainerStyle={{
-            paddingBottom: 10,
-            paddingHorizontal: isTablet ? 40 : 20,
+            paddingBottom: 20, // Standard padding at bottom
+            paddingHorizontal: 0, // No horizontal padding needed, container handles it
+            overflow: 'visible',
           }}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled={false}
@@ -2291,8 +2341,10 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
             flexWrap: 'wrap',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: isTablet ? 20 : (isMobile ? 15 : 12), // Larger gaps to force 3 per row on mobile
+            gap: isTablet ? 5 : 2, // Minimal gap for 6 per row
             paddingVertical: 10,
+            paddingBottom: 20, // Reduced since button is now absolute positioned
+            width: '100%',
           }}>
             <LevelAnimalGrid 
               animals={animals}
@@ -2313,6 +2365,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
             />
           </View>
         </ScrollView>
+        </View>
       </Animated.View>
 
 

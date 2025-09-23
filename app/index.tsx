@@ -106,6 +106,9 @@ export default function App() {
   const handleSelectLevel = useCallback(async (level: string) => {
     // Safety check: Only allow farm level or if user has unlocked all levels
     // This prevents locked levels from being accessed even if they somehow get through
+    
+    // TEMPORARY: Allow all levels for testing
+    /* ORIGINAL CODE - RESTORE AFTER TESTING
     const isFarmLevel = level === 'farm';
     const hasUnlockedAll = await AsyncStorage.getItem('unlocked_all_levels') === 'true';
     
@@ -113,6 +116,7 @@ export default function App() {
       console.warn('Attempted to access locked level:', level, '- blocking access');
       return; // Don't open locked levels
     }
+    */
     
     // Set selected level immediately to avoid black flash
     setSelectedLevel(level);

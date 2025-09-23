@@ -132,13 +132,13 @@ export function useDynamicStyles() {
         color: '#612915',
       },
       animalName: {
-        fontSize: getResponsiveFontSize(isTabletDevice ? 56 : 30, scaleFactor), // Match labelPositioning config
+        fontSize: getResponsiveFontSize(isTabletDevice ? 56 : 50, scaleFactor), // Match user's portrait font size
         marginTop: 0,
         fontWeight: Platform.OS === 'ios' ? ('800' as const) : ('700' as const),
         fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto', // High-quality fonts
         backgroundColor: '#FFEA00', // Solid yellow for crisp rendering
-        paddingVertical: getResponsivePadding(isTabletDevice ? 24 : 20, scaleFactor), // Increased padding for larger font
-        paddingHorizontal: getResponsivePadding(isTabletDevice ? 48 : 40, scaleFactor), // Increased padding for larger font
+        paddingVertical: getResponsivePadding(isTabletDevice ? 24 : 20, scaleFactor), // Match portrait config
+        paddingHorizontal: getResponsivePadding(isTabletDevice ? 48 : 32, scaleFactor), // Match portrait config
         borderRadius: getResponsiveSpacing(isTabletDevice ? 35 : 28, scaleFactor), // Better border radius
         textAlign: 'center' as const,
         elevation: 6,

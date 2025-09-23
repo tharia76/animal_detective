@@ -643,6 +643,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         if (!isNaN(volumeValue) && volumeValue >= 0 && volumeValue <= 1) {
           setVolume(volumeValue);
           setGlobalVolume(volumeValue); // Apply to global system immediately
+      // Also update menu music volume immediately
+      if (playerRef.current) {
+        playerRef.current.volume = volumeValue;
+      }
         }
       }
     } catch (error) {
@@ -658,6 +662,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       const clampedVolume = Math.max(0, Math.min(1, newVolume));
       setVolume(clampedVolume);
       setGlobalVolume(clampedVolume); // Apply globally immediately
+      // Also update menu music volume immediately
+      if (playerRef.current) {
+        playerRef.current.volume = clampedVolume;
+      }
       saveVolumeToStorage(clampedVolume); // Save to persistent storage
     } catch (error) {
       console.warn('Error setting volume:', error);
@@ -670,6 +678,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     console.log('Current volume state:', volume);
     setVolume(newVolume);
     setGlobalVolume(newVolume);
+    // Also update menu music volume immediately
+    if (playerRef.current) {
+      playerRef.current.volume = newVolume;
+    }
     saveVolumeToStorage(newVolume);
   }, [saveVolumeToStorage, volume]);
 
@@ -682,20 +694,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   
 
 
-  // Update menu background music volume when volume changes (only after volume is loaded)
-  useEffect(() => {
-    if (!volumeLoaded) return; // Don't apply until volume is loaded from storage
-    
-    if (playerRef.current) {
-      try {
-        playerRef.current.volume = volume;
-      } catch (e) {
-        console.warn('Failed to set menu music volume:', e);
-      }
-    }
-    // Global volume is set in setVolumeSafely, but ensure it's set here too for direct volume changes
-    setGlobalVolume(volume);
-  }, [volume, volumeLoaded]);
+  // Placeholder for volume update effect - moved after player declaration
 
 
   const [products, setProducts] = useState<RNIap.Product[]>([]);
@@ -737,6 +736,29 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const playerRef = useRef<any>(null);
   const player = useAudioPlayer(menuBgSound);
   
+  // Update menu background music volume when volume changes (only after volume is loaded)
+  useEffect(() => {
+    if (!volumeLoaded) return; // Don't apply until volume is loaded from storage
+    
+    if (playerRef.current) {
+      try {
+        playerRef.current.volume = volume;
+        console.log('Updated menu music volume to:', volume);
+      } catch (e) {
+        console.warn('Failed to set menu music volume:', e);
+      }
+    }
+    // Also try with the player directly
+    if (player) {
+      try {
+        player.volume = volume;
+      } catch (e) {
+        console.warn('Failed to set player volume directly:', e);
+      }
+    }
+    // Global volume is set in setVolumeSafely, but ensure it's set here too for direct volume changes
+    setGlobalVolume(volume);
+  }, [volume, volumeLoaded, player]);
 
 
   // Animated styles for gradient buttons with pulse
@@ -830,6 +852,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   // Play immediately on mount, and cleanup on unmount
   useEffect(() => {
     try {
+      player.volume = volume; // Set volume before playing
       player.play();
     } catch (e) {
       console.warn('Failed to play menu bg sound', e);
@@ -846,7 +869,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         // Defensive: ignore errors on cleanup
       }
     };
-  }, [player]);
+  }, [player, volume]);
 
   // helper to fully stop & unload
   const stopAndUnload = useCallback(() => {
@@ -908,9 +931,21 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     const onFocus = () => {
       try {
         // Reset state when coming back
-        if (playerRef.current) playerRef.current.play();
+        if (playerRef.current) {
+          playerRef.current.volume = volume; // Ensure volume is set correctly
+          playerRef.current.play();
+          console.log('Menu music resumed with volume:', volume);
+          
+          // Double-check volume after a short delay
+          setTimeout(() => {
+            if (playerRef.current) {
+              playerRef.current.volume = volume;
+            }
+          }, 100);
+        }
       } catch (e) {
         // Defensive: ignore
+        console.warn('Failed to resume menu music on focus:', e);
       }
     };
     const onBlur = () => {
@@ -931,7 +966,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       } catch (e) {}
       stopAndUnload();
     };
-  }, [navigation, stopAndUnload]);
+  }, [navigation, stopAndUnload, volume]);
 
   // IAP: Initialize and get products
   useEffect(() => {
@@ -1591,6 +1626,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   // Determine locked state for each level
   const getIsLocked = (level: string) => {
     console.log('getIsLocked called for level:', level, 'unlocked:', unlocked);
+    
+    // Only farm level is unlocked by default
     if (level === 'farm') return false;
     
     // If user has purchased unlock, all levels are unlocked
@@ -1599,8 +1636,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       return false;
     }
     
-    // Show locked styling for all other levels when not unlocked
-    console.log('Returning true (locked) for level:', level);
+    // All other levels are locked
     return true;
   };
 

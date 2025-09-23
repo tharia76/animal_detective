@@ -46,6 +46,7 @@ export const strings = {
       salePriceDisplay: '$2.99 (was $4.99)',
       restorePurchases: 'Restore Purchases',
       processing: 'Processing...',
+      loading: 'Loading...',
       volume: 'Volume',
       language: 'Language',
       
@@ -301,6 +302,7 @@ export const strings = {
     salePriceDisplay: '$2.99 (было $4.99)',
     restorePurchases: 'Вернуть покупки',
     processing: 'Обработка...',
+    loading: 'Загрузка...',
     close: 'Закрыть',
     thisLevelIsLocked: 'Эта миссия под замочком. Открой все, чтобы играть!',
     unlockAllLevelsToPlay: 'Открыть все миссии 🔓',
@@ -556,6 +558,7 @@ export const strings = {
       salePriceDisplay: '$2.99 (eskiden $4.99)',
       restorePurchases: 'Satın Alınanları Geri Getir',
       processing: 'İşleniyor...',
+      loading: 'Yükleniyor...',
       volume: 'Ses',
       done: 'Tamamdır',
       language: 'Dil',

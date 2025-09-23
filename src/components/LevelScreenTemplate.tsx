@@ -890,7 +890,7 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       try {
         // Set volume directly to avoid blocking the main thread
         bgMusicRef.current.volume = DUCKED_BG_VOLUME * globalVolumeMultiplier;
-        console.log('Background music ducked to', DUCKED_BG_VOLUME * globalVolumeMultiplier);
+        // console.log('Background music ducked to', DUCKED_BG_VOLUME * globalVolumeMultiplier);
       } catch (error) {
         console.warn('Error ducking background music:', error);
       }
@@ -902,7 +902,15 @@ const DUCKED_BG_VOLUME = 0.1; // Reduced from 0.2 to 0.1 for better ducking
       try {
         // Set volume directly to avoid blocking the main thread
         bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
-        console.log('Background music restored to', NORMAL_BG_VOLUME * globalVolumeMultiplier);
+        // console.log('Background music restored to', NORMAL_BG_VOLUME * globalVolumeMultiplier);
+        // Double-check the volume was set
+        if (bgMusicRef.current) {
+          setTimeout(() => {
+            if (bgMusicRef.current) {
+              bgMusicRef.current.volume = NORMAL_BG_VOLUME * globalVolumeMultiplier;
+            }
+          }, 100);
+        }
       } catch (error) {
         console.warn('Error restoring background music:', error);
       }
