@@ -872,13 +872,19 @@ export default function LevelScreenTemplate({
 
   // Helper functions for audio ducking
   const duckBackgroundMusic = useCallback(() => {
-    // Audio ducking is not needed with global manager as it handles cross-fade
-    // Keeping function for compatibility
+    try {
+      BackgroundMusicManager.duckVolume();
+    } catch (e) {
+      console.warn('Error ducking background music:', e);
+    }
   }, []);
 
   const restoreBackgroundMusic = useCallback(() => {
-    // Audio restoration is not needed with global manager
-    // Keeping function for compatibility
+    try {
+      BackgroundMusicManager.restoreVolume();
+    } catch (e) {
+      console.warn('Error restoring background music:', e);
+    }
   }, []);
 
   const currentAnimal = useMemo(() => {
@@ -1368,9 +1374,12 @@ export default function LevelScreenTemplate({
     // Register user interaction for audio playback
     BackgroundMusicManager.onUserInteraction();
     
-    // NUCLEAR STOP: Stop all audio before navigation
-    console.log(`🎵 NUCLEAR STOP: Stopping all audio before ${direction} navigation`);
-    BGMClass.globalStopAllAudio();
+    // Stop animal sounds but keep background music playing
+    console.log(`🎵 Stopping animal sounds before ${direction} navigation`);
+    stopSound(true);
+    
+    // Restore background music volume when navigating
+    restoreBackgroundMusic();
     
     if (!hasAnimals || isTransitioning) {
       return;

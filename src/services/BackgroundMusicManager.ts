@@ -140,6 +140,36 @@ class BackgroundMusicManager {
     }
   }
 
+  /**
+   * Duck background music volume for animal sounds
+   */
+  duckVolume() {
+    if (this.currentPlayer && !this.isMuted) {
+      try {
+        // Lower volume to 10% of normal volume
+        this.currentPlayer.volume = this.normalVolume * this.globalVolume * 0.1;
+        console.log('🎵 Background music volume ducked');
+      } catch (e) {
+        console.warn('Error ducking background music volume:', e);
+      }
+    }
+  }
+
+  /**
+   * Restore background music volume to normal
+   */
+  restoreVolume() {
+    if (this.currentPlayer && !this.isMuted) {
+      try {
+        // Restore to normal volume
+        this.currentPlayer.volume = this.normalVolume * this.globalVolume;
+        console.log('🎵 Background music volume restored');
+      } catch (e) {
+        console.warn('Error restoring background music volume:', e);
+      }
+    }
+  }
+
   async playBackgroundMusic(levelName: string, forceRestart: boolean = false) {
     // Production-safe logging
     const debugInfo = `level=${levelName}, muted=${this.isMuted}, hasUserInteracted=${this.hasUserInteracted}`;
