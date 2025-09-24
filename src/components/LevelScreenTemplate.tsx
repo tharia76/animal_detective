@@ -930,7 +930,9 @@ export default function LevelScreenTemplate({
     if (showInstruction) {
       console.log(`🎵 Level ${levelName}: showInstruction=true, playing music`);
       // Always play the background music for this level first
-      BackgroundMusicManager.playBackgroundMusic(levelName);
+      BackgroundMusicManager.playBackgroundMusic(levelName).catch(e => {
+        console.warn('Failed to play background music:', e);
+      });
     } else {
       console.log(`🎵 Level ${levelName}: showInstruction=false, pausing music`);
       // Pause when instruction is hidden
@@ -1230,6 +1232,9 @@ export default function LevelScreenTemplate({
   const handleAnimalPress = useCallback(() => {
     console.log('Animal pressed! isTransitioning:', isTransitioning, 'showName:', showName, 'currentAnimal:', currentAnimal?.name);
     
+    // Register user interaction for audio playback
+    BackgroundMusicManager.onUserInteraction();
+    
     if (isTransitioning || !currentAnimal) {
       console.log('Blocked by transition or no current animal');
       return;
@@ -1360,6 +1365,9 @@ export default function LevelScreenTemplate({
   // Remove toggleShowName entirely
 
   const handleNavigation = useCallback((direction: 'next' | 'prev') => {
+    // Register user interaction for audio playback
+    BackgroundMusicManager.onUserInteraction();
+    
     if (!hasAnimals || isTransitioning) {
       return;
     }
@@ -1537,6 +1545,9 @@ export default function LevelScreenTemplate({
     }, [handleNavigation, isMuted, buttonsDisabledManually]);
 
   const goToHome = useCallback(() => {
+    // Register user interaction for audio playback
+    BackgroundMusicManager.onUserInteraction();
+    
     // Persist current progress before leaving the level
     try { void saveProgress(visitedAnimals); } catch (e) { /* noop */ }
     stopSound(false);
@@ -1633,7 +1644,9 @@ export default function LevelScreenTemplate({
       
       // Resume background music when returning to level after 7/7 completion
       if (levelCompleted && !isMuted) {
-        BackgroundMusicManager.resume();
+        BackgroundMusicManager.resume().catch(e => {
+          console.warn('Failed to resume background music:', e);
+        });
         console.log('🎵 Background music resumed after returning from discover screen');
       }
       

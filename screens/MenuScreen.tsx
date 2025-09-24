@@ -1259,6 +1259,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     (level, isLocked) => {
       playButtonSound(volume);
       
+      // Register user interaction for audio playback
+      const BackgroundMusicManager = require('../src/services/BackgroundMusicManager').default;
+      BackgroundMusicManager.onUserInteraction();
+      
       // If level is locked and user hasn't unlocked all levels, show unlock modal and STOP
       if (isLocked && !unlocked) {
         console.log('Level is locked, showing unlock modal instead of opening level:', level);

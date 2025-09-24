@@ -28,6 +28,7 @@ import JungleScreen from '../screens/levels/Jungle';
 import InsectsScreen from '../screens/levels/Insects';
 import BirdsScreen from '../screens/levels/Birds';
 import { getAnimals } from '../src/data/animals';
+import BackgroundMusicManager from '../src/services/BackgroundMusicManager';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -75,6 +76,12 @@ export default function App() {
   const handleSplashComplete = useCallback(() => {
     console.log('🎉 Splash animation complete - all images loaded!');
     setAssetsReady(true);
+    
+    // Preload common background music for better performance
+    BackgroundMusicManager.preloadCommonMusic().catch(e => {
+      console.warn('Failed to preload background music:', e);
+    });
+    
     // Add a small delay to let users see the splash video, then transition to menu
     setTimeout(() => {
       setShowSplash(false);
