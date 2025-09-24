@@ -833,10 +833,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
 
   // Menu music now handled by BackgroundMusicManager - start menu music immediately
   useEffect(() => {
-    // Start menu music immediately for faster loading
+    // Register user interaction immediately to enable audio playback
     try {
-      console.log('⚡ Starting menu music immediately');
+      console.log('⚡ Registering user interaction for audio playback');
       const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
+      BackgroundMusicManager.getInstance().registerUserInteraction();
+      
+      // Start menu music immediately after registering interaction
+      console.log('⚡ Starting menu music immediately');
       BackgroundMusicManager.getInstance().playBackgroundMusic('menu');
     } catch (e) {
       console.warn('Failed to start menu music:', e);
@@ -1210,6 +1214,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         console.log('🎵 NUCLEAR STOP: Stopping ALL audio before level transition');
         BackgroundMusicManager.globalStopAllAudio(); // Stop everything globally (including menu music)
         console.log('🎵 All audio stopped before transitioning to level');
+        
+        // Start level music immediately after user interaction is registered
+        setTimeout(() => {
+          console.log(`🎵 Starting level music for ${level} after user interaction`);
+          BackgroundMusicManager.getInstance().playBackgroundMusic(level).catch(e => {
+            console.warn(`Failed to start level music for ${level}:`, e);
+          });
+        }, 200); // Small delay to ensure audio session is reset
       } catch (e) {
         console.warn('Error stopping audio before level transition:', e);
       }

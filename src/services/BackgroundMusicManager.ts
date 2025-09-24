@@ -157,9 +157,9 @@ class BackgroundMusicManager {
     
     // Audio session is handled automatically by expo-audio
     
-    // Simplified user interaction detection - only require for web
+    // User interaction detection - require for web and mobile to ensure audio works
     const isWeb = Platform.OS === 'web';
-    const requiresUserInteraction = isWeb;
+    const requiresUserInteraction = true; // Always require user interaction for reliable audio
     
     if (!this.hasUserInteracted && requiresUserInteraction) {
       console.log(`🎵 No user interaction yet on ${Platform.OS}, deferring playback for ${key}`);
@@ -418,6 +418,8 @@ class BackgroundMusicManager {
    * Register that user has interacted with the app (enables audio playback)
    */
   registerUserInteraction() {
+    console.log(`🎵 registerUserInteraction called - current state: hasUserInteracted=${this.hasUserInteracted}, pendingRequest=${!!this.pendingPlayRequest}`);
+    
     if (!this.hasUserInteracted) {
       console.log('🎵 User interaction registered - audio playback enabled');
       this.hasUserInteracted = true;
@@ -429,6 +431,8 @@ class BackgroundMusicManager {
         console.log(`🎵 Executing deferred playback for ${levelName}`);
         this.playBackgroundMusic(levelName, forceRestart);
       }
+    } else {
+      console.log('🎵 User interaction already registered');
     }
   }
 
