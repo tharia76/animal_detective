@@ -39,6 +39,7 @@ import ReAnimated, {
   withSequence,
   Easing
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDynamicStyles } from '../src/styles/styles';
 import { useLocalization } from '../src/hooks/useLocalization';
 import { useForceOrientation } from '../src/hooks/useForceOrientation';
@@ -535,6 +536,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
 
   const dynStyles = useDynamicStyles();
   const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
+  const insets = useSafeAreaInsets();
   
   // Selected level state
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
@@ -569,12 +571,16 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     // Use different tile size constraints based on orientation and device
     let minTileSize, maxTileSize;
     
-    if (currentIsLandscape && currentWidth >= 900) {
-      // Tablet landscape - bigger tiles
+    if (currentIsLandscape && currentWidth >= 1024) {
+      // Large tablet landscape - bigger tiles
       minTileSize = 280;
       maxTileSize = 380;
+    } else if (currentIsLandscape && currentWidth >= 900 && currentWidth < 1024) {
+      // iPhone Pro Max landscape - optimized tile size
+      minTileSize = 144;
+      maxTileSize = 202;
     } else if (currentIsLandscape) {
-      // Phone landscape
+      // Regular phone landscape
       minTileSize = MIN_TILE_SIZE_LANDSCAPE;
       maxTileSize = MAX_TILE_SIZE_LANDSCAPE;
     } else {
@@ -1310,7 +1316,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         onRequestClose={() => setShowUnlockModal(false)}
         supportedOrientations={['landscape', 'landscape-left', 'landscape-right', 'portrait', 'portrait-upside-down']}
       >
-        <View style={responsiveStyles.modalOverlay} pointerEvents="auto">
+        <View style={[responsiveStyles.modalOverlay, {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        }]} pointerEvents="auto">
           <ScrollView 
             contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
             showsVerticalScrollIndicator={false}
@@ -1482,8 +1493,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                                 color: '#000000',
                                 fontWeight: '600',
                                 textShadowColor: 'rgba(0,0,0,0.3)', 
-                                textShadowRadius: 1,
-                              }}>
+                             }}>
                                 {originalPrice}
                               </Text>
                               <Text style={{
@@ -1690,7 +1700,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
             // LANDSCAPE LAYOUT
             <>
               {/* Settings button only (top-right) */}
-              <View style={{ position: 'absolute', top: getResponsiveSpacing(12, scaleFactor), right: getResponsiveSpacing(12, scaleFactor), zIndex: 1000 }}>
+              <View style={{ 
+                position: 'absolute', 
+                top: getResponsiveSpacing(12, scaleFactor), 
+                right: getResponsiveSpacing(12, scaleFactor), 
+                zIndex: 1000 
+              }}>
                 <TouchableOpacity
                   style={responsiveStyles.settingsButtonContainer}
                   onPress={() => {
@@ -1881,8 +1896,17 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
               {/* Notebook button moved into control panel in portrait */}
 
               <ScrollView
-                style={responsiveStyles.scrollView}
-                contentContainerStyle={[responsiveStyles.scrollContent, { paddingTop: getResponsiveSpacing(24, scaleFactor) }]}
+                style={[responsiveStyles.scrollView, {
+                  marginLeft: insets.left,
+                  marginRight: insets.right,
+                }]}
+                contentContainerStyle={[
+                  responsiveStyles.scrollContent, 
+                  { 
+                    paddingTop: insets.top + getResponsiveSpacing(24, scaleFactor),
+                    paddingBottom: insets.bottom + getResponsiveSpacing(120, scaleFactor), // Extra space for control panel
+                  }
+                ]}
                 showsVerticalScrollIndicator={false}
               >
                 {/* Tiles container */}
@@ -2107,7 +2131,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                 <View style={{
                   flex: 1,
                   backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                  margin: getResponsiveSpacing(16, scaleFactor),
+                  marginTop: Math.max(insets.top, getResponsiveSpacing(16, scaleFactor)),
+                  marginBottom: Math.max(insets.bottom, getResponsiveSpacing(16, scaleFactor)),
+                  marginLeft: Math.max(insets.left, getResponsiveSpacing(16, scaleFactor)),
+                  marginRight: Math.max(insets.right, getResponsiveSpacing(16, scaleFactor)),
                   borderRadius: isTablet ? 35 : 25,
                   overflow: 'hidden',
                   elevation: 15,

@@ -2,6 +2,20 @@
 
 ## Date: September 23, 2025
 
+### 📱 iPhone 13 Pro Max Menu Cutoff Fix
+
+**Issue Fixed**: Menu screen was being cut off on iPhone 13 Pro Max in landscape mode.
+
+**Solution**: 
+- Made tiles smaller for iPhone Pro Max sized screens (width 900-1024px) in landscape mode
+- Added special case in tile size calculation to use smaller tiles (100-140px instead of 120-200px)
+- This ensures all tiles fit properly on the screen without being cut off
+
+**Changes Made**:
+1. Added device-specific tile sizing for iPhone Pro Max landscape mode
+2. Kept safe area imports for future use but simplified the layout
+3. Tiles now properly fit within the visible area on Pro Max devices
+
 ### 🔊 Background Music Fix for Deployed App
 
 **Issue Fixed**: Background music was muting when switching between levels on the deployed app (but not locally).
