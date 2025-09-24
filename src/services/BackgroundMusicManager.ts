@@ -100,6 +100,8 @@ class BackgroundMusicManager {
   private maxRetries: number = 3;
   private hasUserInteracted: boolean = false;
   private pendingPlayRequest: { levelName: string; forceRestart: boolean } | null = null;
+  private currentAssetDownload: Promise<void> | null = null;
+  private levelSwitchTimeout: NodeJS.Timeout | null = null;
 
   private constructor() {
     this.configureAudioSession();
@@ -110,6 +112,25 @@ class BackgroundMusicManager {
       BackgroundMusicManager.instance = new BackgroundMusicManager();
     }
     return BackgroundMusicManager.instance;
+  }
+
+  /**
+   * Load asset with timeout to prevent hanging on slow networks
+   */
+  private async loadAssetWithTimeout(levelName: string): Promise<string | number | null> {
+    const timeoutMs = 10000; // 10 second timeout
+    
+    return Promise.race([
+      getLocalMusicUri(levelName),
+      new Promise<null>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`Asset loading timeout for ${levelName} after ${timeoutMs}ms`));
+        }, timeoutMs);
+      })
+    ]).catch(error => {
+      console.warn(`Asset loading failed for ${levelName}:`, error);
+      return null;
+    });
   }
 
   /**
@@ -151,6 +172,12 @@ class BackgroundMusicManager {
     console.log(`🎵 playBackgroundMusic called for ${levelName}, muted: ${this.isMuted}, hasUserInteracted: ${this.hasUserInteracted}`);
     const key = levelName.trim().toLowerCase();
     
+    // Cancel any pending level switch timeout
+    if (this.levelSwitchTimeout) {
+      clearTimeout(this.levelSwitchTimeout);
+      this.levelSwitchTimeout = null;
+    }
+    
     // Ensure audio session is configured
     await this.configureAudioSession();
     
@@ -167,7 +194,14 @@ class BackgroundMusicManager {
     
     // Prevent race conditions from rapid level switching
     if (this.isTransitioning) {
-      console.log(`🎵 Already transitioning, skipping request for ${key}`);
+      console.log(`🎵 Already transitioning, queuing request for ${key}`);
+      // Queue the new request instead of ignoring it
+      this.levelSwitchTimeout = setTimeout(() => {
+        if (!this.isTransitioning) {
+          console.log(`🎵 Executing queued request for ${key}`);
+          this.playBackgroundMusic(levelName, forceRestart);
+        }
+      }, 500);
       return;
     }
     
@@ -178,13 +212,19 @@ class BackgroundMusicManager {
       try {
         console.log(`🎵 Loading music for ${key} for the first time`);
         
-        // For now, use local assets. In production, you could use remote URLs
-        // from BG_MUSIC_URIS and download them on demand
-        const localUri = await getLocalMusicUri(key);
+        // Cancel any previous asset download if still in progress
+        if (this.currentAssetDownload) {
+          console.log(`🎵 Cancelling previous asset download for ${key}`);
+        }
+        
+        // Create a new asset download promise
+        this.currentAssetDownload = this.loadAssetWithTimeout(key);
+        const localUri = await this.currentAssetDownload;
         
         if (!localUri) {
           console.warn(`No background music found for level: ${levelName}`);
           this.isTransitioning = false;
+          this.currentAssetDownload = null;
           return;
         }
         
@@ -192,9 +232,11 @@ class BackgroundMusicManager {
         
         LOADED_MUSIC_CACHE[key] = musicUri;
         console.log(`🎵 Successfully loaded and cached music for ${key}`);
+        this.currentAssetDownload = null;
       } catch (e) {
         console.warn(`Error loading background music for ${key}:`, e);
         this.isTransitioning = false;
+        this.currentAssetDownload = null;
         return;
       }
     } else {
@@ -255,7 +297,7 @@ class BackgroundMusicManager {
 
     // Small delay to ensure previous player is fully cleaned up
     if (this.currentLevelKey && this.currentLevelKey !== key) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     // Create new player
@@ -478,9 +520,20 @@ class BackgroundMusicManager {
   }
 
   cleanup() {
+    console.log('🧹 Cleaning up background music');
+    
+    // Cancel any pending timeouts
+    if (this.levelSwitchTimeout) {
+      clearTimeout(this.levelSwitchTimeout);
+      this.levelSwitchTimeout = null;
+    }
+    
+    // Cancel any ongoing asset downloads
+    this.currentAssetDownload = null;
+    
+    // Clean up current player
     if (this.currentPlayer) {
       try {
-        console.log('🧹 Cleaning up background music');
         this.currentPlayer.pause();
         this.currentPlayer.stop && this.currentPlayer.stop();
         this.currentPlayer.volume = 0;
@@ -493,8 +546,12 @@ class BackgroundMusicManager {
         console.warn('Error cleaning up background music:', e);
       }
       this.currentPlayer = null;
-      this.currentLevelKey = null;
     }
+    
+    // Reset state
+    this.currentLevelKey = null;
+    this.isTransitioning = false;
+    this.pendingPlayRequest = null;
   }
 
   getCurrentLevel(): string | null {
