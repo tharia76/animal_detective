@@ -1,5 +1,4 @@
 import { createAudioPlayer, useAudioPlayer, AudioPlayer } from 'expo-audio';
-import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 import { Asset } from 'expo-asset';
 
@@ -117,7 +116,7 @@ class BackgroundMusicManager {
   private pendingPlayRequest: { levelName: string; forceRestart: boolean } | null = null;
 
   private constructor() {
-    this.configureAudioSession();
+    // Audio session configuration removed to avoid ExponentAV errors
   }
 
   static getInstance(): BackgroundMusicManager {
@@ -127,35 +126,8 @@ class BackgroundMusicManager {
     return BackgroundMusicManager.instance;
   }
 
-  /**
-   * Configure audio session for reliable playback in production
-   */
-  private async configureAudioSession() {
-    if (this.audioSessionConfigured) return;
-    
-    try {
-      // More permissive audio session configuration for production reliability
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        staysActiveInBackground: true,
-        playsInSilentModeIOS: true,
-        shouldDuckAndroid: false, // Changed to false for better compatibility
-        playThroughEarpieceAndroid: false,
-        interruptionModeIOS: 2, // Audio.INTERRUPTION_MODE_IOS_MIX_WITH_OTHERS - more permissive
-        interruptionModeAndroid: 2, // Audio.INTERRUPTION_MODE_ANDROID_DUCK_OTHERS - more permissive
-      });
-      
-      this.audioSessionConfigured = true;
-      console.log('🎵 Audio session configured successfully');
-      
-      // Give the session time to settle
-      await new Promise(resolve => setTimeout(resolve, 100));
-    } catch (error) {
-      console.warn('Failed to configure audio session:', error);
-      // Don't mark as configured if it failed
-      this.audioSessionConfigured = false;
-    }
-  }
+  // Audio session configuration removed to avoid ExponentAV errors
+  // expo-audio handles audio session management automatically
 
   setGlobalVolume(volume: number) {
     this.globalVolume = volume;
@@ -183,14 +155,7 @@ class BackgroundMusicManager {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    // Ensure audio session is configured
-    try {
-      await this.configureAudioSession();
-      console.log(`🎵 Audio session configured for ${key}`);
-    } catch (e) {
-      console.error(`🎵 Audio session configuration failed for ${key}:`, e);
-      // Continue anyway - audio might still work
-    }
+    // Audio session is handled automatically by expo-audio
     
     // Simplified user interaction detection - only require for web
     const isWeb = Platform.OS === 'web';
@@ -498,71 +463,62 @@ class BackgroundMusicManager {
   }
 
   /**
-   * Preload commonly used music on app startup
+   * Preload essential music for instant startup - optimized for speed
    */
   async preloadCommonMusic() {
-    console.log('🎵 Starting preload of common music for production');
-    const commonLevels = ['menu', 'farm', 'forest']; // Menu music now included
+    console.log('⚡ Starting INSTANT preload of essential music');
+    const essentialLevels = ['menu', 'farm']; // Only the most essential for fastest startup
     
-    for (const level of commonLevels) {
+    // Load essential music in parallel for maximum speed
+    const preloadPromises = essentialLevels.map(async (level) => {
       try {
-        console.log(`🎵 Preloading ${level}...`);
         await this.preloadMusic(level);
-        console.log(`🎵 Successfully preloaded ${level}`);
+        console.log(`⚡ ${level} ready instantly`);
       } catch (e) {
-        console.error(`🎵 Failed to preload ${level}:`, e);
-        // Continue with other levels even if one fails
+        console.warn(`⚠️ ${level} preload failed:`, e);
       }
-    }
+    });
     
-    console.log('🎵 Common music preload completed');
+    await Promise.all(preloadPromises);
+    console.log('⚡ Essential music ready instantly!');
   }
 
   /**
-   * Preload all music assets for maximum performance
+   * Preload all music assets for maximum performance - optimized for speed
    */
   async preloadAllMusic() {
-    console.log('🎵 Starting preload of ALL music for maximum performance');
+    console.log('⚡ Starting FAST preload of ALL music');
     const allLevels = ['menu', 'farm', 'forest', 'jungle', 'desert', 'ocean', 'savannah', 'arctic', 'birds', 'insects'];
     
-    const startTime = Date.now();
-    let successCount = 0;
-    let failCount = 0;
-    
-    for (const level of allLevels) {
+    // Load ALL music in parallel for maximum speed
+    const preloadPromises = allLevels.map(async (level) => {
       try {
-        console.log(`🎵 Preloading ${level}...`);
         await this.preloadMusic(level);
-        successCount++;
-        console.log(`🎵 ${level} preloaded successfully`);
+        console.log(`⚡ ${level} ready`);
       } catch (e) {
-        failCount++;
-        console.warn(`🎵 Failed to preload ${level}:`, e);
+        console.warn(`⚠️ ${level} failed:`, e);
       }
-    }
+    });
     
-    const endTime = Date.now();
-    console.log(`🎵 All music preloading completed: ${successCount} success, ${failCount} failed (${endTime - startTime}ms)`);
+    await Promise.all(preloadPromises);
+    console.log('⚡ ALL music preloaded in parallel - MAXIMUM SPEED!');
   }
 
   /**
-   * Production-safe initialization method
+   * Production-safe initialization method - optimized for speed
    */
   async initializeForProduction() {
-    console.log('🎵 Initializing BackgroundMusicManager for production');
+    console.log('⚡ FAST initializing BackgroundMusicManager');
     
     try {
-      // Configure audio session first
-      await this.configureAudioSession();
-      console.log('🎵 Audio session configured for production');
+      // Audio session is handled automatically by expo-audio
+      console.log('⚡ Audio session handled automatically');
       
-      // Preload common music
+      // Preload common music in parallel
       await this.preloadCommonMusic();
-      console.log('🎵 Common music preloaded for production');
-      
-      console.log('🎵 BackgroundMusicManager initialized successfully for production');
+      console.log('⚡ BackgroundMusicManager FAST initialized!');
     } catch (e) {
-      console.error('🎵 Failed to initialize BackgroundMusicManager for production:', e);
+      console.warn('⚠️ BackgroundMusicManager init failed:', e);
       // Don't throw - continue anyway
     }
   }

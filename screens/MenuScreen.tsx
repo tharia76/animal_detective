@@ -831,20 +831,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     }, 1000);
   }, []);
 
-  // Menu music now handled by BackgroundMusicManager - start menu music on mount
+  // Menu music now handled by BackgroundMusicManager - start menu music immediately
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        console.log('🎵 Starting menu music via BackgroundMusicManager');
-        const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
-        BackgroundMusicManager.getInstance().playBackgroundMusic('menu');
-      } catch (e) {
-        console.warn('Failed to start menu music:', e);
-      }
-    }, 500); // Delay to ensure proper initialization
+    // Start menu music immediately for faster loading
+    try {
+      console.log('⚡ Starting menu music immediately');
+      const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
+      BackgroundMusicManager.getInstance().playBackgroundMusic('menu');
+    } catch (e) {
+      console.warn('Failed to start menu music:', e);
+    }
     
     return () => {
-      clearTimeout(timer);
       // Menu music cleanup is handled by BackgroundMusicManager
     };
   }, [volume]); // Only depend on volume changes

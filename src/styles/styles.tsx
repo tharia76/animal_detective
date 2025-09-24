@@ -96,6 +96,76 @@ export function useDynamicStyles() {
         alignItems: 'center' as const,
         backgroundColor: '#FFDAB9',
       },
+      progressContainer: {
+        position: 'absolute' as const,
+        top: getSafeAreaTop() + 40, // Move to top with safe area
+        left: 20,
+        right: 20,
+        alignItems: 'center' as const,
+        zIndex: 10,
+      },
+      progressPillContainer: {
+        width: 280, // Fixed smaller width
+        height: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        borderRadius: 20, // Pill shape
+        overflow: 'hidden' as const,
+        marginBottom: 20, // Slightly more space since no text below
+        padding: 2, // Inner padding for the pill effect
+        shadowColor: 'rgba(0, 0, 0, 0.3)',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
+      },
+      progressBarBackground: {
+        width: '100%' as const,
+        height: '100%' as const,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 18, // Slightly smaller than container
+        overflow: 'hidden' as const,
+      },
+      progressBarFill: {
+        height: '100%' as const,
+        borderRadius: 18, // Match the pill shape
+        shadowColor: '#FF6B35',
+        shadowOffset: {
+          width: 0,
+          height: 1,
+        },
+        shadowOpacity: 0.4,
+        shadowRadius: 3,
+        elevation: 3,
+      },
+      // Progress text styles removed for minimal design
+      skipContainer: {
+        position: 'absolute' as const,
+        bottom: getSafeAreaBottom() + 60,
+        left: 20,
+        right: 20,
+        alignItems: 'center' as const,
+        zIndex: 10,
+      },
+      skipButton: {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+      },
+      skipButtonText: {
+        color: '#FFFFFF',
+        fontSize: getResponsiveFontSize(16, scaleFactor),
+        fontWeight: '600' as const,
+        textAlign: 'center' as const,
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+      },
       background: {
         ...StyleSheet.absoluteFillObject,
         zIndex: 0,
