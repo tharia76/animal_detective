@@ -1,6 +1,7 @@
 import { createAudioPlayer, useAudioPlayer, AudioPlayer } from 'expo-audio';
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
+import { Asset } from 'expo-asset';
 
 /**
  * BackgroundMusicManager with robust production-ready audio handling.
@@ -36,46 +37,46 @@ const BG_MUSIC_URIS: Record<string, string> = {
   insects: 'file:///assets/sounds/background_sounds/insects_bg.mp3',
 };
 
-// Production-optimized loading with fallback
+// Production-optimized loading with Asset API for reliable hosting
 async function getLocalMusicUri(levelName: string): Promise<string | number | null> {
   try {
-    let module;
-    
-    // Use a more efficient loading approach in production
-    const musicModules: Record<string, any> = {
-      farm: () => require('../assets/sounds/background_sounds/farm_bg.mp3'),
-      forest: () => require('../assets/sounds/background_sounds/forest_bg.mp3'),
-      jungle: () => require('../assets/sounds/background_sounds/jungle_bg.mp3'),
-      desert: () => require('../assets/sounds/background_sounds/desert_bg.mp3'),
-      ocean: () => require('../assets/sounds/background_sounds/ocean_bg.mp3'),
-      savannah: () => require('../assets/sounds/background_sounds/savannah_bg.mp3'),
-      arctic: () => require('../assets/sounds/background_sounds/arctic_bg.mp3'),
-      birds: () => require('../assets/sounds/background_sounds/birds_bg.mp3'),
-      insects: () => require('../assets/sounds/background_sounds/insects_bg.mp3'),
+    // Use Asset API for better production compatibility
+    const musicModules: Record<string, () => any> = {
+      farm: () => Asset.fromModule(require('../assets/sounds/background_sounds/farm_bg.mp3')),
+      forest: () => Asset.fromModule(require('../assets/sounds/background_sounds/forest_bg.mp3')),
+      jungle: () => Asset.fromModule(require('../assets/sounds/background_sounds/jungle_bg.mp3')),
+      desert: () => Asset.fromModule(require('../assets/sounds/background_sounds/desert_bg.mp3')),
+      ocean: () => Asset.fromModule(require('../assets/sounds/background_sounds/ocean_bg.mp3')),
+      savannah: () => Asset.fromModule(require('../assets/sounds/background_sounds/savannah_bg.mp3')),
+      arctic: () => Asset.fromModule(require('../assets/sounds/background_sounds/arctic_bg.mp3')),
+      birds: () => Asset.fromModule(require('../assets/sounds/background_sounds/birds_bg.mp3')),
+      insects: () => Asset.fromModule(require('../assets/sounds/background_sounds/insects_bg.mp3')),
     };
     
     const loader = musicModules[levelName];
-    if (loader) {
-      module = loader();
-    }
-    
-    if (!module) {
+    if (!loader) {
+      console.warn(`No music module found for level: ${levelName}`);
       return null;
     }
     
-    // For production, ensure the asset is properly resolved
-    if (typeof module === 'number') {
-      // This is an asset ID from Metro bundler
-      return module;
-    } else if (typeof module === 'string') {
-      // This is a URI string
-      return module;
-    } else if (module && module.uri) {
-      // This is an asset object
-      return module.uri;
+    const asset = loader();
+    console.log(`🎵 Loading asset for ${levelName}, downloaded: ${asset.downloaded}`);
+    
+    // Ensure the asset is downloaded
+    if (!asset.downloaded) {
+      console.log(`🎵 Downloading asset for ${levelName}...`);
+      await asset.downloadAsync();
     }
     
-    return module;
+    const uri = asset.localUri || asset.uri;
+    console.log(`🎵 Asset URI for ${levelName}: ${uri}`);
+    
+    if (!uri) {
+      console.warn(`No URI available for ${levelName} asset`);
+      return null;
+    }
+    
+    return uri;
   } catch (e) {
     console.warn(`Failed to load local music for ${levelName}:`, e);
     return null;
