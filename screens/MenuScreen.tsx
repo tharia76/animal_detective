@@ -54,6 +54,7 @@ import { ImageRegistry } from '../src/utils/PersistentImageRegistry';
 import { preloadImages } from '../src/utils/preloadImages';
 import ScreenLoadingWrapper from '../src/components/ScreenLoadingWrapper';
 import ParentalGate from '../src/components/ParentalGate';
+import FacebookAnalytics from '../src/services/FacebookAnalytics';
 
 
 // Menu music now handled by BackgroundMusicManager
@@ -491,7 +492,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
   });
 };
 
-const lockedLevels = LEVELS.filter(l => l !== 'farm');
+const lockedLevels = LEVELS.filter(l => l !== 'farm' && l !== 'forest');
 
 // Helper function to play button sound
 const playButtonSound = (volume: number) => {
@@ -973,6 +974,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                 setUnlocked(true);
                 saveUnlockedState(true);
                 setPurchaseInProgress(false);
+                
+                // Track successful purchase
+                FacebookAnalytics.trackPurchase(
+                  typeof products[0]?.price === 'number' ? products[0].price : 0,
+                  products[0]?.currency || 'USD',
+                  PRODUCT_ID
+                );
+                
                 Alert.alert(
                   t('thankYou') || 'Thank You!',
                   t('allLevelsNowUnlocked') || 'All levels are now unlocked!'
@@ -1073,6 +1082,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   // Actual purchase handler (called after parental gate success)
   const handlePurchase = useCallback(async () => {
     setPurchaseInProgress(true);
+    
+    // Track purchase attempt
+    FacebookAnalytics.trackUserEngagement('purchase_initiated', 'menu', {
+      product_id: PRODUCT_ID,
+      platform: Platform.OS
+    });
     
     try {
       if (Platform.OS === 'ios') {
@@ -1196,6 +1211,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     (level, isLocked) => {
       playButtonSound(volume);
       
+      // Track level selection in analytics
+      FacebookAnalytics.trackLevelSelected(level, isLocked);
+      
       // Register user interaction for audio playback
       const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
       BackgroundMusicManager.getInstance().onUserInteraction();
@@ -1203,6 +1221,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       // If level is locked and user hasn't unlocked all levels, show unlock modal and STOP
       if (isLocked && !unlocked) {
         setShowUnlockModal(true);
+        // Track unlock modal shown
+        FacebookAnalytics.trackUserEngagement('unlock_modal_shown', level);
         return; // CRITICAL: Don't proceed to open the level
       }
       
@@ -1582,8 +1602,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
  
   // Determine locked state for each level
   const getIsLocked = (level: string) => {
-    // Only farm level is unlocked by default
-    if (level === 'farm') return false;
+    // Farm and Forest levels are unlocked by default
+    if (level === 'farm' || level === 'forest') return false;
     
     // If user has purchased unlock, all levels are unlocked
     if (unlocked) return false;

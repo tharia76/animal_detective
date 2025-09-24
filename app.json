@@ -35,7 +35,8 @@
       "UIInterfaceOrientation~ipad": "UIInterfaceOrientationLandscapeLeft",
       "UIViewControllerBasedStatusBarAppearance~ipad": false,
       "MTKViewDisplaySyncEnabled": true,
-      "UIApplicationSupportsIndirectInputEvents": true
+      "UIApplicationSupportsIndirectInputEvents": true,
+      "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized ads and improve your experience."
     }
   },
   "android": {
@@ -78,9 +79,16 @@
       {
         "initialOrientation": "LANDSCAPE"
       }
+    ],
+    [
+      "expo-facebook",
+      {
+        "appID": "2048296882646951",
+        "displayName": "Animal Detective"
+      }
     ]
   ],
   "experiments": {
-     "typedRoutes": true
+    "typedRoutes": true
   }
 }

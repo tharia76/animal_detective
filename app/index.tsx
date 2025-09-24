@@ -29,6 +29,7 @@ import InsectsScreen from '../screens/levels/Insects';
 import BirdsScreen from '../screens/levels/Birds';
 import { getAnimals } from '../src/data/animals';
 import BackgroundMusicManager from '../src/services/BackgroundMusicManager';
+import FacebookAnalytics from '../src/services/FacebookAnalytics';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -42,6 +43,22 @@ export default function App() {
 
 
   
+  // Initialize Facebook Analytics
+  useEffect(() => {
+    const initializeAnalytics = async () => {
+      try {
+        await FacebookAnalytics.initialize('2048296882646951');
+        await FacebookAnalytics.trackAppOpen();
+        await FacebookAnalytics.trackSessionStarted();
+        console.log('📊 Facebook Analytics initialized successfully');
+      } catch (error) {
+        console.warn('Failed to initialize Facebook Analytics:', error);
+      }
+    };
+    
+    initializeAnalytics();
+  }, []);
+
   // Force landscape on mount - especially for iPad
   useEffect(() => {
     const forceOrientation = async () => {
@@ -145,19 +162,22 @@ export default function App() {
 
   // Instant loading overlay with asset preloading
   const handleSelectLevel = useCallback(async (level: string) => {
-    // Safety check: Only allow farm level or if user has unlocked all levels
+    // Safety check: Only allow farm/forest levels or if user has unlocked all levels
     // This prevents locked levels from being accessed even if they somehow get through
     
     // TEMPORARY: Allow all levels for testing
     /* ORIGINAL CODE - RESTORE AFTER TESTING
-    const isFarmLevel = level === 'farm';
+    const isUnlockedLevel = level === 'farm' || level === 'forest';
     const hasUnlockedAll = await AsyncStorage.getItem('unlocked_all_levels') === 'true';
     
-    if (!isFarmLevel && !hasUnlockedAll) {
+    if (!isUnlockedLevel && !hasUnlockedAll) {
       console.warn('Attempted to access locked level:', level, '- blocking access');
       return; // Don't open locked levels
     }
     */
+    
+    // Track level selection
+    FacebookAnalytics.trackLevelSelected(level, false);
     
     // Set selected level immediately to avoid black flash
     setSelectedLevel(level);

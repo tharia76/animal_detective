@@ -57,6 +57,7 @@ import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositionin
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
 import { getLevelVideo } from '../utils/levelVideoMapping';
 import BackgroundMusicManager, { BackgroundMusicManager as BGMClass } from '../services/BackgroundMusicManager';
+import FacebookAnalytics from '../services/FacebookAnalytics';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
@@ -1268,6 +1269,15 @@ export default function LevelScreenTemplate({
       // Capture if this was the first time clicking this animal
       const wasAlreadyVisited = visitedAnimals.has(currentAnimalIndex);
       
+      // Track animal discovery if it's the first time
+      if (!wasAlreadyVisited) {
+        FacebookAnalytics.trackAnimalDiscovered(
+          currentAnimal.name,
+          levelName,
+          visitedAnimals.size + 1
+        );
+      }
+      
       // Always add current animal to visited animals when clicked
       setVisitedAnimals(prev => {
         const newVisited = new Set(prev);
@@ -1429,6 +1439,14 @@ export default function LevelScreenTemplate({
             if (allAnimalsVisited && !levelCompleted) {
               console.log('✅ ALL ANIMALS CLICKED - SHOWING DISCOVER SCREEN');
           setLevelCompleted(true);
+              
+              // Track level completion
+              FacebookAnalytics.trackLevelCompleted(
+                levelName,
+                animals.length,
+                Date.now() // You can calculate actual completion time if needed
+              );
+              
               // Show DiscoverScreen first for all levels, then CongratsModal
               setShowDiscoverScreen(true);
           setIsTransitioning(false);
