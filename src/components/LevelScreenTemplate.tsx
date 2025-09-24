@@ -56,7 +56,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
 import { getLevelVideo } from '../utils/levelVideoMapping';
-import BackgroundMusicManager from '../services/BackgroundMusicManager';
+import BackgroundMusicManager, { BackgroundMusicManager as BGMClass } from '../services/BackgroundMusicManager';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
@@ -1368,6 +1368,10 @@ export default function LevelScreenTemplate({
     // Register user interaction for audio playback
     BackgroundMusicManager.onUserInteraction();
     
+    // NUCLEAR STOP: Stop all audio before navigation
+    console.log(`🎵 NUCLEAR STOP: Stopping all audio before ${direction} navigation`);
+    BGMClass.globalStopAllAudio();
+    
     if (!hasAnimals || isTransitioning) {
       return;
     }
@@ -1547,6 +1551,10 @@ export default function LevelScreenTemplate({
   const goToHome = useCallback(() => {
     // Register user interaction for audio playback
     BackgroundMusicManager.onUserInteraction();
+    
+    // NUCLEAR STOP: Stop all audio before returning to menu
+    console.log('🎵 NUCLEAR STOP: Stopping all audio before returning to menu');
+    BGMClass.globalStopAllAudio();
     
     // Persist current progress before leaving the level
     try { void saveProgress(visitedAnimals); } catch (e) { /* noop */ }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, Platform } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type PaymentModalProps = {
   showPaymentModal: boolean;
@@ -15,32 +16,57 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   t,
   selectedLockedLevel,
   requestPurchase,
-}) => (
-  <Modal
-    visible={showPaymentModal}
-    transparent={true}
-    animationType="fade"
-    onRequestClose={() => setShowPaymentModal(false)}
-    supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
-  >
-    <View style={{
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)'
-    }}>
+}) => {
+  const insets = useSafeAreaInsets();
+  const isIPhone16Series = Platform.OS === 'ios' && insets.top > 50;
+
+  return (
+    <Modal
+      visible={showPaymentModal}
+      transparent={true}
+      animationType="fade"
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      onRequestClose={() => setShowPaymentModal(false)}
+      supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+    >
       <View style={{
-        width: '80%',
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 20,
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
       }}>
+        <ScrollView 
+          contentContainerStyle={{ 
+            flexGrow: 1, 
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 20,
+            paddingTop: isIPhone16Series ? insets.top + 40 : 40,
+            paddingBottom: isIPhone16Series ? insets.bottom + 40 : 40,
+          }}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior={isIPhone16Series ? "never" : "automatic"}
+        >
+          <View style={{
+            width: '80%',
+            backgroundColor: 'white',
+            borderRadius: 20,
+            padding: 20,
+            alignItems: 'center',
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            maxHeight: isIPhone16Series ? '70%' : '80%',
+          }}>
         <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 15 }}>
           {t('unlockLevel')}
         </Text>
@@ -90,9 +116,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </TouchableOpacity>
           )}
         </View>
+          </View>
+        </ScrollView>
       </View>
-    </View>
-  </Modal>
-);
+    </Modal>
+  );
+};
 
 export default PaymentModal;

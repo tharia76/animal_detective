@@ -56,7 +56,7 @@ import ScreenLoadingWrapper from '../src/components/ScreenLoadingWrapper';
 import ParentalGate from '../src/components/ParentalGate';
 
 
-const menuBgSound = require('../src/assets/sounds/background_sounds/menu.mp3');
+// Menu music now handled by BackgroundMusicManager
 const BG_IMAGE = require('../src/assets/images/menu-screen.webp');
 const LEVELS = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
 
@@ -256,7 +256,7 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
       paddingHorizontal: 0,
       paddingVertical: 0,
       gap: 0,
-      backgroundColor: 'rgba(255, 0, 0, 0.1)', // Temporary red background for debugging
+      backgroundColor: 'transparent',
       borderRadius: 0,
       marginHorizontal: 0,
       // Remove negative margins that might hide the button
@@ -649,10 +649,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         if (!isNaN(volumeValue) && volumeValue >= 0 && volumeValue <= 1) {
           setVolume(volumeValue);
           setGlobalVolume(volumeValue); // Apply to global system immediately
-      // Also update menu music volume immediately
-      if (playerRef.current) {
-        playerRef.current.volume = volumeValue;
-      }
+      // Menu music volume now handled by BackgroundMusicManager
         }
       }
     } catch (error) {
@@ -668,10 +665,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       const clampedVolume = Math.max(0, Math.min(1, newVolume));
       setVolume(clampedVolume);
       setGlobalVolume(clampedVolume); // Apply globally immediately
-      // Also update menu music volume immediately
-      if (playerRef.current) {
-        playerRef.current.volume = clampedVolume;
-      }
+      // Menu music volume now handled by BackgroundMusicManager
       saveVolumeToStorage(clampedVolume); // Save to persistent storage
     } catch (error) {
       console.warn('Error setting volume:', error);
@@ -684,10 +678,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     console.log('Current volume state:', volume);
     setVolume(newVolume);
     setGlobalVolume(newVolume);
-    // Also update menu music volume immediately
-    if (playerRef.current) {
-      playerRef.current.volume = newVolume;
-    }
+    // Menu music volume now handled by BackgroundMusicManager
     saveVolumeToStorage(newVolume);
   }, [saveVolumeToStorage, volume]);
 
@@ -738,33 +729,21 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   // Modal state for locked level
   const [showUnlockModal, setShowUnlockModal] = useState(false);
 
-  // Use a ref to always get the latest player instance
-  const playerRef = useRef<any>(null);
-  const player = useAudioPlayer(menuBgSound);
+  // Menu music now handled by BackgroundMusicManager - no separate player needed
   
   // Update menu background music volume when volume changes (only after volume is loaded)
+  // Menu music volume now handled by BackgroundMusicManager
   useEffect(() => {
     if (!volumeLoaded) return; // Don't apply until volume is loaded from storage
     
-    if (playerRef.current) {
-      try {
-        playerRef.current.volume = volume;
-        console.log('Updated menu music volume to:', volume);
-      } catch (e) {
-        console.warn('Failed to set menu music volume:', e);
-      }
-    }
-    // Also try with the player directly
-    if (player) {
-      try {
-        player.volume = volume;
-      } catch (e) {
-        console.warn('Failed to set player volume directly:', e);
-      }
-    }
+    // Update BackgroundMusicManager volume instead of separate menu player
+    const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
+    BackgroundMusicManager.getInstance().setGlobalVolume(volume);
+    console.log('Updated BackgroundMusicManager volume to:', volume);
+    
     // Global volume is set in setVolumeSafely, but ensure it's set here too for direct volume changes
     setGlobalVolume(volume);
-  }, [volume, volumeLoaded, player]);
+  }, [volume, volumeLoaded]);
 
 
   // Animated styles for gradient buttons with pulse
@@ -803,10 +782,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     setLayoutReady(true);
   }, [width, height, isLandscape]);
 
-  // Keep playerRef in sync with player
-  useEffect(() => {
-    playerRef.current = player;
-  }, [player]);
+  // Menu music now handled by BackgroundMusicManager - no separate player needed
 
   // Initialize gradient animations
   useEffect(() => {
@@ -855,41 +831,25 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     }, 1000);
   }, []);
 
-  // Play immediately on mount, and cleanup on unmount
+  // Menu music now handled by BackgroundMusicManager - start menu music on mount
   useEffect(() => {
-    try {
-      player.volume = volume; // Set volume before playing
-      player.play();
-    } catch (e) {
-      console.warn('Failed to play menu bg sound', e);
-    }
-    return () => {
+    const timer = setTimeout(() => {
       try {
-        if (playerRef.current && playerRef.current.playing) {
-          playerRef.current.pause();
-        }
-        if (playerRef.current) {
-          playerRef.current.remove();
-        }
+        console.log('🎵 Starting menu music via BackgroundMusicManager');
+        const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
+        BackgroundMusicManager.getInstance().playBackgroundMusic('menu');
       } catch (e) {
-        // Defensive: ignore errors on cleanup
+        console.warn('Failed to start menu music:', e);
       }
+    }, 500); // Delay to ensure proper initialization
+    
+    return () => {
+      clearTimeout(timer);
+      // Menu music cleanup is handled by BackgroundMusicManager
     };
-  }, [player, volume]);
+  }, [volume]); // Only depend on volume changes
 
-  // helper to fully stop & unload
-  const stopAndUnload = useCallback(() => {
-    try {
-      if (playerRef.current && playerRef.current.playing) {
-        playerRef.current.pause();
-      }
-      if (playerRef.current) {
-        playerRef.current.remove();
-      }
-    } catch (e) {
-      // Defensive: ignore errors on cleanup
-    }
-  }, []);
+  // Menu music cleanup now handled by BackgroundMusicManager
 
   // Notify parent when screen is ready
   useEffect(() => {
@@ -932,51 +892,26 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     loadVisitedCounts();
   }, []);
 
-  // play on focus, stop on blur
+  // Menu music focus/blur now handled by BackgroundMusicManager
   useEffect(() => {
     const onFocus = () => {
       try {
-        // Stop any level background music that might still be playing
-        const BackgroundMusicManager = require('../src/services/BackgroundMusicManager').default;
-        BackgroundMusicManager.cleanup();
-        
-        // Reset state when coming back
-        if (playerRef.current) {
-          playerRef.current.volume = volume; // Ensure volume is set correctly
-          playerRef.current.play();
-          console.log('Menu music resumed with volume:', volume);
-          
-          // Double-check volume after a short delay
-          setTimeout(() => {
-            if (playerRef.current) {
-              playerRef.current.volume = volume;
-            }
-          }, 100);
-        }
+        console.log('🎵 Menu focused - ensuring menu music is playing');
+        const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
+        // Stop any level background music and start menu music
+        BackgroundMusicManager.getInstance().playBackgroundMusic('menu');
       } catch (e) {
-        // Defensive: ignore
         console.warn('Failed to resume menu music on focus:', e);
       }
     };
-    const onBlur = () => {
-      stopAndUnload();
-    };
 
     const fSub = navigation.addListener('focus', onFocus);
-    const bSub = navigation.addListener('blur', onBlur);
-    // Stop immediately before navigating away to avoid overlap during transitions
-    const brSub = navigation.addListener('beforeRemove', () => {
-      stopAndUnload();
-    });
     return () => {
       try {
         fSub && fSub();
-        bSub && bSub();
-        brSub && brSub();
       } catch (e) {}
-      stopAndUnload();
     };
-  }, [navigation, stopAndUnload, volume]);
+  }, [navigation]);
 
   // IAP: Initialize and get products
   useEffect(() => {
@@ -1260,32 +1195,32 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       playButtonSound(volume);
       
       // Register user interaction for audio playback
-      const BackgroundMusicManager = require('../src/services/BackgroundMusicManager').default;
-      BackgroundMusicManager.onUserInteraction();
+      const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
+      BackgroundMusicManager.getInstance().onUserInteraction();
       
       // If level is locked and user hasn't unlocked all levels, show unlock modal and STOP
       if (isLocked && !unlocked) {
-        console.log('Level is locked, showing unlock modal instead of opening level:', level);
         setShowUnlockModal(true);
         return; // CRITICAL: Don't proceed to open the level
       }
       
-      // Only proceed if level is unlocked
-      console.log('Level is unlocked, proceeding to open:', level);
-      
       // Show destination background immediately
       setSelectedLevel(level);
       
-      // Instant navigation - no delays
+      // Stop ALL audio before transitioning to level - NUCLEAR OPTION
       try { 
-        stopAndUnload(); 
-      } catch {}
+        console.log('🎵 NUCLEAR STOP: Stopping ALL audio before level transition');
+        BackgroundMusicManager.globalStopAllAudio(); // Stop everything globally (including menu music)
+        console.log('🎵 All audio stopped before transitioning to level');
+      } catch (e) {
+        console.warn('Error stopping audio before level transition:', e);
+      }
       
       if (typeof onSelectLevel === 'function') {
         onSelectLevel(level);
       }
     },
-    [onSelectLevel, stopAndUnload, volume, unlocked]
+    [onSelectLevel, volume, unlocked]
   );
 
   // Get price string for unlock button with sale pricing
@@ -1309,36 +1244,32 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     // Detect if this is a phone (smaller screen)
     const isPhone = Math.min(width, height) < 600; // Phones typically have smaller dimensions
     
+    
     return (
-      <Modal
-        visible={showUnlockModal}
-        animationType="fade"
-        transparent
-        presentationStyle="overFullScreen"
-        statusBarTranslucent
-        hardwareAccelerated
-        onRequestClose={() => setShowUnlockModal(false)}
-        supportedOrientations={['landscape', 'landscape-left', 'landscape-right', 'portrait', 'portrait-upside-down']}
-      >
-        <View style={[responsiveStyles.modalOverlay, {
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom,
-          paddingLeft: insets.left,
-          paddingRight: insets.right,
-        }]} pointerEvents="auto">
-          <ScrollView 
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            <View style={[
-              responsiveStyles.modalContent,
-              isPhone && {
-                maxWidth: Math.min(380, width * 0.95), // Wider for phones
-                maxHeight: Math.min(350, height * 0.8), // Less tall for phones
-                padding: getResponsiveSpacing(15, scaleFactor), // Less padding for phones
-              }
-            ]}>
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(139, 69, 19, 0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100000,
+        paddingHorizontal: 20,
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+        width: '100%',
+        height: '100%',
+      }} pointerEvents="auto">
+        <View style={[
+          responsiveStyles.modalContent,
+          isPhone && {
+            maxWidth: Math.min(380, width * 0.95), // Wider for phones
+            maxHeight: Math.min(350, height * 0.8), // Less tall for phones
+            padding: getResponsiveSpacing(15, scaleFactor), // Less padding for phones
+          }
+        ]}>
             {/* Top Right Close Button */}
             <TouchableOpacity
               style={[
@@ -1617,10 +1548,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                 
               </>
             )}
-          </View>
-          </ScrollView>
         </View>
-      </Modal>
+      </View>
     );
   };
 
@@ -1643,16 +1572,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
  
   // Determine locked state for each level
   const getIsLocked = (level: string) => {
-    console.log('getIsLocked called for level:', level, 'unlocked:', unlocked);
-    
     // Only farm level is unlocked by default
     if (level === 'farm') return false;
     
     // If user has purchased unlock, all levels are unlocked
-    if (unlocked) {
-      console.log('User has unlocked all levels, returning false for:', level);
-      return false;
-    }
+    if (unlocked) return false;
     
     // All other levels are locked
     return true;

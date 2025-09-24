@@ -72,21 +72,77 @@ export default function App() {
   }, []);
 
 
-  // Handle splash completion - all images are now loaded
-  const handleSplashComplete = useCallback(() => {
-    console.log('🎉 Splash animation complete - all images loaded!');
-    setAssetsReady(true);
+  // Preload all audio assets for better performance
+  const loadAudioAssets = useCallback(async () => {
+    console.log('🎵 Starting audio asset preloading...');
+    try {
+      const audioAssets = [
+        // Menu music
+        require('../src/assets/sounds/background_sounds/menu.mp3'),
+        // Level background music
+        require('../src/assets/sounds/background_sounds/farm_bg.mp3'),
+        require('../src/assets/sounds/background_sounds/forest_bg.mp3'),
+        require('../src/assets/sounds/background_sounds/jungle_bg.mp3'),
+        require('../src/assets/sounds/background_sounds/desert_bg.mp3'),
+        require('../src/assets/sounds/background_sounds/ocean_bg.mp3'),
+        require('../src/assets/sounds/background_sounds/savannah_bg.mp3'),
+        require('../src/assets/sounds/background_sounds/arctic_bg.mp3'),
+        require('../src/assets/sounds/background_sounds/birds_bg.mp3'),
+        require('../src/assets/sounds/background_sounds/insects_bg.mp3'),
+        // Common UI sounds (if they exist)
+        // require('../src/assets/sounds/ui/button_click.mp3'),
+        // require('../src/assets/sounds/ui/level_complete.mp3'),
+        // require('../src/assets/sounds/ui/animal_found.mp3'),
+      ];
+
+      console.log(`🎵 Preloading ${audioAssets.length} audio assets...`);
+      const startTime = Date.now();
+      await Asset.loadAsync(audioAssets);
+      const endTime = Date.now();
+      console.log(`🎵 All audio assets preloaded successfully! (${endTime - startTime}ms)`);
+      
+      return true;
+    } catch (error) {
+      console.warn('🎵 Error preloading audio assets:', error);
+      return false;
+    }
+  }, []);
+
+  // Handle splash completion - all images and audio are now loaded
+  const handleSplashComplete = useCallback(async () => {
+    console.log('🎉 Splash animation complete - starting asset loading!');
     
-    // Preload common background music for better performance
-    BackgroundMusicManager.preloadCommonMusic().catch(e => {
-      console.warn('Failed to preload background music:', e);
-    });
+    try {
+      // Preload audio assets first
+      const audioLoaded = await loadAudioAssets();
+      
+      if (audioLoaded) {
+        console.log('🎵 Audio preloading completed successfully');
+      } else {
+        console.warn('🎵 Audio preloading had issues, but continuing...');
+      }
+      
+      // Initialize background music for production
+      await BackgroundMusicManager.initializeForProduction();
+      console.log('🎵 BackgroundMusicManager initialized for production');
+      
+      // Preload all music for maximum performance (since assets are already loaded)
+      await BackgroundMusicManager.preloadAllMusic();
+      console.log('🎵 All music preloaded for maximum performance');
+      
+    } catch (e) {
+      console.warn('Failed to initialize background music for production:', e);
+    }
+    
+    // Mark assets as ready
+    setAssetsReady(true);
+    console.log('🎉 All assets loaded and ready!');
     
     // Add a small delay to let users see the splash video, then transition to menu
     setTimeout(() => {
       setShowSplash(false);
     }, 1500); // 1.5 second delay for smooth transition
-  }, []);
+  }, [loadAudioAssets]);
 
   // Remove the massive preloading - everything loads during splash now
   useEffect(() => {

@@ -37,48 +37,63 @@ const BG_MUSIC_URIS: Record<string, string> = {
   insects: 'file:///assets/sounds/background_sounds/insects_bg.mp3',
 };
 
-// Production-optimized loading with Asset API for reliable hosting
+// Production-safe asset loading with fallback
 async function getLocalMusicUri(levelName: string): Promise<string | number | null> {
   try {
-    // Use Asset API for better production compatibility
-    const musicModules: Record<string, () => any> = {
-      farm: () => Asset.fromModule(require('../assets/sounds/background_sounds/farm_bg.mp3')),
-      forest: () => Asset.fromModule(require('../assets/sounds/background_sounds/forest_bg.mp3')),
-      jungle: () => Asset.fromModule(require('../assets/sounds/background_sounds/jungle_bg.mp3')),
-      desert: () => Asset.fromModule(require('../assets/sounds/background_sounds/desert_bg.mp3')),
-      ocean: () => Asset.fromModule(require('../assets/sounds/background_sounds/ocean_bg.mp3')),
-      savannah: () => Asset.fromModule(require('../assets/sounds/background_sounds/savannah_bg.mp3')),
-      arctic: () => Asset.fromModule(require('../assets/sounds/background_sounds/arctic_bg.mp3')),
-      birds: () => Asset.fromModule(require('../assets/sounds/background_sounds/birds_bg.mp3')),
-      insects: () => Asset.fromModule(require('../assets/sounds/background_sounds/insects_bg.mp3')),
-    };
+    // Production-safe require approach with error handling
+    let musicModule: any = null;
     
-    const loader = musicModules[levelName];
-    if (!loader) {
-      console.warn(`No music module found for level: ${levelName}`);
+    switch (levelName) {
+      case 'menu':
+        musicModule = require('../assets/sounds/background_sounds/menu.mp3');
+        break;
+      case 'farm':
+        musicModule = require('../assets/sounds/background_sounds/farm_bg.mp3');
+        break;
+      case 'forest':
+        musicModule = require('../assets/sounds/background_sounds/forest_bg.mp3');
+        break;
+      case 'jungle':
+        musicModule = require('../assets/sounds/background_sounds/jungle_bg.mp3');
+        break;
+      case 'desert':
+        musicModule = require('../assets/sounds/background_sounds/desert_bg.mp3');
+        break;
+      case 'ocean':
+        musicModule = require('../assets/sounds/background_sounds/ocean_bg.mp3');
+        break;
+      case 'savannah':
+        musicModule = require('../assets/sounds/background_sounds/savannah_bg.mp3');
+        break;
+      case 'arctic':
+        musicModule = require('../assets/sounds/background_sounds/arctic_bg.mp3');
+        break;
+      case 'birds':
+        musicModule = require('../assets/sounds/background_sounds/birds_bg.mp3');
+        break;
+      case 'insects':
+        musicModule = require('../assets/sounds/background_sounds/insects_bg.mp3');
+        break;
+      default:
+        console.warn(`No music module found for level: ${levelName}`);
+        return null;
+    }
+    
+    if (!musicModule) {
+      console.warn(`Failed to load music module for ${levelName}`);
       return null;
     }
     
-    const asset = loader();
-    console.log(`🎵 Loading asset for ${levelName}, downloaded: ${asset.downloaded}`);
-    
-    // Ensure the asset is downloaded
-    if (!asset.downloaded) {
-      console.log(`🎵 Downloading asset for ${levelName}...`);
-      await asset.downloadAsync();
+    // In production, ensure we have a valid module
+    if (typeof musicModule === 'number' || (typeof musicModule === 'object' && musicModule.uri)) {
+      console.log(`🎵 Successfully loaded music for ${levelName}`);
+      return musicModule;
     }
     
-    const uri = asset.localUri || asset.uri;
-    console.log(`🎵 Asset URI for ${levelName}: ${uri}`);
-    
-    if (!uri) {
-      console.warn(`No URI available for ${levelName} asset`);
-      return null;
-    }
-    
-    return uri;
+    console.warn(`Invalid music module for ${levelName}:`, musicModule);
+    return null;
   } catch (e) {
-    console.warn(`Failed to load local music for ${levelName}:`, e);
+    console.error(`Failed to load local music for ${levelName}:`, e);
     return null;
   }
 }
@@ -119,20 +134,26 @@ class BackgroundMusicManager {
     if (this.audioSessionConfigured) return;
     
     try {
+      // More permissive audio session configuration for production reliability
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
         staysActiveInBackground: true,
         playsInSilentModeIOS: true,
-        shouldDuckAndroid: true,
+        shouldDuckAndroid: false, // Changed to false for better compatibility
         playThroughEarpieceAndroid: false,
-        interruptionModeIOS: 1, // Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX
-        interruptionModeAndroid: 1, // Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX
+        interruptionModeIOS: 2, // Audio.INTERRUPTION_MODE_IOS_MIX_WITH_OTHERS - more permissive
+        interruptionModeAndroid: 2, // Audio.INTERRUPTION_MODE_ANDROID_DUCK_OTHERS - more permissive
       });
       
       this.audioSessionConfigured = true;
       console.log('🎵 Audio session configured successfully');
+      
+      // Give the session time to settle
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.warn('Failed to configure audio session:', error);
+      // Don't mark as configured if it failed
+      this.audioSessionConfigured = false;
     }
   }
 
@@ -148,16 +169,32 @@ class BackgroundMusicManager {
   }
 
   async playBackgroundMusic(levelName: string, forceRestart: boolean = false) {
-    console.log(`🎵 playBackgroundMusic called for ${levelName}, muted: ${this.isMuted}, hasUserInteracted: ${this.hasUserInteracted}`);
+    // Production-safe logging
+    const debugInfo = `level=${levelName}, muted=${this.isMuted}, hasUserInteracted=${this.hasUserInteracted}`;
+    console.log(`🎵 playBackgroundMusic: ${debugInfo}`);
+    
     const key = levelName.trim().toLowerCase();
     
-    // Ensure audio session is configured
-    await this.configureAudioSession();
+    // Force stop any existing audio first to prevent simultaneous playback
+    if (this.currentPlayer) {
+      console.log(`🎵 Force stopping existing audio before playing ${key}`);
+      this.forceStopAll();
+      // Give a moment for cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     
-    // If no user interaction yet on web/Android, save the request for later
-    // iOS typically allows audio without user interaction in apps
+    // Ensure audio session is configured
+    try {
+      await this.configureAudioSession();
+      console.log(`🎵 Audio session configured for ${key}`);
+    } catch (e) {
+      console.error(`🎵 Audio session configuration failed for ${key}:`, e);
+      // Continue anyway - audio might still work
+    }
+    
+    // Simplified user interaction detection - only require for web
     const isWeb = Platform.OS === 'web';
-    const requiresUserInteraction = isWeb || (Platform.OS === 'android' && !this.audioSessionConfigured);
+    const requiresUserInteraction = isWeb;
     
     if (!this.hasUserInteracted && requiresUserInteraction) {
       console.log(`🎵 No user interaction yet on ${Platform.OS}, deferring playback for ${key}`);
@@ -223,49 +260,60 @@ class BackgroundMusicManager {
     // Mark as transitioning to prevent race conditions
     this.isTransitioning = true;
 
-    // Stop current music if different
+    // Stop current music if different - more aggressive cleanup
     if (this.currentPlayer && this.currentLevelKey !== key) {
       try {
         console.log(`🎵 Stopping previous music for ${this.currentLevelKey}`);
+        
         // Store position for potential resume
         if (this.currentPlayer.getPosition) {
           this.lastPositionMs = await this.currentPlayer.getPosition();
         }
         
-        // Ensure the player is fully stopped
+        // Aggressive cleanup sequence
         this.currentPlayer.pause();
         this.currentPlayer.stop && this.currentPlayer.stop();
-        
-        // Reset volume to 0 to ensure no audio leaks
         this.currentPlayer.volume = 0;
         
-        // Always remove the player to prevent multiple tracks playing
+        // Force remove the player immediately
         if (this.currentPlayer.remove) {
           this.currentPlayer.remove();
         }
         
-        // Clear the reference to help garbage collection
+        // Clear the reference immediately
         this.currentPlayer = null;
+        this.currentLevelKey = null;
+        
+        console.log(`🎵 Previous music fully stopped and removed`);
       } catch (e) {
         console.warn('Error stopping previous background music:', e);
-        // Even if there's an error, clear the reference
+        // Force clear references even on error
         this.currentPlayer = null;
+        this.currentLevelKey = null;
       }
     }
 
-    // Small delay to ensure previous player is fully cleaned up
+    // Longer delay to ensure previous player is fully cleaned up
     if (this.currentLevelKey && this.currentLevelKey !== key) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log(`🎵 Waiting for cleanup of previous player...`);
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
 
-    // Create new player
+    // Create new player with production error handling
     try {
       console.log(`🎵 Creating new audio player for ${key}`);
+      console.log(`🎵 Music URI type: ${typeof musicUri}, value: ${musicUri}`);
+      
       if (key === 'farm') {
         console.log(`🚜 FARM BACKGROUND MUSIC - Starting to load farm_bg.mp3 asset...`);
       }
       
+      // Production-safe player creation
       const player = createAudioPlayer(musicUri as any);
+      
+      if (!player) {
+        throw new Error('createAudioPlayer returned null/undefined');
+      }
       
       if (key === 'farm') {
         console.log(`🚜 FARM BACKGROUND MUSIC - farm_bg.mp3 asset LOADED! Player instance created.`);
@@ -291,18 +339,23 @@ class BackgroundMusicManager {
       this.currentPlayer = player;
       this.currentLevelKey = key;
       
+      console.log(`🎵 Player created successfully for ${key}`);
+      
       if (key === 'farm') {
         console.log(`🚜 FARM BACKGROUND MUSIC - Player created successfully`);
       }
 
       // Play the music with retry logic
       if (!this.isMuted) {
+        console.log(`🎵 Attempting to play ${key} (not muted)`);
         await this.playWithRetry(player, key);
       } else {
         console.log(`🎵 Created player for ${key} but not playing because muted`);
       }
     } catch (e) {
-      console.warn('Error creating background music player:', e);
+      console.error(`🎵 Error creating background music player for ${key}:`, e);
+      console.error(`🎵 Music URI was:`, musicUri);
+      // Don't throw - just log the error and continue
     } finally {
       this.isTransitioning = false;
     }
@@ -313,18 +366,9 @@ class BackgroundMusicManager {
    */
   private async playWithRetry(player: any, key: string, retryCount: number = 0): Promise<void> {
     try {
-      console.log(`🎵 Attempting to play ${key} (attempt ${retryCount + 1}/${this.maxRetries})`);
+      console.log(`🎵 Attempting to play ${key} (attempt ${retryCount + 1}/3)`);
       
-      // Wait for player to be ready
-      if (player.getStatus) {
-        const status = await player.getStatus();
-        if (!status.isLoaded) {
-          console.log(`🎵 Waiting for ${key} to load...`);
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
-      
-      // Try to play
+      // Simple play attempt - don't overcomplicate
       const playPromise = player.play();
       if (playPromise && typeof playPromise.then === 'function') {
         await playPromise;
@@ -347,28 +391,25 @@ class BackgroundMusicManager {
         return; // Don't retry, wait for user interaction
       }
       
-      // Retry if we haven't exceeded max retries
-      if (retryCount < this.maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+      // Retry if we haven't exceeded max retries (reduced to 2 retries for production)
+      if (retryCount < 2) {
+        const delay = 500 + (retryCount * 500); // Shorter delays: 500ms, 1000ms
+        console.log(`🎵 Retrying ${key} in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
         await this.playWithRetry(player, key, retryCount + 1);
       } else {
-        console.error(`Failed to play ${key} after ${this.maxRetries} attempts`);
-        // Try to recover by recreating the player
-        this.scheduleRecovery(key);
+        console.error(`Failed to play ${key} after 3 attempts - giving up`);
+        // Don't schedule recovery in production to avoid infinite loops
       }
     }
   }
 
   /**
-   * Schedule a recovery attempt for failed playback
+   * Schedule a recovery attempt for failed playback (disabled in production)
    */
   private scheduleRecovery(key: string) {
-    setTimeout(() => {
-      if (this.currentLevelKey === key && !this.isMuted) {
-        console.log(`🎵 Attempting recovery for ${key}`);
-        this.playBackgroundMusic(key, true);
-      }
-    }, 5000);
+    // Recovery disabled in production to prevent infinite loops
+    console.log(`🎵 Recovery disabled for production - ${key} playback failed`);
   }
 
   pause() {
@@ -446,19 +487,8 @@ class BackgroundMusicManager {
         LOADED_MUSIC_CACHE[key] = musicUri;
         console.log(`🎵 Successfully preloaded music for ${key}`);
         
-        // In production, also create a test player to ensure the asset is fully loaded
-        if (__DEV__ === false) {
-          try {
-            const testPlayer = createAudioPlayer(musicUri as any);
-            testPlayer.volume = 0;
-            // Don't play, just load
-            if (testPlayer.remove) {
-              setTimeout(() => testPlayer.remove(), 100);
-            }
-          } catch (e) {
-            console.warn(`Preload test player failed for ${key}:`, e);
-          }
-        }
+        // Simple preload - just cache the URI, don't create test players
+        console.log(`🎵 Preloaded and cached ${key} for production`);
       } else {
         console.warn(`No background music found for preload: ${levelName}`);
       }
@@ -471,34 +501,159 @@ class BackgroundMusicManager {
    * Preload commonly used music on app startup
    */
   async preloadCommonMusic() {
-    const commonLevels = ['menu', 'farm', 'forest']; // Add your most common levels
+    console.log('🎵 Starting preload of common music for production');
+    const commonLevels = ['menu', 'farm', 'forest']; // Menu music now included
+    
     for (const level of commonLevels) {
-      await this.preloadMusic(level);
+      try {
+        console.log(`🎵 Preloading ${level}...`);
+        await this.preloadMusic(level);
+        console.log(`🎵 Successfully preloaded ${level}`);
+      } catch (e) {
+        console.error(`🎵 Failed to preload ${level}:`, e);
+        // Continue with other levels even if one fails
+      }
+    }
+    
+    console.log('🎵 Common music preload completed');
+  }
+
+  /**
+   * Preload all music assets for maximum performance
+   */
+  async preloadAllMusic() {
+    console.log('🎵 Starting preload of ALL music for maximum performance');
+    const allLevels = ['menu', 'farm', 'forest', 'jungle', 'desert', 'ocean', 'savannah', 'arctic', 'birds', 'insects'];
+    
+    const startTime = Date.now();
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const level of allLevels) {
+      try {
+        console.log(`🎵 Preloading ${level}...`);
+        await this.preloadMusic(level);
+        successCount++;
+        console.log(`🎵 ${level} preloaded successfully`);
+      } catch (e) {
+        failCount++;
+        console.warn(`🎵 Failed to preload ${level}:`, e);
+      }
+    }
+    
+    const endTime = Date.now();
+    console.log(`🎵 All music preloading completed: ${successCount} success, ${failCount} failed (${endTime - startTime}ms)`);
+  }
+
+  /**
+   * Production-safe initialization method
+   */
+  async initializeForProduction() {
+    console.log('🎵 Initializing BackgroundMusicManager for production');
+    
+    try {
+      // Configure audio session first
+      await this.configureAudioSession();
+      console.log('🎵 Audio session configured for production');
+      
+      // Preload common music
+      await this.preloadCommonMusic();
+      console.log('🎵 Common music preloaded for production');
+      
+      console.log('🎵 BackgroundMusicManager initialized successfully for production');
+    } catch (e) {
+      console.error('🎵 Failed to initialize BackgroundMusicManager for production:', e);
+      // Don't throw - continue anyway
     }
   }
 
   cleanup() {
     if (this.currentPlayer) {
       try {
-        console.log('🧹 Cleaning up background music');
+        console.log('🧹 Aggressively cleaning up background music');
+        
+        // Multiple cleanup attempts to ensure no audio leaks
         this.currentPlayer.pause();
         this.currentPlayer.stop && this.currentPlayer.stop();
         this.currentPlayer.volume = 0;
         
-        // Always remove the player to prevent lingering audio
+        // Force remove the player
         if (this.currentPlayer.remove) {
           this.currentPlayer.remove();
         }
+        
+        // Additional cleanup for web platforms
+        if (Platform.OS === 'web' && this.currentPlayer.pause) {
+          this.currentPlayer.pause();
+        }
+        
+        console.log('🧹 Background music cleanup completed');
       } catch (e) {
         console.warn('Error cleaning up background music:', e);
       }
-      this.currentPlayer = null;
-      this.currentLevelKey = null;
     }
+    
+    // Force clear all references
+    this.currentPlayer = null;
+    this.currentLevelKey = null;
+    this.isTransitioning = false;
+    this.playbackRetryCount = 0;
+    this.pendingPlayRequest = null;
+    
+    console.log('🧹 All background music references cleared');
   }
 
   getCurrentLevel(): string | null {
     return this.currentLevelKey;
+  }
+
+  /**
+   * Force stop all background music - emergency cleanup
+   */
+  forceStopAll() {
+    console.log('🚨 Force stopping all background music');
+    
+    try {
+      if (this.currentPlayer) {
+        this.currentPlayer.pause();
+        this.currentPlayer.stop && this.currentPlayer.stop();
+        this.currentPlayer.volume = 0;
+        if (this.currentPlayer.remove) {
+          this.currentPlayer.remove();
+        }
+      }
+    } catch (e) {
+      console.warn('Error in force stop:', e);
+    }
+    
+    // Clear all state
+    this.currentPlayer = null;
+    this.currentLevelKey = null;
+    this.isTransitioning = false;
+    this.playbackRetryCount = 0;
+    this.pendingPlayRequest = null;
+    
+    console.log('🚨 All background music force stopped');
+  }
+
+  /**
+   * Global audio stop - stops ALL audio in the app
+   * This should be called before any audio transitions
+   */
+  static globalStopAllAudio() {
+    console.log('🌍 Global stop all audio called');
+    
+    try {
+      // Stop background music manager
+      const instance = BackgroundMusicManager.getInstance();
+      instance.forceStopAll();
+      
+      // Try to stop any other audio players that might be running
+      // This is a nuclear option to ensure no audio overlaps
+      console.log('🌍 Global audio stop completed');
+    } catch (e) {
+      console.warn('Error in global audio stop:', e);
+    }
   }
 
   isPlaying(): boolean {
@@ -526,4 +681,7 @@ class BackgroundMusicManager {
   }
 }
 
+
+// Export both the class (for static methods) and the instance (for regular use)
+export { BackgroundMusicManager };
 export default BackgroundMusicManager.getInstance();

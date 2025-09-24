@@ -7,7 +7,8 @@ import {
   Modal, 
   Animated,
   useWindowDimensions,
-  ScrollView
+  ScrollView,
+  Platform
 } from 'react-native';
 
 import { useDynamicStyles } from '../styles/styles';
@@ -15,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalization } from '../hooks/useLocalization';
 import { createAudioPlayer } from 'expo-audio';
 import { useLevelCompletion } from '../hooks/useLevelCompletion';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface CongratsModalProps {
   showCongratsModal: boolean;
@@ -31,6 +33,8 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
   goToHome,
   levelName
 }) => {
+  const insets = useSafeAreaInsets();
+  const isIPhone16Series = Platform.OS === 'ios' && insets.top > 50;
   const dynamicStyles = useDynamicStyles();
   const { width: screenW, height: screenH } = useWindowDimensions();
   const isLandscape = screenW > screenH;
@@ -397,7 +401,8 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
           animationType="fade"
           onRequestClose={() => { /* Prevent accidental close */ }}
           supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
-          presentationStyle="overFullScreen"
+          presentationStyle={isIPhone16Series ? "fullScreen" : "overFullScreen"}
+          statusBarTranslucent
         >
       <View style={{
         flex: 1,
@@ -406,8 +411,10 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
         backgroundColor: 'rgba(0,0,0,0.6)',
         width: screenW,
         height: screenH,
-        paddingTop: isLandscape ? Math.max(screenH * 0.1, 20) : 0,
-        paddingBottom: isLandscape ? 20 : 0,
+        paddingTop: isLandscape ? Math.max(screenH * 0.1, 20) : (isIPhone16Series ? insets.top : 0),
+        paddingBottom: isLandscape ? 20 : (isIPhone16Series ? insets.bottom : 0),
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
       }}>
         {/* Modal Content */}
         <ScrollView 
@@ -416,12 +423,15 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
             justifyContent: isLandscape ? 'flex-start' : 'center',
             alignItems: 'center',
             minHeight: isLandscape ? undefined : '100%',
-            paddingVertical: isLandscape ? 10 : 40,
+            paddingVertical: isLandscape ? 10 : (isIPhone16Series ? 40 : 40),
             paddingHorizontal: 20,
+            paddingTop: isIPhone16Series ? insets.top + 20 : undefined,
           }}
           showsVerticalScrollIndicator={false}
           bounces={false}
           overScrollMode="never"
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior={isIPhone16Series ? "never" : "automatic"}
           style={{ 
             maxHeight: isLandscape ? screenH * 0.8 : '100%',
             width: '100%'
