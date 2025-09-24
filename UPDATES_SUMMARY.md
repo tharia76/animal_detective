@@ -32,6 +32,13 @@
 - Consistent behavior between local and deployed environments
 - Handles web audio autoplay policies properly
 
+**Additional Fixes**:
+1. **Fixed music initialization** - Music now plays automatically when entering levels without needing to toggle mute
+2. **Fixed dual music playback** - Prevented menu and level music from playing simultaneously by:
+   - Cleaning up level music when returning to menu from any exit point
+   - Menu screen now stops any lingering level music on focus
+   - Added cleanup calls in DiscoverScreen's home button and completion flow
+
 ### 🎮 Discover Screen Layout Improvements
 
 1. **Animal Grid Layout Optimization**

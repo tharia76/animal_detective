@@ -930,6 +930,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   useEffect(() => {
     const onFocus = () => {
       try {
+        // Stop any level background music that might still be playing
+        const BackgroundMusicManager = require('../src/services/BackgroundMusicManager').default;
+        BackgroundMusicManager.cleanup();
+        
         // Reset state when coming back
         if (playerRef.current) {
           playerRef.current.volume = volume; // Ensure volume is set correctly

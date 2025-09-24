@@ -917,20 +917,34 @@ export default function LevelScreenTemplate({
     return skyBackgroundImageUri;
   }, [levelName, skyBackgroundImageUri, currentAnimal?.isMoving]);
 
+  // Initialize BackgroundMusicManager mute state on mount
+  useEffect(() => {
+    console.log(`🎵 Initializing level ${levelName} with muted=${isMuted}`);
+    BackgroundMusicManager.setMuted(isMuted);
+  }, []); // Only on mount
+
   // --- BG MUSIC EFFECT (only play if instruction bubble is visible) ---
   // NOTE: Do NOT depend on isMuted here to avoid tearing down/recreating the player and losing position
   useEffect(() => {
     // Use global background music manager
-    if (showInstruction && !isMuted) {
+    if (showInstruction) {
+      console.log(`🎵 Level ${levelName}: showInstruction=true, playing music`);
+      // Always play the background music for this level first
       BackgroundMusicManager.playBackgroundMusic(levelName);
-    } else if (isMuted) {
-      BackgroundMusicManager.setMuted(true);
-    } else if (!showInstruction) {
+    } else {
+      console.log(`🎵 Level ${levelName}: showInstruction=false, pausing music`);
+      // Pause when instruction is hidden
       BackgroundMusicManager.pause();
     }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [levelName, bgMusic, showInstruction, isMuted]);
+  }, [levelName, bgMusic, showInstruction]);
+
+  // Handle mute state changes separately
+  useEffect(() => {
+    console.log(`🔇 Level ${levelName}: mute state changed to ${isMuted}`);
+    BackgroundMusicManager.setMuted(isMuted);
+  }, [isMuted, levelName]);
 
   // No cleanup needed - background music is managed globally and persists across levels
 
@@ -1526,7 +1540,8 @@ export default function LevelScreenTemplate({
     // Persist current progress before leaving the level
     try { void saveProgress(visitedAnimals); } catch (e) { /* noop */ }
     stopSound(false);
-    // Background music will persist and be handled by menu screen
+    // Stop level background music when going back to menu
+    BackgroundMusicManager.cleanup();
     onBackToMenu();
   }, [stopSound, onBackToMenu, saveProgress, visitedAnimals]);
 

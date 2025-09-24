@@ -1714,6 +1714,10 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           // Keep button enabled for debugging
           setAllAnimalsRevealed(true);
           
+          // Stop level background music before navigating back to menu
+          const BackgroundMusicManager = require('../services/BackgroundMusicManager').default;
+          BackgroundMusicManager.cleanup();
+          
           // Navigate back to menu
           if (onBackToMenu) {
             onBackToMenu();
@@ -2179,7 +2183,14 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           
           {/* Home Button */}
           <TouchableOpacity
-            onPress={onBackToMenu}
+            onPress={() => {
+              // Stop level background music before going to menu
+              const BackgroundMusicManager = require('../services/BackgroundMusicManager').default;
+              BackgroundMusicManager.cleanup();
+              if (onBackToMenu) {
+                onBackToMenu();
+              }
+            }}
             style={{
               position: 'absolute',
               left: isTablet ? -20 : 0,

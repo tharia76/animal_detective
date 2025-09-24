@@ -44,6 +44,7 @@ class BackgroundMusicManager {
   }
 
   async playBackgroundMusic(levelName: string, forceRestart: boolean = false) {
+    console.log(`🎵 playBackgroundMusic called for ${levelName}, muted: ${this.isMuted}`);
     const key = levelName.trim().toLowerCase();
     const source = BG_MUSIC_MAP[key];
 
@@ -54,6 +55,7 @@ class BackgroundMusicManager {
 
     // If same music is already playing and not forcing restart, just ensure it's playing
     if (this.currentLevelKey === key && this.currentPlayer && !forceRestart) {
+      console.log(`🎵 Same music already loaded for ${key}`);
       if (!this.isMuted) {
         try {
           // For web platform, we need to handle the promise properly
@@ -111,20 +113,28 @@ class BackgroundMusicManager {
       this.currentPlayer = player;
       this.currentLevelKey = key;
 
+      // Always try to play if not muted (don't check internal state during creation)
       if (!this.isMuted) {
         // For web platform, handle autoplay policies
         try {
+          console.log(`🎵 Starting playback for ${key}`);
           const playPromise = player.play();
           if (playPromise && typeof playPromise.then === 'function') {
-            playPromise.catch((e: any) => {
-              console.warn('Error playing background music:', e);
-              // On web, user interaction might be required
-              // Store the player to retry on next user interaction
-            });
+            playPromise
+              .then(() => {
+                console.log(`🎵 Successfully started playing ${key}`);
+              })
+              .catch((e: any) => {
+                console.warn('Error playing background music:', e);
+                // On web, user interaction might be required
+                // Store the player to retry on next user interaction
+              });
           }
         } catch (e) {
           console.warn('Error playing background music:', e);
         }
+      } else {
+        console.log(`🎵 Created player for ${key} but not playing because muted`);
       }
     } catch (e) {
       console.warn('Error creating background music player:', e);
@@ -134,7 +144,7 @@ class BackgroundMusicManager {
   }
 
   pause() {
-    this.isMuted = true;
+    console.log(`⏸️ pause() called, current player exists: ${!!this.currentPlayer}`);
     if (this.currentPlayer) {
       try {
         this.currentPlayer.pause();
@@ -145,15 +155,19 @@ class BackgroundMusicManager {
   }
 
   resume() {
-    this.isMuted = false;
-    if (this.currentPlayer) {
+    console.log(`▶️ resume() called, current player exists: ${!!this.currentPlayer}, muted: ${this.isMuted}`);
+    if (this.currentPlayer && !this.isMuted) {
       try {
         this.currentPlayer.volume = this.normalVolume * this.globalVolume;
         const playPromise = this.currentPlayer.play();
         if (playPromise && typeof playPromise.then === 'function') {
-          playPromise.catch((e: any) => {
-            console.warn('Error resuming background music:', e);
-          });
+          playPromise
+            .then(() => {
+              console.log(`▶️ Successfully resumed playback`);
+            })
+            .catch((e: any) => {
+              console.warn('Error resuming background music:', e);
+            });
         }
       } catch (e) {
         console.warn('Error resuming background music:', e);
@@ -162,6 +176,8 @@ class BackgroundMusicManager {
   }
 
   setMuted(muted: boolean) {
+    console.log(`🔇 setMuted called with ${muted}, current player exists: ${!!this.currentPlayer}`);
+    this.isMuted = muted;
     if (muted) {
       this.pause();
     } else {
