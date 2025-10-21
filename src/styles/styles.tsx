@@ -204,8 +204,8 @@ export function useDynamicStyles() {
       animalName: {
         fontSize: getResponsiveFontSize(isTabletDevice ? 56 : 50, scaleFactor), // Match user's portrait font size
         marginTop: 0,
-        fontWeight: Platform.OS === 'ios' ? ('800' as const) : ('700' as const),
-        fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto', // High-quality fonts
+        fontWeight: 'normal' as const,
+        fontFamily: 'SUSE_700Bold', // SUSE Mono font
         backgroundColor: '#FFEA00', // Solid yellow for crisp rendering
         paddingVertical: getResponsivePadding(isTabletDevice ? 24 : 20, scaleFactor), // Match portrait config
         paddingHorizontal: getResponsivePadding(isTabletDevice ? 48 : 32, scaleFactor), // Match portrait config
@@ -285,7 +285,7 @@ export function useDynamicStyles() {
       soundButton: {
         position: 'absolute',
         top: getResponsiveSpacing(65, scaleFactor) + (isTabletDevice && isLandscapeMode ? screenH * 0.1 : 0), // Move down 10% on tablet landscape (same level as instruction bubble)
-        left: getResponsiveSpacing(45, scaleFactor), // Match home button distance from edge
+        right: getResponsiveSpacing(45, scaleFactor), // Move to right side
         backgroundColor: 'orange', // Match home button color
         paddingVertical: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 25 : isTabletDevice ? 15 : 20, scaleFactor), // Bigger on tablet landscape
         paddingHorizontal: getResponsiveSpacing(isTabletDevice && isLandscapeMode ? 35 : isTabletDevice ? 22 : 28, scaleFactor), // Bigger on tablet landscape

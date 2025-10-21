@@ -1,0 +1,9 @@
+{
+  "watch": ["src/backend"],
+  "ext": "ts",
+  "ignore": ["node_modules", "src/**/*.test.ts", "src/**/*.spec.ts"],
+  "exec": "NODE_ENV=development ts-node --transpile-only src/backend/app.ts",
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

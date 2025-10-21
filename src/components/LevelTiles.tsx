@@ -167,6 +167,22 @@ const AnimatedTile = React.memo(({
   const visited = Math.max(0, Math.min(visitedCount ?? 0, levelAnimalCount));
   const progress = levelAnimalCount > 0 ? visited / levelAnimalCount : 0;
 
+  // Get level-specific text color
+  const getLevelTextColor = (level: string) => {
+    switch (level) {
+      case 'farm': return '#8B4513'; // Saddle brown
+      case 'forest': return '#228B22'; // Forest green
+      case 'ocean': return '#0066CC'; // Ocean blue
+      case 'desert': return '#D2691E'; // Chocolate/desert orange
+      case 'arctic': return '#4169E1'; // Royal blue
+      case 'insects': return '#556B2F'; // Dark olive green
+      case 'savannah': return '#DAA520'; // Goldenrod
+      case 'jungle': return '#006400'; // Dark green
+      case 'birds': return '#9932CC'; // Dark orchid/purple
+      default: return '#333333';
+    }
+  };
+
 
 
   return (
@@ -182,12 +198,13 @@ const AnimatedTile = React.memo(({
            marginRight: colIdx < columns - 1 ? margin : 0,
           borderRadius: 28,
           borderWidth: 4,
-           borderColor: animatedBorderColor,
+           borderColor: 'rgba(255, 255, 255, 0.8)', // Bright frosted white border
            shadowColor: getShadowColor(level, isLocked),
-           shadowOffset: { width: 0, height: 0 },
-           shadowOpacity: animatedShadowOpacity,
-           shadowRadius: 10,
-           elevation: 12,
+           shadowOffset: { width: 0, height: 10 },
+           shadowOpacity: 0.5,
+           shadowRadius: 20,
+           elevation: 15,
+           backgroundColor: 'rgba(255, 255, 255, 0.2)', // Subtle white background for glassy effect
          }}
       >
         <TouchableOpacity
@@ -219,15 +236,16 @@ const AnimatedTile = React.memo(({
                top: 0,
                left: 0,
                backgroundColor: getLevelBackgroundColor(level), // Fallback color
+               opacity: 1.0, // Full opacity for vibrant colors
              }}
             resizeMode="cover"
             fadeDuration={0} // No fade for instant display
           />
-          {/* Subtle vignette */}
+          {/* Subtle glassy overlay for depth without dulling colors */}
           <LinearGradient
-            colors={[ 'rgba(0,0,0,0.12)', 'rgba(0,0,0,0.04)', 'rgba(0,0,0,0.12)' ]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
+            colors={[ 'rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.08)' ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           />
                                {isLocked && (
@@ -236,6 +254,143 @@ const AnimatedTile = React.memo(({
                 <Ionicons name="lock-closed" size={40} color="white" />
               </View>
             </View>
+          )}
+          
+          {/* Level-specific images in top left corner */}
+          {level === 'farm' && (
+            <Image
+              source={require('../assets/images/cow_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+          {level === 'forest' && (
+            <Image
+              source={require('../assets/images/forest_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+          {level === 'ocean' && (
+            <Image
+              source={require('../assets/images/ocean_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+          {level === 'desert' && (
+            <Image
+              source={require('../assets/images/desert_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+          {level === 'arctic' && (
+            <Image
+              source={require('../assets/images/arctic_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+          {level === 'insects' && (
+            <Image
+              source={require('../assets/images/insect_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+          {level === 'savannah' && (
+            <Image
+              source={require('../assets/images/savannah_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+          {level === 'jungle' && (
+            <Image
+              source={require('../assets/images/jungle_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+          {level === 'birds' && (
+            <Image
+              source={require('../assets/images/bird_level.png')}
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                width: itemSize * 0.5,
+                height: itemSize * 0.5,
+                zIndex: 5,
+                transform: [{ rotate: '-15deg' }],
+              }}
+              resizeMode="contain"
+            />
           )}
           
           {/* Completion Checkmark - top right corner */}
@@ -286,15 +441,17 @@ const AnimatedTile = React.memo(({
               style={{
                 paddingVertical: 14,
                 paddingHorizontal: 28,
-                backgroundColor: getLevelBackgroundColor(level),
+                backgroundColor: 'rgba(255, 255, 255, 0.85)', // More opaque for better text readability
                 borderRadius: 24,
                 alignItems: 'center',
                 justifyContent: 'center',
                 shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
+                shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 5,
+                shadowRadius: 8,
+                elevation: 6,
+                borderWidth: 2,
+                borderColor: 'rgba(255, 255, 255, 0.95)', // Brighter frosted border
               }}
             >
               <Text
@@ -303,33 +460,17 @@ const AnimatedTile = React.memo(({
                   fontSize: isLandscape && itemSize >= 280 ? 30 : isLandscape ? 22 : 24, // Increased font sizes
                   fontWeight: 'bold',
                   fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-                  color: 'white',
+                  color: getLevelTextColor(level), // Unique color for each level
                   textAlign: 'center',
                   width: Math.floor(itemSize * 0.8),
                   textRendering: 'optimizeLegibility' as any,
+                  textShadowColor: 'rgba(255,255,255,0.8)',
+                  textShadowOffset: { width: 1, height: 1 },
+                  textShadowRadius: 3,
                 }}
               >
                 {t(level)}
               </Text>
-              
-              {/* Subtitle showing mission status */}
-              {levelAnimalCount > 0 && (
-                <Text
-                  numberOfLines={1}
-                  allowFontScaling={false}
-                  style={{
-                    fontSize: isLandscape && itemSize >= 280 ? 18 : isLandscape ? 14 : 16,
-                    fontWeight: '500',
-                    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    marginTop: 4,
-                    textAlign: 'center',
-                    textRendering: 'optimizeLegibility' as any,
-                  }}
-                >
-                  {isCompleted ? t('missionComplete') : t('animalsToDiscover').replace('{count}', levelAnimalCount.toString())}
-                </Text>
-              )}
             </View>
           </View>
         </TouchableOpacity>
@@ -344,7 +485,14 @@ const AnimatedTile = React.memo(({
               bottom: 6,
               height:30,
               borderRadius: 15,
-              backgroundColor: 'rgba(255,255,255,0.45)'
+              backgroundColor: 'rgba(255,255,255,0.9)', // Bright white glassy background
+              borderWidth: 2,
+              borderColor: 'rgba(255, 255, 255, 1)', // Solid white frosted border
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              elevation: 3,
             }}
           >
             <Animated.View
@@ -352,7 +500,7 @@ const AnimatedTile = React.memo(({
                 width: `${progress * 100}%`,
                 height: '100%',
                 borderRadius: 15,
-                backgroundColor: 'rgba(226, 70, 43, 0.98)'
+                backgroundColor: '#4CAF50' // Vibrant green progress indicator
               }}
             />
             <View
@@ -369,10 +517,10 @@ const AnimatedTile = React.memo(({
             >
               <Text
                 style={{
-                  color: '#fff',
-                  fontSize: 11,
-                  fontWeight: '700',
-                  textShadowColor: 'rgba(0,0,0,0.4)',
+                  color: '#1a1a1a',
+                  fontSize: 12,
+                  fontWeight: 'bold',
+                  textShadowColor: 'rgba(255,255,255,0.8)',
                   textShadowOffset: { width: 0, height: 1 },
                   textShadowRadius: 2,
                 }}

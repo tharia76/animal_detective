@@ -42,7 +42,7 @@ export default function OptimizedVideo({
       const unsubscribe = player.addListener('statusChange', (status) => {
         console.log('🎬 Video status:', status);
         
-        if (status.isLoaded) {
+        if ((status as any).isLoaded) {
           console.log('✅ Video loaded successfully');
           setIsLoading(false);
           setHasError(false);

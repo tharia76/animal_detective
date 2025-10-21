@@ -55,7 +55,6 @@ import { getResponsiveBackgroundStyles, getDeviceInfo } from '../utils/responsiv
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
-import { getLevelVideo } from '../utils/levelVideoMapping';
 import BackgroundMusicManager, { BackgroundMusicManager as BGMClass } from '../services/BackgroundMusicManager';
 import FacebookAnalytics from '../services/FacebookAnalytics';
 
@@ -391,8 +390,8 @@ export default function LevelScreenTemplate({
   const [levelCompleted, setLevelCompleted] = useState(false);
     const [wasAlreadyCompleted, setWasAlreadyCompleted] = useState(false); // Track if level was already completed when entering
   
-  // Video overlay state
-  const [showIntroVideo, setShowIntroVideo] = useState(true); // Start as true to hide UI immediately
+  // Video overlay state (videos disabled, so always false)
+  const [showIntroVideo, setShowIntroVideo] = useState(false); // Videos disabled - show UI immediately
   const [videoSource, setVideoSource] = useState<any>(null);
     const [showCompletionCelebration, setShowCompletionCelebration] = useState(false);
     const [screenLocked, setScreenLocked] = useState(false);
@@ -400,22 +399,7 @@ export default function LevelScreenTemplate({
   const [buttonsDisabledManually, setButtonsDisabledManually] = useState(false);
   const isClickingRef = useRef(false);
 
-  // Initialize video source for the level
-  useEffect(() => {
-    const video = getLevelVideo(levelName);
-    if (video) {
-      setVideoSource(video);
-      // Set video to show immediately to hide UI elements
-      setShowIntroVideo(visitedAnimals.size === 0 && !levelCompleted);
-    } else {
-      // If no video available, hide video overlay and show UI
-      setVideoSource(null);
-      setShowIntroVideo(false);
-    }
-  }, [levelName, visitedAnimals.size, levelCompleted]);
-
-  // Note: Video show/hide logic is now handled in the video source initialization useEffect above
-
+  
 
   const labelShowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickFlagClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2025,7 +2009,11 @@ export default function LevelScreenTemplate({
       <View style={[dynamicStyles.container, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
         {!showIntroVideo && (
           <TouchableOpacity style={[dynamicStyles.backToMenuButton]} onPress={goToHome}>
-             <Ionicons name="home" size={24} color="black" />
+             <Image 
+               source={require('../assets/images/home_icon.png')}
+               style={{ width: 36, height: 36 }}
+               resizeMode="contain"
+             />
           </TouchableOpacity>
         )}
         <View style={dynamicStyles.content}>
@@ -2105,10 +2093,13 @@ export default function LevelScreenTemplate({
             {!showDiscoverScreen && !showIntroVideo && (
               <View style={{
                 position: 'absolute',
-                top: Math.min(screenW, screenH) < 768 
-                  ? (isLandscape ? screenH * 0.05 : screenH * 0.05) // 5% from top on phones
-                  : (isLandscape ? 60 : 100), // Keep original for tablets
-                right: 15,
+                top: Math.max(
+                  safeAreaInsets.top + 10, // Always at least 10px below the notch/status bar
+                  Math.min(screenW, screenH) < 768 
+                    ? (isLandscape ? screenH * 0.05 : screenH * 0.05) // 5% from top on phones
+                    : (isLandscape ? 60 : 100) // Keep original for tablets
+                ),
+                left: Math.max(safeAreaInsets.left + 15, 15), // Respect left safe area (for landscape notch)
                 backgroundColor: '#FF4444',
                 borderRadius: 30,
                 paddingHorizontal: 20,
@@ -2144,7 +2135,11 @@ export default function LevelScreenTemplate({
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <Ionicons name="home" size={36} color="black" />
+                  <Image 
+                    source={require('../assets/images/home_icon.png')}
+                    style={{ width: 60, height: 60 }}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
 
                 {/* Counter Display */}
@@ -2218,26 +2213,35 @@ export default function LevelScreenTemplate({
                 </View>
 
                 {/* Notebook Button */}
-                <TouchableOpacity onPress={() => {
-                  try {
-                    const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
-                    clickPlayer.play();
-                    clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
-                      if (status?.didJustFinish) clickPlayer.remove();
-                    });
-                  } catch {}
-                  setShowDiscoverScreen(true);
-                }} style={{
-                  backgroundColor: '#FFD4A3', // Same orange as other buttons
-                  borderRadius: 30,
-                  padding: 15,
-                  width: 70,
-                  height: 70,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative'
-                }}>
-                  <Ionicons name="document-text" size={36} color="black" />
+                <TouchableOpacity 
+                  onPress={() => {
+                    try {
+                      const clickPlayer = createAudioPlayer(require('../assets/sounds/other/animal_click.mp3'));
+                      clickPlayer.play();
+                      clickPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                        if (status?.didJustFinish) clickPlayer.remove();
+                      });
+                    } catch {}
+                    setShowDiscoverScreen(true);
+                  }} 
+                  style={{
+                    backgroundColor: '#FFD4A3',
+                    borderRadius: 30,
+                    padding: 15,
+                    width: 70,
+                    height: 70,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative'
+                  }}>
+                  <Image 
+                    source={require('../assets/images/list_icon.png')}
+                    style={{ 
+                      width: 60, 
+                      height: 60
+                    }}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
               </View>
             )}
@@ -2368,11 +2372,6 @@ export default function LevelScreenTemplate({
                           }
                         ]}>
                           {currentAnimal?.name}
-                            {hasClickedCurrentAnimal && (
-                              <Text style={{ color: '#4CAF50' }}>
-                                {' ✓'}
-                              </Text>
-                            )}
                         </Animated.Text>
                       </View>
                     </Animated.View>

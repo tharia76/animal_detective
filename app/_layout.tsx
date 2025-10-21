@@ -16,6 +16,8 @@ import Animated, {
   interpolate,
   Extrapolate
 } from 'react-native-reanimated';
+import { LuckiestGuy_400Regular } from '@expo-google-fonts/luckiest-guy';
+import { SUSE_400Regular, SUSE_700Bold } from '@expo-google-fonts/suse';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -23,7 +25,9 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    // Add your custom fonts here if needed
+    LuckiestGuy_400Regular,
+    SUSE_400Regular,
+    SUSE_700Bold,
   });
 
   // Listen to orientation changes using useWindowDimensions

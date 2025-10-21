@@ -215,11 +215,11 @@ export const backgroundAssetManager = new BackgroundAssetManager();
 
 // Convenience function to queue common asset types
 export const queueLevelAssets = (levelName: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
-  const levelVideos = [
+  const levelVideos: any[] = [
     // Add level-specific videos based on level name
   ];
 
-  const levelImages = [
+  const levelImages: any[] = [
     // Add level-specific images based on level name
   ];
 

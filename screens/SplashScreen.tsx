@@ -51,13 +51,15 @@ export default function SplashScreen({ titleAnim, onLoadingComplete, loadingProg
       useNativeDriver: true,
     }).start();
     
-    // Show skip option after reasonable time
+    // Show skip option after reasonable time - use InteractionManager to avoid warning
     const skipTimer = setTimeout(() => {
-      setShowSkipOption(true);
+      InteractionManager.runAfterInteractions(() => {
+        setShowSkipOption(true);
+      });
     }, 8000);
     
     return () => clearTimeout(skipTimer);
-  }, []);
+  }, [fadeAnim]);
   
   // Skip to menu for faster startup
   const skipToPriority = useCallback(() => {

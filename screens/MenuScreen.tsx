@@ -21,7 +21,6 @@ import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
-import * as RNIap from 'react-native-iap';
 import { useAudioPlayer, createAudioPlayer } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -46,6 +45,7 @@ import { useForceOrientation } from '../src/hooks/useForceOrientation';
 import LanguageSelector from '../src/components/LanguageSelector';
 import LevelTiles from '../src/components/LevelTiles';
 import AnimatedFireflies from '../src/components/AnimatedFireflies';
+import AnimatedFlyingAnimals from '../src/components/AnimatedFlyingAnimals';
 import { setGlobalVolume } from '../src/components/LevelScreenTemplate';
 import { useLevelCompletion } from '../src/hooks/useLevelCompletion';
 import { getAnimals } from '../src/data/animals';
@@ -53,7 +53,6 @@ import { ImageCache } from '../src/utils/ImageCache';
 import { ImageRegistry } from '../src/utils/PersistentImageRegistry';
 import { preloadImages } from '../src/utils/preloadImages';
 import ScreenLoadingWrapper from '../src/components/ScreenLoadingWrapper';
-import ParentalGate from '../src/components/ParentalGate';
 import FacebookAnalytics from '../src/services/FacebookAnalytics';
 
 
@@ -67,9 +66,6 @@ const MAX_TILE_SIZE_LANDSCAPE = 200;
 const MIN_TILE_SIZE_PORTRAIT = 140;  // Slightly bigger minimum for portrait
 const MAX_TILE_SIZE_PORTRAIT = 180; // Slightly bigger maximum for portrait
 const RESPONSIVE_MARGIN = 6;
-
-// Product ID for unlocking all levels except Farm (used for both iOS App Store and Google Play)
-const PRODUCT_ID = 'animalDetectiveUnclock'; // Used for both iOS and Android
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
   farm: require('../src/assets/images/level-backgrounds/farm.webp'),
@@ -492,8 +488,6 @@ const createResponsiveStyles = (scaleFactor: number, width: number, height: numb
   });
 };
 
-const lockedLevels = LEVELS.filter(l => l !== 'farm' && l !== 'forest');
-
 // Helper function to play button sound
 const playButtonSound = (volume: number) => {
   if (volume > 0) {
@@ -614,9 +608,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [visitedCounts, setVisitedCounts] = useState<Record<string, number>>({});
 
-  // Payment state
-  const [iapInitialized, setIapInitialized] = useState(false);
-
   // Settings modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [volume, setVolume] = useState(0.8); // Default volume at 80%
@@ -694,41 +685,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
 
   // Placeholder for volume update effect - moved after player declaration
 
-
-  const [products, setProducts] = useState<RNIap.Product[]>([]);
-  const [purchaseInProgress, setPurchaseInProgress] = useState(false);
-  const [unlocked, setUnlocked] = useState<boolean>(false);
-  const [showParentalGate, setShowParentalGate] = useState(false);
-  
-  // Load unlocked state from storage on mount
-  useEffect(() => {
-    const loadUnlockedState = async () => {
-      try {
-        
-        const stored = await AsyncStorage.getItem('unlocked_all_levels');
-        if (stored === 'true') {
-          setUnlocked(true);
-        }
-      } catch (error) {
-        console.warn('Error loading unlocked state:', error);
-      }
-    };
-    loadUnlockedState();
-  }, []);
-  
-  // Save unlocked state to storage when it changes
-  const saveUnlockedState = useCallback(async (isUnlocked: boolean) => {
-    try {
-      await AsyncStorage.setItem('unlocked_all_levels', isUnlocked.toString());
-    } catch (error) {
-      console.warn('Error saving unlocked state:', error);
-    }
-  }, []);
-  
-
-
-  // Modal state for locked level
-  const [showUnlockModal, setShowUnlockModal] = useState(false);
 
   // Menu music now handled by BackgroundMusicManager - no separate player needed
   
@@ -916,212 +872,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     };
   }, [navigation]);
 
-  // IAP: Initialize and get products
-  useEffect(() => {
-    let purchaseUpdateSubscription: any;
-    let purchaseErrorSubscription: any;
-
-    async function initIAP() {
-      
-      try {
-        console.log('Initializing IAP connection...');
-        await RNIap.initConnection();
-        console.log('IAP connection successful');
-        setIapInitialized(true);
-
-        // Get product info
-        console.log('Requesting products for SKU:', PRODUCT_ID);
-        try {
-          const products = await RNIap.getProducts({ skus: [PRODUCT_ID] });
-          console.log('Received products:', products);
-          if (products && products.length > 0) {
-            setProducts(products);
-          } else {
-            console.warn('No products found for SKU:', PRODUCT_ID);
-            Alert.alert(
-              'Product Not Found',
-              `Product "${PRODUCT_ID}" not found in App Store. Please check your App Store Connect configuration.`
-            );
-          }
-        } catch (productError) {
-          console.error('Error fetching products:', productError);
-          Alert.alert(
-            'Product Error',
-            `Failed to fetch product information: ${productError.message || 'Unknown error'}`
-          );
-        }
-
-        // Check if already purchased
-        const purchases = await RNIap.getAvailablePurchases();
-        const hasUnlock = purchases.some(
-          (purchase) =>
-            purchase.productId === PRODUCT_ID ||
-            purchase.productId === PRODUCT_ID.replace('.unlockall', '.unlockall') // fallback
-        );
-        if (hasUnlock) {
-          setUnlocked(true);
-          saveUnlockedState(true);
-        }
-
-        // Listen for purchase updates
-        purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(async (purchase) => {
-          const receipt = purchase.transactionReceipt;
-          if (receipt) {
-            try {
-              // For iOS transactions, we need to finish them properly
-              await RNIap.finishTransaction({ purchase, isConsumable: false });
-              if (purchase.productId === PRODUCT_ID) {
-                setUnlocked(true);
-                saveUnlockedState(true);
-                setPurchaseInProgress(false);
-                
-                // Track successful purchase
-                FacebookAnalytics.trackPurchase(
-                  typeof products[0]?.price === 'number' ? products[0].price : 0,
-                  products[0]?.currency || 'USD',
-                  PRODUCT_ID
-                );
-                
-                Alert.alert(
-                  t('thankYou') || 'Thank You!',
-                  t('allLevelsNowUnlocked') || 'All levels are now unlocked!'
-                );
-              }
-            } catch (err) {
-              console.warn('finishTransaction error', err);
-              setPurchaseInProgress(false);
-            }
-          }
-        });
-
-        purchaseErrorSubscription = RNIap.purchaseErrorListener((error) => {
-          setPurchaseInProgress(false);
-          console.warn('Purchase error:', error);
-          
-          // Handle specific purchase errors
-          if (error.code === 'E_USER_CANCELLED') {
-            // User cancelled purchase - no need to show error
-            return;
-          }
-          
-          Alert.alert(
-            t('purchaseError') || 'Purchase Error',
-            error.message || t('somethingWentWrong') || 'Something went wrong. Please try again.'
-          );
-        });
-      } catch (e) {
-        console.warn('IAP initialization error:', e);
-        setIapInitialized(true);
-        // Don't show alert for initialization errors to avoid blocking the app
-      }
-    }
-
-    initIAP();
-
-    return () => {
-      try {
-        purchaseUpdateSubscription && purchaseUpdateSubscription.remove();
-        purchaseErrorSubscription && purchaseErrorSubscription.remove();
-        RNIap.endConnection();
-      } catch (e) {}
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Restore purchases
-  const handleRestore = useCallback(async () => {
-    setPurchaseInProgress(true);
-    try {
-      const purchases = await RNIap.getAvailablePurchases();
-      const hasUnlock = purchases.some(
-        (purchase) =>
-          purchase.productId === PRODUCT_ID ||
-          purchase.productId === PRODUCT_ID.replace('.unlockall', '.unlockall')
-      );
-      if (hasUnlock) {
-        setUnlocked(true);
-        saveUnlockedState(true);
-        Alert.alert(
-          t('restored') || 'Purchases Restored',
-          t('allLevelsNowUnlocked') || 'All levels are now unlocked!'
-        );
-      } else {
-        Alert.alert(
-          t('noPreviousPurchases') || 'No Previous Purchases',
-          t('noPurchasesFound') || 'No previous purchases were found to restore.'
-        );
-      }
-    } catch (e) {
-      console.warn('Restore purchases error:', e);
-      Alert.alert(
-        t('error') || 'Error',
-        t('couldNotRestorePurchases') || 'Could not restore purchases. Please try again.'
-      );
-    }
-    setPurchaseInProgress(false);
-  }, [t]);
-
-  // Show parental gate before purchase
-  const handleUnlock = useCallback(() => {
-    if (purchaseInProgress) {
-      return;
-    }
-    
-    if (!iapInitialized) {
-      Alert.alert(
-        'IAP Not Ready',
-        'In-App Purchase system is not ready yet. Please wait a moment and try again.'
-      );
-      return;
-    }
-    
-    // Show parental gate first
-    setShowParentalGate(true);
-  }, [purchaseInProgress, iapInitialized]);
-
-  // Actual purchase handler (called after parental gate success)
-  const handlePurchase = useCallback(async () => {
-    setPurchaseInProgress(true);
-    
-    // Track purchase attempt
-    FacebookAnalytics.trackUserEngagement('purchase_initiated', 'menu', {
-      product_id: PRODUCT_ID,
-      platform: Platform.OS
-    });
-    
-    try {
-      if (Platform.OS === 'ios') {
-        // For iOS, use standard In-App Purchase through react-native-iap
-        await RNIap.requestPurchase({ 
-          sku: PRODUCT_ID,
-          andDangerouslyFinishTransactionAutomaticallyIOS: false // Let us handle transaction completion
-        });
-      } else {
-        // For Android, use Google Play Billing
-        await RNIap.requestPurchase({ sku: PRODUCT_ID });
-      }
-    } catch (e) {
-      console.warn('Purchase error:', e);
-      setPurchaseInProgress(false);
-      // Show user-friendly error message
-      Alert.alert(
-        t('purchaseError') || 'Purchase Error',
-        t('couldNotCompletePurchase') || 'Could not complete purchase. Please try again.'
-      );
-    }
-  }, [t, products]);
-
-  // Handle parental gate success
-  const handleParentalGateSuccess = useCallback(() => {
-    setShowParentalGate(false);
-    handlePurchase();
-  }, [handlePurchase]);
-
-  // Handle parental gate cancel
-  const handleParentalGateCancel = useCallback(() => {
-    setShowParentalGate(false);
-  }, []);
-
   // Handle toggling level completion status
   const handleToggleCompletion = useCallback(
     async (level: string, isCompleted: boolean) => {
@@ -1212,19 +962,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       playButtonSound(volume);
       
       // Track level selection in analytics
-      FacebookAnalytics.trackLevelSelected(level, isLocked);
+      FacebookAnalytics.trackLevelSelected(level, false); // All levels are unlocked
       
       // Register user interaction for audio playback
       const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
       BackgroundMusicManager.getInstance().onUserInteraction();
-      
-      // If level is locked and user hasn't unlocked all levels, show unlock modal and STOP
-      if (isLocked && !unlocked) {
-        setShowUnlockModal(true);
-        // Track unlock modal shown
-        FacebookAnalytics.trackUserEngagement('unlock_modal_shown', level);
-        return; // CRITICAL: Don't proceed to open the level
-      }
       
       // Show destination background immediately
       setSelectedLevel(level);
@@ -1250,337 +992,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         onSelectLevel(level);
       }
     },
-    [onSelectLevel, volume, unlocked]
+    [onSelectLevel, volume]
   );
 
-  // Get price string for unlock button with sale pricing
-  const unlockPrice =
-    products && products.length > 0 && products[0].localizedPrice
-      ? products[0].localizedPrice
-      : t('salePrice');
-  
-  const originalPrice = t('originalPrice');
-  const salePrice = t('salePrice');
-
-
-
-  // Modal for locked level
+  // Modal for locked level - REMOVED (app is now free)
   const renderUnlockModal = () => {
-    if (!showUnlockModal) return null;
-    
-    // Detect landscape mode where we want vertical button layout
-    const isPhoneLandscape = isLandscape; // Use landscape orientation regardless of device size
-    
-    // Detect if this is a phone (smaller screen)
-    const isPhone = Math.min(width, height) < 600; // Phones typically have smaller dimensions
-    
-    
-    return (
-      <View style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(139, 69, 19, 0.4)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100000,
-        paddingHorizontal: 20,
-        paddingTop: insets.top,
-        paddingBottom: insets.bottom,
-        width: '100%',
-        height: '100%',
-      }} pointerEvents="auto">
-        <View style={[
-          responsiveStyles.modalContent,
-          isPhone && {
-            maxWidth: Math.min(380, width * 0.95), // Wider for phones
-            maxHeight: Math.min(350, height * 0.8), // Less tall for phones
-            padding: getResponsiveSpacing(15, scaleFactor), // Less padding for phones
-          }
-        ]}>
-            {/* Top Right Close Button */}
-            <TouchableOpacity
-              style={[
-                responsiveStyles.modalTopRightCloseButton,
-                isPhone && {
-                  width: getResponsiveSpacing(25, scaleFactor),
-                  height: getResponsiveSpacing(25, scaleFactor),
-                  top: getResponsiveSpacing(8, scaleFactor),
-                  right: getResponsiveSpacing(8, scaleFactor),
-                }
-              ]}
-              onPress={() => {
-                playButtonSound(volume);
-                setShowUnlockModal(false);
-              }}
-            >
-              <Text style={{
-                color: '#FFFFFF',
-                fontSize: isPhone ? getResponsiveFontSize(14, scaleFactor) : getResponsiveFontSize(16, scaleFactor),
-                fontWeight: 'bold',
-              }}>×</Text>
-            </TouchableOpacity>
-            
-            <Text style={[
-              responsiveStyles.modalTitle,
-              isPhone && { fontSize: getResponsiveFontSize(12, scaleFactor) } // Much smaller title for phones
-            ]}>{t('unlockAllLevelsToPlay')}</Text>
-            <Text style={[
-              responsiveStyles.modalText,
-              isPhone && { 
-                fontSize: getResponsiveFontSize(10, scaleFactor), // Much smaller text for phones
-                marginBottom: getResponsiveSpacing(10, scaleFactor), // Even less spacing for phones
-                lineHeight: getResponsiveFontSize(12, scaleFactor) // Tighter line height for phones
-              } // Smaller text for phones
-            ]}>
-              {t('thisLevelIsLocked')}
-            </Text>
-            {!unlocked && (
-              <>
-                <TouchableOpacity
-                  style={[
-                    responsiveStyles.modalUnlockButton, 
-                    { 
-                      backgroundColor: '#FF8C00',
-                      shadowColor: '#FF8C00',
-                      shadowOffset: { width: 0, height: 8 },
-                      shadowOpacity: 0.6,
-                      shadowRadius: 15,
-                      elevation: 12,
-                      borderWidth: 3,
-                      borderColor: '#FF6B00',
-                      borderRadius: getResponsiveSpacing(15, scaleFactor),
-                      minHeight: getResponsiveSpacing(45, scaleFactor),
-                      paddingHorizontal: getResponsiveSpacing(20, scaleFactor),
-                      paddingVertical: getResponsiveSpacing(12, scaleFactor),
-                    },
-                    isPhone && {
-                      paddingHorizontal: getResponsiveSpacing(6, scaleFactor), // Much smaller padding
-                      paddingVertical: getResponsiveSpacing(3, scaleFactor), // Much smaller vertical padding
-                      minHeight: getResponsiveSpacing(20, scaleFactor), // Much smaller height
-                      marginBottom: getResponsiveSpacing(2, scaleFactor), // Much less margin
-                    }
-                  ]}
-                    onPress={() => {
-                      playButtonSound(volume);
-                      setShowUnlockModal(false);
-                      handleUnlock();
-                    }}
-                    disabled={purchaseInProgress}
-                  >
-                    {purchaseInProgress ? (
-                      // Show loading indicator during purchase processing
-                      <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                        <Text style={[responsiveStyles.modalUnlockButtonText, { 
-                          marginTop: 1, 
-                          fontSize: isPhone ? getResponsiveFontSize(8, scaleFactor) : responsiveStyles.modalUnlockButtonText.fontSize - 1, 
-                          textShadowColor: 'rgba(0,0,0,0.7)', 
-                          textShadowRadius: 1 
-                        }]}>
-                          {t('processing') || 'Processing...'}
-                        </Text>
-                      </View>
-                    ) : isPhoneLandscape ? (
-                      // Phone landscape: Stack icon and text vertically, centered
-                      <View style={{ alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                        <Ionicons 
-                          name="lock-open" 
-                          size={isPhone ? getResponsiveFontSize(10, scaleFactor) : responsiveStyles.modalUnlockButtonText.fontSize + 2} 
-                          color="#FFFFFF" 
-                        />
-                        <View style={{ alignItems: 'center', paddingVertical: isPhone ? 1 : 4 }}>
-                          {/* Sale Badge */}
-                          <View style={{
-                            backgroundColor: '#FF4444',
-                            paddingHorizontal: isPhone ? 6 : 12,
-                            paddingVertical: isPhone ? 1 : 3,
-                            borderRadius: isPhone ? 6 : 12,
-                            marginBottom: isPhone ? 3 : 6,
-                            shadowColor: '#FF4444',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 4,
-                            elevation: 4,
-                          }}>
-                            <Text style={{
-                              color: 'white',
-                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 4,
-                              fontWeight: '800',
-                              letterSpacing: 0.5,
-                            }}>
-{t('limitedSale')}
-                            </Text>
-                          </View>
-                          
-                          {/* Main Title */}
-                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-                           
-                            <Text style={[responsiveStyles.modalUnlockButtonText, { 
-                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize,
-                              fontWeight: '700',
-                              color: 'white',
-                              textAlign: 'center',
-                              textShadowColor: 'rgba(0,0,0,0.3)',
-                              textShadowRadius: 2,
-                            }]}>
-                              {t('unlockAllMissions')}
-                            </Text>
-                          </View>
-                          
-                          {/* Pricing Section */}
-                          <View style={{ 
-                            flexDirection: 'row', 
-                            alignItems: 'baseline', 
-                            justifyContent: 'center',
-                            backgroundColor: 'rgba(255,255,255,0.15)',
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            marginTop: 2,
-                          }}>
-                            <Text style={{ 
-                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize + 4, 
-                              fontWeight: '900',
-                              color: '#000000',
-                              textShadowColor: 'rgba(0,0,0,0.5)', 
-                              textShadowRadius: 3,
-                              letterSpacing: 0.5,
-                            }}>
-                              {salePrice}
-                            </Text>
-                            <View style={{ marginLeft: 8, alignItems: 'center' }}>
-                              <Text style={{ 
-                                fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 3, 
-                                textDecorationLine: 'line-through',
-                                color: '#000000',
-                                fontWeight: '600',
-                                textShadowColor: 'rgba(0,0,0,0.3)', 
-                             }}>
-                                {originalPrice}
-                              </Text>
-                              <Text style={{
-                                fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 5,
-                                color: '#4CAF50',
-                                fontWeight: '700',
-                                marginTop: 1,
-                              }}>
-{t('save40')}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                    ) : (
-                      // Other orientations: Keep original horizontal layout
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 1 }}>
-                        <Ionicons 
-                          name="lock-open" 
-                          size={responsiveStyles.modalUnlockButtonText.fontSize} 
-                          color="#FFFFFF" 
-                        />
-                        <View style={{ alignItems: 'center', paddingVertical: isPhone ? 1 : 4 }}>
-                          {/* Sale Badge */}
-                          <View style={{
-                            backgroundColor: '#FF4444',
-                            paddingHorizontal: isPhone ? 6 : 12,
-                            paddingVertical: isPhone ? 1 : 3,
-                            borderRadius: isPhone ? 6 : 12,
-                            marginBottom: isPhone ? 3 : 6,
-                            shadowColor: '#FF4444',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 4,
-                            elevation: 4,
-                          }}>
-                            <Text style={{
-                              color: 'white',
-                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 4,
-                              fontWeight: '800',
-                              letterSpacing: 0.5,
-                            }}>
-{t('limitedSale')}
-                            </Text>
-                          </View>
-                          
-                          {/* Main Title */}
-                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-                            <Image
-                              source={require('../src/assets/images/unlock.png')}
-                              style={{
-                                width: responsiveStyles.modalUnlockButtonText.fontSize + 8,
-                                height: responsiveStyles.modalUnlockButtonText.fontSize + 8,
-                                marginRight: 8,
-                              }}
-                              resizeMode="contain"
-                              fadeDuration={0}
-                            />
-                            <Text style={[responsiveStyles.modalUnlockButtonText, { 
-                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize,
-                              fontWeight: '700',
-                              color: 'white',
-                              textAlign: 'center',
-                              textShadowColor: 'rgba(0,0,0,0.3)',
-                              textShadowRadius: 2,
-                            }]}>
-                              {t('unlockAllMissions')}
-                            </Text>
-                          </View>
-                          
-                          {/* Pricing Section */}
-                          <View style={{ 
-                            flexDirection: 'row', 
-                            alignItems: 'baseline', 
-                            justifyContent: 'center',
-                            backgroundColor: 'rgba(255,255,255,0.15)',
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            marginTop: 2,
-                          }}>
-                            <Text style={{ 
-                              fontSize: responsiveStyles.modalUnlockButtonText.fontSize + 4, 
-                              fontWeight: '900',
-                              color: '#000000',
-                              textShadowColor: 'rgba(0,0,0,0.5)', 
-                              textShadowRadius: 3,
-                              letterSpacing: 0.5,
-                            }}>
-                              {salePrice}
-                            </Text>
-                            <View style={{ marginLeft: 8, alignItems: 'center' }}>
-                              <Text style={{ 
-                                fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 3, 
-                                textDecorationLine: 'line-through',
-                                color: '#000000',
-                                fontWeight: '600',
-                                textShadowColor: 'rgba(0,0,0,0.3)', 
-                                textShadowRadius: 1,
-                              }}>
-                                {originalPrice}
-                              </Text>
-                              <Text style={{
-                                fontSize: responsiveStyles.modalUnlockButtonText.fontSize - 5,
-                                color: '#4CAF50',
-                                fontWeight: '700',
-                                marginTop: 1,
-                              }}>
-{t('save40')}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                
-              </>
-            )}
-        </View>
-      </View>
-    );
+    return null; // App is now free, no unlock modal needed
   };
 
   // Remove the loading check since ScreenLoadingWrapper handles it
@@ -1600,16 +1017,9 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const settingsModalTop = Math.max(0, Math.round((currentHeight - settingsModalHeight) / 2));
   const settingsModalLeft = Math.max(0, Math.round((currentWidth - settingsModalWidth) / 2));
  
-  // Determine locked state for each level
+  // All levels are unlocked (app is now free)
   const getIsLocked = (level: string) => {
-    // Farm and Forest levels are unlocked by default
-    if (level === 'farm' || level === 'forest') return false;
-    
-    // If user has purchased unlock, all levels are unlocked
-    if (unlocked) return false;
-    
-    // All other levels are locked
-    return true;
+    return false; // All levels are always unlocked
   };
 
   // Gather all assets that need to be preloaded
@@ -1652,6 +1062,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         <View style={{ flex: 1, backgroundColor: 'transparent' }}>
           {/* Animated Fireflies Background - only render after layout is ready */}
           {layoutReady && <AnimatedFireflies />}
+          {/* Animated Flying Animals Background */}
+          {layoutReady && <AnimatedFlyingAnimals />}
 
 
           {currentIsLandscape ? (
@@ -1734,97 +1146,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                       >
                         {t('pickWorldMessage')}
                       </Text>
-                      {!unlocked && (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: getResponsiveSpacing(10, scaleFactor) }}>
-                        
-                          <ReAnimated.View style={bounceStyle}>
-                            <TouchableOpacity
-                              onPress={() => {
-                                playButtonSound(volume);
-                                handleUnlock();
-                              }}
-                              disabled={purchaseInProgress}
-                              activeOpacity={0.9}
-                              style={{ 
-                                borderRadius: getResponsiveSpacing(18, scaleFactor),
-                                backgroundColor: '#FF8C00',
-                                paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
-                                paddingVertical: getResponsiveSpacing(6, scaleFactor),
-                                elevation: 2,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 1 },
-                                shadowOpacity: 0.2,
-                                shadowRadius: 2,
-                              }}
-                            >
-                            <View style={{ alignItems: 'center', paddingVertical: 2 }}>
-                              {/* Compact Sale Badge */}
-                              <View style={{
-                                backgroundColor: '#FF4444',
-                                paddingHorizontal: 6,
-                                paddingVertical: 1,
-                                borderRadius: 8,
-                                marginBottom: 2,
-                              }}>
-                                <Text style={{
-                                  color: 'white',
-                                  fontSize: getResponsiveFontSize(7, scaleFactor),
-                                  fontWeight: '800',
-                                  letterSpacing: 0.3,
-                                }}>
-                                  {t('sale')}
-                                </Text>
-                              </View>
-                              
-                              {/* Compact Title */}
-                              <Text style={{ 
-                                color: 'white', 
-                                fontWeight: '700', 
-                                fontSize: getResponsiveFontSize(8, scaleFactor), 
-                                textShadowColor: 'rgba(0,0,0,0.4)', 
-                                textShadowRadius: 2,
-                                textAlign: 'center',
-                                marginBottom: 1,
-                              }}>
-                                {t('unlockAllMissions')}
-                              </Text>
-                              
-                              {/* Compact Pricing */}
-                              <View style={{ 
-                                flexDirection: 'row', 
-                                alignItems: 'center',
-                                backgroundColor: 'rgba(255,255,255,0.2)',
-                                paddingHorizontal: 6,
-                                paddingVertical: 2,
-                                borderRadius: 10,
-                              }}>
-                                <Text style={{ 
-                                  color: '#000000', 
-                                  fontWeight: '900', 
-                                  fontSize: getResponsiveFontSize(10, scaleFactor), 
-                                  textShadowColor: 'rgba(0,0,0,0.5)', 
-                                  textShadowRadius: 2,
-                                }}>
-                                  {salePrice}
-                                </Text>
-                                <Text style={{ 
-                                  color: '#000000', 
-                                  fontWeight: '600', 
-                                  fontSize: getResponsiveFontSize(7, scaleFactor), 
-                                  textDecorationLine: 'line-through', 
-                                  marginLeft: 4,
-                                  textShadowColor: 'rgba(0,0,0,0.3)', 
-                                  textShadowRadius: 1,
-                                }}>
-                                  {originalPrice}
-                                </Text>
-                              </View>
-                            </View>
-
-                          </TouchableOpacity>
-                        </ReAnimated.View>
-                        </View>
-                      )}
                   </View>
                   
                   <LevelTiles
@@ -1902,143 +1223,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                       >
                         {t('pickWorldMessage')}
                       </Text>
-                      {!unlocked && (
-                                                <View style={{ flexDirection: 'column', alignItems: 'center', marginLeft: getResponsiveSpacing(12, scaleFactor) }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Image
-                              source={require('../src/assets/images/unlock.png')}
-                              style={{
-                                width: 56,
-                                height: 56,
-                                marginRight: getResponsiveSpacing(14, scaleFactor),
-                              }}
-                              resizeMode="contain"
-                              fadeDuration={0}
-                            />
-                            <ReAnimated.View style={bounceStyle2}>
-                              <TouchableOpacity
-                                onPress={() => {
-                                  playButtonSound(volume);
-                                  handleUnlock();
-                                }}
-                                disabled={purchaseInProgress}
-                                activeOpacity={0.9}
-                                style={{ 
-                                  borderRadius: getResponsiveSpacing(20, scaleFactor),
-                                  backgroundColor: '#FF8C00',
-                                  paddingHorizontal: getResponsiveSpacing(16, scaleFactor),
-                                  paddingVertical: getResponsiveSpacing(8, scaleFactor),
-                                  elevation: 2,
-                                  shadowColor: '#000',
-                                  shadowOffset: { width: 0, height: 1 },
-                                  shadowOpacity: 0.2,
-                                  shadowRadius: 2,
-                                }}
-                              >
-                              <View style={{ alignItems: 'center', paddingVertical: 3 }}>
-                                {/* Compact Sale Badge */}
-                                <View style={{
-                                  backgroundColor: '#FF4444',
-                                  paddingHorizontal: 8,
-                                  paddingVertical: 2,
-                                  borderRadius: 10,
-                                  marginBottom: 3,
-                                }}>
-                                  <Text style={{
-                                    color: 'white',
-                                    fontSize: getResponsiveFontSize(8, scaleFactor),
-                                    fontWeight: '800',
-                                    letterSpacing: 0.3,
-                                  }}>
-                                    {t('sale')}
-                                  </Text>
-                                </View>
-                                
-                                {/* Compact Title */}
-                                <Text style={{ 
-                                  color: 'white', 
-                                  fontWeight: '700', 
-                                  fontSize: getResponsiveFontSize(10, scaleFactor), 
-                                  textShadowColor: 'rgba(0,0,0,0.4)', 
-                                  textShadowRadius: 2,
-                                  textAlign: 'center',
-                                  marginBottom: 2,
-                                }}>
-                                  {t('unlockAllMissions')}
-                                </Text>
-                                
-                                {/* Compact Pricing */}
-                                <View style={{ 
-                                  flexDirection: 'row', 
-                                  alignItems: 'center',
-                                  backgroundColor: 'rgba(255,255,255,0.2)',
-                                  paddingHorizontal: 8,
-                                  paddingVertical: 3,
-                                  borderRadius: 12,
-                                }}>
-                                  <Text style={{ 
-                                    color: '#000000', 
-                                    fontWeight: '900', 
-                                    fontSize: getResponsiveFontSize(12, scaleFactor), 
-                                    textShadowColor: 'rgba(0,0,0,0.5)', 
-                                    textShadowRadius: 2,
-                                  }}>
-                                    {salePrice}
-                                  </Text>
-                                  <Text style={{ 
-                                    color: '#000000', 
-                                    fontWeight: '600', 
-                                    fontSize: getResponsiveFontSize(9, scaleFactor), 
-                                    textDecorationLine: 'line-through', 
-                                    marginLeft: 6,
-                                    textShadowColor: 'rgba(0,0,0,0.3)', 
-                                    textShadowRadius: 1,
-                                  }}>
-                                    {originalPrice}
-                                  </Text>
-                                </View>
-                              </View>
-
-                              </TouchableOpacity>
-                            </ReAnimated.View>
-                          </View>
-                          
-                          {/* Restore Purchases Button */}
-                          <TouchableOpacity
-                            onPress={() => {
-                              playButtonSound(volume);
-                              handleRestore();
-                            }}
-                            disabled={purchaseInProgress}
-                            activeOpacity={0.8}
-                            style={{ 
-                              marginTop: getResponsiveSpacing(8, scaleFactor),
-                              borderRadius: getResponsiveSpacing(15, scaleFactor),
-                              backgroundColor: '#6C7B7F',
-                              paddingHorizontal: getResponsiveSpacing(12, scaleFactor),
-                              paddingVertical: getResponsiveSpacing(6, scaleFactor),
-                              elevation: 1,
-                              shadowColor: '#000',
-                              shadowOffset: { width: 0, height: 1 },
-                              shadowOpacity: 0.15,
-                              shadowRadius: 1,
-                              borderWidth: 1,
-                              borderColor: 'rgba(255, 255, 255, 0.3)',
-                            }}
-                          >
-                            <Text style={{ 
-                              color: 'white', 
-                              fontWeight: '600', 
-                              fontSize: getResponsiveFontSize(8, scaleFactor), 
-                              textShadowColor: 'rgba(0,0,0,0.3)', 
-                              textShadowRadius: 1,
-                              textAlign: 'center',
-                            }}>
-                              {purchaseInProgress ? t('processing') : t('restorePurchases')}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
                     </View>
                   <LevelTiles
                     key="portrait-tiles-stable"
@@ -2063,7 +1247,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
               </ScrollView>
             </>
           )}
-          {renderUnlockModal()}
           
           {/* Settings Full Screen */}
           {showSettingsModal && volume !== undefined && typeof volume === 'number' && (
@@ -2321,74 +1504,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                     </View>
                   </View>
 
-                  {/* Restore Purchases Section */}
-                  {!unlocked && (
-                    <View style={{ marginBottom: 40 }}>
-                      <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginBottom: 20,
-                        paddingHorizontal: 8,
-                      }}>
-                        <View style={{
-                          width: 4,
-                          height: 20,
-                          backgroundColor: '#4CAF50',
-                          borderRadius: 2,
-                          marginRight: 12,
-                        }} />
-                        <Text style={{
-                          fontSize: 18,
-                          fontWeight: '700',
-                          color: '#612915',
-                          textShadowColor: 'rgba(76, 175, 80, 0.2)',
-                          textShadowOffset: { width: 0, height: 1 },
-                          textShadowRadius: 1,
-                        }}>
-                          {t('restorePurchases') || 'Restore Purchases'}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => {
-                          playButtonSound(volume);
-                          handleRestore();
-                        }}
-                        disabled={purchaseInProgress}
-                        style={{
-                          backgroundColor: purchaseInProgress ? '#9E9E9E' : '#4CAF50',
-                          borderRadius: 18,
-                          padding: 16,
-                          alignItems: 'center',
-                          minHeight: 50,
-                          flexDirection: 'row',
-                          justifyContent: 'center',
-                          shadowColor: '#4CAF50',
-                          shadowOffset: { width: 0, height: 3 },
-                          shadowOpacity: purchaseInProgress ? 0.2 : 0.4,
-                          shadowRadius: 6,
-                          elevation: 5,
-                          borderWidth: 1,
-                          borderColor: 'rgba(76, 175, 80, 0.3)',
-                          opacity: purchaseInProgress ? 0.7 : 1,
-                        }}
-                      >
-                        <Ionicons 
-                          name="refresh-circle" 
-                          size={20} 
-                          color="white" 
-                          style={{ marginRight: 8 }}
-                        />
-                        <Text style={{
-                          color: 'white',
-                          fontSize: 16,
-                          fontWeight: 'bold',
-                        }}>
-                          {purchaseInProgress ? t('processing') : t('restorePurchases')}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
                   {/* Reset All Levels Section */}
                   <View style={{ marginBottom: 40 }}>
                     <View style={{
@@ -2499,13 +1614,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       </ImageBackground>
       )}
     </View>
-    
-    {/* Parental Gate Modal */}
-    <ParentalGate
-      visible={showParentalGate}
-      onSuccess={handleParentalGateSuccess}
-      onCancel={handleParentalGateCancel}
-    />
     </ScreenLoadingWrapper>
   );
 }

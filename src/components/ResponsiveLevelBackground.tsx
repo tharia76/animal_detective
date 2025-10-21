@@ -118,7 +118,7 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
             height: backgroundStyles.height,
             width: backgroundStyles.width,
           },
-          backgroundStyles.transform && { transform: backgroundStyles.transform }
+          backgroundStyles.transform && { transform: backgroundStyles.transform as any }
         ]}
         resizeMode={backgroundStyles.resizeMode}
         onLoad={handleImageLoad}
@@ -169,7 +169,7 @@ export const withResponsiveBackground = <P extends object>(
       backgroundSource={backgroundSource}
       isMoving={isMoving}
     >
-      <WrappedComponent {...props} ref={ref} />
+      <WrappedComponent {...props as P} ref={ref} />
     </ResponsiveLevelBackground>
   ));
 };

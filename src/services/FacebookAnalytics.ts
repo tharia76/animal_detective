@@ -1,4 +1,4 @@
-import { AppEventsLogger } from 'expo-facebook';
+import * as Facebook from 'expo-facebook';
 import { Platform } from 'react-native';
 
 /**
@@ -18,8 +18,8 @@ class FacebookAnalyticsService {
     try {
       this.appId = appId || '2048296882646951';
       
-      // Initialize App Events Logger
-      await AppEventsLogger.initializeAsync(this.appId);
+      // Initialize Facebook SDK
+      await Facebook.initializeAsync({ appId: this.appId });
       
       this.isInitialized = true;
       console.log('📊 Facebook Analytics initialized');
@@ -33,7 +33,7 @@ class FacebookAnalyticsService {
    */
   async trackAppOpen() {
     try {
-      await AppEventsLogger.logEvent('app_open', {
+      await Facebook.logEventAsync('app_open', {
         platform: Platform.OS,
         app_version: '1.0.0',
         timestamp: Date.now()
@@ -59,7 +59,7 @@ class FacebookAnalyticsService {
         parameters.completion_time = completionTime;
       }
       
-      await AppEventsLogger.logEvent('level_completed', parameters);
+      await Facebook.logEventAsync('level_completed', parameters);
       console.log(`📊 Level completed: ${levelName}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -81,7 +81,7 @@ class FacebookAnalyticsService {
         parameters.discovery_order = discoveryOrder;
       }
       
-      await AppEventsLogger.logEvent('animal_discovered', parameters);
+      await Facebook.logEventAsync('animal_discovered', parameters);
       console.log(`📊 Animal discovered: ${animalName}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -93,10 +93,10 @@ class FacebookAnalyticsService {
    */
   async trackPurchase(price: number, currency: string = 'USD', productId?: string) {
     try {
-      await AppEventsLogger.logPurchase(price, currency);
+      await Facebook.logPurchaseAsync(price, currency);
       
       if (productId) {
-        await AppEventsLogger.logEvent('purchase_completed', {
+        await Facebook.logEventAsync('purchase_completed', {
           product_id: productId,
           price: price,
           currency: currency,
@@ -125,7 +125,7 @@ class FacebookAnalyticsService {
         Object.assign(parameters, additionalParams);
       }
       
-      await AppEventsLogger.logEvent('user_engagement', parameters);
+      await Facebook.logEventAsync('user_engagement', parameters);
       console.log(`📊 User engagement: ${action}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -137,9 +137,9 @@ class FacebookAnalyticsService {
    */
   async trackLevelSelected(levelName: string, isLocked: boolean = false) {
     try {
-      await AppEventsLogger.logEvent('level_selected', {
+      await Facebook.logEventAsync('level_selected', {
         level_name: levelName,
-        is_locked: isLocked,
+        is_locked: isLocked ? 'true' : 'false',
         timestamp: Date.now()
       });
       console.log(`📊 Level selected: ${levelName}`);
@@ -153,7 +153,7 @@ class FacebookAnalyticsService {
    */
   async trackSessionStarted() {
     try {
-      await AppEventsLogger.logEvent('session_started', {
+      await Facebook.logEventAsync('session_started', {
         platform: Platform.OS,
         timestamp: Date.now()
       });
@@ -178,7 +178,7 @@ class FacebookAnalyticsService {
         parameters.old_value = String(oldValue);
       }
       
-      await AppEventsLogger.logEvent('settings_changed', parameters);
+      await Facebook.logEventAsync('settings_changed', parameters);
       console.log(`📊 Settings changed: ${settingName}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -198,7 +198,7 @@ class FacebookAnalyticsService {
         Object.assign(eventParams, parameters);
       }
       
-      await AppEventsLogger.logEvent(eventName, eventParams);
+      await Facebook.logEventAsync(eventName, eventParams);
       console.log(`📊 Custom event tracked: ${eventName}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -223,7 +223,7 @@ class FacebookAnalyticsService {
    */
   async trackAppInstall() {
     try {
-      await AppEventsLogger.logEvent('app_install', {
+      await Facebook.logEventAsync('app_install', {
         platform: Platform.OS,
         timestamp: Date.now()
       });
@@ -238,7 +238,7 @@ class FacebookAnalyticsService {
    */
   async trackTutorialCompleted(stepName: string, totalSteps: number) {
     try {
-      await AppEventsLogger.logEvent('tutorial_completed', {
+      await Facebook.logEventAsync('tutorial_completed', {
         step_name: stepName,
         total_steps: totalSteps,
         timestamp: Date.now()
@@ -263,7 +263,7 @@ class FacebookAnalyticsService {
         parameters.level_name = levelName;
       }
       
-      await AppEventsLogger.logEvent('achievement_unlocked', parameters);
+      await Facebook.logEventAsync('achievement_unlocked', parameters);
       console.log(`📊 Achievement unlocked: ${achievementName}`);
     } catch (error) {
       console.warn('Analytics error:', error);

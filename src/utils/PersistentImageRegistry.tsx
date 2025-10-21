@@ -22,15 +22,23 @@ class PersistentImageRegistry {
   ): React.ReactElement {
     if (this.imageComponents.has(key)) {
       const existingImage = this.imageComponents.get(key)!;
-      // Clone with new style to allow dynamic sizing
-      return React.cloneElement(existingImage, { style: baseStyle });
+      // Clone with new style to allow dynamic sizing.
+      // `React.cloneElement` only accepts props that are valid for the underlying element, so we must carry over existing props and merge style.
+      const existingProps: any = existingImage.props || {};
+      return React.cloneElement(
+        existingImage,
+        {
+          ...existingProps,
+          style: [existingProps.style, baseStyle].filter(Boolean),
+        }
+      );
     }
 
     // Create the image component once
     const imageComponent = (
       <Image
         source={source}
-        style={baseStyle}
+        style={baseStyle as any}
         resizeMode={resizeMode}
         fadeDuration={0}
         key={key}
@@ -49,7 +57,7 @@ class PersistentImageRegistry {
     const cached = this.imageComponents.get(key);
     if (cached && style) {
       // Return with updated style
-      return React.cloneElement(cached, { style });
+      return React.cloneElement(cached as any, { style: style as any });
     }
     return cached || null;
   }

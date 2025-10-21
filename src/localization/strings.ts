@@ -86,7 +86,7 @@ export const strings = {
       arcticCollection: 'Arctic Friends Collection',
       animalsToDiscover: '{count} animals to discover',
       missionComplete: '🏆 Mission Complete!',
-      missionNotebook: '{level} Mission Notebook!',
+      missionNotebook: '{level} Mission!',
       resetMissionTitle: 'Are you sure?',
       resetMissionMessage: 'This will clear your progress for this mission.',
       yesReset: 'Yes, Reset It',
@@ -118,6 +118,7 @@ export const strings = {
       completeMission: 'Complete Mission',
       completeMissionCelebration: '🎉 COMPLETE MISSION! 🎉',
       sound: 'Sound',
+      dragAnimalHere: 'Drag animal here',
   
   
     animals: {
@@ -324,7 +325,7 @@ export const strings = {
     arcticCollection: 'Коллекция арктических друзей',
     animalsToDiscover: 'Ещё {count} зверюшек',
     missionComplete: '🏆 Миссия выполнена!',
-    missionNotebook: 'Блокнот миссии {level}!',
+    missionNotebook: 'Миссия {level}!',
     resetMissionTitle: 'Точно?',
     resetMissionMessage: 'Это сбросит весь прогресс по этой миссии.',
     yesReset: 'Да, сбросить',
@@ -356,6 +357,7 @@ export const strings = {
       levelDiscoveredBirds: 'Птиц',
       completeMission: 'Завершить миссию',
       completeMissionCelebration: '🎉 МИССИЯ ЗАВЕРШЕНА! 🎉',
+      dragAnimalHere: 'Перетащи зверюшку сюда',
     
     // Parental Gate Strings
     parentalPermissionRequired: 'Требуется разрешение родителей',
@@ -598,7 +600,7 @@ export const strings = {
       arcticCollection: 'Kutup Dostları Koleksiyonu',
       animalsToDiscover: 'Keşfedilecek {count} dost',
       missionComplete: '🏆 Görev Tamam!',
-      missionNotebook: '{level} Görev Defteri!',
+      missionNotebook: '{level} Görevi!',
       resetMissionTitle: 'Emin misin?',
       resetMissionMessage: 'Bu, bu görevdeki ilerlemeni sıfırlar.',
       yesReset: 'Evet, Sıfırla',
@@ -630,6 +632,7 @@ export const strings = {
         completeMission: 'Görevi Tamamla',
         completeMissionCelebration: '🎉 GÖREV TAMAMLANDI! 🎉',
         sound: 'Ses',
+        dragAnimalHere: 'Hayvan dostunu buraya sürükle',
   
   
     animals: {

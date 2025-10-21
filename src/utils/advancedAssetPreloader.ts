@@ -55,7 +55,6 @@ const BACKGROUND_ASSETS = [
   require('../assets/images/congrats-bg.png'),
   require('../assets/images/discovered_number.png'),
   require('../assets/images/icon.png'),
-  require('../assets/images/discover/discover_bg.png'),
   
   // Background elements
   require('../assets/images/level-backgrounds/leaves/leaf1.png'),
@@ -214,14 +213,14 @@ class SmartAssetPreloader {
       await this.loadAssetBatch(CRITICAL_ASSETS, 2, onProgress, 'critical');
       
       // Allow UI to update
-      await new Promise(resolve => InteractionManager.runAfterInteractions(resolve));
+      await new Promise<void>(resolve => InteractionManager.runAfterInteractions(() => resolve(undefined)));
       
       // Phase 2: Load priority assets (high priority)
       console.log('🎯 Phase 2: Loading priority assets...');
       await this.loadAssetBatch(PRIORITY_ASSETS, 3, onProgress, 'priority');
       
       // Another UI update opportunity
-      await new Promise(resolve => InteractionManager.runAfterInteractions(resolve));
+      await new Promise<void>(resolve => InteractionManager.runAfterInteractions(() => resolve()));
       
       // Phase 3: Load background assets (low priority, non-blocking)
       console.log('🌄 Phase 3: Loading background assets...');

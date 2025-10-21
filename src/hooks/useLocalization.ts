@@ -46,7 +46,7 @@ export const useLocalization = (): UseLocalizationReturn => {
   const t = useCallback(
     (key: string, options?: any): string => {
       const translation = i18n.t(key, { lng: lang, ...options });
-      return translation || key;
+      return translation as string || key;
     },
     [lang]
   );
