@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,6 +7,7 @@ import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 import ScreenLoadingWrapper from '../../src/components/ScreenLoadingWrapper';
+import { getLevelAssets } from '../../src/utils/getLevelAssets';
 
 // Define Props for the screen
 type ForestScreenProps = {
@@ -18,7 +19,6 @@ type ForestScreenProps = {
 
 export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: ForestScreenProps) {
   const { lang, t } = useLocalization();
-  const [allAssetsLoaded, setAllAssetsLoaded] = useState(false);
   
   // Load the forest background image
   const FOREST_BG = require('../../src/assets/images/level-backgrounds/forest.webp');
@@ -89,18 +89,22 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
     })();
   }, [forestAnimals.length]);
 
+  // Gather all assets to preload including animal sprites, sounds, UI images, leaves, etc.
+  const forestAssets = useMemo(() => {
+    return getLevelAssets('Forest', forestAnimals);
+  }, [forestAnimals]);
+
   return (
     <ScreenLoadingWrapper
+      assetsToLoad={forestAssets}
       loadingText={t('loading') || 'Loading Forest...'}
       backgroundColor="#87CEEB"
       minLoadingTime={800}
       onAssetsLoaded={() => {
-        requestAnimationFrame(() => {
-          setAllAssetsLoaded(true);
-        });
+        // Assets loaded, screen will be ready
       }}
     >
-      {allAssetsLoaded && bgUri && typeof initialIndex === 'number' ? (
+      {bgUri && typeof initialIndex === 'number' ? (
         <LevelScreenTemplate
           levelName="Forest"
           animals={forestAnimals}

@@ -30,9 +30,6 @@ const MovingBg = ({
   // SLOW IT DOWN: Increase duration to 40s per full cycle
   const SCROLL_DURATION = 20000; // 40s per full cycle
 
-  // Track orientation
-  const isPortrait = screenH >= screenW;
-
   // Default to screen size, but update after image loads
   const [imgWidth, setImgWidth] = useState<number>(screenW);
   const [imgHeight, setImgHeight] = useState<number>(screenH);
@@ -68,16 +65,12 @@ const MovingBg = ({
         try {
           const resolved = Image.resolveAssetSource(backgroundImageUri);
           if (mounted && resolved) {
-            // For portrait: scale to fill height, for landscape: scale to fill width
-            if (isPortrait) {
-              const scale = effectiveHeight / resolved.height;
+            // Scale to cover the entire screen
+            const scaleX = effectiveWidth / resolved.width;
+            const scaleY = effectiveHeight / resolved.height;
+            const scale = Math.max(scaleX, scaleY) * 1.1; // Add 10% extra to ensure full coverage
               setImgWidth(resolved.width * scale);
-              setImgHeight(effectiveHeight);
-            } else {
-              const scale = effectiveWidth / resolved.width;
-              setImgWidth(effectiveWidth);
               setImgHeight(resolved.height * scale);
-            }
           }
         } catch (error) {
           console.warn('Error resolving asset source:', error);
@@ -91,16 +84,12 @@ const MovingBg = ({
           backgroundImageUri,
           (width, height) => {
             if (mounted) {
-              // For portrait: scale to fill height, for landscape: scale to fill width
-              if (isPortrait) {
-                const scale = effectiveHeight / height;
+              // Scale to cover the entire screen
+              const scaleX = effectiveWidth / width;
+              const scaleY = effectiveHeight / height;
+              const scale = Math.max(scaleX, scaleY) * 1.1; // Add 10% extra to ensure full coverage
                 setImgWidth(width * scale);
-                setImgHeight(effectiveHeight);
-              } else {
-                const scale = effectiveWidth / width;
-                setImgWidth(effectiveWidth);
                 setImgHeight(height * scale);
-              }
             }
           },
           () => {
@@ -115,7 +104,7 @@ const MovingBg = ({
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [backgroundImageUri, effectiveHeight, effectiveWidth, screenW, isPortrait]);
+  }, [backgroundImageUri, effectiveHeight, effectiveWidth, screenW, screenH]);
 
   useEffect(() => {
     let isMounted = true;
@@ -139,8 +128,8 @@ const MovingBg = ({
     };
   }, [scrollX, imgWidth]);
 
-  // To hide the black line, slightly overlap the images by a fraction of a pixel
-  const overlap = 5;
+  // To hide the black line, overlap the images generously
+  const overlap = 10;
 
   // Directional logic for seamless loop
   // If movingDirection is 'left', images move leftward (right to left)
@@ -179,28 +168,20 @@ const MovingBg = ({
 
   const [{ first, second }] = getTransforms();
 
-  // For landscape, center vertically if image is not as tall as screen
-  // For portrait, center horizontally if image is not as wide as screen
+  // Ensure images cover the entire screen
   const getImageStyle = (base: any) => {
-    if (isPortrait) {
-      // Portrait: image fills height, may be wider than screen
+    // Always ensure full coverage - center the oversized image
+    // Use Math.min to ensure negative offsets (images extend beyond container)
+    const topOffset = Math.min(0, (effectiveHeight - imgHeight) / 2) - 5;
+    const leftOffset = Math.min(0, (effectiveWidth - imgWidth) / 2) - 5;
+    
       return {
         ...base,
-        top: 0,
-        left: (screenW - imgWidth) / 2, // center horizontally if needed
+      top: topOffset,
+      left: leftOffset,
         width: imgWidth + overlap,
-        height: imgHeight,
+      height: imgHeight + overlap,
       };
-    } else {
-      // Landscape: image fills width, may be shorter than screen
-      return {
-        ...base,
-        top: containerHeight ? 0 : (effectiveHeight - imgHeight) / 2, // If custom height, start at top; otherwise center
-        left: 0,
-        width: imgWidth + overlap,
-        height: imgHeight,
-      };
-    }
   };
 
   return (
@@ -208,6 +189,7 @@ const MovingBg = ({
       <Animated.Image
         source={imageSource}
         resizeMode="cover"
+        fadeDuration={0}
         style={[
           getImageStyle({
             position: 'absolute',
@@ -226,6 +208,7 @@ const MovingBg = ({
       <Animated.Image
         source={imageSource}
         resizeMode="cover"
+        fadeDuration={0}
         style={[
           getImageStyle({
             position: 'absolute',
@@ -248,8 +231,10 @@ const MovingBg = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    width: '100%',
-    height: '100%',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     overflow: 'hidden',
     backgroundColor: 'transparent', // Changed from black to transparent
   },

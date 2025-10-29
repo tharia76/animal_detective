@@ -124,6 +124,8 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         blurRadius={0}
+        fadeDuration={0}
+        imageStyle={{ cache: 'force-cache' }}
       >
         {/* Fallback color overlay when image is loading or fails to load */}
         {!isImageLoaded && (

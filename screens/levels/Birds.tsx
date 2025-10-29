@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
@@ -6,6 +6,7 @@ import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 import ScreenLoadingWrapper from '../../src/components/ScreenLoadingWrapper';
+import { getLevelAssets } from '../../src/utils/getLevelAssets';
 
 // Define Props for the screen
 type BirdsScreenProps = {
@@ -17,7 +18,6 @@ type BirdsScreenProps = {
 
 export default function BirdsScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: BirdsScreenProps) {
   const { lang, t } = useLocalization();
-  const [allAssetsLoaded, setAllAssetsLoaded] = useState(false);
   
   // Load the birds background image
   const BIRDS_BG = require('../../src/assets/images/level-backgrounds/birds.webp');
@@ -40,18 +40,22 @@ export default function BirdsScreen({ onBackToMenu, backgroundImageUri, skyBackg
     load();
   }, []);
 
+  // Gather all assets to preload including animal sprites, sounds, UI images, feathers, etc.
+  const birdsAssets = useMemo(() => {
+    return getLevelAssets('Birds', birdsAnimals);
+  }, [birdsAnimals]);
+
   return (
     <ScreenLoadingWrapper
+      assetsToLoad={birdsAssets}
       loadingText={t('loading') || 'Loading Birds...'}
       backgroundColor="#87ceeb"
       minLoadingTime={800}
       onAssetsLoaded={() => {
-        requestAnimationFrame(() => {
-          setAllAssetsLoaded(true);
-        });
+        // Assets loaded, screen will be ready
       }}
     >
-      {allAssetsLoaded && bgUri ? (
+      {bgUri ? (
         <LevelScreenTemplate
           levelName="Birds"
           animals={birdsAnimals}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
@@ -6,6 +6,7 @@ import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 import ScreenLoadingWrapper from '../../src/components/ScreenLoadingWrapper';
+import { getLevelAssets } from '../../src/utils/getLevelAssets';
 
 // Define Props for the screen
 type InsectsScreenProps = {
@@ -17,7 +18,6 @@ type InsectsScreenProps = {
 
 export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: InsectsScreenProps) {
   const { lang, t } = useLocalization();
-  const [allAssetsLoaded, setAllAssetsLoaded] = useState(false);
   
   // Load the insects background image
   const INSECTS_BG = require('../../src/assets/images/level-backgrounds/insect.webp');
@@ -40,20 +40,22 @@ export default function InsectsScreen({ onBackToMenu, backgroundImageUri, skyBac
     load();
   }, []);
 
-
+  // Gather all assets to preload including animal sprites, sounds, UI images, flowers, etc.
+  const insectsAssets = useMemo(() => {
+    return getLevelAssets('Insects', insectsAnimals);
+  }, [insectsAnimals]);
 
   return (
     <ScreenLoadingWrapper
+      assetsToLoad={insectsAssets}
       loadingText={t('loading') || 'Loading Insects...'}
       backgroundColor="#87CEEB"
       minLoadingTime={800}
       onAssetsLoaded={() => {
-        requestAnimationFrame(() => {
-          setAllAssetsLoaded(true);
-        });
+        // Assets loaded, screen will be ready
       }}
     >
-      {allAssetsLoaded && bgUri ? (
+      {bgUri ? (
         <LevelScreenTemplate
           levelName="Insects"
           animals={insectsAnimals}

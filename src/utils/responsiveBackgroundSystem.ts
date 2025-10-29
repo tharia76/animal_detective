@@ -197,22 +197,22 @@ const LEVEL_BACKGROUND_CONFIGS = {
   jungle: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'center',
+      verticalAlignment: 'bottom',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.25, scale: 1.2, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.3, scale: 1.15, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.1, scale: 1.15, verticalAlignment: 'bottom' },
+        landscape: { topOffset: -0.1, scale: 1.1, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0.15, scale: 1.1, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.2, scale: 1.05, verticalAlignment: 'center' }
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'bottom' },
+        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.2, scale: 1.25, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.25, scale: 1.2, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.05, scale: 1.1, verticalAlignment: 'bottom' },
+        landscape: { topOffset: 0, scale: 1.05, verticalAlignment: 'center' }
       }
     }
   },
@@ -220,22 +220,22 @@ const LEVEL_BACKGROUND_CONFIGS = {
   savannah: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'center',
+      verticalAlignment: 'bottom',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.4, scale: 1.0, verticalAlignment: 'center' },
-        landscape: { topOffset: 0.3, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.1, scale: 1.15, verticalAlignment: 'bottom' },
+        landscape: { topOffset: -0.1, scale: 1.1, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0.05, scale: 1.0, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.1, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'bottom' },
+        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.1, scale: 1.05, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.8, scale: 1.05, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.05, scale: 1.1, verticalAlignment: 'bottom' },
+        landscape: { topOffset: 0, scale: 1.05, verticalAlignment: 'center' }
       }
     }
   },
@@ -289,22 +289,22 @@ const LEVEL_BACKGROUND_CONFIGS = {
   insects: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'center',
+      verticalAlignment: 'bottom',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.2, scale: 1.15, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.2, scale: 1.1, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.1, scale: 1.15, verticalAlignment: 'bottom' },
+        landscape: { topOffset: -0.1, scale: 1.1, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0.1, scale: 1.05, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.1, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'bottom' },
+        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.15, scale: 1.2, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.15, scale: 1.15, verticalAlignment: 'center' }
+        portrait: { topOffset: 0.05, scale: 1.1, verticalAlignment: 'bottom' },
+        landscape: { topOffset: 0, scale: 1.05, verticalAlignment: 'center' }
       }
     }
   }
@@ -318,10 +318,6 @@ export const getResponsiveBackgroundStyles = (
 ): BackgroundStyles => {
   const level = levelName.toLowerCase();
   const config = LEVEL_BACKGROUND_CONFIGS[level as keyof typeof LEVEL_BACKGROUND_CONFIGS];
-  
-  if (level === 'savannah') {
-    console.log('🦁 SAVANNAH PROCESSING:', { level, configExists: !!config, deviceType: deviceInfo.deviceType, isLandscape: deviceInfo.isLandscape });
-  }
   
   if (!config) {
     console.warn(`No configuration found for level: ${level}`);
@@ -387,22 +383,6 @@ export const getResponsiveBackgroundStyles = (
   if (scale !== 1.0) {
     styles.transform = [{ scale }];
   }
-  
-  console.log(`🦁 SAVANNAH DEBUG - Background styles for ${level} (${deviceInfo.deviceType} ${orientation}):`, {
-    top: styles.top,
-    height: styles.height,
-    scale,
-    topOffset,
-    verticalAlignment,
-    configFound: !!config,
-    deviceOverride: deviceOverride,
-    deviceInfo: {
-      width,
-      height,
-      aspectRatio: deviceInfo.aspectRatio,
-      safeArea: { top: safeAreaTop, bottom: safeAreaBottom, left: safeAreaLeft, right: safeAreaRight }
-    }
-  });
   
   return styles;
 };

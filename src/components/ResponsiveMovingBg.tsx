@@ -68,14 +68,14 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
       const calculateDimensions = (originalWidth: number, originalHeight: number) => {
         if (!mounted) return;
         
-        // For moving backgrounds, we want to fill the entire screen
-        const containerHeight = deviceInfo.height;
-        const containerWidth = deviceInfo.width;
+        // For moving backgrounds, we want to fill the entire screen including safe areas
+        const containerHeight = deviceInfo.height + safeAreaInsets.top + safeAreaInsets.bottom;
+        const containerWidth = deviceInfo.width + safeAreaInsets.left + safeAreaInsets.right;
         
-        // Scale image to cover the entire screen
+        // Scale image to cover the entire screen - use Math.max to ensure full coverage
         const scaleX = containerWidth / originalWidth;
         const scaleY = containerHeight / originalHeight;
-        const scale = Math.max(scaleX, scaleY); // Remove extra overscan - scaling is handled by background system
+        const scale = Math.max(scaleX, scaleY) * 1.1; // Add 10% extra to ensure full coverage
         
         const scaledWidth = originalWidth * scale;
         const scaledHeight = originalHeight * scale;
@@ -183,38 +183,18 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
 
   // Apply positioning for fullscreen images
   const getImageStyle = (baseTransform: any) => {
-    const overlap = 2; // Small overlap to hide seams
+    const overlap = 10; // Generous overlap to hide seams
     
     // Center the image on the screen, accounting for safe areas
     const totalWidth = deviceInfo.width + safeAreaInsets.left + safeAreaInsets.right;
     const totalHeight = deviceInfo.height + safeAreaInsets.top + safeAreaInsets.bottom;
     
-    let leftOffset = -(imgWidth - totalWidth) / 2;
-    let topOffset = -(imgHeight - totalHeight) / 2;
-    
-    // Apply custom positioning for Savannah level to show more ground
-    if (levelName?.toLowerCase() === 'savannah') {
-      const isMobileDevice = deviceInfo.deviceType === 'phone' || deviceInfo.deviceType === 'foldable';
-      
-      if (isMobileDevice) {
-        // Move background - treat foldable same as phone
-        const groundOffset = deviceInfo.isLandscape ? 
-          deviceInfo.height * -0.4 :  // 50% up in landscape
-          deviceInfo.height * 0.4;    // 40% down in portrait
-        topOffset = topOffset + groundOffset;
-        
-        console.log('🦁🦁🦁 SAVANNAH MOVING BG - Mobile positioning applied:', { 
-          originalTopOffset: -(imgHeight - totalHeight) / 2,
-          groundOffset,
-          finalTopOffset: topOffset,
-          deviceType: deviceInfo.deviceType,
-          isLandscape: deviceInfo.isLandscape,
-          screenSize: { width: deviceInfo.width, height: deviceInfo.height }
-        });
-      }
-    }
+    // Ensure full coverage by using Math.min to keep images covering the screen
+    // Add extra buffer (-5) to prevent any gaps
+    let leftOffset = Math.min(0, -(imgWidth - totalWidth) / 2) - 5;
+    let topOffset = Math.min(0, -(imgHeight - totalHeight) / 2) - 5;
 
-    // Apply custom positioning for Forest level to show more ground
+    // Apply custom positioning for specific levels to show more ground
     if (levelName?.toLowerCase() === 'forest') {
       const isMobileDevice = deviceInfo.deviceType === 'phone' || deviceInfo.deviceType === 'foldable';
       
@@ -241,7 +221,7 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
       top: topOffset,
       left: leftOffset,
       width: imgWidth + overlap,
-      height: imgHeight,
+      height: imgHeight + overlap,
       transform: [baseTransform],
     };
   };
@@ -256,16 +236,6 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
       topOffset: -(imgHeight - (deviceInfo.height + safeAreaInsets.top + safeAreaInsets.bottom)) / 2
     }
   });
-
-  // Add extra debug for Savannah
-  if (levelName?.toLowerCase() === 'savannah') {
-    console.log('🦁🦁🦁 SAVANNAH LEVEL DETECTED IN MOVING BG!', {
-      levelName,
-      deviceType: deviceInfo.deviceType,
-      isPhone: deviceInfo.deviceType === 'phone',
-      screenDimensions: { width: deviceInfo.width, height: deviceInfo.height }
-    });
-  }
 
   // Add extra debug for Forest
   if (levelName?.toLowerCase() === 'forest') {
@@ -299,6 +269,7 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
       <Animated.Image
         source={imageSource}
         resizeMode="cover"
+        fadeDuration={0}
         style={getImageStyle({
           translateX: scrollX.interpolate({
             inputRange: first.inputRange,
@@ -312,6 +283,7 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
       <Animated.Image
         source={imageSource}
         resizeMode="cover"
+        fadeDuration={0}
         style={getImageStyle({
           translateX: scrollX.interpolate({
             inputRange: second.inputRange,

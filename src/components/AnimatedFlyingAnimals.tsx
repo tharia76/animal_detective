@@ -207,6 +207,7 @@ const AnimatedFlyingAnimals: React.FC = () => {
             },
           ]}
           resizeMode="contain"
+          fadeDuration={0}
         />
       </Animated.View>
     );

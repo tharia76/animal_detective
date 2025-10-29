@@ -69,6 +69,8 @@ export default function FastBackground({
       style={style}
       resizeMode={resizeMode}
       onLoadEnd={() => setIsLoading(false)}
+      fadeDuration={0}
+      imageStyle={{ cache: 'force-cache' }}
     >
       {showLoader && isLoading && (
         <View style={{ 

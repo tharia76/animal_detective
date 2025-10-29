@@ -38,7 +38,6 @@ export default function App() {
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [titleAnim] = useState(() => new Animated.Value(0));
   const [assetsReady, setAssetsReady] = useState(false);
-  const [fadeAnim] = useState(() => new Animated.Value(1));
   const [loadingProgress, setLoadingProgress] = useState(0);
 
 
@@ -162,27 +161,22 @@ export default function App() {
 
   // Instant loading overlay with asset preloading
   const handleSelectLevel = useCallback(async (level: string) => {
-    // Safety check: Only allow farm/forest levels or if user has unlocked all levels
+    // Safety check: Only allow farm/ocean/forest levels or if user has unlocked all levels
     // This prevents locked levels from being accessed even if they somehow get through
-    
-    // TEMPORARY: Allow all levels for testing
-    /* ORIGINAL CODE - RESTORE AFTER TESTING
-    const isUnlockedLevel = level === 'farm' || level === 'forest';
+    const isUnlockedLevel = level === 'farm' || level === 'ocean' || level === 'forest';
     const hasUnlockedAll = await AsyncStorage.getItem('unlocked_all_levels') === 'true';
     
     if (!isUnlockedLevel && !hasUnlockedAll) {
       console.warn('Attempted to access locked level:', level, '- blocking access');
       return; // Don't open locked levels
     }
-    */
     
     // Track level selection
-    FacebookAnalytics.trackLevelSelected(level, false);
+    const isLocked = !isUnlockedLevel && !hasUnlockedAll;
+    FacebookAnalytics.trackLevelSelected(level, isLocked);
     
     // Set selected level immediately to avoid black flash
     setSelectedLevel(level);
-    // Reset fade animation to ensure smooth transition
-    fadeAnim.setValue(1);
     
     // Preload level assets during loading
     const preloadAssets = async () => {
@@ -219,14 +213,12 @@ export default function App() {
     
     // Start preloading immediately
     preloadAssets();
-  }, [fadeAnim]);
+  }, []);
 
   const handleBackToMenu = useCallback(() => {
     // Go back to menu immediately to avoid black flash
     setSelectedLevel(null);
-    // Reset fade animation to ensure smooth transition
-    fadeAnim.setValue(1);
-  }, [fadeAnim]);
+  }, []);
 
   if (showSplash || !assetsReady) {
     return <SplashScreen titleAnim={titleAnim} onLoadingComplete={handleSplashComplete} loadingProgress={loadingProgress} />;
@@ -342,22 +334,20 @@ export default function App() {
     <>
       <StatusBar hidden />
       <View style={{ flex: 1, backgroundColor: '#FFDAB9' }}>
-        <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-          {selectedLevel == null ? (
-            assetsReady ? (
-              <MenuScreen
-                onSelectLevel={handleSelectLevel}
-                backgroundImageUri={null} // No preloaded menu image for now
-              />
-            ) : (
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFDAB9' }}>
-                <ActivityIndicator size="large" color="orange" />
-              </View>
-            )
+        {selectedLevel == null ? (
+          assetsReady ? (
+            <MenuScreen
+              onSelectLevel={handleSelectLevel}
+              backgroundImageUri={null} // No preloaded menu image for now
+            />
           ) : (
-            renderLevelScreen()
-          )}
-        </Animated.View>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFDAB9' }}>
+              <ActivityIndicator size="large" color="orange" />
+            </View>
+          )
+        ) : (
+          renderLevelScreen()
+        )}
       </View>
     </>
   );

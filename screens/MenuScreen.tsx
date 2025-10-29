@@ -25,6 +25,7 @@ import { useAudioPlayer, createAudioPlayer } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CommonActions } from '@react-navigation/native';
+import PurchaseService from '../src/services/PurchaseService';
 
 import ReAnimated, { 
   useSharedValue, 
@@ -535,6 +536,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   
   // Selected level state
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  
+  // Unlock modal state
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [lockedLevelClicked, setLockedLevelClicked] = useState<string | null>(null);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [productPrice, setProductPrice] = useState<string | null>(null);
 
   // Get animals data for level tile subtitles
   const animals = getAnimals(lang);
@@ -600,12 +607,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const bounceScale2 = useSharedValue(1);
 
   // Use dimensions directly for more stable layouts
-  const [layoutReady, setLayoutReady] = useState(true); // Set to true since wrapper handles loading
-
-  const [bgReady, setBgReady] = useState(true); // Set to true since wrapper handles loading
-  const [bgUri, setBgUri] = useState<string | null>(null);
-  const [imgsReady, setImgsReady] = useState(true); // Set to true since wrapper handles loading
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [visitedCounts, setVisitedCounts] = useState<Record<string, number>>({});
 
   // Settings modal state
@@ -734,11 +735,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     };
   };
 
-  // Handle layout ready state - instant
-  useEffect(() => {
-    setLayoutReady(true);
-  }, [width, height, isLandscape]);
-
   // Menu music now handled by BackgroundMusicManager - no separate player needed
 
   // Initialize gradient animations
@@ -810,18 +806,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
 
   // Menu music cleanup now handled by BackgroundMusicManager
 
-  // Notify parent when screen is ready
+  // Load visited counts for each level from AsyncStorage (non-blocking)
   useEffect(() => {
-    if (assetsLoaded && onScreenReady) {
-      onScreenReady();
-    }
-  }, [onScreenReady, assetsLoaded]);
-
-  // Load visited counts for each level from AsyncStorage (optimized)
-  useEffect(() => {
+    // Start with empty counts - menu renders immediately
+    // Load counts in background without blocking render
     const loadVisitedCounts = async () => {
       try {
-        // Load all at once for instant results
         const entries = await Promise.all(
           LEVELS.map(async (lvl) => {
             try {
@@ -847,7 +837,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       }
     };
 
-    // Load immediately - no delays
+    // Load in background - don't block initial render
     loadVisitedCounts();
   }, []);
 
@@ -961,8 +951,17 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     (level, isLocked) => {
       playButtonSound(volume);
       
+      // Show unlock modal if level is locked
+      if (isLocked) {
+        console.log('Level is locked:', level);
+        setLockedLevelClicked(level);
+        setShowUnlockModal(true);
+        FacebookAnalytics.trackLevelSelected(level, true);
+        return;
+      }
+      
       // Track level selection in analytics
-      FacebookAnalytics.trackLevelSelected(level, false); // All levels are unlocked
+      FacebookAnalytics.trackLevelSelected(level, false);
       
       // Register user interaction for audio playback
       const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
@@ -994,10 +993,138 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     },
     [onSelectLevel, volume]
   );
+  
+  // Handle unlock all levels
+  const handleUnlockAll = useCallback(async () => {
+    try {
+      playButtonSound(volume);
+      setIsPurchasing(true);
+      
+      // Purchase unlock all levels
+      const success = await PurchaseService.purchaseUnlockAll();
+      
+      if (success) {
+        // Update state immediately
+        setUnlockedAllLevels(true);
+        
+        // Close modal
+        setShowUnlockModal(false);
+        setLockedLevelClicked(null);
+        
+        // Show success message
+        Alert.alert(
+          t('unlockAllLevels') || 'Unlock All Missions',
+          t('allLevelsNowUnlocked') || 'All missions are now open!'
+        );
+      } else {
+        // User canceled or purchase failed
+        Alert.alert(
+          t('purchaseError') || 'Purchase Error',
+          t('couldNotCompletePurchase') || 'Uh-oh! Purchase didn\'t go through.'
+        );
+      }
+    } catch (error) {
+      console.warn('Error purchasing unlock all:', error);
+      Alert.alert(
+        t('purchaseError') || 'Purchase Error',
+        t('couldNotCompletePurchase') || 'Uh-oh! Purchase didn\'t go through.'
+      );
+    } finally {
+      setIsPurchasing(false);
+    }
+  }, [volume, t]);
 
-  // Modal for locked level - REMOVED (app is now free)
+  // Modal for locked level
   const renderUnlockModal = () => {
-    return null; // App is now free, no unlock modal needed
+    if (!showUnlockModal) return null;
+    
+    const styles = responsiveStyles;
+    
+    return (
+      <Modal
+        visible={showUnlockModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          setShowUnlockModal(false);
+          setLockedLevelClicked(null);
+        }}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => {
+            setShowUnlockModal(false);
+            setLockedLevelClicked(null);
+          }}
+        >
+          <TouchableOpacity
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <TouchableOpacity
+              style={styles.modalTopRightCloseButton}
+              onPress={() => {
+                setShowUnlockModal(false);
+                setLockedLevelClicked(null);
+              }}
+            >
+              <Text style={styles.modalCloseButtonText}>×</Text>
+            </TouchableOpacity>
+            
+            {/* Title */}
+            <Text style={styles.modalTitle}>
+              {t('thisLevelIsLocked')}
+            </Text>
+            
+            {/* Message */}
+            <Text style={styles.modalText}>
+              {t('unlockAllLevelsToPlay')}
+            </Text>
+            
+            {/* Unlock All Button */}
+            <TouchableOpacity
+              style={[styles.modalUnlockButton, isPurchasing && { opacity: 0.6 }]}
+              onPress={handleUnlockAll}
+              disabled={isPurchasing}
+            >
+              <Text style={styles.modalUnlockButtonText}>
+                {isPurchasing 
+                  ? (t('loading') || 'Loading...')
+                  : `${t('unlockAllLevels')} - ${productPrice || t('regularUnlockPrice')}`
+                }
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Restore Purchases Button */}
+            <TouchableOpacity
+              style={[styles.modalCloseButton, { marginTop: 8 }]}
+              onPress={handleRestorePurchases}
+              disabled={isPurchasing}
+            >
+              <Text style={styles.modalCloseButtonText}>
+                {t('restorePurchases')}
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Close Button */}
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => {
+                setShowUnlockModal(false);
+                setLockedLevelClicked(null);
+              }}
+            >
+              <Text style={styles.modalCloseButtonText}>
+                {t('close')}
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    );
   };
 
   // Remove the loading check since ScreenLoadingWrapper handles it
@@ -1017,16 +1144,101 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const settingsModalTop = Math.max(0, Math.round((currentHeight - settingsModalHeight) / 2));
   const settingsModalLeft = Math.max(0, Math.round((currentWidth - settingsModalWidth) / 2));
  
-  // All levels are unlocked (app is now free)
-  const getIsLocked = (level: string) => {
-    return false; // All levels are always unlocked
-  };
+  // Lock all levels except farm, ocean, and forest
+  const [unlockedAllLevels, setUnlockedAllLevels] = useState(false);
+  
+  // Initialize purchase service and check unlock status on mount
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        // Initialize purchase service
+        await PurchaseService.initialize();
+        
+        // Load product price
+        const product = PurchaseService.getUnlockAllProduct();
+        if (product) {
+          setProductPrice(PurchaseService.getUnlockAllPrice());
+        } else {
+          setProductPrice(t('regularUnlockPrice'));
+        }
+        
+        // Check if all levels are unlocked
+        const unlocked = await PurchaseService.isUnlocked();
+        setUnlockedAllLevels(unlocked);
+      } catch (error) {
+        console.warn('Error initializing purchase service:', error);
+        // Fallback to AsyncStorage check
+        try {
+          const unlocked = await AsyncStorage.getItem('unlocked_all_levels');
+          setUnlockedAllLevels(unlocked === 'true');
+        } catch (e) {
+          console.warn('Error checking unlocked levels:', e);
+        }
+      }
+    };
+    initialize();
+  }, [t]);
+  
+  const getIsLocked = useCallback((level: string) => {
+    // If all levels are unlocked, nothing is locked
+    if (unlockedAllLevels) {
+      return false;
+    }
+    
+    // Otherwise, only farm, ocean, and forest are unlocked
+    const unlockedLevels = ['farm', 'ocean', 'forest'];
+    return !unlockedLevels.includes(level.toLowerCase());
+  }, [unlockedAllLevels]);
+  
+  // Handle restore purchases
+  const handleRestorePurchases = useCallback(async () => {
+    try {
+      playButtonSound(volume);
+      setIsPurchasing(true);
+      
+      const restored = await PurchaseService.restorePurchases();
+      
+      if (restored) {
+        setUnlockedAllLevels(true);
+        Alert.alert(
+          t('restorePurchases') || 'Restore Purchases',
+          t('allLevelsNowUnlocked') || 'All missions are now open!'
+        );
+      } else {
+        Alert.alert(
+          t('restorePurchases') || 'Restore Purchases',
+          t('noPurchasesFound') || 'No purchases found.'
+        );
+      }
+    } catch (error) {
+      console.warn('Error restoring purchases:', error);
+      Alert.alert(
+        t('purchaseError') || 'Purchase Error',
+        t('couldNotRestorePurchases') || 'Hmm… could not bring back your purchases.'
+      );
+    } finally {
+      setIsPurchasing(false);
+    }
+  }, [volume, t]);
 
-  // Gather all assets that need to be preloaded
+  // Gather all menu assets to preload
   const menuAssets = useMemo(() => {
     const assets = [
       BG_IMAGE,
-      ...Object.values(LEVEL_BACKGROUNDS)
+      // All level background images (for tiles)
+      ...Object.values(LEVEL_BACKGROUNDS),
+      // Settings icon
+      require('../src/assets/images/settings.png'),
+      // Level-specific images (for level tiles)
+      require('../src/assets/images/cow_level.png'),
+      require('../src/assets/images/forest_level.png'),
+      require('../src/assets/images/ocean_level.png'),
+      require('../src/assets/images/desert_level.png'),
+      require('../src/assets/images/arctic_level.png'),
+      require('../src/assets/images/insect_level.png'),
+      require('../src/assets/images/savannah_level.png'),
+      require('../src/assets/images/jungle_level.png'),
+      require('../src/assets/images/bird_level.png'),
     ];
     return assets;
   }, []);
@@ -1036,8 +1248,12 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       assetsToLoad={menuAssets}
       loadingText={t('loading') || 'Loading...'}
       backgroundColor="#FFDAB9"
-      minLoadingTime={600} // Give time for level tiles to load
-      onAssetsLoaded={() => setAssetsLoaded(true)}
+      minLoadingTime={600}
+      onAssetsLoaded={() => {
+        if (onScreenReady) {
+          onScreenReady();
+        }
+      }}
     >
       <View style={{
         flex: 1, 
@@ -1045,25 +1261,26 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         width: '100%',
         height: '100%'
       }}>
-      {/* Menu content */}
-      {(
-        <ImageBackground
-          source={backgroundImageUri ? { uri: backgroundImageUri } : BG_IMAGE}
-          style={{ 
-            flex: 1, 
-            backgroundColor: '#ffdab9', // Solid fallback color
-            width: '100%',
-            height: '100%',
-          }}
-          imageStyle={{ opacity: 0.65 }}
-          fadeDuration={0} // No fade animation
-          resizeMode="cover"
-        >
-        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-          {/* Animated Fireflies Background - only render after layout is ready */}
-          {layoutReady && <AnimatedFireflies />}
-          {/* Animated Flying Animals Background */}
-          {layoutReady && <AnimatedFlyingAnimals />}
+        {/* Menu content */}
+        {(
+          <ImageBackground
+            source={backgroundImageUri ? { uri: backgroundImageUri } : BG_IMAGE}
+            style={{ 
+              flex: 1, 
+              backgroundColor: '#ffdab9', // Solid fallback color
+              width: '100%',
+              height: '100%',
+            }}
+            imageStyle={{ opacity: 0.65 }}
+            fadeDuration={0} // No fade animation
+            resizeMode="cover"
+            defaultSource={BG_IMAGE} // Preload default image
+          >
+          <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+            {/* Animated Fireflies Background */}
+            <AnimatedFireflies />
+            {/* Animated Flying Animals Background */}
+            <AnimatedFlyingAnimals />
 
 
           {currentIsLandscape ? (
@@ -1613,6 +1830,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         </View>
       </ImageBackground>
       )}
+      
+      {/* Unlock Modal */}
+      {renderUnlockModal()}
+      
     </View>
     </ScreenLoadingWrapper>
   );

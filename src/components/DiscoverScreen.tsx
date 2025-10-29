@@ -454,6 +454,10 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   const dragAnimValue = useRef(new Animated.ValueXY()).current;
   const dropZoneShake = useRef(new Animated.Value(0)).current;
   const currentSquareIndexRef = useRef(currentSquareIndex);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+  const scrollY = useRef(0);
   
   // Animated hand hint
   const handAnimX = useRef(new Animated.Value(1)).current; // Start from right (1 = 100%)
@@ -788,7 +792,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   };
 
   const squareSize = isTablet ? 300 : 240;
-  const animalCardSize = isTablet ? 60 : 50;
+  const animalCardSize = isTablet ? 100 : 85; // Increased size for bigger tiles (3 per row instead of 5)
 
     return (
     <View style={{ flex: 1, backgroundColor: '#40E0D0' }}>
@@ -1127,16 +1131,35 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </Animated.View>
         )}
 
-        {/* Right Side: Animals Grid - 5 per row */}
+        {/* Right Side: Animals Grid - 2 per row with scroll buttons column */}
         <View style={{
           flex: 1,
+          flexDirection: 'row',
           zIndex: 1000,
           elevation: 1000,
         }}>
+        <View style={{ flex: 1, position: 'relative' }}>
         <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: 5 }}
+            contentContainerStyle={{ paddingTop: 5, paddingHorizontal: 12 }}
             scrollEnabled={!draggingAnimal}
+            onScroll={(event) => {
+              const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+              scrollY.current = contentOffset.y;
+              const isAtTop = contentOffset.y <= 0;
+              const isAtBottom = contentOffset.y >= contentSize.height - layoutMeasurement.height - 10;
+              setCanScrollUp(!isAtTop);
+              setCanScrollDown(!isAtBottom);
+            }}
+            onMomentumScrollEnd={(event) => {
+              const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+              scrollY.current = contentOffset.y;
+              const isAtTop = contentOffset.y <= 0;
+              const isAtBottom = contentOffset.y >= contentSize.height - layoutMeasurement.height - 10;
+              setCanScrollUp(!isAtTop);
+              setCanScrollDown(!isAtBottom);
+            }}
           >
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
               {shuffledAnimals.map((animal, shuffledIdx) => {
@@ -1259,6 +1282,86 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               })}
           </View>
         </ScrollView>
+        </View>
+        
+        {/* Third Column: Scroll Buttons */}
+        <View style={{
+          width: isTablet ? 100 : 90,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 15,
+          zIndex: 2000,
+          elevation: 2000,
+          pointerEvents: 'box-none',
+        }}>
+          {/* Scroll Up Button */}
+          <TouchableOpacity
+            onPress={() => {
+              if (!canScrollUp) return;
+              const scrollAmount = 200; // Scroll up by 200px
+              scrollViewRef.current?.scrollTo({ 
+                y: Math.max(0, scrollY.current - scrollAmount), 
+                animated: true 
+              });
+            }}
+            disabled={!canScrollUp}
+            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            style={{
+              backgroundColor: canScrollUp ? 'rgba(255, 255, 255, 0.9)' : 'rgba(200, 200, 200, 0.5)',
+              borderRadius: isTablet ? 40 : 35,
+              width: isTablet ? 80 : 75,
+              height: isTablet ? 80 : 75,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              borderWidth: 3,
+              borderColor: canScrollUp ? '#2196F3' : '#cccccc',
+              zIndex: 2001,
+              elevation: 2001,
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-up" size={isTablet ? 44 : 40} color={canScrollUp ? "#2196F3" : "#999999"} />
+          </TouchableOpacity>
+          
+          {/* Scroll Down Button */}
+          <TouchableOpacity
+            onPress={() => {
+              if (!canScrollDown) return;
+              const scrollAmount = 200; // Scroll down by 200px
+              const newY = scrollY.current + scrollAmount;
+              scrollViewRef.current?.scrollTo({ 
+                y: newY, 
+                animated: true 
+              });
+            }}
+            disabled={!canScrollDown}
+            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            style={{
+              backgroundColor: canScrollDown ? 'rgba(255, 255, 255, 0.9)' : 'rgba(200, 200, 200, 0.5)',
+              borderRadius: isTablet ? 40 : 35,
+              width: isTablet ? 80 : 75,
+              height: isTablet ? 80 : 75,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              borderWidth: 3,
+              borderColor: canScrollDown ? '#2196F3' : '#cccccc',
+              zIndex: 2001,
+              elevation: 2001,
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-down" size={isTablet ? 44 : 40} color={canScrollDown ? "#2196F3" : "#999999"} />
+          </TouchableOpacity>
+        </View>
         </View>
       </View>
 
@@ -1418,8 +1521,8 @@ const DraggableAnimal: React.FC<{
 
   return (
     <View {...panResponder.panHandlers} style={{ 
-      width: '20%',
-      padding: 3,
+      width: '45%',
+      padding: 10,
     }}>
         <Animated.View style={{
         opacity,
@@ -1430,7 +1533,7 @@ const DraggableAnimal: React.FC<{
           {
               width: '100%',
             aspectRatio: 1,
-            padding: 8,
+            padding: 12,
             borderColor: isWrongAnimal ? '#FF0000' : '#FFD700',
             borderWidth: isWrongAnimal ? 4 : 3,
           }
@@ -1438,8 +1541,8 @@ const DraggableAnimal: React.FC<{
           <Image 
             source={imageSource}
             style={{
-              width: '80%',
-              height: '80%',
+              width: '85%',
+              height: '85%',
               resizeMode: 'contain',
             }}
           />

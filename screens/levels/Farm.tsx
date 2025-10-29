@@ -6,6 +6,7 @@ import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 import ScreenLoadingWrapper from '../../src/components/ScreenLoadingWrapper';
+import { getLevelAssets } from '../../src/utils/getLevelAssets';
 
 // Define Props for the screen
 type FarmScreenProps = {
@@ -17,7 +18,6 @@ type FarmScreenProps = {
 
 export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri, onScreenReady }: FarmScreenProps) {
   const { t, lang } = useLocalization();
-  const [allAssetsLoaded, setAllAssetsLoaded] = useState(false);
   
   // Load the farm background image
   const FARM_BG = require('../../src/assets/images/level-backgrounds/farm.webp');
@@ -38,33 +38,14 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
       }
       
       setBgUri(bgAsset.uri);
-      
-      // Very small delay to ensure background is rendered
-      setTimeout(() => {
-        // Notify parent that screen is ready
-        if (onScreenReady) {
-          onScreenReady();
-        }
-      }, 10);
     };
     
     loadBackground();
-  }, [onScreenReady]);
+  }, []);
 
-  // Gather all assets to preload including animal sprites
+  // Gather all assets to preload including animal sprites, sounds, UI images, etc.
   const farmAssets = useMemo(() => {
-    const assets = [
-      FARM_BG,
-    ];
-    
-    // Add farm animal sprites to ensure they're loaded
-    farmAnimals.forEach(animal => {
-      if (animal.source) {
-        assets.push(animal.source);
-      }
-    });
-    
-    return assets;
+    return getLevelAssets('Farm', farmAnimals);
   }, [farmAnimals]);
 
   // Wrap entire component with loading wrapper
@@ -75,12 +56,12 @@ export default function FarmScreen({ onBackToMenu, backgroundImageUri, skyBackgr
       backgroundColor="#87CEEB"
       minLoadingTime={800}
       onAssetsLoaded={() => {
-        requestAnimationFrame(() => {
-          setAllAssetsLoaded(true);
-        });
+        if (onScreenReady) {
+          onScreenReady();
+        }
       }}
     >
-      {allAssetsLoaded && bgUri ? (
+      {bgUri ? (
         <View style={{ flex: 1 }}>
           <LevelScreenTemplate
             levelName="Farm"

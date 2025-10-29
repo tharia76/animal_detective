@@ -42,6 +42,9 @@ import AnimatedSand from './AnimatedSand';
 import AnimatedSnow from './AnimatedSnow';
 import AnimatedFireflies from './AnimatedFireflies';
 import AnimatedLeaves from './AnimatedLeaves';
+import AnimatedRain from './AnimatedRain';
+import AnimatedFeathers from './AnimatedFeathers';
+import AnimatedFlowers from './AnimatedFlowers';
 // --- Add localization import ---
 import { useLocalization } from '../hooks/useLocalization';
 // --- Add smooth rotation hook ---
@@ -343,8 +346,8 @@ type Props = {
   initialIndex?: number; // optional: allows caller to set initial animal index synchronously
 };
 
-  const FADE_DURATION = 160; // snappier navigation feel
-  const CONTENT_FADE_DURATION = 200;
+  const FADE_DURATION = 0; // Instant navigation - no fade
+  const CONTENT_FADE_DURATION = 0;
 
 export default function LevelScreenTemplate({
   levelName,
@@ -381,7 +384,6 @@ export default function LevelScreenTemplate({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [arrowAnim] = useState(() => new Animated.Value(0));
   const [animalFadeAnim] = useState(() => new Animated.Value(1)); // Start fully visible
-  const [contentFade] = useState(() => new Animated.Value(1)); // Start fully visible
   const soundRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const isSoundPlayingRef = useRef<boolean>(false);
   const confettiAnimRefs = useRef<Animated.Value[]>([]);
@@ -947,11 +949,8 @@ export default function LevelScreenTemplate({
 
   // When currentAnimal?.isMoving changes, crossfade the backgrounds
   useEffect(() => {
-      // Check if current animal is fox - skip transition delay for fox
-      const isFox = currentAnimal?.name?.toLowerCase().includes('fox') || 
-                    currentAnimal?.name?.toLowerCase().includes('лисица') || 
-                    currentAnimal?.name?.toLowerCase().includes('tilki');
-      const transitionDuration = isFox ? 0 : 180; // No delay for fox, 180ms for others
+      // Instant background transitions
+      const transitionDuration = 0; // Instant background switching
       
     if (currentAnimal?.isMoving) {
       // Fade in moving bg, fade out image bg
@@ -1394,15 +1393,8 @@ export default function LevelScreenTemplate({
     isClickingRef.current = false;
     stopSound(true);
 
-    // Use a smoother crossfade/scale combo for transitions
-    Animated.parallel([
-      Animated.timing(animalFadeAnim, {
-        toValue: 0,
-        duration: FADE_DURATION,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
+    // Instant navigation - no animation delay
+    const processNavigation = () => {
       // Double-check that we still have animals and valid state
       if (!hasAnimals || animals.length === 0) {
         console.warn('No animals available during navigation');
@@ -1471,27 +1463,17 @@ export default function LevelScreenTemplate({
 
 
 
-      try {
-        requestAnimationFrame(() => setCurrentAnimalIndex(newIndex));
-      } catch {
-        setTimeout(() => setCurrentAnimalIndex(newIndex), 0);
-      }
-        // hasClickedCurrentAnimal and showName will be updated by useEffect based on visitedAnimals
-
-      // Use a small delay to ensure state updates are processed
-      setTimeout(() => {
-        Animated.timing(animalFadeAnim, {
-          toValue: 1,
-          duration: FADE_DURATION,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start(() => {
-          setIsTransitioning(false);
-          // Re-enable label rendering after fade-in completes (landscape safe guard)
-          setCanRenderLabel(true);
-        });
-      }, 0);
-    });
+      // Instant index update - no animation delay
+      setCurrentAnimalIndex(newIndex);
+      animalFadeAnim.setValue(1);
+      
+      // Immediately end transition and re-enable label rendering
+      setIsTransitioning(false);
+      setCanRenderLabel(true);
+    };
+    
+    // Execute navigation immediately
+    processNavigation();
   }, [
       hasAnimals,
       isTransitioning,
@@ -1633,16 +1615,15 @@ export default function LevelScreenTemplate({
       celebrationPulseAnim.setValue(1);
       arrowPulseAnim.setValue(1);
 
-    // Use a small delay to ensure state updates are processed
-    setTimeout(() => {
-        Animated.timing(animalFadeAnim, {
-            toValue: 1,
-            duration: FADE_DURATION,
-            useNativeDriver: true,
-        }).start(() => {
-            setIsTransitioning(false);
-        });
-    }, 16); // One frame delay
+    // Instant fade-in
+    Animated.timing(animalFadeAnim, {
+        toValue: 1,
+        duration: FADE_DURATION,
+        easing: Easing.linear,
+        useNativeDriver: true,
+    }).start(() => {
+        setIsTransitioning(false);
+    });
 
   }, [stopSound, animalFadeAnim]);
 
@@ -1790,11 +1771,6 @@ export default function LevelScreenTemplate({
       console.log('🎬 Background loaded, waiting for animals...');
     }
   }, [allAssetsReady]);
-
-  // Ensure content is visible immediately; no fade-in dependency on currentAnimal
-  useEffect(() => {
-    try { contentFade.setValue(1); } catch {}
-  }, []);
 
   // Compute the marginTop for animals based on level and device
   const getAnimalMarginTop = () => {
@@ -2088,8 +2064,7 @@ export default function LevelScreenTemplate({
 
         {/* Foreground content */}
       <View style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'transparent' }}>
-        <Animated.View style={{ flex: 1, opacity: contentFade }}>
-          <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
             {!showDiscoverScreen && !showIntroVideo && (
               <View style={{
                 position: 'absolute',
@@ -2271,6 +2246,9 @@ export default function LevelScreenTemplate({
                 {levelName.toLowerCase() === 'arctic' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedSnow />}
                 {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedFireflies />}
                 {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedLeaves />}
+                {levelName.toLowerCase() === 'jungle' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedRain />}
+                {levelName.toLowerCase() === 'birds' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedFeathers />}
+                {levelName.toLowerCase() === 'insects' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedFlowers />}
 
 
 
@@ -2579,7 +2557,6 @@ export default function LevelScreenTemplate({
 
 
         </View>
-      </Animated.View>
       </View>
       </AnimatedReanimated.View>
     </View>

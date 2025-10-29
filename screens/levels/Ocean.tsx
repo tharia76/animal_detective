@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Asset } from 'expo-asset';
 import { getAnimals } from '../../src/data/animals';
@@ -6,6 +6,7 @@ import { AnimalType } from '../../src/data/AnimalType';
 import LevelScreenTemplate from '../../src/components/LevelScreenTemplate';
 import { useLocalization } from '../../src/hooks/useLocalization';
 import ScreenLoadingWrapper from '../../src/components/ScreenLoadingWrapper';
+import { getLevelAssets } from '../../src/utils/getLevelAssets';
 
 // Define Props for the screen
 type OceanScreenProps = {
@@ -17,7 +18,6 @@ type OceanScreenProps = {
 
 export default function OceanScreen({ onBackToMenu, backgroundImageUri, skyBackgroundImageUri }: OceanScreenProps) {
   const { lang, t } = useLocalization();
-  const [allAssetsLoaded, setAllAssetsLoaded] = useState(false);
   
   // Load the ocean background image
   const OCEAN_BG = require('../../src/assets/images/level-backgrounds/ocean.webp');
@@ -40,18 +40,22 @@ export default function OceanScreen({ onBackToMenu, backgroundImageUri, skyBackg
     load();
   }, []);
 
+  // Gather all assets to preload including animal sprites, sounds, UI images, etc.
+  const oceanAssets = useMemo(() => {
+    return getLevelAssets('Ocean', oceanAnimals);
+  }, [oceanAnimals]);
+
   return (
     <ScreenLoadingWrapper
+      assetsToLoad={oceanAssets}
       loadingText={t('loading') || 'Loading Ocean...'}
       backgroundColor="#006994"
       minLoadingTime={800}
       onAssetsLoaded={() => {
-        requestAnimationFrame(() => {
-          setAllAssetsLoaded(true);
-        });
+        // Assets loaded, screen will be ready
       }}
     >
-      {allAssetsLoaded && bgUri ? (
+      {bgUri ? (
         <LevelScreenTemplate
           levelName="Ocean"
           animals={oceanAnimals}
