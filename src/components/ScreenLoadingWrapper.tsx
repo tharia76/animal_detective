@@ -20,6 +20,7 @@ export default function ScreenLoadingWrapper({
   backgroundColor = '#FFDAB9',
   minLoadingTime = 200 // Fast loading for better UX
 }: LoadingWrapperProps) {
+  // Start with loading enabled - show loading screen immediately
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isInteractive, setIsInteractive] = useState(true); // Track if overlay should block touches
@@ -30,6 +31,7 @@ export default function ScreenLoadingWrapper({
     
     const loadAssets = async () => {
       const startTime = Date.now();
+      let needsDownload = false;
       
       try {
         if (assetsToLoad.length > 0) {
@@ -37,11 +39,28 @@ export default function ScreenLoadingWrapper({
           const validAssets = assetsToLoad.filter(asset => asset !== undefined && asset !== null);
           
           if (validAssets.length > 0) {
+            // Check if any assets need downloading
+            for (const asset of validAssets) {
+              try {
+                const assetObj = Asset.fromModule(asset);
+                if (!assetObj.downloaded) {
+                  needsDownload = true;
+                  break;
+                }
+              } catch {
+                needsDownload = true;
+                break;
+              }
+            }
+            
             // Load all assets in parallel
             const assetPromises = validAssets.map(async (asset, index) => {
               try {
                 const assetObj = Asset.fromModule(asset);
-                await assetObj.downloadAsync();
+                // Only download if not already cached
+                if (!assetObj.downloaded) {
+                  await assetObj.downloadAsync();
+                }
                 
                 // Update progress only if component is still mounted
                 if (isMounted) {
@@ -52,6 +71,9 @@ export default function ScreenLoadingWrapper({
               } catch (error) {
                 console.warn('Failed to load asset:', error);
                 // Continue loading other assets even if one fails
+                if (isMounted) {
+                  setLoadingProgress((index + 1) / validAssets.length);
+                }
                 return null;
               }
             });
@@ -60,36 +82,45 @@ export default function ScreenLoadingWrapper({
           }
         }
         
-        // Ensure minimum loading time to prevent flashing
+        // Only wait minimum time if assets needed downloading
         const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+        let waitTime = 0;
         
-        if (remainingTime > 0) {
-          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        if (needsDownload) {
+          // Assets were downloading - ensure minimum time
+          waitTime = Math.max(0, minLoadingTime - elapsedTime);
+        } else {
+          // All cached - minimal delay for smooth transition
+          waitTime = Math.max(0, 100 - elapsedTime);
+        }
+        
+        if (waitTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
         
         // Only proceed if component is still mounted
         if (!isMounted) return;
         
-        // Call onAssetsLoaded first to let content prepare
+        // Call onAssetsLoaded
         onAssetsLoaded?.();
         
-        // Delay to ensure child components and animals are rendered
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Wait for children to render
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        await new Promise(resolve => requestAnimationFrame(resolve));
         
         // Only proceed if still mounted
         if (!isMounted) return;
         
-        // Make overlay non-interactive immediately so clicks pass through
+        // Make overlay non-interactive so clicks pass through
         setIsInteractive(false);
         
-        // Fade out the loading screen smoothly but quickly
+        // Fade out the loading screen
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 200,
+          duration: 100,
           useNativeDriver: true,
         }).start(() => {
-          // Only hide loading screen after fade completes
+          // Hide loading screen after fade completes
           if (isMounted) {
             setIsLoading(false);
           }
@@ -116,7 +147,7 @@ export default function ScreenLoadingWrapper({
 
   return (
     <>
-      {/* Render children immediately so they're ready */}
+      {/* Always render children - they'll be behind the loading overlay */}
       {children}
       
       {/* Show loading overlay on top while loading */}

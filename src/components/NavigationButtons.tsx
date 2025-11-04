@@ -72,7 +72,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   
   // Add throttling to prevent rapid taps
   const lastTapTime = useRef(0);
-  const TAP_THROTTLE_MS = 100; // Allow faster taps while still preventing spam
+  const TAP_THROTTLE_MS = 0; // Instant navigation - no throttle
 
   // Get orientation and dimensions
   const { width, height } = useWindowDimensions();

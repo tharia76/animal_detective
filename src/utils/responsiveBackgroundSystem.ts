@@ -173,7 +173,7 @@ const LEVEL_BACKGROUND_CONFIGS = {
   jungle: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'center',
+      verticalAlignment: 'bottom',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
@@ -196,7 +196,7 @@ const LEVEL_BACKGROUND_CONFIGS = {
   savannah: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'center',
+      verticalAlignment: 'bottom',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
@@ -265,7 +265,7 @@ const LEVEL_BACKGROUND_CONFIGS = {
   insects: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'center',
+      verticalAlignment: 'bottom',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
@@ -294,10 +294,6 @@ export const getResponsiveBackgroundStyles = (
 ): BackgroundStyles => {
   const level = levelName.toLowerCase();
   const config = LEVEL_BACKGROUND_CONFIGS[level as keyof typeof LEVEL_BACKGROUND_CONFIGS];
-  
-  if (level === 'savannah') {
-    console.log('🦁 SAVANNAH PROCESSING:', { level, configExists: !!config, deviceType: deviceInfo.deviceType, isLandscape: deviceInfo.isLandscape });
-  }
   
   if (!config) {
     console.warn(`No configuration found for level: ${level}`);
@@ -363,22 +359,6 @@ export const getResponsiveBackgroundStyles = (
   if (scale !== 1.0) {
     styles.transform = [{ scale }];
   }
-  
-  console.log(`🦁 SAVANNAH DEBUG - Background styles for ${level} (${deviceInfo.deviceType} ${orientation}):`, {
-    top: styles.top,
-    height: styles.height,
-    scale,
-    topOffset,
-    verticalAlignment,
-    configFound: !!config,
-    deviceOverride: deviceOverride,
-    deviceInfo: {
-      width,
-      height,
-      aspectRatio: deviceInfo.aspectRatio,
-      safeArea: { top: safeAreaTop, bottom: safeAreaBottom, left: safeAreaLeft, right: safeAreaRight }
-    }
-  });
   
   return styles;
 };

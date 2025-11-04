@@ -53,8 +53,8 @@ export default function FastImage({
       style={style}
       onLoadStart={() => setIsLoading(true)}
       onLoadEnd={() => setIsLoading(false)}
-      // Force image to reload
-      key={imageUri}
+      fadeDuration={0}
+      cache="force-cache"
     />
   );
 }

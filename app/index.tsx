@@ -41,7 +41,6 @@ export default function App() {
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [titleAnim] = useState(() => new Animated.Value(0));
   const [assetsReady, setAssetsReady] = useState(false);
-  const [fadeAnim] = useState(() => new Animated.Value(1));
   const [loadingProgress, setLoadingProgress] = useState(0);
 
 
@@ -205,12 +204,11 @@ export default function App() {
     }
     
     // Track level selection
-    FacebookAnalytics.trackLevelSelected(level, false);
+    const isLocked = !isUnlockedLevel && !hasUnlockedAll;
+    FacebookAnalytics.trackLevelSelected(level, isLocked);
     
     // Set selected level immediately to avoid black flash
     setSelectedLevel(level);
-    // Reset fade animation to ensure smooth transition
-    fadeAnim.setValue(1);
     
     // Preload level assets during loading
     const preloadAssets = async () => {
@@ -247,14 +245,12 @@ export default function App() {
     
     // Start preloading immediately
     preloadAssets();
-  }, [fadeAnim]);
+  }, []);
 
   const handleBackToMenu = useCallback(() => {
     // Go back to menu immediately to avoid black flash
     setSelectedLevel(null);
-    // Reset fade animation to ensure smooth transition
-    fadeAnim.setValue(1);
-  }, [fadeAnim]);
+  }, []);
 
   if (showSplash || !assetsReady) {
     return <SplashScreen titleAnim={titleAnim} onLoadingComplete={handleSplashComplete} loadingProgress={loadingProgress} />;
@@ -370,22 +366,20 @@ export default function App() {
     <>
       <StatusBar hidden />
       <View style={{ flex: 1, backgroundColor: '#FFDAB9' }}>
-        <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-          {selectedLevel == null ? (
-            assetsReady ? (
-              <MenuScreen
-                onSelectLevel={handleSelectLevel}
-                backgroundImageUri={null} // No preloaded menu image for now
-              />
-            ) : (
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFDAB9' }}>
-                <ActivityIndicator size="large" color="orange" />
-              </View>
-            )
+        {selectedLevel == null ? (
+          assetsReady ? (
+            <MenuScreen
+              onSelectLevel={handleSelectLevel}
+              backgroundImageUri={null} // No preloaded menu image for now
+            />
           ) : (
-            renderLevelScreen()
-          )}
-        </Animated.View>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFDAB9' }}>
+              <ActivityIndicator size="large" color="orange" />
+            </View>
+          )
+        ) : (
+          renderLevelScreen()
+        )}
       </View>
     </>
   );

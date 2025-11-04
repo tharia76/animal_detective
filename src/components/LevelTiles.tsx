@@ -240,6 +240,7 @@ const AnimatedTile = React.memo(({
              }}
             resizeMode="cover"
             fadeDuration={0} // No fade for instant display
+            defaultSource={LEVEL_BACKGROUNDS[level]} // Preload image
           />
           {/* Subtle glassy overlay for depth without dulling colors */}
           <LinearGradient
