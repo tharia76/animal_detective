@@ -432,6 +432,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   const [wrongDrop, setWrongDrop] = useState(false);
   const [wrongAnimalIndex, setWrongAnimalIndex] = useState<number | null>(null);
   const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollYPosition = useRef(0);
   
   // Balloon state for mission complete
   const [celebrationBalloons, setCelebrationBalloons] = useState<Array<{
@@ -760,6 +762,19 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
     }
   };
 
+  const handleScrollUp = () => {
+    const scrollAmount = isTablet ? 200 : 150;
+    const newY = Math.max(0, scrollYPosition.current - scrollAmount);
+    scrollYPosition.current = newY;
+    scrollViewRef.current?.scrollTo({ y: newY, animated: true });
+  };
+
+  const handleScrollDown = () => {
+    const scrollAmount = isTablet ? 200 : 150;
+    scrollYPosition.current += scrollAmount;
+    scrollViewRef.current?.scrollTo({ y: scrollYPosition.current, animated: true });
+  };
+
   const handleCloseMissionComplete = async () => {
     try {
       const yaySound = require('../assets/sounds/other/yay.mp3');
@@ -788,7 +803,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   };
 
   const squareSize = isTablet ? 300 : 240;
-  const animalCardSize = isTablet ? 60 : 50;
+  const animalCardSize = isTablet ? 45 : 40;
 
     return (
     <View style={{ flex: 1, backgroundColor: '#40E0D0' }}>
@@ -1127,16 +1142,24 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </Animated.View>
         )}
 
-        {/* Right Side: Animals Grid - 5 per row */}
+        {/* Right Side: Animals Grid - 3 per row with scroll buttons column */}
         <View style={{
           flex: 1,
           zIndex: 1000,
           elevation: 1000,
+          flexDirection: 'row',
         }}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
+          {/* Animals Grid */}
+          <ScrollView
+            ref={scrollViewRef}
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingTop: 5 }}
             scrollEnabled={!draggingAnimal}
+            style={{ flex: 1 }}
+            onScroll={(event) => {
+              scrollYPosition.current = event.nativeEvent.contentOffset.y;
+            }}
+            scrollEventThrottle={16}
           >
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
               {shuffledAnimals.map((animal, shuffledIdx) => {
@@ -1153,7 +1176,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                     imageSource={imageSource}
                     index={squareIndex}
                     squareSize={animalCardSize}
-              isTablet={isTablet}
+                    isTablet={isTablet}
                     dragAnimValue={dragAnimValue}
                     onDragStart={(position) => {
                       console.log('Dragging animal:', animal.englishKey, 'squareIndex:', squareIndex);
@@ -1163,102 +1186,153 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                     onDragMove={(position) => {
                       dragAnimValue.setValue({ x: position.x, y: position.y });
                     }}
-                  onDragEnd={(position) => {
-                    const zone = dropZonePosition.current;
-                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width &&
-                                   position.y >= zone.y && position.y <= zone.y + zone.height;
-                    
-                    // Use ref to get the CURRENT value, not the closure value
-                    const currentIndex = currentSquareIndexRef.current;
-                    const expectedAnimal = unlockedAnimals[currentIndex];
-                    
-                    console.log('Drop check - Dragged:', animal.englishKey, 'Expected:', expectedAnimal?.englishKey, 'currentIndex from ref:', currentIndex);
-                    
-                    if (dropped) {
-                      if (animal.englishKey === expectedAnimal?.englishKey) {
-                        // Correct drop
-                        console.log('✅ Correct! Placing at currentIndex:', currentIndex);
-                        setPlacedAnimals(prev => {
-                          const newSet = new Set(prev);
-                          newSet.add(currentIndex);
-                          console.log('Updated placedAnimals:', Array.from(newSet));
-                          return newSet;
-                        });
-                        
-                        // Play "aha2" sound for correct drop
-                        try {
-                          const ahaSound = require('../assets/sounds/other/aha2.mp3');
-                          const ahaPlayer = createAudioPlayer(ahaSound);
-                          ahaPlayer.play();
-                          ahaPlayer.addListener('playbackStatusUpdate', (status: any) => {
-                            if (status.didJustFinish) ahaPlayer.remove();
+                    onDragEnd={(position) => {
+                      const zone = dropZonePosition.current;
+                      const dropped = position.x >= zone.x && position.x <= zone.x + zone.width &&
+                                     position.y >= zone.y && position.y <= zone.y + zone.height;
+                      
+                      // Use ref to get the CURRENT value, not the closure value
+                      const currentIndex = currentSquareIndexRef.current;
+                      const expectedAnimal = unlockedAnimals[currentIndex];
+                      
+                      console.log('Drop check - Dragged:', animal.englishKey, 'Expected:', expectedAnimal?.englishKey, 'currentIndex from ref:', currentIndex);
+                      
+                      if (dropped) {
+                        if (animal.englishKey === expectedAnimal?.englishKey) {
+                          // Correct drop
+                          console.log('✅ Correct! Placing at currentIndex:', currentIndex);
+                          setPlacedAnimals(prev => {
+                            const newSet = new Set(prev);
+                            newSet.add(currentIndex);
+                            console.log('Updated placedAnimals:', Array.from(newSet));
+                            return newSet;
                           });
-                        } catch (error) {
-                          console.warn('Error playing aha2 sound:', error);
+                          
+                          // Play "aha2" sound for correct drop
+                          try {
+                            const ahaSound = require('../assets/sounds/other/aha2.mp3');
+                            const ahaPlayer = createAudioPlayer(ahaSound);
+                            ahaPlayer.play();
+                            ahaPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                              if (status.didJustFinish) ahaPlayer.remove();
+                            });
+                          } catch (error) {
+                            console.warn('Error playing aha2 sound:', error);
+                          }
+                          
+                          // Then play animal sound
+                          setTimeout(() => {
+                            if (animal.sound) playAnimalSound(animal.sound);
+                          }, 300);
+                        } else {
+                          // Wrong drop - show red feedback and shake
+                          console.log('❌ Wrong!');
+                          setWrongDrop(true);
+                          setWrongAnimalIndex(squareIndex);
+                          
+                          // Play "no" sound for wrong drop
+                          try {
+                            const noSound = require('../assets/sounds/other/no.mp3');
+                            const noPlayer = createAudioPlayer(noSound);
+                            noPlayer.play();
+                            noPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                              if (status.didJustFinish) noPlayer.remove();
+                            });
+                          } catch (error) {
+                            console.warn('Error playing no sound:', error);
+                          }
+                          
+                          // Shake animation
+                          Animated.sequence([
+                            Animated.timing(dropZoneShake, {
+                              toValue: 10,
+                              duration: 50,
+                              useNativeDriver: true,
+                            }),
+                            Animated.timing(dropZoneShake, {
+                              toValue: -10,
+                              duration: 50,
+                              useNativeDriver: true,
+                            }),
+                            Animated.timing(dropZoneShake, {
+                              toValue: 10,
+                              duration: 50,
+                              useNativeDriver: true,
+                            }),
+                            Animated.timing(dropZoneShake, {
+                              toValue: 0,
+                              duration: 50,
+                              useNativeDriver: true,
+                            }),
+                          ]).start();
+                          
+                          // Reset red feedback after animation
+                          setTimeout(() => {
+                            setWrongDrop(false);
+                            setWrongAnimalIndex(null);
+                          }, 400);
                         }
-                        
-                        // Then play animal sound
-                        setTimeout(() => {
-                          if (animal.sound) playAnimalSound(animal.sound);
-                        }, 300);
-                      } else {
-                        // Wrong drop - show red feedback and shake
-                        console.log('❌ Wrong!');
-                        setWrongDrop(true);
-                        setWrongAnimalIndex(squareIndex);
-                        
-                        // Play "no" sound for wrong drop
-                        try {
-                          const noSound = require('../assets/sounds/other/no.mp3');
-                          const noPlayer = createAudioPlayer(noSound);
-                          noPlayer.play();
-                          noPlayer.addListener('playbackStatusUpdate', (status: any) => {
-                            if (status.didJustFinish) noPlayer.remove();
-                          });
-                        } catch (error) {
-                          console.warn('Error playing no sound:', error);
-                        }
-                        
-                        // Shake animation
-                        Animated.sequence([
-                          Animated.timing(dropZoneShake, {
-                            toValue: 10,
-                            duration: 50,
-                            useNativeDriver: true,
-                          }),
-                          Animated.timing(dropZoneShake, {
-                            toValue: -10,
-                            duration: 50,
-                            useNativeDriver: true,
-                          }),
-                          Animated.timing(dropZoneShake, {
-                            toValue: 10,
-                            duration: 50,
-                            useNativeDriver: true,
-                          }),
-                          Animated.timing(dropZoneShake, {
-                            toValue: 0,
-                            duration: 50,
-                            useNativeDriver: true,
-                          }),
-                        ]).start();
-                        
-                        // Reset red feedback after animation
-                        setTimeout(() => {
-                          setWrongDrop(false);
-                          setWrongAnimalIndex(null);
-                        }, 400);
                       }
-                    }
-                    
-                    setDraggingAnimal(null);
-                  }}
-                  isWrongAnimal={wrongAnimalIndex === squareIndex}
+                      
+                      setDraggingAnimal(null);
+                    }}
+                    isWrongAnimal={wrongAnimalIndex === squareIndex}
                   />
                 );
               })}
+            </View>
+          </ScrollView>
+          
+          {/* Scroll buttons column - Always visible */}
+          <View style={{ 
+            flexDirection: 'column', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            paddingHorizontal: isTablet ? 15 : 10,
+            gap: isTablet ? 20 : 15,
+          }}>
+            <TouchableOpacity
+              onPress={handleScrollUp}
+              activeOpacity={0.7}
+              hitSlop={{ top: 40, bottom: 40, left: 40, right: 40 }}
+              style={{
+                backgroundColor: '#4CAF50',
+                width: isTablet ? 90 : 75,
+                height: isTablet ? 90 : 75,
+                borderRadius: isTablet ? 45 : 37.5,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 5,
+              }}
+            >
+              <Ionicons name="arrow-up" size={isTablet ? 45 : 38} color="white" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={handleScrollDown}
+              activeOpacity={0.7}
+              hitSlop={{ top: 40, bottom: 40, left: 40, right: 40 }}
+              style={{
+                backgroundColor: '#4CAF50',
+                width: isTablet ? 90 : 75,
+                height: isTablet ? 90 : 75,
+                borderRadius: isTablet ? 45 : 37.5,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 5,
+              }}
+            >
+              <Ionicons name="arrow-down" size={isTablet ? 45 : 38} color="white" />
+            </TouchableOpacity>
           </View>
-        </ScrollView>
         </View>
       </View>
 
@@ -1418,7 +1492,7 @@ const DraggableAnimal: React.FC<{
 
   return (
     <View {...panResponder.panHandlers} style={{ 
-      width: '20%',
+      width: '33.33%',
       padding: 3,
     }}>
         <Animated.View style={{

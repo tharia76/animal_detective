@@ -18,20 +18,26 @@ const AnimatedLeaves: React.FC = () => {
   const rotationAnimations = useRef<Animated.Value[]>([]).current;
   const swayAnimations = useRef<Animated.Value[]>([]).current;
 
+  // Detect if device is tablet/iPad
+  const isTablet = Math.min(screenWidth, screenHeight) >= 768;
+
   // Create leaves with different properties
   const leaves: Leaf[] = React.useMemo(() => {
     const leafCount = 15; // Number of falling leaves
+    // Bigger sizes on iPads: 40-80 pixels vs 20-50 on phones
+    const minSize = isTablet ? 40 : 20;
+    const maxSize = isTablet ? 80 : 50;
     return Array.from({ length: leafCount }, (_, index) => ({
       id: index,
       x: Math.random() * screenWidth, // Random horizontal position
-      size: Math.random() * 30 + 20, // Random size between 20-50
+      size: Math.random() * (maxSize - minSize) + minSize, // Random size between minSize-maxSize
       speed: Math.random() * 8000 + 4000, // Random speed between 4-12 seconds
       delay: Math.random() * 3000, // Random delay up to 3 seconds
       rotationSpeed: Math.random() * 3000 + 2000, // Random rotation speed
       swayAmount: Math.random() * 60 + 20, // Random sway amount
       leafType: ['leaf1', 'leaf2', 'leaf3'][Math.floor(Math.random() * 3)] as 'leaf1' | 'leaf2' | 'leaf3',
     }));
-  }, [screenWidth, screenHeight]);
+  }, [screenWidth, screenHeight, isTablet]);
 
   // Initialize animations
   useEffect(() => {

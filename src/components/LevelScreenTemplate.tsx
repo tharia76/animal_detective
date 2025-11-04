@@ -42,6 +42,10 @@ import AnimatedSand from './AnimatedSand';
 import AnimatedSnow from './AnimatedSnow';
 import AnimatedFireflies from './AnimatedFireflies';
 import AnimatedLeaves from './AnimatedLeaves';
+import AnimatedRain from './AnimatedRain';
+import AnimatedFlowers from './AnimatedFlowers';
+import AnimatedFeathers from './AnimatedFeathers';
+import AnimatedThunder from './AnimatedThunder';
 // --- Add localization import ---
 import { useLocalization } from '../hooks/useLocalization';
 // --- Add smooth rotation hook ---
@@ -309,15 +313,15 @@ export const getGlobalVolume = () => {
 
 // --- MOVING BG MAP: Map levelName to moving background asset/uri ---
 const MOVING_BG_MAP: Record<string, string | number | undefined> = {
-  'farm': require('../assets/images/level-backgrounds/farm.webp'),
-  'forest': require('../assets/images/level-backgrounds/forest.webp'),
-  'ocean': require('../assets/images/level-backgrounds/ocean.webp'),
-  'desert': require('../assets/images/level-backgrounds/desert.webp'),
-  'arctic': require('../assets/images/level-backgrounds/arctic.webp'),
-  'insects': require('../assets/images/level-backgrounds/insect.webp'),
-  'savannah': require('../assets/images/level-backgrounds/savannah.webp'),
-  'jungle': require('../assets/images/level-backgrounds/jungle.webp'),
-  'birds': require('../assets/images/level-backgrounds/birds.webp'),
+  'farm': require('../assets/images/level-backgrounds/farm.png'),
+  'forest': require('../assets/images/level-backgrounds/forest.png'),
+  'ocean': require('../assets/images/level-backgrounds/ocean.png'),
+  'desert': require('../assets/images/level-backgrounds/desert.png'),
+  'arctic': require('../assets/images/level-backgrounds/arctic.png'),
+  'insects': require('../assets/images/level-backgrounds/insect.png'),
+  'savannah': require('../assets/images/level-backgrounds/savannah.png'),
+  'jungle': require('../assets/images/level-backgrounds/jungle.png'),
+  'birds': require('../assets/images/level-backgrounds/birds.png'),
 };
 
 type Animal = {
@@ -2027,13 +2031,13 @@ export default function LevelScreenTemplate({
 
   // --- RENDER: Crossfade both backgrounds ---
   return (
-    <View style={[dynamicStyles.container, { backgroundColor: getLevelBackgroundColor(levelName) }]}>
+    <View style={[dynamicStyles.container, { backgroundColor: 'transparent' }]}>
       {/* Level intro video overlay */}
      
       <AnimatedReanimated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
         {/* Background container - show immediately */}
         <View style={[StyleSheet.absoluteFillObject, { 
-          backgroundColor: getLevelBackgroundColor(levelName) 
+          backgroundColor: 'transparent' 
         }]}>
         <View style={StyleSheet.absoluteFillObject}>
           {/* Responsive moving background (sky) */}
@@ -2042,7 +2046,7 @@ export default function LevelScreenTemplate({
               pointerEvents="none"
               style={[
                 StyleSheet.absoluteFillObject,
-                { opacity: movingBgOpacity, backgroundColor: getLevelBackgroundColor(levelName) }
+                { opacity: movingBgOpacity, backgroundColor: 'transparent' }
               ]}
             >
               <ResponsiveMovingBg
@@ -2059,7 +2063,7 @@ export default function LevelScreenTemplate({
               pointerEvents="none"
               style={[
                 StyleSheet.absoluteFillObject,
-                { opacity: imageBgOpacity, backgroundColor: getLevelBackgroundColor(levelName) }
+                { opacity: imageBgOpacity, backgroundColor: 'transparent' }
               ]}
             >
               <ResponsiveLevelBackground
@@ -2102,19 +2106,19 @@ export default function LevelScreenTemplate({
                 left: Math.max(safeAreaInsets.left + 15, 15), // Respect left safe area (for landscape notch)
                 backgroundColor: '#FF4444',
                 borderRadius: 30,
-                paddingHorizontal: 20,
-                paddingVertical: 20,
+                paddingHorizontal: Math.min(screenW, screenH) >= 768 ? 25 : 20, // Bigger padding on iPads
+                paddingVertical: Math.min(screenW, screenH) >= 768 ? 25 : 20, // Bigger padding on iPads
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 20,
+                gap: Math.min(screenW, screenH) >= 768 ? 25 : 20, // Bigger gap on iPads
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
                 shadowRadius: 4,
                 elevation: 5,
                 zIndex: 1000,
-                minWidth: 120,
+                minWidth: Math.min(screenW, screenH) >= 768 ? 140 : 120, // Bigger min width on iPads
               }}>
                 {/* Home Button */}
                 <TouchableOpacity onPress={() => {
@@ -2130,14 +2134,14 @@ export default function LevelScreenTemplate({
                   backgroundColor: '#FFD4A3', // Same orange as counter
                   borderRadius: 30,
                   padding: 15,
-                  width: 70,
-                  height: 70,
+                  width: Math.min(screenW, screenH) >= 768 ? 90 : 70, // Bigger on iPads
+                  height: Math.min(screenW, screenH) >= 768 ? 90 : 70, // Bigger on iPads
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
                   <Image 
                     source={require('../assets/images/home_icon.png')}
-                    style={{ width: 60, height: 60 }}
+                    style={{ width: Math.min(screenW, screenH) >= 768 ? 75 : 60, height: Math.min(screenW, screenH) >= 768 ? 75 : 60 }} // Bigger icon on iPads
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
@@ -2149,9 +2153,9 @@ export default function LevelScreenTemplate({
                     position: 'absolute',
                     top: -5,
                     left: -5,
-                    width: 80,
-                    height: 80,
-                    borderRadius: 40,
+                    width: Math.min(screenW, screenH) >= 768 ? 100 : 80, // Bigger glow on iPads
+                    height: Math.min(screenW, screenH) >= 768 ? 100 : 80, // Bigger glow on iPads
+                    borderRadius: Math.min(screenW, screenH) >= 768 ? 50 : 40, // Bigger radius on iPads
                     backgroundColor: counterButtonGlowAnim.interpolate({
                       inputRange: [0, 1],
                       outputRange: ['rgba(255, 200, 150, 0)', 'rgba(255, 200, 150, 0.2)'],
@@ -2167,8 +2171,8 @@ export default function LevelScreenTemplate({
                   <Animated.View style={{
                     backgroundColor: '#FFD4A3', // Light orange color
                     borderRadius: 30,
-                    width: 70,
-                    height: 70,
+                    width: Math.min(screenW, screenH) >= 768 ? 90 : 70, // Bigger on iPads
+                    height: Math.min(screenW, screenH) >= 768 ? 90 : 70, // Bigger on iPads
                     alignItems: 'center',
                     justifyContent: 'center',
                     transform: [{ scale: counterPopAnim }],
@@ -2200,7 +2204,7 @@ export default function LevelScreenTemplate({
                   }}>
                   <Text style={{
                     color: '#2B5E34', // Dark green
-                    fontSize: 22,
+                    fontSize: Math.min(screenW, screenH) >= 768 ? 28 : 22, // Bigger text on iPads
                     fontWeight: '900',
                     fontFamily: Platform.OS === 'ios' ? 'Arial Rounded MT Bold' : 'Roboto',
                     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -2228,8 +2232,8 @@ export default function LevelScreenTemplate({
                     backgroundColor: '#FFD4A3',
                     borderRadius: 30,
                     padding: 15,
-                    width: 70,
-                    height: 70,
+                    width: Math.min(screenW, screenH) >= 768 ? 90 : 70, // Bigger on iPads
+                    height: Math.min(screenW, screenH) >= 768 ? 90 : 70, // Bigger on iPads
                     alignItems: 'center',
                     justifyContent: 'center',
                     position: 'relative'
@@ -2237,8 +2241,8 @@ export default function LevelScreenTemplate({
                   <Image 
                     source={require('../assets/images/list_icon.png')}
                     style={{ 
-                      width: 60, 
-                      height: 60
+                      width: Math.min(screenW, screenH) >= 768 ? 75 : 60,  // Bigger icon on iPads
+                      height: Math.min(screenW, screenH) >= 768 ? 75 : 60  // Bigger icon on iPads
                     }}
                     resizeMode="contain"
                   />
@@ -2271,6 +2275,9 @@ export default function LevelScreenTemplate({
                 {levelName.toLowerCase() === 'arctic' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedSnow />}
                 {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedFireflies />}
                 {levelName.toLowerCase() === 'forest' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedLeaves />}
+                {levelName.toLowerCase() === 'jungle' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedRain />}
+                {levelName.toLowerCase() === 'insects' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedFlowers />}
+                {levelName.toLowerCase() === 'birds' && showInstruction && !showDiscoverScreen && !showIntroVideo && <AnimatedFeathers />}
 
 
 

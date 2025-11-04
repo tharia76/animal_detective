@@ -24,15 +24,15 @@ const CRITICAL_IMAGES = [
   require('../assets/images/icon.png'),
   
   // Level backgrounds
-  require('../assets/images/level-backgrounds/farm.webp'),
-  require('../assets/images/level-backgrounds/forest.webp'),
-  require('../assets/images/level-backgrounds/jungle.webp'),
-  require('../assets/images/level-backgrounds/ocean.webp'),
-  require('../assets/images/level-backgrounds/arctic.webp'),
-  require('../assets/images/level-backgrounds/desert.webp'),
-  require('../assets/images/level-backgrounds/savannah.webp'),
-  require('../assets/images/level-backgrounds/birds.webp'),
-  require('../assets/images/level-backgrounds/insect.webp'),
+  require('../assets/images/level-backgrounds/farm.png'),
+  require('../assets/images/level-backgrounds/forest.png'),
+  require('../assets/images/level-backgrounds/jungle.png'),
+  require('../assets/images/level-backgrounds/ocean.png'),
+  require('../assets/images/level-backgrounds/arctic.png'),
+  require('../assets/images/level-backgrounds/desert.png'),
+  require('../assets/images/level-backgrounds/savannah.png'),
+  require('../assets/images/level-backgrounds/birds.png'),
+  require('../assets/images/level-backgrounds/insect.png'),
 
   // Discover screen images
   require('../assets/images/discover/discover_bg.png'),

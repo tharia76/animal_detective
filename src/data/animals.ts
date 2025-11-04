@@ -2,7 +2,7 @@
 import { Asset } from 'expo-asset';
 import { AnimalType } from './AnimalType';
 
-const backgroundImage = require('../assets/images/level-backgrounds/farm.webp');
+const backgroundImage = require('../assets/images/level-backgrounds/farm.png');
 Asset.fromModule(backgroundImage).downloadAsync().catch(error =>
   console.warn('Background image preload error:', error)
 );
@@ -2423,4 +2423,53 @@ export function getAnimals(language: string = 'en'): AnimalType[] {
   // Images will be loaded progressively by the ImageLoader utility when needed
 
   return animals;
+}
+
+// Export all animal sprite sources for preloading
+export function getAllAnimalSprites(): number[] {
+  return [
+    // Farm animals
+    dogSpriteSheet, catSpriteSheet, chickenSpriteSheet, chickSpriteSheet, donkeySpriteSheet,
+    cowSpriteSheet, duckSpriteSheet, goatSpriteSheet, gooseSpriteSheet, horseSpriteSheet,
+    llamaSpriteSheet, pigSpriteSheet, rabbitSpriteSheet, sheepSpriteSheet, roosterSpriteSheet,
+    turkeySpriteSheet,
+    
+    // Forest animals
+    badgerSpriteSheet, foxSpriteSheet, bearSpriteSheet, raccoonSpriteSheet, squirrelSpriteSheet,
+    hedgehogSpriteSheet, owlSpriteSheet, wolfSpriteSheet, deerSpriteSheet, mooseSpriteSheet,
+    mouseSpriteSheet, beaverSpriteSheet, boarSpriteSheet, batSpriteSheet,
+    
+    // Arctic animals
+    whiteBearSprite, whiteFoxSprite, reindeerSprite, sealSprite, snowyOwlSprite, penguinSprite,
+    walrusSprite,
+    
+    // Desert animals
+    camelSprite, caracalSprite, desertTortoiseSprite, fenexFoxSprite, jerboaSprite,
+    sandCatSprite, scorpionSprite, iguanaSprite,
+    
+    // Ocean animals
+    dolphinSprite, fishSprite, jellyfishSprite, octopusSprite, crabSprite, lobsterSprite,
+    seahorseSprite, seaTurtleSprite, sharkSprite, starfishSprite, stingraySprite,
+    whaleSprite, shrimpSprite,
+    
+    // Jungle animals
+    gorillaSprite, chimpanzeeSprite, jaguarSprite, leonSprite, blackPantherSprite, orangutanSprite,
+    slothSprite, snakeSprite, turtleSprite, koalaSprite, crocodileSprite, chameleonSprite,
+    frogSprite, lemurSprite, lizardSprite,
+    
+    // Savannah animals
+    leonSprite, bengalTigerSprite, elephantSprite, giraffeSprite, zebraSprite,
+    rhinocerosSprite, hippopotamusSprite, hyenaSprite, antelopeSprite, oryxSprite,
+    jackalSprite, meerkatSprite, ostrichSprite, bizonSprite, wildBoarSprite, gepardSprite,
+    
+    // Insects  
+    butterflySprite, beeSprite, antSprite, grasshopperSprite, caterpillarSprite,
+    dragonflySprite, flySprite, ladyBagSprite, mantisSprite, mosquitoSprite, spiderSprite,
+    snailSprite, wormSprite, cockroachSprite,
+    
+    // Birds
+    eagleSprite, doveSprite, duckSpriteSheet, sparrowSprite, swanSprite, flamingoSprite,
+    pelicanSprite, toucanSprite, parrotSprite, canarySprite, woodpeckerSprite, owlSpriteSheet,
+    ravenSprite, seagullSprite, storkSprite,
+  ];
 }

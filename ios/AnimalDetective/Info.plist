@@ -98,5 +98,7 @@
 	</array>
 	<key>UIModalPresentationStyle~default</key>
 	<string>UIModalPresentationOverFullScreen</string>
+	<key>GADApplicationIdentifier</key>
+	<string>YOUR_ADMOB_APP_ID</string>
 </dict>
 </plist>

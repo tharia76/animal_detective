@@ -90,5 +90,6 @@
   ],
   "experiments": {
     "typedRoutes": true
-  }
+  },
+  "newArchEnabled": true
 }

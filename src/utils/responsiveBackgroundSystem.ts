@@ -76,7 +76,7 @@ export const getDeviceInfo = (safeAreaInsets?: any): DeviceInfo => {
   };
 };
 
-// Advanced level background configurations
+// Advanced level background configurations - ALL LEVELS NOW USE SAME POSITIONING
 const LEVEL_BACKGROUND_CONFIGS = {
   forest: {
     baseConfig: {
@@ -87,40 +87,16 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { 
-          topOffset: 0.15, 
-          scale: 1.2,
-          verticalAlignment: 'top',
-        },
-        landscape: { 
-          topOffset: -0.2, 
-          scale: 1.15,
-          verticalAlignment: 'center',
-        }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { 
-          topOffset: 0.05, 
-          scale: 1.0,
-          verticalAlignment: 'center',
-        },
-        landscape: { 
-          topOffset: -0.15, 
-          scale: 1.0,
-          verticalAlignment: 'center',
-        }
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { 
-          topOffset: 0.1, 
-          scale: 1.15,
-          verticalAlignment: 'top',
-        },
-        landscape: { 
-          topOffset: -0.1, 
-          scale: 1.1,
-          verticalAlignment: 'center',
-        }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   },
@@ -128,22 +104,22 @@ const LEVEL_BACKGROUND_CONFIGS = {
   ocean: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'bottom',
+      verticalAlignment: 'center',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'bottom' },
-        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'bottom' },
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
         landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0, scale: 1.05, verticalAlignment: 'bottom' },
-        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   },
@@ -157,16 +133,16 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.1, scale: 1.15, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.1, scale: 1.1, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
         portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
         landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.05, scale: 1.1, verticalAlignment: 'center' },
-        landscape: { topOffset: 0, scale: 1.05, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   },
@@ -174,22 +150,22 @@ const LEVEL_BACKGROUND_CONFIGS = {
   arctic: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'top',
+      verticalAlignment: 'center',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.2, scale: 1.15, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.25, scale: 1.1, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0.1, scale: 1.05, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.15, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.15, scale: 1.2, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.2, scale: 1.15, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   },
@@ -203,16 +179,16 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.25, scale: 1.2, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.3, scale: 1.15, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0.15, scale: 1.1, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.2, scale: 1.05, verticalAlignment: 'center' }
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.2, scale: 1.25, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.25, scale: 1.2, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   },
@@ -226,16 +202,16 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.4, scale: 1.0, verticalAlignment: 'center' },
-        landscape: { topOffset: 0.3, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0.05, scale: 1.0, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.1, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.1, scale: 1.05, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.8, scale: 1.05, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   },
@@ -243,22 +219,22 @@ const LEVEL_BACKGROUND_CONFIGS = {
   farm: {
     baseConfig: {
       aspectRatioOptimal: 1.78,
-      verticalAlignment: 'bottom',
+      verticalAlignment: 'center',
       horizontalAlignment: 'center',
       scaleStrategy: 'cover',
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.1, scale: 1.15, verticalAlignment: 'bottom' },
-        landscape: { topOffset: -0.1, scale: 1.1, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'bottom' },
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
         landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.05, scale: 1.1, verticalAlignment: 'bottom' },
-        landscape: { topOffset: 0, scale: 1.05, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   },
@@ -272,16 +248,16 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
-        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
         portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
         landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0, scale: 1.05, verticalAlignment: 'center' },
-        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   },
@@ -295,16 +271,16 @@ const LEVEL_BACKGROUND_CONFIGS = {
     },
     deviceOverrides: {
       phone: {
-        portrait: { topOffset: 0.2, scale: 1.15, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.2, scale: 1.1, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       },
       tablet: {
-        portrait: { topOffset: 0.1, scale: 1.05, verticalAlignment: 'center' },
-        landscape: { topOffset: -0.1, scale: 1.0, verticalAlignment: 'center' }
+        portrait: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' },
+        landscape: { topOffset: 0, scale: 1.0, verticalAlignment: 'center' }
       },
       foldable: {
-        portrait: { topOffset: 0.15, scale: 1.2, verticalAlignment: 'top' },
-        landscape: { topOffset: -0.15, scale: 1.15, verticalAlignment: 'center' }
+        portrait: { topOffset: -0.03, scale: 1.05, verticalAlignment: 'center' },
+        landscape: { topOffset: -0.03, scale: 1.0, verticalAlignment: 'center' }
       }
     }
   }

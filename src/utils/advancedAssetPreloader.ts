@@ -2,6 +2,7 @@ import { Asset } from 'expo-asset';
 import { Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InteractionManager } from 'react-native';
+import { getAllAnimalSprites } from '../data/animals';
 
 export interface AssetLoadingProgress {
   phase: 'critical' | 'priority' | 'background' | 'complete';
@@ -24,12 +25,16 @@ const CRITICAL_ASSETS = [
   require('../assets/images/hand.png'),
 ];
 
+// Get all animal sprites dynamically
+const ANIMAL_SPRITES = getAllAnimalSprites();
+console.log(`🐾 Loaded ${ANIMAL_SPRITES.length} animal sprites for preloading`);
+
 const PRIORITY_ASSETS = [
   // Level backgrounds - load next for smooth transitions
-  require('../assets/images/level-backgrounds/farm.webp'),
-  require('../assets/images/level-backgrounds/forest.webp'),
-  require('../assets/images/level-backgrounds/ocean.webp'),
-  require('../assets/images/level-backgrounds/jungle.webp'),
+  require('../assets/images/level-backgrounds/farm.png'),
+  require('../assets/images/level-backgrounds/forest.png'),
+  require('../assets/images/level-backgrounds/ocean.png'),
+  require('../assets/images/level-backgrounds/jungle.png'),
   
   // Common UI elements
   require('../assets/images/settings.png'),
@@ -41,15 +46,20 @@ const PRIORITY_ASSETS = [
   require('../assets/images/silhouettes/dog_silhouette.png'),
   require('../assets/images/silhouettes/cow_silhouette.png'),
   require('../assets/images/silhouettes/chicken_silhouette.png'),
+  
+  // All animal sprites for instant level loading
+  ...ANIMAL_SPRITES,
 ];
+
+console.log(`📦 Total PRIORITY_ASSETS to preload: ${PRIORITY_ASSETS.length}`);
 
 const BACKGROUND_ASSETS = [
   // Remaining level backgrounds
-  require('../assets/images/level-backgrounds/arctic.webp'),
-  require('../assets/images/level-backgrounds/desert.webp'),
-  require('../assets/images/level-backgrounds/savannah.webp'),
-  require('../assets/images/level-backgrounds/birds.webp'),
-  require('../assets/images/level-backgrounds/insect.webp'),
+  require('../assets/images/level-backgrounds/arctic.png'),
+  require('../assets/images/level-backgrounds/desert.png'),
+  require('../assets/images/level-backgrounds/savannah.png'),
+  require('../assets/images/level-backgrounds/birds.png'),
+  require('../assets/images/level-backgrounds/insect.png'),
   
   // Secondary UI elements
   require('../assets/images/congrats-bg.png'),

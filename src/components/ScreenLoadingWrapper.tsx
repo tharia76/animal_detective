@@ -18,7 +18,7 @@ export default function ScreenLoadingWrapper({
   onAssetsLoaded,
   loadingText = 'Loading...',
   backgroundColor = '#FFDAB9',
-  minLoadingTime = 1500 // At least 1500ms to ensure everything loads
+  minLoadingTime = 200 // Fast loading for better UX
 }: LoadingWrapperProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);

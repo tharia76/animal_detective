@@ -31,7 +31,7 @@ export const LANDSCAPE_LABEL_CONFIG = {
     borderRadius: 18
   },
   tablet: {
-    topOffset: 0.1,
+    topOffset: 0.05, // Reduced from 0.1 to move labels down on iPads
     fontSize: 56,  // Increased to match phone size
     paddingVertical: 24,
     paddingHorizontal: 32,
@@ -83,8 +83,11 @@ export const getLabelPositioning = (
   
   // Only apply landscape positioning when in landscape mode
   if (!isLandscape) {
+    // For iPads in portrait mode, add a small marginTop to move labels down
+    const isTabletDevice = Math.min(screenW, screenH) >= 768;
     return {
       top: 0,
+      marginTop: isTabletDevice ? screenH * 0.05 : 0, // Move labels down 5% on iPads in portrait
       fontSize: 50,  // Increased to match landscape
       paddingVertical: 20,
       paddingHorizontal: 32,

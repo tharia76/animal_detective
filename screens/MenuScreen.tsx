@@ -54,11 +54,16 @@ import { ImageRegistry } from '../src/utils/PersistentImageRegistry';
 import { preloadImages } from '../src/utils/preloadImages';
 import ScreenLoadingWrapper from '../src/components/ScreenLoadingWrapper';
 import FacebookAnalytics from '../src/services/FacebookAnalytics';
+import ParentalGate from '../src/components/ParentalGate';
+import Constants from 'expo-constants';
 
 
 // Menu music now handled by BackgroundMusicManager
-const BG_IMAGE = require('../src/assets/images/menu-screen.webp');
+const BG_IMAGE = require('../src/assets/images/menu-screen.png');
 const LEVELS = ['farm', 'forest', 'ocean', 'desert', 'arctic', 'insects', 'savannah', 'jungle', 'birds'];
+
+// Product ID for unlocking all levels
+const PRODUCT_ID = 'animalDetectiveUnclock'; // Used for both iOS and Android
 
 // Responsive tile size constants for different orientations
 const MIN_TILE_SIZE_LANDSCAPE = 120;
@@ -68,15 +73,15 @@ const MAX_TILE_SIZE_PORTRAIT = 180; // Slightly bigger maximum for portrait
 const RESPONSIVE_MARGIN = 6;
 
 const LEVEL_BACKGROUNDS: Record<string, any> = {
-  farm: require('../src/assets/images/level-backgrounds/farm.webp'),
-  forest: require('../src/assets/images/level-backgrounds/forest.webp'),
-  ocean: require('../src/assets/images/level-backgrounds/ocean.webp'),
-  desert: require('../src/assets/images/level-backgrounds/desert.webp'),
-  arctic: require('../src/assets/images/level-backgrounds/arctic.webp'),
-  insects: require('../src/assets/images/level-backgrounds/insect.webp'),
-  savannah: require('../src/assets/images/level-backgrounds/savannah.webp'),
-  jungle: require('../src/assets/images/level-backgrounds/jungle.webp'),
-  birds: require('../src/assets/images/level-backgrounds/birds.webp'),
+  farm: require('../src/assets/images/level-backgrounds/farm.png'),
+  forest: require('../src/assets/images/level-backgrounds/forest.png'),
+  ocean: require('../src/assets/images/level-backgrounds/ocean.png'),
+  desert: require('../src/assets/images/level-backgrounds/desert.png'),
+  arctic: require('../src/assets/images/level-backgrounds/arctic.png'),
+  insects: require('../src/assets/images/level-backgrounds/insect.png'),
+  savannah: require('../src/assets/images/level-backgrounds/savannah.png'),
+  jungle: require('../src/assets/images/level-backgrounds/jungle.png'),
+  birds: require('../src/assets/images/level-backgrounds/birds.png'),
 };
 
 const getLevelBackgroundColor = (level: string): string => {
@@ -613,7 +618,203 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const [volume, setVolume] = useState(0.8); // Default volume at 80%
   const [volumeLoaded, setVolumeLoaded] = useState(false); // Track if volume is loaded from storage
   
+  // Payment state
+  const [iapInitialized, setIapInitialized] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [purchaseInProgress, setPurchaseInProgress] = useState(false);
+  const [unlocked, setUnlocked] = useState<boolean>(false);
+  const [showParentalGate, setShowParentalGate] = useState(false);
+  const modalTransitionRef = useRef(false);
+  
+  // Load unlocked state from storage on mount
+  // No longer auto-unlocks in debug mode - levels stay locked except farm, forest, ocean
+  // Force clear any existing unlock state to ensure proper locking
+  useEffect(() => {
+    const loadUnlockedState = async () => {
+      try {
+        // Force clear unlock state to ensure proper locking
+        // Only keep unlock if user actually purchased it (will be restored via restorePurchases)
+        await AsyncStorage.removeItem('unlocked_all_levels');
+        setUnlocked(false);
+        console.log('🔒 Cleared unlock state - only farm, forest, ocean unlocked');
+      } catch (error) {
+        console.warn('Error loading unlocked state:', error);
+      }
+    };
+    loadUnlockedState();
+  }, []);
+  
+  // Save unlocked state to storage when it changes
+  const saveUnlockedState = useCallback(async (isUnlocked: boolean) => {
+    try {
+      await AsyncStorage.setItem('unlocked_all_levels', isUnlocked.toString());
+    } catch (error) {
+      console.warn('Error saving unlocked state:', error);
+    }
+  }, []);
 
+  // Modal state for locked level
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  
+  // Debug: Log modal state changes
+  useEffect(() => {
+    console.log('🔍 Unlock Modal State:', { showUnlockModal, showParentalGate, visible: showUnlockModal && !showParentalGate });
+  }, [showUnlockModal, showParentalGate]);
+
+  // IAP: Initialize and get products
+  useEffect(() => {
+    let purchaseUpdateSubscription: any;
+    let purchaseErrorSubscription: any;
+
+    async function initIAP() {
+      // Skip IAP initialization in Expo Go (where native modules aren't available)
+      // Check if we're in Expo Go - executionEnvironment is 'storeClient' in Expo Go
+      const isExpoGo = Constants.executionEnvironment === 'storeClient';
+      
+      if (isExpoGo) {
+        console.log('Skipping IAP initialization in Expo Go');
+        setIapInitialized(true);
+        return;
+      }
+
+      // Only try to require react-native-iap if we're not in Expo Go
+      let RNIap: any = null;
+      try {
+        RNIap = require('react-native-iap');
+      } catch (e: any) {
+        // If require fails, we're likely in an environment without native modules
+        console.warn('react-native-iap not available:', e?.message || e);
+        setIapInitialized(true);
+        return;
+      }
+
+      // Check if RNIap is available
+      if (!RNIap || !RNIap.initConnection) {
+        console.warn('react-native-iap not available - IAP features disabled');
+        setIapInitialized(true); // Set to true to allow app to continue
+        return;
+      }
+
+      try {
+        console.log('Initializing IAP connection...');
+        try {
+          await RNIap.initConnection();
+          console.log('IAP connection successful');
+          setIapInitialized(true);
+        } catch (initError: any) {
+          // Silently handle initialization errors (e.g., Expo Go)
+          if (initError.message?.includes('native module') ||
+              initError.code === 'MODULE_NOT_FOUND') {
+            console.warn('IAP not available in this environment');
+            setIapInitialized(true); // Set to true to allow app to continue
+            return;
+          }
+          throw initError; // Re-throw if it's a different error
+        }
+
+        // Get product info
+        console.log('Requesting products for SKU:', PRODUCT_ID);
+        try {
+          const products = await RNIap.getProducts({ skus: [PRODUCT_ID] });
+          console.log('Received products:', products);
+          if (products && products.length > 0) {
+            setProducts(products);
+          } else {
+            console.warn('No products found for SKU:', PRODUCT_ID);
+            // Don't show alert - silently handle
+          }
+        } catch (productError: any) {
+          // Silently handle product errors (IAP may not be available)
+          console.warn('Error fetching products:', productError);
+        }
+
+        // Check if already purchased
+        try {
+          const purchases = await RNIap.getAvailablePurchases();
+          const hasUnlock = purchases.some(
+            (purchase) =>
+              purchase.productId === PRODUCT_ID ||
+              purchase.productId === PRODUCT_ID.replace('.unlockall', '.unlockall') // fallback
+          );
+          if (hasUnlock) {
+            setUnlocked(true);
+            saveUnlockedState(true);
+          }
+        } catch (purchaseError: any) {
+          // Silently handle purchase check errors
+          console.warn('Error checking purchases:', purchaseError);
+        }
+
+        // Listen for purchase updates
+        try {
+          purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(async (purchase) => {
+            const receipt = purchase.transactionReceipt;
+            if (receipt) {
+              try {
+                // For iOS transactions, we need to finish them properly
+                await RNIap.finishTransaction({ purchase, isConsumable: false });
+                if (purchase.productId === PRODUCT_ID) {
+                  setUnlocked(true);
+                  saveUnlockedState(true);
+                  setPurchaseInProgress(false);
+                  Alert.alert(
+                    t('thankYou') || 'Thank You!',
+                    t('allLevelsNowUnlocked') || 'All levels are now unlocked!'
+                  );
+                }
+              } catch (err) {
+                console.warn('finishTransaction error', err);
+                setPurchaseInProgress(false);
+              }
+            }
+          });
+
+          purchaseErrorSubscription = RNIap.purchaseErrorListener((error) => {
+            setPurchaseInProgress(false);
+            console.warn('Purchase error:', error);
+            
+            // Handle specific purchase errors
+            if (error.code === 'E_USER_CANCELLED') {
+              // User cancelled purchase - no need to show error
+              return;
+            }
+            
+            Alert.alert(
+              t('purchaseError') || 'Purchase Error',
+              error.message || t('somethingWentWrong') || 'Something went wrong. Please try again.'
+            );
+          });
+        } catch (listenerError: any) {
+          // Silently handle listener setup errors
+          console.warn('Error setting up purchase listeners:', listenerError);
+        }
+      } catch (e: any) {
+        // Catch any other errors silently
+        console.warn('IAP initialization error:', e);
+        setIapInitialized(true);
+        // Don't show alert for initialization errors to avoid blocking the app
+      }
+    }
+
+    initIAP();
+
+    return () => {
+      try {
+        purchaseUpdateSubscription && purchaseUpdateSubscription.remove();
+        purchaseErrorSubscription && purchaseErrorSubscription.remove();
+        // Try to get RNIap locally for cleanup
+        try {
+          const RNIap = require('react-native-iap');
+          if (RNIap && RNIap.endConnection) {
+            RNIap.endConnection();
+          }
+        } catch (e) {
+          // Module not available, skip cleanup
+        }
+      } catch (e) {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Wrapper function for language change with button sound
   const handleLanguageChange = useCallback((code: string) => {
@@ -926,7 +1127,11 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                   await AsyncStorage.removeItem(progressKey);
                 }
                 
-                console.log('🗑️ Reset all levels and cleared all animal progress');
+                // Clear unlock status to restore locks
+                await AsyncStorage.removeItem('unlocked_all_levels');
+                setUnlocked(false);
+                
+                console.log('🗑️ Reset all levels, cleared all animal progress, and restored locks');
                 
                 // Reset UI visited counts for all levels immediately
                 setVisitedCounts(() => {
@@ -959,14 +1164,24 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   // also stop when you select a level - instant navigation
   const handleSelect = useCallback(
     (level, isLocked) => {
+      console.log('🔍 handleSelect called:', { level, isLocked, unlocked });
       playButtonSound(volume);
-      
-      // Track level selection in analytics
-      FacebookAnalytics.trackLevelSelected(level, false); // All levels are unlocked
       
       // Register user interaction for audio playback
       const { BackgroundMusicManager } = require('../src/services/BackgroundMusicManager');
       BackgroundMusicManager.getInstance().onUserInteraction();
+      
+      // If level is locked and user hasn't unlocked all levels, show unlock modal and STOP
+      if (isLocked && !unlocked) {
+        console.log('🔒 Level is locked - showing unlock modal');
+        setShowUnlockModal(true);
+        // Track analytics for locked level attempt
+        FacebookAnalytics.trackLevelSelected(level, true);
+        return; // CRITICAL: Don't proceed to open the level
+      }
+      
+      // Track level selection in analytics
+      FacebookAnalytics.trackLevelSelected(level, false);
       
       // Show destination background immediately
       setSelectedLevel(level);
@@ -992,13 +1207,153 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         onSelectLevel(level);
       }
     },
-    [onSelectLevel, volume]
+    [onSelectLevel, volume, unlocked]
   );
 
-  // Modal for locked level - REMOVED (app is now free)
-  const renderUnlockModal = () => {
-    return null; // App is now free, no unlock modal needed
-  };
+  // Restore purchases
+  const handleRestore = useCallback(async () => {
+    let RNIap: any = null;
+    try {
+      RNIap = require('react-native-iap');
+    } catch (e) {
+      Alert.alert(
+        t('error') || 'Error',
+        'In-app purchases are not available in this environment.'
+      );
+      return;
+    }
+
+    if (!RNIap || !RNIap.getAvailablePurchases) {
+      Alert.alert(
+        t('error') || 'Error',
+        'In-app purchases are not available in this environment.'
+      );
+      return;
+    }
+
+    setPurchaseInProgress(true);
+    try {
+      const purchases = await RNIap.getAvailablePurchases();
+      const hasUnlock = purchases.some(
+        (purchase) =>
+          purchase.productId === PRODUCT_ID ||
+          purchase.productId === PRODUCT_ID.replace('.unlockall', '.unlockall')
+      );
+      if (hasUnlock) {
+        setUnlocked(true);
+        saveUnlockedState(true);
+        Alert.alert(
+          t('restored') || 'Purchases Restored',
+          t('allLevelsNowUnlocked') || 'All levels are now unlocked!'
+        );
+      } else {
+        Alert.alert(
+          t('noPreviousPurchases') || 'No Previous Purchases',
+          t('noPurchasesFound') || 'No previous purchases were found to restore.'
+        );
+      }
+    } catch (e) {
+      console.warn('Restore purchases error:', e);
+      Alert.alert(
+        t('error') || 'Error',
+        t('couldNotRestorePurchases') || 'Could not restore purchases. Please try again.'
+      );
+    }
+    setPurchaseInProgress(false);
+  }, [t, saveUnlockedState]);
+
+  // Show parental gate before purchase
+  const handleUnlock = useCallback(() => {
+    console.log('🔓 handleUnlock called');
+    console.log('🔓 purchaseInProgress:', purchaseInProgress);
+    console.log('🔓 showUnlockModal:', showUnlockModal);
+    
+    if (purchaseInProgress) {
+      console.log('🔓 Purchase in progress, returning');
+      return;
+    }
+    
+    if (modalTransitionRef.current) {
+      console.log('🔓 Modal transition in progress, returning');
+      return;
+    }
+    
+    // Play button sound
+    playButtonSound(volume);
+    
+    // Set flag to prevent multiple calls
+    modalTransitionRef.current = true;
+    
+    // Close unlock modal first
+    setShowUnlockModal(false);
+    
+    // Wait for modal to fully dismiss before showing parental gate
+    console.log('🔓 Scheduling parental gate in 500ms');
+    setTimeout(() => {
+      console.log('🔓 Showing parental gate now');
+      setShowParentalGate(true);
+      modalTransitionRef.current = false;
+    }, 500);
+  }, [purchaseInProgress, volume, showUnlockModal]);
+
+  // Actual purchase handler (called after parental gate success)
+  const handlePurchase = useCallback(async () => {
+    let RNIap: any = null;
+    try {
+      RNIap = require('react-native-iap');
+    } catch (e) {
+      Alert.alert(
+        t('error') || 'Error',
+        'In-app purchases are not available in this environment.'
+      );
+      return;
+    }
+
+    if (!RNIap || !RNIap.requestPurchase) {
+      Alert.alert(
+        t('error') || 'Error',
+        'In-app purchases are not available in this environment.'
+      );
+      return;
+    }
+
+    setPurchaseInProgress(true);
+    
+    try {
+      if (Platform.OS === 'ios') {
+        // For iOS, use standard In-App Purchase through react-native-iap
+        await RNIap.requestPurchase({ 
+          sku: PRODUCT_ID,
+          andDangerouslyFinishTransactionAutomaticallyIOS: false // Let us handle transaction completion
+        });
+      } else {
+        // For Android, use Google Play Billing
+        await RNIap.requestPurchase({ sku: PRODUCT_ID });
+      }
+    } catch (e) {
+      console.warn('Purchase error:', e);
+      setPurchaseInProgress(false);
+      // Show user-friendly error message
+      Alert.alert(
+        t('purchaseError') || 'Purchase Error',
+        t('couldNotCompletePurchase') || 'Could not complete purchase. Please try again.'
+      );
+    }
+  }, [t]);
+
+
+  // Handle parental gate success
+  const handleParentalGateSuccess = useCallback(() => {
+    setShowParentalGate(false);
+    handlePurchase();
+  }, [handlePurchase]);
+
+  // Handle parental gate cancel
+  const handleParentalGateCancel = useCallback(() => {
+    setShowParentalGate(false);
+    modalTransitionRef.current = false;
+    // No alert needed - user intentionally cancelled by closing the modal
+  }, []);
 
   // Remove the loading check since ScreenLoadingWrapper handles it
   // The wrapper will show loading state until all assets are loaded
@@ -1017,9 +1372,19 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const settingsModalTop = Math.max(0, Math.round((currentHeight - settingsModalHeight) / 2));
   const settingsModalLeft = Math.max(0, Math.round((currentWidth - settingsModalWidth) / 2));
  
-  // All levels are unlocked (app is now free)
+  // Lock all levels except farm, forest, and ocean (or if user has unlocked all)
+  // Debug mode still respects locking (only farm, forest, ocean unlocked)
   const getIsLocked = (level: string) => {
-    return false; // All levels are always unlocked
+    // If user has unlocked all levels, nothing is locked
+    if (unlocked) {
+      return false;
+    }
+    // Unlock farm, forest, and ocean only
+    if (level === 'farm' || level === 'forest' || level === 'ocean') {
+      return false;
+    }
+    // Lock all other levels
+    return true;
   };
 
   // Gather all assets that need to be preloaded
@@ -1613,6 +1978,194 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         </View>
       </ImageBackground>
       )}
+      
+      {/* Unlock Modal */}
+      <Modal
+        visible={showUnlockModal && !showParentalGate}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          playButtonSound(volume);
+          setShowUnlockModal(false);
+        }}
+        supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+        statusBarTranslucent={true}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: isTablet ? 40 : 15,
+            paddingVertical: isTablet ? 40 : 20,
+            zIndex: 99999,
+          }}
+          onPress={() => {
+            playButtonSound(volume);
+            setShowUnlockModal(false);
+          }}
+        >
+          <Pressable
+            style={{
+              backgroundColor: '#FFF8DC',
+              borderRadius: isTablet ? 30 : 22,
+              padding: isTablet ? 30 : 18,
+              alignItems: 'center',
+              width: '100%',
+              maxWidth: isTablet ? 700 : 550,
+              shadowColor: '#FF8C00',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.35,
+              shadowRadius: 15,
+              elevation: 15,
+              borderWidth: 3,
+              borderColor: '#FF8C00',
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <TouchableOpacity
+              onPress={() => {
+                playButtonSound(volume);
+                setShowUnlockModal(false);
+              }}
+              style={{
+                position: 'absolute',
+                top: isTablet ? 15 : 8,
+                right: isTablet ? 15 : 8,
+                padding: 6,
+                zIndex: 10,
+              }}
+            >
+              <Ionicons name="close-circle" size={isTablet ? 36 : 28} color="#612915" />
+            </TouchableOpacity>
+            
+            {/* Lock Icon */}
+            <View style={{ marginTop: isTablet ? 10 : 5, marginBottom: isTablet ? 16 : 10 }}>
+              <Ionicons name="lock-closed" size={isTablet ? 60 : 45} color="#FF8C00" />
+            </View>
+            
+            {/* Title */}
+            <Text style={{
+              fontSize: isTablet ? 26 : 18,
+              fontWeight: '900',
+              marginBottom: isTablet ? 10 : 6,
+              color: '#612915',
+              textAlign: 'center',
+              textShadowColor: 'rgba(0,0,0,0.2)',
+              textShadowOffset: { width: 0, height: 2 },
+              textShadowRadius: 3,
+            }}>
+              {t('unlockLevel') || 'Unlock Mission'}
+            </Text>
+            
+            {/* Message */}
+            <Text style={{
+              fontSize: isTablet ? 16 : 13,
+              color: '#8B4513',
+              marginBottom: isTablet ? 18 : 12,
+              textAlign: 'center',
+              lineHeight: isTablet ? 22 : 18,
+              fontWeight: '600',
+              paddingHorizontal: isTablet ? 10 : 5,
+            }}>
+              {t('unlockMessage') || 'Unlock all missions to access all levels and more!'}
+            </Text>
+            
+            {/* IAP Information */}
+            <View style={{
+              backgroundColor: 'rgba(255, 140, 0, 0.15)',
+              borderRadius: 12,
+              padding: isTablet ? 12 : 10,
+              marginBottom: isTablet ? 16 : 12,
+              width: '70%',
+              alignItems: 'center',
+              borderWidth: 2,
+              borderColor: 'rgba(255, 140, 0, 0.3)',
+            }}>
+              <Text style={{
+                fontSize: isTablet ? 18 : 14,
+                fontWeight: 'bold',
+                color: '#612915',
+                marginBottom: isTablet ? 6 : 4,
+              }}>
+                {t('unlockAllMissions') || 'Unlock All Missions'}
+              </Text>
+              <Text style={{
+                fontSize: isTablet ? 32 : 26,
+                fontWeight: 'bold',
+                color: '#FF8C00',
+              }}>
+                {products.length > 0 && products[0].localizedPrice ? products[0].localizedPrice : '$0.99'}
+              </Text>
+            </View>
+            
+            {/* Purchase Button */}
+            <TouchableOpacity
+              onPress={handleUnlock}
+              disabled={purchaseInProgress}
+              style={{
+                backgroundColor: purchaseInProgress ? '#CCCCCC' : '#FF8C00',
+                borderRadius: isTablet ? 28 : 22,
+                padding: isTablet ? 18 : 12,
+                alignItems: 'center',
+                width: '100%',
+                marginBottom: isTablet ? 10 : 8,
+                shadowColor: '#FF8C00',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 8,
+                elevation: 6,
+                borderWidth: 2,
+                borderColor: 'rgba(255, 140, 0, 0.3)',
+              }}
+            >
+              {purchaseInProgress ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={{
+                  color: 'white',
+                  fontSize: isTablet ? 22 : 17,
+                  fontWeight: '800',
+                  textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: 2,
+                }}>
+                  {Platform.OS === 'ios' ? (t('appStorePay') || 'Get it now') : (t('googlePlayPay') || 'Get it now')}
+                </Text>
+              )}
+            </TouchableOpacity>
+            
+            {/* Restore Purchases Button */}
+            <TouchableOpacity
+              onPress={handleRestore}
+              style={{
+                padding: isTablet ? 10 : 6,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{
+                color: '#612915',
+                fontSize: isTablet ? 15 : 11,
+                textDecorationLine: 'underline',
+                fontWeight: '600',
+              }}>
+                {t('restorePurchases') || 'Restore Purchases'}
+              </Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+      
+      {/* Parental Gate Modal */}
+      <ParentalGate
+        visible={showParentalGate}
+        onSuccess={handleParentalGateSuccess}
+        onCancel={handleParentalGateCancel}
+        title="Parental Permission Required"
+        message="Please complete this challenge to access the store:"
+      />
     </View>
     </ScreenLoadingWrapper>
   );

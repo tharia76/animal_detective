@@ -272,7 +272,7 @@ export function useDynamicStyles() {
         marginTop: isTabletDevice ? '5%' : '8%', // Better spacing
         transform: [{ 
           scale: isTabletDevice 
-            ? 1.6 
+            ? 1.85  // Increased from 1.6 to 1.85 for bigger animals on iPads
             : (isLandscapeMode ? 1.0 : 0.85) // Better scaling for all orientations
         }],
       },

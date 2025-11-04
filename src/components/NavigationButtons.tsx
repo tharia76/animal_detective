@@ -144,19 +144,22 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   }));
 
   // Responsive navigation button style - much smaller in mobile portrait
+  // Larger buttons for iPads/tablets
   const baseButtonSize = isTabletDevice 
-    ? 120 
+    ? 160  // Increased from 120 to 160 for iPads
     : (isLandscape ? 140 : 80); // Much smaller buttons in mobile portrait
   const baseIconSize = isTabletDevice 
-    ? 65 
+    ? 85  // Increased from 65 to 85 for iPads
     : (isLandscape ? 75 : 35); // Much smaller icons in mobile portrait
   
   // Add safety bounds to prevent excessive scaling
   const safeScaleFactor = Math.max(0.5, Math.min(scaleFactor, 2.0));
   const minButtonSize = isLandscape ? 60 : 45; // Smaller minimum for portrait
   const minIconSize = isLandscape ? 30 : 20; // Smaller minimum for portrait
-  const buttonSize = Math.max(minButtonSize, Math.min(200, getResponsiveSpacing(baseButtonSize, safeScaleFactor)));
-  const iconSize = Math.max(minIconSize, Math.min(100, getResponsiveSpacing(baseIconSize, safeScaleFactor)));
+  const maxButtonSize = isTabletDevice ? 220 : 200; // Larger max for tablets
+  const maxIconSize = isTabletDevice ? 120 : 100; // Larger max for tablets
+  const buttonSize = Math.max(minButtonSize, Math.min(maxButtonSize, getResponsiveSpacing(baseButtonSize, safeScaleFactor)));
+  const iconSize = Math.max(minIconSize, Math.min(maxIconSize, getResponsiveSpacing(baseIconSize, safeScaleFactor)));
 
   const navButtonStyle = [
     styles.navButton,

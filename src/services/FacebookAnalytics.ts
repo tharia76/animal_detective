@@ -1,13 +1,24 @@
 import * as Facebook from 'expo-facebook';
 import { Platform } from 'react-native';
 
+// Try to import AppEventsLogger from react-native-fbads
+let AppEventsLogger: any = null;
+try {
+  const fbads = require('react-native-fbads');
+  AppEventsLogger = fbads.AppEventsLogger;
+} catch (error) {
+  console.warn('react-native-fbads not available, using expo-facebook');
+}
+
 /**
  * Facebook Analytics Service for Animal Detective
  * Tracks user behavior, app usage, and key events using Meta App Events
+ * Uses AppEventsLogger from react-native-fbads when available, falls back to expo-facebook
  */
 class FacebookAnalyticsService {
   private isInitialized = false;
   private appId: string | null = null;
+  private useAppEventsLogger = AppEventsLogger !== null;
 
   /**
    * Initialize Facebook Analytics service
@@ -18,13 +29,52 @@ class FacebookAnalyticsService {
     try {
       this.appId = appId || '2048296882646951';
       
-      // Initialize Facebook SDK
+      // Initialize Facebook SDK (expo-facebook)
       await Facebook.initializeAsync({ appId: this.appId });
       
+      // If using AppEventsLogger, it's already initialized via native code
+      if (this.useAppEventsLogger) {
+        console.log('📊 Facebook Analytics initialized with AppEventsLogger');
+      } else {
+        console.log('📊 Facebook Analytics initialized with expo-facebook');
+      }
+      
       this.isInitialized = true;
-      console.log('📊 Facebook Analytics initialized');
     } catch (error) {
       console.warn('Facebook Analytics initialization error:', error);
+    }
+  }
+
+  /**
+   * Helper method to log events using AppEventsLogger or expo-facebook
+   */
+  private async logEvent(eventName: string, parameters?: Record<string, any>) {
+    // Check if Facebook SDK is available
+    if (!Facebook || typeof Facebook.logEventAsync !== 'function') {
+      console.warn('Facebook SDK not available for logging event:', eventName);
+      return;
+    }
+
+    if (this.useAppEventsLogger && AppEventsLogger) {
+      // Use AppEventsLogger from react-native-fbads (synchronous)
+      try {
+        AppEventsLogger.logEvent(eventName, parameters || {});
+      } catch (error) {
+        console.warn('AppEventsLogger error:', error);
+        // Fallback to expo-facebook if AppEventsLogger fails
+        try {
+          await Facebook.logEventAsync(eventName, parameters || {});
+        } catch (fbError) {
+          console.warn('Facebook.logEventAsync error:', fbError);
+        }
+      }
+    } else {
+      // Fallback to expo-facebook
+      try {
+        await Facebook.logEventAsync(eventName, parameters || {});
+      } catch (error) {
+        console.warn('Facebook.logEventAsync error:', error);
+      }
     }
   }
 
@@ -33,7 +83,7 @@ class FacebookAnalyticsService {
    */
   async trackAppOpen() {
     try {
-      await Facebook.logEventAsync('app_open', {
+      await this.logEvent('app_open', {
         platform: Platform.OS,
         app_version: '1.0.0',
         timestamp: Date.now()
@@ -59,7 +109,7 @@ class FacebookAnalyticsService {
         parameters.completion_time = completionTime;
       }
       
-      await Facebook.logEventAsync('level_completed', parameters);
+      await this.logEvent('level_completed', parameters);
       console.log(`📊 Level completed: ${levelName}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -81,7 +131,7 @@ class FacebookAnalyticsService {
         parameters.discovery_order = discoveryOrder;
       }
       
-      await Facebook.logEventAsync('animal_discovered', parameters);
+      await this.logEvent('animal_discovered', parameters);
       console.log(`📊 Animal discovered: ${animalName}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -93,10 +143,15 @@ class FacebookAnalyticsService {
    */
   async trackPurchase(price: number, currency: string = 'USD', productId?: string) {
     try {
-      await Facebook.logPurchaseAsync(price, currency);
+      // Check if Facebook SDK is available
+      if (Facebook && typeof Facebook.logPurchaseAsync === 'function') {
+        await Facebook.logPurchaseAsync(price, currency);
+      } else {
+        console.warn('Facebook.logPurchaseAsync not available');
+      }
       
       if (productId) {
-        await Facebook.logEventAsync('purchase_completed', {
+        await this.logEvent('purchase_completed', {
           product_id: productId,
           price: price,
           currency: currency,
@@ -125,7 +180,7 @@ class FacebookAnalyticsService {
         Object.assign(parameters, additionalParams);
       }
       
-      await Facebook.logEventAsync('user_engagement', parameters);
+      await this.logEvent('user_engagement', parameters);
       console.log(`📊 User engagement: ${action}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -137,7 +192,7 @@ class FacebookAnalyticsService {
    */
   async trackLevelSelected(levelName: string, isLocked: boolean = false) {
     try {
-      await Facebook.logEventAsync('level_selected', {
+      await this.logEvent('level_selected', {
         level_name: levelName,
         is_locked: isLocked ? 'true' : 'false',
         timestamp: Date.now()
@@ -153,7 +208,7 @@ class FacebookAnalyticsService {
    */
   async trackSessionStarted() {
     try {
-      await Facebook.logEventAsync('session_started', {
+      await this.logEvent('session_started', {
         platform: Platform.OS,
         timestamp: Date.now()
       });
@@ -178,7 +233,7 @@ class FacebookAnalyticsService {
         parameters.old_value = String(oldValue);
       }
       
-      await Facebook.logEventAsync('settings_changed', parameters);
+      await this.logEvent('settings_changed', parameters);
       console.log(`📊 Settings changed: ${settingName}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -198,7 +253,7 @@ class FacebookAnalyticsService {
         Object.assign(eventParams, parameters);
       }
       
-      await Facebook.logEventAsync(eventName, eventParams);
+      await this.logEvent(eventName, eventParams);
       console.log(`📊 Custom event tracked: ${eventName}`);
     } catch (error) {
       console.warn('Analytics error:', error);
@@ -223,7 +278,7 @@ class FacebookAnalyticsService {
    */
   async trackAppInstall() {
     try {
-      await Facebook.logEventAsync('app_install', {
+      await this.logEvent('app_install', {
         platform: Platform.OS,
         timestamp: Date.now()
       });
@@ -238,7 +293,7 @@ class FacebookAnalyticsService {
    */
   async trackTutorialCompleted(stepName: string, totalSteps: number) {
     try {
-      await Facebook.logEventAsync('tutorial_completed', {
+      await this.logEvent('tutorial_completed', {
         step_name: stepName,
         total_steps: totalSteps,
         timestamp: Date.now()
@@ -263,7 +318,7 @@ class FacebookAnalyticsService {
         parameters.level_name = levelName;
       }
       
-      await Facebook.logEventAsync('achievement_unlocked', parameters);
+      await this.logEvent('achievement_unlocked', parameters);
       console.log(`📊 Achievement unlocked: ${achievementName}`);
     } catch (error) {
       console.warn('Analytics error:', error);

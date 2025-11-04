@@ -30,6 +30,9 @@ import BirdsScreen from '../screens/levels/Birds';
 import { getAnimals } from '../src/data/animals';
 import BackgroundMusicManager from '../src/services/BackgroundMusicManager';
 import FacebookAnalytics from '../src/services/FacebookAnalytics';
+import FirebaseAnalytics from '../src/services/FirebaseAnalytics';
+import AdMobService from '../src/services/AdMobService';
+import TikTokAnalytics from '../src/services/TikTokAnalytics';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -43,10 +46,11 @@ export default function App() {
 
 
   
-  // Initialize Facebook Analytics
+  // Initialize Analytics and Ad Services
   useEffect(() => {
-    const initializeAnalytics = async () => {
+    const initializeServices = async () => {
       try {
+        // Initialize Facebook Analytics
         await FacebookAnalytics.initialize('2048296882646951');
         await FacebookAnalytics.trackAppOpen();
         await FacebookAnalytics.trackSessionStarted();
@@ -54,9 +58,37 @@ export default function App() {
       } catch (error) {
         console.warn('Failed to initialize Facebook Analytics:', error);
       }
+
+      try {
+        // Initialize Firebase Analytics
+        await FirebaseAnalytics.initialize();
+        await FirebaseAnalytics.trackAppOpen();
+        await FirebaseAnalytics.trackSessionStarted();
+        console.log('📊 Firebase Analytics initialized successfully');
+      } catch (error) {
+        console.warn('Failed to initialize Firebase Analytics:', error);
+      }
+
+      try {
+        // Initialize AdMob
+        await AdMobService.initialize();
+        console.log('📱 AdMob initialized successfully');
+      } catch (error) {
+        console.warn('Failed to initialize AdMob:', error);
+      }
+
+      try {
+        // Initialize TikTok Analytics (values are hardcoded in TikTokAnalytics.ts)
+        await TikTokAnalytics.initialize();
+        await TikTokAnalytics.trackAppOpen();
+        await TikTokAnalytics.trackSessionStarted();
+        console.log('📱 TikTok Analytics initialized successfully');
+      } catch (error) {
+        console.warn('Failed to initialize TikTok Analytics:', error);
+      }
     };
     
-    initializeAnalytics();
+    initializeServices();
   }, []);
 
   // Force landscape on mount - especially for iPad
@@ -162,19 +194,15 @@ export default function App() {
 
   // Instant loading overlay with asset preloading
   const handleSelectLevel = useCallback(async (level: string) => {
-    // Safety check: Only allow farm/forest levels or if user has unlocked all levels
-    // This prevents locked levels from being accessed even if they somehow get through
-    
-    // TEMPORARY: Allow all levels for testing
-    /* ORIGINAL CODE - RESTORE AFTER TESTING
-    const isUnlockedLevel = level === 'farm' || level === 'forest';
+    // Safety check: Only allow farm, forest, and ocean levels (unless unlocked)
+    // Debug mode still respects locking - only farm, forest, ocean unlocked
+    const isUnlockedLevel = level === 'farm' || level === 'forest' || level === 'ocean';
     const hasUnlockedAll = await AsyncStorage.getItem('unlocked_all_levels') === 'true';
     
     if (!isUnlockedLevel && !hasUnlockedAll) {
       console.warn('Attempted to access locked level:', level, '- blocking access');
       return; // Don't open locked levels
     }
-    */
     
     // Track level selection
     FacebookAnalytics.trackLevelSelected(level, false);

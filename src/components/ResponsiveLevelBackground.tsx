@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { 
-  ImageBackground, 
+  Image,
   View, 
   StyleSheet, 
   Dimensions,
@@ -83,7 +83,7 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
   const containerStyle = useMemo(() => {
     const baseStyle = {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor,
+      backgroundColor: 'transparent', // Transparent - image renders immediately
       // Extend beyond safe areas to cover notch area
       top: -safeAreaInsets.top,
       bottom: -safeAreaInsets.bottom,
@@ -100,14 +100,14 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
     }
 
     return [baseStyle, style];
-  }, [backgroundColor, style, deviceInfo.isLandscape, safeAreaInsets]);
+  }, [style, deviceInfo.isLandscape, safeAreaInsets]);
 
 
 
   return (
     <View style={containerStyle} onLayout={onLayout}>
       {/* Background Image with responsive positioning */}
-      <ImageBackground
+      <Image
         source={backgroundSource}
         style={[
           {
@@ -123,18 +123,8 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
         resizeMode={backgroundStyles.resizeMode}
         onLoad={handleImageLoad}
         onError={handleImageError}
-        blurRadius={0}
-      >
-        {/* Fallback color overlay when image is loading or fails to load */}
-        {!isImageLoaded && (
-          <View 
-            style={[
-              StyleSheet.absoluteFillObject,
-              { backgroundColor }
-            ]} 
-          />
-        )}
-      </ImageBackground>
+        fadeDuration={0}
+      />
 
       {/* Content overlay */}
       {children && (

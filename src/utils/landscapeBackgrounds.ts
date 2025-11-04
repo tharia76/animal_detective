@@ -168,15 +168,15 @@ export const getLandscapeBackgroundStyles = (
 // Get landscape-optimized background color
 export const getLandscapeBackgroundColor = (levelName: string): string => {
   const colorMap: Record<string, string> = {
-    forest: '#87CEEB',
-    birds: '#87CEEB',
-    jungle: '#1a3d1a',
-    savannah: '#f4e4bc',
-    ocean: '#006994',
-    desert: '#f4e4bc',
-    farm: '#87CEEB',
-    arctic: '#87CEEB',
-    insects: '#87CEEB'
+    forest: '#2d5a3d',      // Dark green for forest
+    birds: '#87ceeb',       // Sky blue for birds
+    jungle: '#1a4d1a',      // Dark jungle green
+    savannah: '#deb887',    // Sandy brown for savannah
+    ocean: '#006994',       // Deep blue for ocean
+    desert: '#f4a460',      // Sandy desert color
+    farm: '#90ee90',        // Light green for farm
+    arctic: '#b0e0e6',      // Light blue for arctic
+    insects: '#90ee90'      // Light green for insects
   };
   return colorMap[levelName.toLowerCase()] || '#000';
 };

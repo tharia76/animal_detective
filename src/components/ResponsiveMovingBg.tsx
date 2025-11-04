@@ -192,20 +192,39 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
     let leftOffset = -(imgWidth - totalWidth) / 2;
     let topOffset = -(imgHeight - totalHeight) / 2;
     
+    // Apply general phone positioning - move moving backgrounds up on phones
+    const isMobileDevice = deviceInfo.deviceType === 'phone' || deviceInfo.deviceType === 'foldable';
+    
+    if (isMobileDevice && levelName?.toLowerCase() !== 'farm') {
+      // Move moving background up 3% on phones for all levels except farm
+      const phoneOffset = deviceInfo.isLandscape ? 
+        deviceInfo.height * -0.03 :  // 3% up in landscape
+        deviceInfo.height * -0.03;   // 3% up in portrait
+      topOffset = topOffset + phoneOffset;
+      
+      console.log(`📱 MOVING BG - Phone positioning applied for ${levelName}:`, { 
+        originalTopOffset: -(imgHeight - totalHeight) / 2,
+        phoneOffset,
+        finalTopOffset: topOffset,
+        deviceType: deviceInfo.deviceType,
+        isLandscape: deviceInfo.isLandscape,
+        screenSize: { width: deviceInfo.width, height: deviceInfo.height }
+      });
+    }
+
     // Apply custom positioning for Savannah level to show more ground
     if (levelName?.toLowerCase() === 'savannah') {
-      const isMobileDevice = deviceInfo.deviceType === 'phone' || deviceInfo.deviceType === 'foldable';
-      
       if (isMobileDevice) {
-        // Move background - treat foldable same as phone
-        const groundOffset = deviceInfo.isLandscape ? 
-          deviceInfo.height * -0.4 :  // 50% up in landscape
-          deviceInfo.height * 0.4;    // 40% down in portrait
-        topOffset = topOffset + groundOffset;
+        // Savannah-specific adjustment: move background down more noticeably (reduced)
+        const savannahOffset = deviceInfo.isLandscape ? 
+          deviceInfo.height * -0.1 :  // 10% up in landscape (on top of general phone offset)
+          deviceInfo.height * 0.1;    // 10% down in portrait (on top of general phone offset)
+        topOffset = topOffset + savannahOffset;
         
         console.log('🦁🦁🦁 SAVANNAH MOVING BG - Mobile positioning applied:', { 
           originalTopOffset: -(imgHeight - totalHeight) / 2,
-          groundOffset,
+          generalPhoneOffset: deviceInfo.isLandscape ? deviceInfo.height * 0.05 : deviceInfo.height * 0.1,
+          savannahOffset,
           finalTopOffset: topOffset,
           deviceType: deviceInfo.deviceType,
           isLandscape: deviceInfo.isLandscape,
@@ -216,22 +235,212 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
 
     // Apply custom positioning for Forest level to show more ground
     if (levelName?.toLowerCase() === 'forest') {
-      const isMobileDevice = deviceInfo.deviceType === 'phone' || deviceInfo.deviceType === 'foldable';
-      
       if (isMobileDevice) {
-        // Move background down more noticeably - treat foldable same as phone
-        const groundOffset = deviceInfo.isLandscape ? 
-          deviceInfo.height * - 0.1 :   // 40% down in landscape
-          deviceInfo.height * 0.5;    // 50% down in portrait
-        topOffset = topOffset + groundOffset;
+        // Forest-specific adjustment: move background down more noticeably (reduced)
+        const forestOffset = deviceInfo.isLandscape ? 
+          deviceInfo.height * 0.02 :   // 2% down in landscape (on top of general phone offset)
+          deviceInfo.height * 0.15;    // 15% down in portrait (on top of general phone offset)
+        topOffset = topOffset + forestOffset;
         
         console.log('🌲🌲🌲 FOREST MOVING BG - Mobile positioning applied:', { 
           originalTopOffset: -(imgHeight - totalHeight) / 2,
-          groundOffset,
+          generalPhoneOffset: deviceInfo.isLandscape ? deviceInfo.height * 0.05 : deviceInfo.height * 0.1,
+          forestOffset,
           finalTopOffset: topOffset,
           deviceType: deviceInfo.deviceType,
           isLandscape: deviceInfo.isLandscape,
           screenSize: { width: deviceInfo.width, height: deviceInfo.height }
+        });
+      }
+      
+      // In landscape, ensure the background fills the entire screen from top
+      if (deviceInfo.isLandscape) {
+        topOffset = 0; // Start from top to fill entire screen
+        
+        console.log('🌲🌲🌲 FOREST MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
+        });
+      }
+    }
+
+    // Apply custom positioning for Farm level - ensure full screen coverage in landscape
+    if (levelName?.toLowerCase() === 'farm') {
+      if (deviceInfo.isLandscape) {
+        // In landscape, always position image from top (0) to fill entire screen
+        // The image is scaled to cover, so it will be larger than container
+        topOffset = 0;
+        
+        console.log('🚜🚜🚜 FARM MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          safeAreaInsetsTop: safeAreaInsets.top,
+          safeAreaInsetsBottom: safeAreaInsets.bottom,
+          deviceInfoHeight: deviceInfo.height,
+          containerHeight,
+          totalHeight,
+          imgHeight,
+          finalTopOffset: topOffset,
+          imageCoversScreen: imgHeight >= containerHeight,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
+        });
+      }
+    }
+
+    // Apply custom positioning for Ocean level - ensure full screen coverage in landscape
+    if (levelName?.toLowerCase() === 'ocean') {
+      if (deviceInfo.isLandscape) {
+        // In landscape, always position image from top (0) to fill entire screen
+        // The image is scaled to cover, so it will be larger than container
+        topOffset = 0;
+        
+        console.log('🌊🌊🌊 OCEAN MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          safeAreaInsetsTop: safeAreaInsets.top,
+          safeAreaInsetsBottom: safeAreaInsets.bottom,
+          deviceInfoHeight: deviceInfo.height,
+          totalHeight,
+          imgHeight,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
+        });
+      }
+    }
+
+    // Apply custom positioning for Desert level - ensure full screen coverage in landscape
+    if (levelName?.toLowerCase() === 'desert') {
+      if (deviceInfo.isLandscape) {
+        // In landscape, always position image from top (0) to fill entire screen
+        // The image is scaled to cover, so it will be larger than container
+        topOffset = 0;
+        
+        console.log('🏜️🏜️🏜️ DESERT MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          safeAreaInsetsTop: safeAreaInsets.top,
+          safeAreaInsetsBottom: safeAreaInsets.bottom,
+          deviceInfoHeight: deviceInfo.height,
+          totalHeight,
+          imgHeight,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
+        });
+      }
+    }
+
+    // Apply custom positioning for Arctic level - ensure full screen coverage in landscape
+    if (levelName?.toLowerCase() === 'arctic') {
+      if (deviceInfo.isLandscape) {
+        topOffset = 0;
+        
+        console.log('❄️❄️❄️ ARCTIC MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          safeAreaInsetsTop: safeAreaInsets.top,
+          safeAreaInsetsBottom: safeAreaInsets.bottom,
+          deviceInfoHeight: deviceInfo.height,
+          totalHeight,
+          imgHeight,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
+        });
+      }
+    }
+
+    // Apply custom positioning for Insects level - ensure full screen coverage in landscape
+    if (levelName?.toLowerCase() === 'insects') {
+      if (deviceInfo.isLandscape) {
+        topOffset = 0;
+        
+        console.log('🐛🐛🐛 INSECTS MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          safeAreaInsetsTop: safeAreaInsets.top,
+          safeAreaInsetsBottom: safeAreaInsets.bottom,
+          deviceInfoHeight: deviceInfo.height,
+          totalHeight,
+          imgHeight,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
+        });
+      }
+    }
+
+    // Apply custom positioning for Savannah level - ensure full screen coverage in landscape
+    if (levelName?.toLowerCase() === 'savannah') {
+      if (deviceInfo.isLandscape) {
+        // Override any mobile-specific positioning in landscape
+        topOffset = 0;
+        
+        console.log('🦁🦁🦁 SAVANNAH MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          safeAreaInsetsTop: safeAreaInsets.top,
+          safeAreaInsetsBottom: safeAreaInsets.bottom,
+          deviceInfoHeight: deviceInfo.height,
+          totalHeight,
+          imgHeight,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
+        });
+      }
+    }
+
+    // Apply custom positioning for Jungle level - ensure full screen coverage in landscape
+    if (levelName?.toLowerCase() === 'jungle') {
+      if (deviceInfo.isLandscape) {
+        topOffset = 0;
+        
+        console.log('🌴🌴🌴 JUNGLE MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          safeAreaInsetsTop: safeAreaInsets.top,
+          safeAreaInsetsBottom: safeAreaInsets.bottom,
+          deviceInfoHeight: deviceInfo.height,
+          totalHeight,
+          imgHeight,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
+        });
+      }
+    }
+
+    // Apply custom positioning for Birds level - ensure full screen coverage in landscape
+    if (levelName?.toLowerCase() === 'birds') {
+      if (deviceInfo.isLandscape) {
+        topOffset = 0;
+        
+        console.log('🐦🐦🐦 BIRDS MOVING BG - Landscape fullscreen positioning applied:', { 
+          originalTopOffset: -(imgHeight - totalHeight) / 2,
+          safeAreaInsetsTop: safeAreaInsets.top,
+          safeAreaInsetsBottom: safeAreaInsets.bottom,
+          deviceInfoHeight: deviceInfo.height,
+          totalHeight,
+          imgHeight,
+          finalTopOffset: topOffset,
+          deviceType: deviceInfo.deviceType,
+          isLandscape: deviceInfo.isLandscape,
+          screenSize: { width: deviceInfo.width, height: deviceInfo.height },
+          imgDimensions: { width: imgWidth, height: imgHeight }
         });
       }
     }
