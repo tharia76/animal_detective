@@ -33,6 +33,7 @@ target 'AnimalDetective' do
 
   # Explicitly declare pods with modular headers to override autolinking
   pod 'GoogleUtilities', :modular_headers => true
+  pod 'TikTokBusinessSDK', :modular_headers => true
 
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
@@ -93,6 +94,14 @@ target 'AnimalDetective' do
           config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
         end
       end
+      # Enable modular headers for TikTokBusinessSDK (required for TikTokBusiness Swift pod)
+      if target.name == 'TikTokBusinessSDK' || target.name.include?('TikTokBusinessSDK')
+        target.build_configurations.each do |config|
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+          config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+          config.build_settings['CLANG_ENABLE_MODULE_MAP'] = 'YES'
+        end
+      end
     end
     
     # Fix internal inconsistency errors by disabling parallel builds for problematic targets
@@ -150,8 +159,9 @@ target 'AnimalDetective' do
     installer.pods_project.targets.each do |target|
       if target.name == 'glog' || target.name == 'boost' || target.name == 'nanopb'
         target.build_configurations.each do |config|
-          # Ensure privacy bundles are built for Archive configurations
-          config.build_settings['SKIP_INSTALL'] = 'NO'
+          # Set SKIP_INSTALL to YES to prevent static libraries from being installed to Products/usr
+          # This prevents archives from appearing in "Other Items" in Xcode Organizer
+          config.build_settings['SKIP_INSTALL'] = 'YES'
           # Make sure resource bundles are generated
           config.build_settings['GENERATE_INFOPLIST_FILE'] = 'NO'
         end

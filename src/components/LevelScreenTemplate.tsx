@@ -1032,18 +1032,30 @@ export default function LevelScreenTemplate({
   useEffect(() => {
     console.log(`🎵 Initializing level ${levelName} with muted=${isMuted}`);
     BackgroundMusicManager.setMuted(isMuted);
+    // Register user interaction immediately when level loads to enable audio playback
+    BackgroundMusicManager.onUserInteraction();
   }, []); // Only on mount
 
   // --- BG MUSIC EFFECT (only play if instruction bubble is visible) ---
   // NOTE: Do NOT depend on isMuted here to avoid tearing down/recreating the player and losing position
   useEffect(() => {
+    // Register user interaction FIRST to ensure audio can play
+    BackgroundMusicManager.onUserInteraction();
+    
     // Use global background music manager
     if (showInstruction) {
       console.log(`🎵 Level ${levelName}: showInstruction=true, playing music`);
       // Always play the background music for this level first
-      BackgroundMusicManager.playBackgroundMusic(levelName).catch(e => {
-        console.warn('Failed to play background music:', e);
-      });
+      // Small delay to ensure user interaction is fully registered
+      setTimeout(() => {
+        BackgroundMusicManager.playBackgroundMusic(levelName).catch(e => {
+          console.warn('Failed to play background music:', e);
+        });
+        // Also attempt any pending playback that might have been queued
+        BackgroundMusicManager.attemptPendingPlayback().catch(e => {
+          console.warn('Failed to attempt pending playback:', e);
+        });
+      }, 100);
     } else {
       console.log(`🎵 Level ${levelName}: showInstruction=false, pausing music`);
       // Pause when instruction is hidden

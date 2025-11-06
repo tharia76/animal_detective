@@ -2215,6 +2215,32 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - SocketRocket (0.7.1)
+  - TikTokBusiness (1.5.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - TikTokBusinessSDK (= 1.5.0)
+    - Yoga
+  - TikTokBusinessSDK (1.5.0)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2323,12 +2349,15 @@ DEPENDENCIES:
   - RNReactNativeHapticFeedback (from `../node_modules/react-native-haptic-feedback`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - TikTokBusiness (from `../node_modules/react-native-tiktok-business-sdk`)
+  - TikTokBusinessSDK
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
   trunk:
     - GoogleUtilities
     - SocketRocket
+    - TikTokBusinessSDK
 
 EXTERNAL SOURCES:
   boost:
@@ -2536,6 +2565,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  TikTokBusiness:
+    :path: "../node_modules/react-native-tiktok-business-sdk"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2644,8 +2675,10 @@ SPEC CHECKSUMS:
   RNReanimated: 8b24b49fc13fce9a6e1729ccff645a63d2b7a6d1
   RNScreens: c2e3cc506212228c607b4785b315205e28acbf0f
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  TikTokBusiness: 345994eac724800583649112d8c89205f7b1ccc6
+  TikTokBusinessSDK: c6419c085404b8a7cc0988184052e71d716477b2
   Yoga: dc7c21200195acacb62fa920c588e7c2106de45e
 
-PODFILE CHECKSUM: babad5be41f43ed1c0ea5a5b6cfd043ee4266188
+PODFILE CHECKSUM: 7e8381d5d483f24664839c13534a974dab4a8a15
 
 COCOAPODS: 1.16.2
