@@ -38,10 +38,21 @@ export default function SplashScreen({ titleAnim, onLoadingComplete, loadingProg
     }, 200);
   });
   const [showSkipOption, setShowSkipOption] = useState(false);
+  const [currentProgress, setCurrentProgress] = useState(0);
   
   // Simple animated values for skip button
   const [fadeAnim] = useState(() => new Animated.Value(0));
+  const [progressAnim] = useState(() => new Animated.Value(0));
 
+
+  // Update progress bar animation when currentProgress changes
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: currentProgress / 100,
+      duration: 300,
+      useNativeDriver: false, // width animation doesn't support native driver
+    }).start();
+  }, [currentProgress, progressAnim]);
 
   // Initial animations
   useEffect(() => {
@@ -82,23 +93,46 @@ export default function SplashScreen({ titleAnim, onLoadingComplete, loadingProg
     testVideoSource();
   }, []);
 
-  // Simplified asset preloading without progress tracking
+  // Asset preloading with progress tracking
   useEffect(() => {
     const startPreloading = async () => {
       try {
+        // Initialize progress
+        setCurrentProgress(10);
+        
         // Check if user prefers fast loading
         const userPreference = await AsyncStorage.getItem('loadingPreference');
         const useFastLoading = userPreference === 'fast';
         
+        // Progress update function
+        const updateProgress = (progress: number) => {
+          setCurrentProgress(Math.min(progress, 100));
+        };
+        
         if (useFastLoading) {
           // Fast loading: Only essentials, continue in background
-          await Promise.allSettled([
-            videoPreloader.preloadEssentialVideos(() => {}),
-            assetPreloader.preloadEssentialAssets(() => {})
-          ]);
+          updateProgress(20);
+          
+          // Preload videos with progress callback
+          const videoPromise = videoPreloader.preloadEssentialVideos((progress) => {
+            // progress.percentage is 0-100, map to 20-50% of total
+            updateProgress(20 + (progress.percentage * 0.3));
+          });
+          
+          updateProgress(30);
+          
+          // Preload assets with progress callback
+          const assetPromise = assetPreloader.preloadEssentialAssets((progress) => {
+            // progress.percentage is 0-100, map to 50-80% of total
+            updateProgress(50 + (progress.percentage * 0.3));
+          });
+          
+          await Promise.allSettled([videoPromise, assetPromise]);
+          updateProgress(90);
           
           // Transition after essentials are loaded
           setTimeout(() => {
+            updateProgress(100);
             onLoadingComplete();
             
             // Queue remaining assets for background loading
@@ -114,19 +148,35 @@ export default function SplashScreen({ titleAnim, onLoadingComplete, loadingProg
           
         } else {
           // Balanced loading: Load all assets
-          await Promise.allSettled([
-            videoPreloader.preloadAllVideos(() => {}),
-            assetPreloader.preloadAllAssets(() => {})
-          ]);
+          updateProgress(20);
+          
+          // Preload videos with progress callback
+          const videoPromise = videoPreloader.preloadAllVideos((progress) => {
+            // progress.percentage is 0-100, map to 20-60% of total
+            updateProgress(20 + (progress.percentage * 0.4));
+          });
+          
+          updateProgress(30);
+          
+          // Preload assets with progress callback
+          const assetPromise = assetPreloader.preloadAllAssets((progress) => {
+            // progress.percentage is 0-100, map to 60-90% of total
+            updateProgress(60 + (progress.percentage * 0.3));
+          });
+          
+          await Promise.allSettled([videoPromise, assetPromise]);
+          updateProgress(95);
           
           setTimeout(() => {
+            updateProgress(100);
             onLoadingComplete();
           }, 800);
         }
         
       } catch (error) {
         console.warn('Error during preloading:', error);
-        // Fallback: quick transition
+        // Fallback: quick transition with progress
+        setCurrentProgress(100);
         setTimeout(() => {
           onLoadingComplete();
         }, 2000);
@@ -157,31 +207,73 @@ export default function SplashScreen({ titleAnim, onLoadingComplete, loadingProg
         // Optimize for better quality rendering
         pointerEvents="auto"
       />
-      
 
-        
-
-        
-
-        
-        {/* Skip Option - Only show skip button without progress bar */}
-        {showSkipOption && (
-          <Animated.View 
-            style={[dynamicStyles.skipContainer, { opacity: fadeAnim }]}
-          >
-            <TouchableOpacity 
-              style={dynamicStyles.skipButton}
-              onPress={skipToPriority}
-              activeOpacity={0.7}
-            >
-              <Text style={dynamicStyles.skipButtonText}>Skip to Menu</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-      
+      {/* Loading Progress Bar */}
+      <View style={{
+        position: 'absolute',
+        bottom: 120,
+        left: 60,
+        right: 60,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        {/* Progress Bar Container */}
+        <View style={{
+          width: '70%',
+          height: 6,
+          backgroundColor: '#FFFFFF',
+          borderRadius: 3,
+          overflow: 'hidden',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 4,
+          elevation: 5,
+          borderWidth: 1,
+          borderColor: 'rgba(0, 0, 0, 0.1)',
+        }}>
+          {/* Progress Bar Fill */}
+          <Animated.View
+            style={{
+              height: '100%',
+              width: progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+              backgroundColor: '#FF8C00',
+              borderRadius: 3,
+            }}
+          />
         </View>
+        {/* Progress Percentage Text */}
+        <Text style={{
+          marginTop: 6,
+          color: '#FFFFFF',
+          fontSize: 12,
+          fontWeight: 'bold',
+          textShadowColor: 'rgba(0, 0, 0, 0.7)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 3,
+        }}>
+          {Math.round(currentProgress)}%
+        </Text>
+      </View>
 
-        
-       
+      {/* Skip Option - Only show skip button without progress bar */}
+      {showSkipOption && (
+        <Animated.View 
+          style={[dynamicStyles.skipContainer, { opacity: fadeAnim }]}
+        >
+          <TouchableOpacity 
+            style={dynamicStyles.skipButton}
+            onPress={skipToPriority}
+            activeOpacity={0.7}
+          >
+            <Text style={dynamicStyles.skipButtonText}>Skip to Menu</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+      
+    </View>
   );
 }
