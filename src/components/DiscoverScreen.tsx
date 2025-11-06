@@ -15,6 +15,7 @@ import {
   Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Asset } from 'expo-asset';
 
 import { createAudioPlayer } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
@@ -432,7 +433,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   const [wrongDrop, setWrongDrop] = useState(false);
   const [wrongAnimalIndex, setWrongAnimalIndex] = useState<number | null>(null);
   const [isLoadingProgress, setIsLoadingProgress] = useState(true);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const discoverScrollViewRef = useRef<ScrollView>(null);
   const scrollYPosition = useRef(0);
   
   // Balloon state for mission complete
@@ -490,6 +491,38 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       };
     })
   , [isTablet, screenW, balloonAssets]);
+
+  // Preload all animal images when component mounts
+  useEffect(() => {
+    const preloadImages = async () => {
+      try {
+        const imagesToPreload: any[] = [];
+        
+        // Preload all still images and silhouettes for unlocked animals
+        unlockedAnimals.forEach((animal) => {
+          const englishKey = animal.englishKey;
+          if (stillImageMap[englishKey]) {
+            imagesToPreload.push(stillImageMap[englishKey]);
+          }
+          if (silhouetteImageMap[englishKey]) {
+            imagesToPreload.push(silhouetteImageMap[englishKey]);
+          }
+        });
+        
+        // Preload images in parallel for faster loading
+        if (imagesToPreload.length > 0) {
+          await Asset.loadAsync(imagesToPreload);
+          console.log(`✅ Preloaded ${imagesToPreload.length} animal images`);
+        }
+      } catch (error) {
+        console.warn('Error preloading images:', error);
+      }
+    };
+    
+    if (unlockedAnimals.length > 0) {
+      preloadImages();
+    }
+  }, [unlockedAnimals]);
 
   // Load saved progress on mount
   useEffect(() => {
@@ -1093,6 +1126,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                             height: squareSize * 0.85,
                             resizeMode: 'contain',
                           }}
+                          fadeDuration={0}
+                          progressiveRenderingEnabled={true}
                         />
                         <View style={styles.checkmark}>
                           <Ionicons name="checkmark" size={30} color="white" />
@@ -1108,6 +1143,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                             resizeMode: 'contain',
                             opacity: 0.3,
                           }}
+                          fadeDuration={0}
+                          progressiveRenderingEnabled={true}
                         />
                       ) : (
                         <Text style={[styles.questionMark, { fontSize: isTablet ? 60 : 50 }]}>?</Text>
@@ -1152,7 +1189,6 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           flexDirection: 'row',
           zIndex: 1000,
           elevation: 1000,
-          flexDirection: 'row',
         }}>
           {/* Animals Grid */}
           <ScrollView
@@ -1419,7 +1455,6 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </TouchableOpacity>
         </View>
         </View>
-      </View>
 
       {/* FLOATING OVERLAY AT ABSOLUTE ROOT - HIGHEST z-index */}
       {draggingAnimal && (
@@ -1601,6 +1636,8 @@ const DraggableAnimal: React.FC<{
               height: '85%',
               resizeMode: 'contain',
             }}
+            fadeDuration={0}
+            progressiveRenderingEnabled={true}
           />
         </View>
         </Animated.View>

@@ -106,6 +106,13 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
 
   return (
     <View style={containerStyle} onLayout={onLayout}>
+      {/* Fallback background color - shows immediately while image loads */}
+      <View style={{
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: backgroundColor,
+        zIndex: 0,
+      }} />
+      
       {/* Background Image with responsive positioning */}
       <Image
         source={backgroundSource}
@@ -117,6 +124,7 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
             right: backgroundStyles.right,
             height: backgroundStyles.height,
             width: backgroundStyles.width,
+            zIndex: 1,
           },
           backgroundStyles.transform && { transform: backgroundStyles.transform as any }
         ]}
@@ -124,6 +132,7 @@ const ResponsiveLevelBackground: React.FC<ResponsiveLevelBackgroundProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         fadeDuration={0}
+        progressiveRenderingEnabled={true}
       />
 
       {/* Content overlay */}

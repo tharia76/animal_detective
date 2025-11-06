@@ -29,9 +29,6 @@ import InsectsScreen from '../screens/levels/Insects';
 import BirdsScreen from '../screens/levels/Birds';
 import { getAnimals } from '../src/data/animals';
 import BackgroundMusicManager from '../src/services/BackgroundMusicManager';
-import FacebookAnalytics from '../src/services/FacebookAnalytics';
-import FirebaseAnalytics from '../src/services/FirebaseAnalytics';
-import AdMobService from '../src/services/AdMobService';
 import TikTokAnalytics from '../src/services/TikTokAnalytics';
 
 export default function App() {
@@ -45,49 +42,29 @@ export default function App() {
 
 
   
-  // Initialize Analytics and Ad Services
+  // Initialize TikTok Analytics
   useEffect(() => {
-    const initializeServices = async () => {
+    const initializeAnalytics = async () => {
       try {
-        // Initialize Facebook Analytics
-        await FacebookAnalytics.initialize('2048296882646951');
-        await FacebookAnalytics.trackAppOpen();
-        await FacebookAnalytics.trackSessionStarted();
-        console.log('📊 Facebook Analytics initialized successfully');
-      } catch (error) {
-        console.warn('Failed to initialize Facebook Analytics:', error);
-      }
-
-      try {
-        // Initialize Firebase Analytics
-        await FirebaseAnalytics.initialize();
-        await FirebaseAnalytics.trackAppOpen();
-        await FirebaseAnalytics.trackSessionStarted();
-        console.log('📊 Firebase Analytics initialized successfully');
-      } catch (error) {
-        console.warn('Failed to initialize Firebase Analytics:', error);
-      }
-
-      try {
-        // Initialize AdMob
-        await AdMobService.initialize();
-        console.log('📱 AdMob initialized successfully');
-      } catch (error) {
-        console.warn('Failed to initialize AdMob:', error);
-      }
-
-      try {
-        // Initialize TikTok Analytics (values are hardcoded in TikTokAnalytics.ts)
-        await TikTokAnalytics.initialize();
+        // TikTok App ID: 7568899277611696136 (hardcoded)
+        // App Name: Animal Detective For Kids
+        // App ID: 6751962145
+        await TikTokAnalytics.initialize(
+          'com.metaltorchlabs.pixieplay', // appId - hardcoded bundle ID
+          '7568899277611696136', // TikTok App ID (hardcoded)
+          undefined, // Access Token - set from TikTok Events Manager
+          __DEV__ // Enable debug mode in development
+        );
+        
+        // Track app open
         await TikTokAnalytics.trackAppOpen();
         await TikTokAnalytics.trackSessionStarted();
-        console.log('📱 TikTok Analytics initialized successfully');
       } catch (error) {
         console.warn('Failed to initialize TikTok Analytics:', error);
       }
     };
     
-    initializeServices();
+    initializeAnalytics();
   }, []);
 
   // Force landscape on mount - especially for iPad
@@ -205,7 +182,6 @@ export default function App() {
     
     // Track level selection
     const isLocked = !isUnlockedLevel && !hasUnlockedAll;
-    FacebookAnalytics.trackLevelSelected(level, isLocked);
     
     // Set selected level immediately to avoid black flash
     setSelectedLevel(level);
@@ -213,19 +189,44 @@ export default function App() {
     // Preload level assets during loading
     const preloadAssets = async () => {
       try {
+        // Track level selection
+        const isUnlocked = true; // Assuming levels are unlocked by default
+        TikTokAnalytics.trackLevelSelected(level, isUnlocked).catch(() => {});
+        
         // Preload level progress from AsyncStorage
         const progressKey = `animalProgress_${level.toLowerCase()}`;
         const indexKey = `animalCurrentIndex_${level.toLowerCase()}`;
         const visitedCountKey = `visitedCount_${level.toLowerCase()}`;
         
-        await Promise.all([
+        const [savedProgress, savedIndex, visitedCount] = await Promise.all([
           AsyncStorage.getItem(progressKey),
           AsyncStorage.getItem(indexKey),
           AsyncStorage.getItem(visitedCountKey)
         ]);
         
-        // Preload animal data for the level (avoid hook calls in async functions)
-        // Just preload the AsyncStorage data, animal data will load normally
+        // Preload background image for this level
+        const MOVING_BG_MAP: Record<string, any> = {
+          'farm': require('../src/assets/images/level-backgrounds/farm.png'),
+          'forest': require('../src/assets/images/level-backgrounds/forest.png'),
+          'ocean': require('../src/assets/images/level-backgrounds/ocean.png'),
+          'desert': require('../src/assets/images/level-backgrounds/desert.png'),
+          'arctic': require('../src/assets/images/level-backgrounds/arctic.png'),
+          'insects': require('../src/assets/images/level-backgrounds/insect.png'),
+          'savannah': require('../src/assets/images/level-backgrounds/savannah.png'),
+          'jungle': require('../src/assets/images/level-backgrounds/jungle.png'),
+          'birds': require('../src/assets/images/level-backgrounds/birds.png'),
+        };
+        
+        // Preload background image immediately (highest priority)
+        if (MOVING_BG_MAP[levelKey]) {
+          // Preload immediately and wait for it to complete before continuing
+          const bgImage = MOVING_BG_MAP[levelKey];
+          Asset.loadAsync([bgImage]).then(() => {
+            console.log(`✅ Preloaded background image for ${level}`);
+          }).catch((error) => {
+            console.warn('Error preloading background image:', error);
+          });
+        }
         
         // Store preloaded data in global cache for instant access
         global._preloadedAssets = global._preloadedAssets || {};
@@ -233,11 +234,13 @@ export default function App() {
           progressKey,
           indexKey,
           visitedCountKey,
-          // Animal data will be loaded by the level screen itself
+          savedProgress,
+          savedIndex,
+          visitedCount,
           preloadedAt: Date.now()
         };
         
-        // Assets preloaded silently
+        console.log(`📦 Preloaded level data for ${level}`);
       } catch (error) {
         console.warn('Error preloading assets:', error);
       }

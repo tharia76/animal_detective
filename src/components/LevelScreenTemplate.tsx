@@ -60,7 +60,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
 import BackgroundMusicManager, { BackgroundMusicManager as BGMClass } from '../services/BackgroundMusicManager';
-import FacebookAnalytics from '../services/FacebookAnalytics';
+import TikTokAnalytics from '../services/TikTokAnalytics';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
@@ -542,6 +542,123 @@ export default function LevelScreenTemplate({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [levelName]);
 
+  // Preload current animal image immediately, then preload others
+  useEffect(() => {
+    // Priority 1: Preload current animal image immediately (highest priority)
+    if (currentAnimal?.source) {
+      // Use both Asset.loadAsync and Image.prefetch for maximum speed
+      Asset.loadAsync([currentAnimal.source]).catch(() => {});
+      
+      // Also prefetch using Image.prefetch for immediate decoding (iOS)
+      if (Platform.OS === 'ios' && typeof currentAnimal.source === 'number') {
+        Image.prefetch(Image.resolveAssetSource(currentAnimal.source).uri).catch(() => {});
+      }
+    }
+    
+    // Priority 2: Preload all other animal images in background
+    const preloadAnimalImages = async () => {
+      try {
+        const imagesToPreload: any[] = [];
+        
+        // Preload all animal images (skip current one as it's already loading)
+        animals.forEach((animal, index) => {
+          if (animal.source && index !== currentAnimalIndex) {
+            imagesToPreload.push(animal.source);
+          }
+        });
+        
+        // Preload in parallel for faster loading (non-blocking)
+        if (imagesToPreload.length > 0) {
+          // Fire and forget - don't await to avoid blocking
+          Asset.loadAsync(imagesToPreload).then(() => {
+            console.log(`✅ Preloaded ${imagesToPreload.length} animal images for ${levelName}`);
+          }).catch((error) => {
+            console.warn('Error preloading animal images (non-critical):', error);
+          });
+        }
+      } catch (error) {
+        console.warn('Error setting up animal preload:', error);
+      }
+    };
+    
+    if (animals.length > 0) {
+      // Run preload in background without blocking
+      preloadAnimalImages();
+    }
+  }, [animals, levelName, currentAnimalIndex, currentAnimal]);
+
+
+  // Preload background images immediately when component mounts or level changes
+  useEffect(() => {
+    const preloadBackgroundImages = async () => {
+      try {
+        const imagesToPreload: any[] = [];
+        
+        // Preload static background image (highest priority)
+        const staticBg = MOVING_BG_MAP[levelName.toLowerCase()];
+        if (staticBg && typeof staticBg === 'number') {
+          imagesToPreload.push(staticBg);
+          // Also prefetch for iOS for immediate decoding
+          if (Platform.OS === 'ios') {
+            Image.prefetch(Image.resolveAssetSource(staticBg).uri).catch(() => {});
+          }
+        }
+        
+        // Preload moving background (sky) if available as number
+        if (movingBgSource && typeof movingBgSource === 'number') {
+          imagesToPreload.push(movingBgSource);
+          // Also prefetch for iOS
+          if (Platform.OS === 'ios') {
+            Image.prefetch(Image.resolveAssetSource(movingBgSource).uri).catch(() => {});
+          }
+        }
+        
+        // Preload immediately (highest priority for backgrounds)
+        if (imagesToPreload.length > 0) {
+          Asset.loadAsync(imagesToPreload).then(() => {
+            console.log(`✅ Preloaded ${imagesToPreload.length} background images for ${levelName}`);
+          }).catch((error) => {
+            console.warn('Error preloading background images:', error);
+          });
+        }
+      } catch (error) {
+        console.warn('Error setting up background preload:', error);
+      }
+    };
+    
+    if (levelName) {
+      preloadBackgroundImages();
+    }
+  }, [levelName, movingBgSource]);
+
+  // Preload adjacent animal images (next/previous) immediately when current animal changes
+  useEffect(() => {
+    if (!currentAnimal) return;
+    
+    // Immediately preload next and previous animal images for instant navigation
+    const imagesToPreload: any[] = [];
+    
+    // Preload next animal
+    if (currentAnimalIndex < animals.length - 1) {
+      const nextAnimal = animals[currentAnimalIndex + 1];
+      if (nextAnimal?.source) {
+        imagesToPreload.push(nextAnimal.source);
+      }
+    }
+    
+    // Preload previous animal
+    if (currentAnimalIndex > 0) {
+      const prevAnimal = animals[currentAnimalIndex - 1];
+      if (prevAnimal?.source) {
+        imagesToPreload.push(prevAnimal.source);
+      }
+    }
+    
+    // Preload in parallel (non-blocking)
+    if (imagesToPreload.length > 0) {
+      Asset.loadAsync(imagesToPreload).catch(() => {});
+    }
+  }, [currentAnimalIndex, animals, currentAnimal]);
 
   // Prefetch current animal sprite to avoid pop-in when returning to the level
   const prefetchCurrentAnimal = useCallback(() => {
@@ -1255,11 +1372,12 @@ export default function LevelScreenTemplate({
       
       // Track animal discovery if it's the first time
       if (!wasAlreadyVisited) {
-        FacebookAnalytics.trackAnimalDiscovered(
-          currentAnimal.name,
+        // Animal discovered - track in TikTok Analytics
+        TikTokAnalytics.trackAnimalDiscovered(
+          currentAnimal?.name || 'unknown',
           levelName,
-          visitedAnimals.size + 1
-        );
+          currentAnimalIndex
+        ).catch(() => {});
       }
       
       // Always add current animal to visited animals when clicked
@@ -1418,11 +1536,6 @@ export default function LevelScreenTemplate({
           setLevelCompleted(true);
               
               // Track level completion
-              FacebookAnalytics.trackLevelCompleted(
-                levelName,
-                animals.length,
-                Date.now() // You can calculate actual completion time if needed
-              );
               
               // Show DiscoverScreen first for all levels, then CongratsModal
               setShowDiscoverScreen(true);
@@ -1675,6 +1788,7 @@ export default function LevelScreenTemplate({
         style={dynamicStyles.animalImage}
         fadeDuration={0}
         progressiveRenderingEnabled={true}
+        resizeMode="contain"
       />
     );
 
@@ -2010,7 +2124,7 @@ export default function LevelScreenTemplate({
       <AnimatedReanimated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
         {/* Background container - show immediately */}
         <View style={[StyleSheet.absoluteFillObject, { 
-          backgroundColor: 'transparent' 
+          backgroundColor: getLevelBackgroundColor(levelName) 
         }]}>
         <View style={StyleSheet.absoluteFillObject}>
           {/* Responsive moving background (sky) */}

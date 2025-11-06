@@ -31,11 +31,22 @@ class AdMobService {
     }
     
     try {
+      // Check if App ID is configured properly before initializing
+      // The SDK will crash if App ID is not valid (e.g., "YOUR_ADMOB_APP_ID")
       const adapterStatuses = await MobileAds().initialize();
       this.isInitialized = true;
       console.log('📱 AdMob initialized');
       console.log('Adapter statuses:', adapterStatuses);
-    } catch (error) {
+    } catch (error: any) {
+      // Check if error is related to missing/invalid App ID
+      const errorMessage = error?.message || error?.toString() || '';
+      if (errorMessage.includes('application ID') || errorMessage.includes('GADApplicationIdentifier')) {
+        console.warn('⚠️ AdMob App ID not configured. Skipping AdMob initialization.');
+        console.warn('💡 To fix: Update Info.plist (iOS) and AndroidManifest.xml (Android) with a valid AdMob App ID.');
+        console.warn('💡 For testing, use: ca-app-pub-3940256099942544~1458002511');
+        return; // Don't mark as initialized, but don't crash
+      }
+      
       console.warn('AdMob initialization error:', error);
       console.warn('💡 Ensure AdMob is properly configured and native modules are linked.');
     }

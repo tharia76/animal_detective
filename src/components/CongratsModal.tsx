@@ -17,6 +17,7 @@ import { useLocalization } from '../hooks/useLocalization';
 import { createAudioPlayer } from 'expo-audio';
 import { useLevelCompletion } from '../hooks/useLevelCompletion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import TikTokAnalytics from '../services/TikTokAnalytics';
 
 interface CongratsModalProps {
   showCongratsModal: boolean;
@@ -282,6 +283,13 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
         markLevelCompleted(levelName).catch(error => {
           console.warn('Error marking level as completed:', error);
         });
+        
+        // Track level completion in TikTok Analytics
+        TikTokAnalytics.trackLevelCompleted(
+          levelName,
+          7, // All levels have 7 animals
+          undefined // Time spent not available in this component
+        ).catch(() => {});
       }
 
       // Play yay sound when modal opens

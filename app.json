@@ -1,7 +1,7 @@
 {
   "name": "Animal Detective",
   "slug": "animal-detective",
-  "version": "1.0.0",
+  "version": "1.7",
   "orientation": "landscape",
   "icon": "./src/assets/images/icon.png",
   "scheme": "animal-detective",
@@ -78,13 +78,6 @@
       "expo-screen-orientation",
       {
         "initialOrientation": "LANDSCAPE"
-      }
-    ],
-    [
-      "expo-facebook",
-      {
-        "appID": "2048296882646951",
-        "displayName": "Animal Detective"
       }
     ]
   ],

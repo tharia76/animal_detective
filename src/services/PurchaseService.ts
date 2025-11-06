@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import FacebookAnalytics from './FacebookAnalytics';
+import TikTokAnalytics from './TikTokAnalytics';
 
 const UNLOCK_ALL_LEVELS_KEY = 'unlocked_all_levels';
 const PRODUCT_ID_UNLOCK_ALL = 'animalDetectiveUnclock';
@@ -98,7 +98,6 @@ class PurchaseService {
       console.log('⚠️ Purchase: Native module not available, using fallback unlock');
       try {
         await AsyncStorage.setItem(UNLOCK_ALL_LEVELS_KEY, 'true');
-        await FacebookAnalytics.trackPurchase(0.99, 'USD', PRODUCT_ID_UNLOCK_ALL);
         console.log('✅ Fallback unlock completed (dev mode)');
         return true;
       } catch (error) {
@@ -136,12 +135,18 @@ class PurchaseService {
           // Unlock all levels
           await AsyncStorage.setItem(UNLOCK_ALL_LEVELS_KEY, 'true');
 
-          // Track purchase in analytics
-          const price = parseFloat((product as any).price || '0.99');
-          const currencyCode = (product as any).currencyCode || 'USD';
-          await FacebookAnalytics.trackPurchase(price, currencyCode, PRODUCT_ID_UNLOCK_ALL);
-
           console.log('✅ Purchase completed successfully');
+          
+          // Track purchase in TikTok Analytics
+          const purchaseAmount = purchase.priceAmountMicros ? purchase.priceAmountMicros / 1000000 : 0;
+          const currency = purchase.priceCurrencyCode || 'USD';
+          TikTokAnalytics.trackPurchase(
+            purchaseAmount,
+            currency,
+            PRODUCT_ID_UNLOCK_ALL,
+            purchase.transactionId || purchase.orderId
+          ).catch(() => {});
+          
           return true;
         }
       } else if (responseCode === (InAppPurchases?.IAPResponseCode?.USER_CANCELED || 1)) {

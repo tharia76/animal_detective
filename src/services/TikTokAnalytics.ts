@@ -1,308 +1,295 @@
-import {
-  initializeSdk,
-  identify,
-  trackEvent,
-  TikTokEventName,
-  TikTokContentEventName,
-  TikTokContentEventParameter,
-  TikTokContentEventContentsParameter,
-} from 'react-native-tiktok-business-sdk';
 import { Platform } from 'react-native';
 
-/**
- * TikTok Analytics Service for Animal Detective
- * Tracks user behavior, app usage, and key events using TikTok Business SDK
- */
-class TikTokAnalyticsService {
+// Dynamically import TikTok SDK
+let TikTokSDK: any = null;
+let isSDKAvailable = false;
+
+try {
+  TikTokSDK = require('react-native-tiktok-business-sdk');
+  isSDKAvailable = true;
+} catch (error) {
+  isSDKAvailable = false;
+  console.warn('⚠️ TikTok Business SDK not available. Using fallback mode.');
+}
+
+class TikTokAnalytics {
   private isInitialized = false;
-  private appId: string | null = null;
-  private ttAppId: string | null = null;
-  private accessToken: string | null = null;
+  private ttAppId: string = '';
+  private accessToken: string = '';
+  private appId: string = '';
+  private debugMode: boolean = false;
 
   /**
-   * Initialize TikTok Analytics service
-   * @param appId - Your app ID (Android package name or iOS bundle ID)
-   * @param ttAppId - Your TikTok App ID from TikTok Events Manager (optional - defaults to configured value)
-   * @param accessToken - Your access token from TikTok Events Manager (optional - defaults to configured value)
-   * @param debug - Whether to enable debug mode
+   * Initialize TikTok Analytics
+   * @param appId - Your app bundle ID (defaults to 'com.metaltorchlabs.pixieplay')
+   * @param ttAppId - TikTok App ID / Pixel ID (defaults to '7568899277611696136' - hardcoded)
+   * @param accessToken - TikTok Access Token from Events Manager
+   * @param debugMode - Enable debug logging
+   * 
+   * Hardcoded values:
+   * - TikTok App ID: 7568899277611696136
+   * - App Name: Animal Detective For Kids
+   * - App ID: 6751962145
    */
   async initialize(
     appId?: string,
     ttAppId?: string,
     accessToken?: string,
-    debug: boolean = false
-  ) {
-    if (this.isInitialized) return;
-    
-    try {
-      // Hardcoded TikTok configuration
-      this.appId = appId || (Platform.OS === 'ios' 
-        ? 'com.metaltorchlabs.pixieplay' 
-        : 'com.metaltorchlabs.pixieplay');
-      this.ttAppId = ttAppId || '7568899277611696136'; // TikTok App ID: 7568899277611696136
-      this.accessToken = accessToken || 'YOUR_ACCESS_TOKEN'; // Get from TikTok Events Manager → Settings → Access Token
+    debugMode: boolean = false
+  ): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
 
-      // Initialize TikTok SDK
-      await initializeSdk(this.appId, this.ttAppId, this.accessToken, debug);
+    // Hardcoded TikTok App ID: 7568899277611696136
+    // App Name: Animal Detective For Kids
+    // App ID: 6751962145
+    this.appId = appId || 'com.metaltorchlabs.pixieplay';
+    this.ttAppId = ttAppId || '7568899277611696136'; // TikTok App ID (hardcoded)
+    this.accessToken = accessToken || '';
+    this.debugMode = debugMode || __DEV__;
+
+    if (!isSDKAvailable) {
+      console.log('⚠️ TikTok SDK: Native module not available, using fallback');
+      console.log('💡 For production, create a development build: npx expo run:ios or eas build');
+      return;
+    }
+
+    try {
+      if (Platform.OS === 'ios') {
+        await TikTokSDK.initializeWithAppId(this.appId, this.ttAppId, this.accessToken);
+      } else if (Platform.OS === 'android') {
+        await TikTokSDK.initialize(this.ttAppId, this.accessToken);
+      }
       
       this.isInitialized = true;
-      console.log('📱 TikTok Analytics initialized');
-    } catch (error) {
-      console.warn('TikTok Analytics initialization error:', error);
-    }
-  }
-
-  /**
-   * Identify a user
-   * @param externalId - External user ID
-   * @param externalUserName - External username
-   * @param phoneNumber - User phone number (optional)
-   * @param email - User email (optional)
-   */
-  async identifyUser(
-    externalId?: string,
-    externalUserName?: string,
-    phoneNumber?: string,
-    email?: string
-  ) {
-    try {
-      await identify(externalId, externalUserName, phoneNumber, email);
-      console.log('📱 User identified');
-    } catch (error) {
-      console.warn('TikTok identify error:', error);
-    }
-  }
-
-  /**
-   * Track app opens
-   */
-  async trackAppOpen() {
-    try {
-      await trackEvent(TikTokEventName.LAUNCH_APP, {});
-      console.log('📱 App open tracked');
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
-  }
-
-  /**
-   * Track app installs
-   */
-  async trackAppInstall() {
-    try {
-      await trackEvent(TikTokEventName.INSTALL_APP, {
+      console.log('✅ TikTok Analytics initialized', {
+        appId: this.appId,
+        ttAppId: this.ttAppId,
         platform: Platform.OS,
-        timestamp: Date.now()
       });
-      console.log('📱 App install tracked');
     } catch (error) {
-      console.warn('Analytics error:', error);
+      console.warn('Failed to initialize TikTok Analytics:', error);
     }
   }
 
   /**
-   * Track level completions
+   * Track a standard TikTok event
    */
-  async trackLevelCompleted(levelName: string, animalsFound: number, completionTime?: number) {
-    try {
-      await trackEvent(TikTokEventName.ACHIEVE_LEVEL, {
-        level_name: levelName,
-        animals_found: animalsFound,
-        completion_time: completionTime,
-        timestamp: Date.now()
-      });
-      console.log(`📱 Level completed: ${levelName}`);
-    } catch (error) {
-      console.warn('Analytics error:', error);
+  private async trackEvent(
+    eventName: string,
+    properties?: Record<string, any>
+  ): Promise<void> {
+    if (!this.isInitialized && isSDKAvailable) {
+      console.warn('⚠️ TikTok Analytics not initialized. Call initialize() first.');
+      return;
     }
-  }
 
-  /**
-   * Track animal discoveries
-   */
-  async trackAnimalDiscovered(animalName: string, levelName: string, discoveryOrder?: number) {
     try {
-      await trackEvent(TikTokContentEventName.VIEW_CONTENT, {
-        [TikTokContentEventParameter.CONTENT_TYPE]: 'animal',
-        [TikTokContentEventParameter.CONTENT_ID]: animalName,
-        [TikTokContentEventParameter.DESCRIPTION]: `Animal discovered in ${levelName}`,
-        level_name: levelName,
-        discovery_order: discoveryOrder,
-        timestamp: Date.now()
-      });
-      console.log(`📱 Animal discovered: ${animalName}`);
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
-  }
-
-  /**
-   * Track in-app purchases
-   */
-  async trackPurchase(price: number, currency: string = 'USD', productId?: string, orderId?: string) {
-    try {
-      const parameters: Record<string, any> = {
-        [TikTokContentEventParameter.CURRENCY]: currency,
-        [TikTokContentEventParameter.VALUE]: price,
-        timestamp: Date.now()
-      };
-
-      if (productId) {
-        parameters[TikTokContentEventParameter.CONTENT_ID] = productId;
+      if (isSDKAvailable && TikTokSDK) {
+        if (Platform.OS === 'ios') {
+          await TikTokSDK.trackEvent(eventName, properties || {});
+        } else if (Platform.OS === 'android') {
+          await TikTokSDK.trackEvent(eventName, properties || {});
+        }
+        
+        if (this.debugMode) {
+          console.log(`📊 TikTok Event: ${eventName}`, properties || {});
+        }
       }
-
-      if (orderId) {
-        parameters[TikTokContentEventParameter.ORDER_ID] = orderId;
-      }
-
-      await trackEvent(TikTokContentEventName.PURCHASE, parameters);
-      console.log(`📱 Purchase tracked: ${price} ${currency}`);
     } catch (error) {
-      console.warn('Analytics error:', error);
+      console.warn(`Failed to track TikTok event ${eventName}:`, error);
     }
   }
 
   /**
-   * Track user engagement
+   * Track app launch
    */
-  async trackUserEngagement(action: string, levelName?: string, additionalParams?: Record<string, any>) {
-    try {
-      const parameters: Record<string, any> = {
-        action: action,
-        level_name: levelName || 'menu',
-        timestamp: Date.now()
-      };
-      
-      if (additionalParams) {
-        Object.assign(parameters, additionalParams);
-      }
-      
-      await trackEvent(TikTokEventName.SEARCH, parameters); // Using SEARCH as engagement event
-      console.log(`📱 User engagement: ${action}`);
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
+  async trackAppOpen(): Promise<void> {
+    await this.trackEvent('LAUNCH_APP', {
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Track session start
+   */
+  async trackSessionStarted(): Promise<void> {
+    await this.trackEvent('LAUNCH_APP', {
+      event_type: 'session_start',
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Track level completion
+   */
+  async trackLevelCompleted(
+    levelName: string,
+    animalsFound: number,
+    timeSpent?: number
+  ): Promise<void> {
+    await this.trackEvent('ACHIEVE_LEVEL', {
+      level_name: levelName,
+      level_id: levelName.toLowerCase(),
+      animals_found: animalsFound,
+      total_animals: 7,
+      time_spent: timeSpent,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Track animal discovery
+   */
+  async trackAnimalDiscovered(
+    animalName: string,
+    levelName: string,
+    animalIndex: number
+  ): Promise<void> {
+    await this.trackEvent('VIEW_CONTENT', {
+      content_type: 'animal',
+      content_name: animalName,
+      content_id: `${levelName}_${animalName}`,
+      level_name: levelName,
+      animal_index: animalIndex,
+      timestamp: Date.now(),
+    });
   }
 
   /**
    * Track level selection
    */
-  async trackLevelSelected(levelName: string, isLocked: boolean = false) {
-    try {
-      await trackEvent(TikTokContentEventName.VIEW_CONTENT, {
-        [TikTokContentEventParameter.CONTENT_TYPE]: 'level',
-        [TikTokContentEventParameter.CONTENT_ID]: levelName,
-        is_locked: isLocked ? 'true' : 'false',
-        timestamp: Date.now()
-      });
-      console.log(`📱 Level selected: ${levelName}`);
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
+  async trackLevelSelected(levelName: string, isUnlocked: boolean): Promise<void> {
+    await this.trackEvent('VIEW_CONTENT', {
+      content_type: 'level',
+      content_name: levelName,
+      content_id: levelName.toLowerCase(),
+      is_unlocked: isUnlocked,
+      timestamp: Date.now(),
+    });
   }
 
   /**
-   * Track session events
+   * Track purchase
    */
-  async trackSessionStarted() {
-    try {
-      await trackEvent(TikTokEventName.LAUNCH_APP, {
-        platform: Platform.OS,
-        timestamp: Date.now()
-      });
-      console.log('📱 Session started');
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
+  async trackPurchase(
+    amount: number,
+    currency: string = 'USD',
+    productId?: string,
+    orderId?: string
+  ): Promise<void> {
+    await this.trackEvent('PURCHASE', {
+      value: amount,
+      currency: currency,
+      content_type: 'in_app_purchase',
+      content_id: productId,
+      order_id: orderId,
+      timestamp: Date.now(),
+    });
   }
 
   /**
    * Track tutorial completion
    */
-  async trackTutorialCompleted(stepName: string, totalSteps: number) {
-    try {
-      await trackEvent(TikTokEventName.COMPLETE_TUTORIAL, {
-        step_name: stepName,
-        total_steps: totalSteps,
-        timestamp: Date.now()
-      });
-      console.log(`📱 Tutorial completed: ${stepName}`);
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
+  async trackTutorialCompleted(): Promise<void> {
+    await this.trackEvent('COMPLETE_TUTORIAL', {
+      timestamp: Date.now(),
+    });
   }
 
   /**
-   * Track achievement unlocks
+   * Track achievement unlock
    */
-  async trackAchievementUnlocked(achievementName: string, levelName?: string) {
-    try {
-      const parameters: Record<string, any> = {
-        achievement_name: achievementName,
-        timestamp: Date.now()
-      };
-      
-      if (levelName) {
-        parameters.level_name = levelName;
-      }
-      
-      await trackEvent(TikTokEventName.UNLOCK_ACHIEVEMENT, parameters);
-      console.log(`📱 Achievement unlocked: ${achievementName}`);
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
+  async trackAchievementUnlocked(achievementName: string): Promise<void> {
+    await this.trackEvent('UNLOCK_ACHIEVEMENT', {
+      achievement_name: achievementName,
+      timestamp: Date.now(),
+    });
   }
 
   /**
-   * Track custom events
+   * Track user engagement
    */
-  async trackCustomEvent(eventName: string, parameters?: Record<string, any>) {
+  async trackUserEngagement(eventType: string, context?: Record<string, any>): Promise<void> {
+    await this.trackEvent('SEARCH', {
+      event_type: eventType,
+      ...context,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Track custom event
+   */
+  async trackCustomEvent(eventName: string, properties?: Record<string, any>): Promise<void> {
+    await this.trackEvent(eventName, {
+      ...properties,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Identify user (for better attribution)
+   */
+  async identifyUser(
+    externalUserId?: string,
+    phoneNumber?: string,
+    email?: string,
+    additionalProperties?: Record<string, any>
+  ): Promise<void> {
+    if (!isSDKAvailable || !TikTokSDK) {
+      return;
+    }
+
     try {
-      const eventParams: Record<string, any> = {
-        timestamp: Date.now()
+      const properties: Record<string, any> = {
+        ...additionalProperties,
       };
-      
-      if (parameters) {
-        Object.assign(eventParams, parameters);
+
+      if (externalUserId) {
+        properties.external_id = externalUserId;
       }
-      
-      await trackEvent(eventName as any, eventParams);
-      console.log(`📱 Custom event tracked: ${eventName}`);
+      if (phoneNumber) {
+        properties.phone_number = phoneNumber;
+      }
+      if (email) {
+        properties.email = email;
+      }
+
+      if (Platform.OS === 'ios') {
+        await TikTokSDK.identify(properties);
+      } else if (Platform.OS === 'android') {
+        await TikTokSDK.identify(properties);
+      }
+
+      if (this.debugMode) {
+        console.log('📊 TikTok User Identified:', properties);
+      }
     } catch (error) {
-      console.warn('Analytics error:', error);
+      console.warn('Failed to identify user in TikTok:', error);
     }
   }
 
   /**
    * Track registration
    */
-  async trackRegistration(userId?: string) {
-    try {
-      await trackEvent(TikTokEventName.REGISTRATION, {
-        user_id: userId,
-        timestamp: Date.now()
-      });
-      console.log('📱 Registration tracked');
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
+  async trackRegistration(userId?: string): Promise<void> {
+    await this.trackEvent('REGISTRATION', {
+      user_id: userId,
+      timestamp: Date.now(),
+    });
   }
 
   /**
    * Track login
    */
-  async trackLogin(userId?: string) {
-    try {
-      await trackEvent(TikTokEventName.LOGIN, {
-        user_id: userId,
-        timestamp: Date.now()
-      });
-      console.log('📱 Login tracked');
-    } catch (error) {
-      console.warn('Analytics error:', error);
-    }
+  async trackLogin(userId?: string): Promise<void> {
+    await this.trackEvent('LOGIN', {
+      user_id: userId,
+      timestamp: Date.now(),
+    });
   }
 }
 
-export default new TikTokAnalyticsService();
-
+export default new TikTokAnalytics();

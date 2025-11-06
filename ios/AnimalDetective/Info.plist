@@ -19,7 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.4.0</string>
+	<string>1.7</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
@@ -33,7 +33,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1.4</string>
+	<string>1.7</string>
 	<key>EXDefaultScreenOrientationMask</key>
 	<string>UIInterfaceOrientationMaskLandscape</string>
 	<key>UIModalPresentationCapturesStatusBarAppearance</key>
@@ -98,7 +98,5 @@
 	</array>
 	<key>UIModalPresentationStyle~default</key>
 	<string>UIModalPresentationOverFullScreen</string>
-	<key>GADApplicationIdentifier</key>
-	<string>YOUR_ADMOB_APP_ID</string>
 </dict>
 </plist>

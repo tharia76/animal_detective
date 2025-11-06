@@ -499,6 +499,7 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
         source={imageSource}
         resizeMode="cover"
         fadeDuration={0}
+        progressiveRenderingEnabled={true}
         style={getImageStyle({
           translateX: scrollX.interpolate({
             inputRange: first.inputRange,
@@ -513,6 +514,7 @@ const ResponsiveMovingBg: React.FC<ResponsiveMovingBgProps> = ({
         source={imageSource}
         resizeMode="cover"
         fadeDuration={0}
+        progressiveRenderingEnabled={true}
         style={getImageStyle({
           translateX: scrollX.interpolate({
             inputRange: second.inputRange,

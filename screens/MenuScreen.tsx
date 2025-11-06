@@ -54,7 +54,6 @@ import { ImageCache } from '../src/utils/ImageCache';
 import { ImageRegistry } from '../src/utils/PersistentImageRegistry';
 import { preloadImages } from '../src/utils/preloadImages';
 import ScreenLoadingWrapper from '../src/components/ScreenLoadingWrapper';
-import FacebookAnalytics from '../src/services/FacebookAnalytics';
 import ParentalGate from '../src/components/ParentalGate';
 import Constants from 'expo-constants';
 
@@ -653,9 +652,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       console.warn('Error saving unlocked state:', error);
     }
   }, []);
-
-  // Modal state for locked level
-  const [showUnlockModal, setShowUnlockModal] = useState(false);
   
   // Debug: Log modal state changes
   useEffect(() => {
@@ -1166,12 +1162,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         console.log('🔒 Level is locked - showing unlock modal');
         setShowUnlockModal(true);
         // Track analytics for locked level attempt
-        FacebookAnalytics.trackLevelSelected(level, true);
         return; // CRITICAL: Don't proceed to open the level
       }
       
       // Track level selection in analytics
-      FacebookAnalytics.trackLevelSelected(level, false);
       
       // Show destination background immediately
       setSelectedLevel(level);
@@ -1211,7 +1205,7 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       
       if (success) {
         // Update state immediately
-        setUnlockedAllLevels(true);
+        setUnlocked(true);
         
         // Close modal
         setShowUnlockModal(false);

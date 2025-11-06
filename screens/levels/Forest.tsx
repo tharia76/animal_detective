@@ -75,11 +75,6 @@ export default function ForestScreen({ onBackToMenu, backgroundImageUri, skyBack
     );
   }
 
-  // Gather all assets to preload including animal sprites, sounds, UI images, leaves, etc.
-  const forestAssets = useMemo(() => {
-    return getLevelAssets('Forest', forestAnimals);
-  }, [forestAnimals]);
-
   return (
     <LevelScreenTemplate
       levelName="Forest"
