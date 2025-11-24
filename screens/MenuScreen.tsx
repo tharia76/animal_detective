@@ -26,6 +26,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CommonActions } from '@react-navigation/native';
 import PurchaseService from '../src/services/PurchaseService';
+import TikTokAnalytics from '../src/services/TikTokAnalytics';
+import ApiService from '../src/services/ApiService';
 
 import ReAnimated, { 
   useSharedValue, 
@@ -1186,6 +1188,26 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
       } catch (e) {
         console.warn('Error stopping audio before level transition:', e);
       }
+      
+      // Track level selection
+      TikTokAnalytics.trackLevelSelected(level, true).catch(() => {});
+      
+      // Track level started with detailed data
+      AsyncStorage.getItem('userId').then(userId => {
+        ApiService.trackLevelStartedDetailed(
+          userId || 'anonymous',
+          level,
+          {
+            level_name: level,
+            level_id: level.toLowerCase(),
+            content_id: level.toLowerCase(),
+            content_type: 'level',
+            is_unlocked: true,
+            action: 'level_started',
+            timestamp: Date.now(),
+          }
+        ).catch(() => {});
+      }).catch(() => {});
       
       if (typeof onSelectLevel === 'function') {
         onSelectLevel(level);

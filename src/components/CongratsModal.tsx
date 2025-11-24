@@ -18,6 +18,8 @@ import { createAudioPlayer } from 'expo-audio';
 import { useLevelCompletion } from '../hooks/useLevelCompletion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TikTokAnalytics from '../services/TikTokAnalytics';
+import ApiService from '../services/ApiService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface CongratsModalProps {
   showCongratsModal: boolean;
@@ -290,6 +292,27 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
           7, // All levels have 7 animals
           undefined // Time spent not available in this component
         ).catch(() => {});
+        
+        // Also send detailed event to backend
+        AsyncStorage.getItem('userId').then(userId => {
+          ApiService.trackLevelCompletedDetailed(
+            userId || 'anonymous',
+            levelName,
+            7, // score
+            undefined, // duration
+            {
+              level_name: levelName,
+              level_id: levelName.toLowerCase(),
+              content_id: levelName.toLowerCase(),
+              content_type: 'level',
+              value: 7,
+              currency: 'USD',
+              animals_found: 7,
+              total_animals: 7,
+              timestamp: Date.now(),
+            }
+          ).catch(() => {});
+        }).catch(() => {});
       }
 
       // Play yay sound when modal opens

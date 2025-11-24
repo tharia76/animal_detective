@@ -61,6 +61,7 @@ import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositionin
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
 import BackgroundMusicManager, { BackgroundMusicManager as BGMClass } from '../services/BackgroundMusicManager';
 import TikTokAnalytics from '../services/TikTokAnalytics';
+import ApiService from '../services/ApiService';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
@@ -1384,12 +1385,30 @@ export default function LevelScreenTemplate({
       
       // Track animal discovery if it's the first time
       if (!wasAlreadyVisited) {
-        // Animal discovered - track in TikTok Analytics
+        // Animal discovered - track in TikTok Analytics with detailed data
+        const animalName = currentAnimal?.name || 'unknown';
         TikTokAnalytics.trackAnimalDiscovered(
-          currentAnimal?.name || 'unknown',
+          animalName,
           levelName,
           currentAnimalIndex
         ).catch(() => {});
+        
+        // Also send detailed event to backend
+        // Get userId from AsyncStorage or use anonymous
+        AsyncStorage.getItem('userId').then(userId => {
+          ApiService.trackAnimalDiscoveredDetailed(
+            userId || 'anonymous',
+            animalName,
+            levelName,
+            {
+              animal_index: currentAnimalIndex,
+              level_name: levelName,
+              content_id: `${levelName}_${animalName}`,
+              content_type: 'animal',
+              timestamp: Date.now(),
+            }
+          ).catch(() => {});
+        }).catch(() => {});
       }
       
       // Always add current animal to visited animals when clicked

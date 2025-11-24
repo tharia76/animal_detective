@@ -140,12 +140,33 @@ class PurchaseService {
           // Track purchase in TikTok Analytics
           const purchaseAmount = purchase.priceAmountMicros ? purchase.priceAmountMicros / 1000000 : 0;
           const currency = purchase.priceCurrencyCode || 'USD';
+          const transactionId = purchase.transactionId || purchase.orderId;
+          
           TikTokAnalytics.trackPurchase(
             purchaseAmount,
             currency,
             PRODUCT_ID_UNLOCK_ALL,
-            purchase.transactionId || purchase.orderId
+            transactionId
           ).catch(() => {});
+          
+          // Also send detailed event to backend
+          AsyncStorage.getItem('userId').then(userId => {
+            ApiService.trackPurchaseDetailed(
+              userId || 'anonymous',
+              PRODUCT_ID_UNLOCK_ALL,
+              transactionId || 'unknown',
+              purchaseAmount,
+              currency,
+              {
+                product_name: 'Unlock All Levels',
+                content_id: PRODUCT_ID_UNLOCK_ALL,
+                content_type: 'product',
+                value: purchaseAmount,
+                currency: currency,
+                timestamp: Date.now(),
+              }
+            ).catch(() => {});
+          }).catch(() => {});
           
           return true;
         }

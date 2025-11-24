@@ -1,0 +1,9 @@
+Event Name,Conversion Value,Event Type,Description
+launch_app,0,Install,App launch event
+achieve_level,1,In-App Event,Level completion
+purchase,2,In-App Event,In-app purchase
+view_content,0,In-App Event,Content view (animal/level)
+complete_tutorial,1,In-App Event,Tutorial completion
+unlock_achievement,1,In-App Event,Achievement unlocked
+registration,1,In-App Event,User registration
+

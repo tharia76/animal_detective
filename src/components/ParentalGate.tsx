@@ -142,7 +142,7 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
       setHoldProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          onSuccess();
+          // Don't call onSuccess here - use useEffect to watch for completion
           return 100;
         }
         return prev + 2; // 3 seconds total (100/2 = 50 intervals of ~60ms)
@@ -151,7 +151,18 @@ const ParentalGate: React.FC<ParentalGateProps> = ({
     
     // Store interval ID for cleanup
     (handleHoldStart as any).intervalId = interval;
-  }, [onSuccess]);
+  }, []);
+  
+  // Watch for hold completion and call onSuccess when progress reaches 100
+  useEffect(() => {
+    if (holdProgress >= 100 && isHolding) {
+      setIsHolding(false);
+      // Use setTimeout to ensure this runs after state updates complete
+      setTimeout(() => {
+        onSuccess();
+      }, 0);
+    }
+  }, [holdProgress, isHolding, onSuccess]);
 
   const handleHoldEnd = useCallback(() => {
     setIsHolding(false);

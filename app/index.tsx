@@ -30,6 +30,44 @@ import BirdsScreen from '../screens/levels/Birds';
 import { getAnimals } from '../src/data/animals';
 import BackgroundMusicManager from '../src/services/BackgroundMusicManager';
 import TikTokAnalytics from '../src/services/TikTokAnalytics';
+import TikTokOAuthService from '../src/services/TikTokOAuthService';
+import { Linking } from 'react-native';
+
+// Use SecureStore if available, fallback to AsyncStorage
+let SecureStore: any = null;
+try {
+  SecureStore = require('expo-secure-store');
+} catch (error) {
+  // SecureStore not available (e.g., in Expo Go)
+  console.log('expo-secure-store not available, using AsyncStorage fallback');
+}
+
+// Helper function to get token from either storage
+const getStoredToken = async (): Promise<string | null> => {
+  try {
+    if (SecureStore && SecureStore.getItemAsync) {
+      return await SecureStore.getItemAsync('tiktok_access_token');
+    } else {
+      return await AsyncStorage.getItem('tiktok_access_token');
+    }
+  } catch (error) {
+    console.warn('Failed to get stored token:', error);
+    return null;
+  }
+};
+
+// Helper function to store token
+const storeToken = async (token: string): Promise<void> => {
+  try {
+    if (SecureStore && SecureStore.setItemAsync) {
+      await SecureStore.setItemAsync('tiktok_access_token', token);
+    } else {
+      await AsyncStorage.setItem('tiktok_access_token', token);
+    }
+  } catch (error) {
+    console.warn('Failed to store token:', error);
+  }
+};
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -42,17 +80,37 @@ export default function App() {
 
 
   
-  // Initialize TikTok Analytics
+  // Initialize TikTok Analytics with OAuth flow
   useEffect(() => {
     const initializeAnalytics = async () => {
       try {
-        // TikTok App ID: 7568899277611696136 (hardcoded)
-        // App Name: Animal Detective For Kids
-        // App ID: 6751962145
+        // Check if we have a stored access token
+        let accessToken = await getStoredToken();
+        
+        if (!accessToken) {
+          console.log('📱 No TikTok Access Token found');
+          console.log('💡 TikTok SDK will be initialized after OAuth flow completes');
+          console.log('💡 Events will be tracked via backend API');
+          
+          // Send app launch event via backend API even without SDK
+          try {
+            await TikTokAnalytics.trackAppOpen();
+            await TikTokAnalytics.trackSessionStarted();
+          } catch (error) {
+            console.warn('Failed to send launch event via backend:', error);
+          }
+          
+          // Don't initialize SDK yet - wait for OAuth flow
+          // Events will be sent via backend API instead
+          return;
+        }
+
+        // Initialize SDK with stored access token
+        console.log('🔧 Initializing TikTok SDK with stored Access Token...');
         await TikTokAnalytics.initialize(
           'com.metaltorchlabs.pixieplay', // appId - hardcoded bundle ID
           '7568899277611696136', // TikTok App ID (hardcoded)
-          undefined, // Access Token - set from TikTok Events Manager
+          accessToken, // Access Token from OAuth flow
           __DEV__ // Enable debug mode in development
         );
         
@@ -61,10 +119,59 @@ export default function App() {
         await TikTokAnalytics.trackSessionStarted();
       } catch (error) {
         console.warn('Failed to initialize TikTok Analytics:', error);
+        console.warn('💡 Events will be tracked via backend API instead');
       }
     };
     
     initializeAnalytics();
+  }, []);
+
+  // Handle OAuth redirects and initialize SDK after token exchange
+  useEffect(() => {
+    const handleDeepLink = async (url: string) => {
+      if (TikTokOAuthService.isOAuthRedirect(url)) {
+        try {
+          console.log('🔐 Processing TikTok OAuth redirect...');
+          
+          // Exchange auth code for access token via backend
+          const accessToken = await TikTokOAuthService.handleOAuthRedirect(url);
+          
+          if (accessToken) {
+            // Store token securely
+            await storeToken(accessToken);
+            console.log('✅ TikTok Access Token stored');
+            
+            // Now initialize SDK with the access token
+            await TikTokAnalytics.initialize(
+              'com.metaltorchlabs.pixieplay',
+              '7568899277611696136',
+              accessToken,
+              __DEV__
+            );
+            
+            console.log('✅ TikTok SDK initialized with OAuth token');
+            
+            // Track app open now that SDK is initialized
+            await TikTokAnalytics.trackAppOpen();
+            await TikTokAnalytics.trackSessionStarted();
+          }
+        } catch (error) {
+          console.error('❌ OAuth flow failed:', error);
+        }
+      }
+    };
+
+    // Handle initial URL (if app opened via deep link)
+    Linking.getInitialURL().then(url => {
+      if (url) handleDeepLink(url);
+    });
+
+    // Handle URL while app is running
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      handleDeepLink(url);
+    });
+
+    return () => subscription.remove();
   }, []);
 
   // Force landscape on mount - especially for iPad
@@ -192,6 +299,23 @@ export default function App() {
         // Track level selection
         const isUnlocked = true; // Assuming levels are unlocked by default
         TikTokAnalytics.trackLevelSelected(level, isUnlocked).catch(() => {});
+        
+        // Also send detailed event to backend
+        AsyncStorage.getItem('userId').then(userId => {
+          ApiService.trackLevelStartedDetailed(
+            userId || 'anonymous',
+            level,
+            {
+              level_name: level,
+              level_id: level.toLowerCase(),
+              content_id: level.toLowerCase(),
+              content_type: 'level',
+              is_unlocked: isUnlocked,
+              action: 'level_started',
+              timestamp: Date.now(),
+            }
+          ).catch(() => {});
+        }).catch(() => {});
         
         // Preload level progress from AsyncStorage
         const progressKey = `animalProgress_${level.toLowerCase()}`;

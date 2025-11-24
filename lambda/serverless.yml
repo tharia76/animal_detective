@@ -1,0 +1,301 @@
+service: animal-detective-backend
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 30
+  environment:
+    STAGE: ${self:provider.stage}
+    USERS_TABLE: ${self:custom.usersTable}
+    ANALYTICS_TABLE: ${self:custom.analyticsTable}
+    GAME_EVENTS_TABLE: ${self:custom.gameEventsTable}
+    SESSIONS_TABLE: ${self:custom.sessionsTable}
+    ANIMAL_INTERACTIONS_TABLE: ${self:custom.animalInteractionsTable}
+    TIKTOK_APP_SECRET: TTCYJT3g804mY1GuV1MF9q2l4U9kIYJ5
+    TIKTOK_TOKEN_TABLE: ${self:custom.tiktokTokenTable}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTable}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.analyticsTable}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.gameEventsTable}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.sessionsTable}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.animalInteractionsTable}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTable}/*"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.analyticsTable}/*"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.gameEventsTable}/*"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.sessionsTable}/*"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.animalInteractionsTable}/*"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.tiktokTokenTable}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.tiktokTokenTable}/*"
+
+custom:
+  usersTable: animal-detective-users-${self:provider.stage}
+  analyticsTable: animal-detective-analytics-${self:provider.stage}
+  gameEventsTable: animal-detective-game-events-${self:provider.stage}
+  sessionsTable: animal-detective-sessions-${self:provider.stage}
+  animalInteractionsTable: animal-detective-animal-interactions-${self:provider.stage}
+  tiktokTokenTable: tiktok-access-tokens-${self:provider.stage}
+
+functions:
+  # Analytics endpoint
+  analytics:
+    handler: dist/handlers/analytics.handler
+    events:
+      - http:
+          path: analytics
+          method: post
+          cors: true
+
+  # Game events endpoint
+  gameEvents:
+    handler: dist/handlers/gameEvents.handler
+    events:
+      - http:
+          path: game-events
+          method: post
+          cors: true
+
+  # User data endpoints
+  getUserData:
+    handler: dist/handlers/userData.handler
+    events:
+      - http:
+          path: users/{userId}
+          method: get
+          cors: true
+
+  updateUserData:
+    handler: dist/handlers/userData.handler
+    events:
+      - http:
+          path: users/{userId}
+          method: put
+          cors: true
+
+  # Session tracking
+  startSession:
+    handler: dist/handlers/sessions.handler
+    events:
+      - http:
+          path: sessions/start
+          method: post
+          cors: true
+
+  endSession:
+    handler: dist/handlers/sessions.handler
+    events:
+      - http:
+          path: sessions/end
+          method: post
+          cors: true
+
+  # Animal interactions
+  trackAnimalClick:
+    handler: dist/handlers/animalInteractions.handler
+    events:
+      - http:
+          path: animals/click
+          method: post
+          cors: true
+
+  # Analytics queries
+  getDailyDownloads:
+    handler: dist/handlers/analyticsQueries.handler
+    events:
+      - http:
+          path: analytics/daily-downloads
+          method: get
+          cors: true
+
+  getUserRetention:
+    handler: dist/handlers/analyticsQueries.handler
+    events:
+      - http:
+          path: analytics/retention
+          method: get
+          cors: true
+
+  getAnimalStats:
+    handler: dist/handlers/analyticsQueries.handler
+    events:
+      - http:
+          path: analytics/animal-stats
+          method: get
+          cors: true
+
+  # Health check
+  health:
+    handler: dist/handlers/health.handler
+    events:
+      - http:
+          path: health
+          method: get
+          cors: true
+
+  # TikTok Events API test endpoint
+  tiktokTest:
+    handler: dist/handlers/tiktokTest.handler
+    events:
+      - http:
+          path: tiktok-test
+          method: post
+          cors: true
+
+  # TikTok OAuth token exchange endpoint
+  tiktokOAuth:
+    handler: dist/handlers/tiktokOAuth.handler
+    events:
+      - http:
+          path: api/tiktok/exchange
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.usersTable}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+
+    AnalyticsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.analyticsTable}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: eventId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: eventId
+            KeyType: HASH
+        TimeToLiveSpecification:
+          Enabled: true
+          AttributeName: ttl
+
+    GameEventsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.gameEventsTable}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: N
+          - AttributeName: level
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: timestamp
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: LevelIndex
+            KeySchema:
+              - AttributeName: level
+                KeyType: HASH
+              - AttributeName: timestamp
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    SessionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.sessionsTable}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: sessionId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: startDate
+            AttributeType: S
+        KeySchema:
+          - AttributeName: sessionId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UserIdIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: sessionId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: DateIndex
+            KeySchema:
+              - AttributeName: startDate
+                KeyType: HASH
+              - AttributeName: sessionId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    AnimalInteractionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.animalInteractionsTable}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: interactionId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: animalName
+            AttributeType: S
+          - AttributeName: date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: interactionId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UserIdIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: interactionId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: AnimalIndex
+            KeySchema:
+              - AttributeName: animalName
+                KeyType: HASH
+              - AttributeName: interactionId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: DateIndex
+            KeySchema:
+              - AttributeName: date
+                KeyType: HASH
+              - AttributeName: interactionId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
