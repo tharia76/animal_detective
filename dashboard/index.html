@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Detective - Analytics Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .header-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px;
+        }
+        .config-section {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        .config-section input {
+            padding: 10px 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 14px;
+            width: 400px;
+        }
+        .config-section input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        .config-section button {
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .config-section button:hover {
+            transform: scale(1.05);
+        }
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 15px 25px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab:hover {
+            background: #e8e8e8;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+        .content {
+            padding: 30px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .error-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ffcdd2;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        tbody tr:hover {
+            background: #f5f5f5;
+        }
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .date-filter select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .date-filter button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .date-filter button:hover {
+            background: #5568d3;
+        }
+        .setup-message {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        .setup-message h2 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        .setup-message p {
+            color: #856404;
+            line-height: 1.6;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .level-pill {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+            text-transform: capitalize;
+            margin: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .level-farm { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); }
+        .level-forest { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); }
+        .level-ocean { background: linear-gradient(135deg, #0288D1 0%, #01579B 100%); }
+        .level-desert { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+        .level-arctic { background: linear-gradient(135deg, #B3E5FC 0%, #81D4FA 100%); color: #01579B; }
+        .level-insects { background: linear-gradient(135deg, #8BC34A 0%, #689F38 100%); }
+        .level-savannah { background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%); color: #5D4037; }
+        .level-jungle { background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); }
+        .level-birds { background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%); }
+        .level-unknown { background: linear-gradient(135deg, #9E9E9E 0%, #616161 100%); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // API Base URL - Use local backend when running on localhost
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE_URL = isLocalhost 
+            ? 'http://localhost:3000'
+            : 'https://kbhbelilr3phj6ruq3opi3zs7e0cykav.lambda-url.us-west-2.on.aws';
+
+        // API Service
+        const apiService = {
+            async getDailyDownloads(date) {
+                const response = await fetch(`${API_BASE_URL}/analytics/daily-downloads?date=${date}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            },
+            async getRetention(days) {
+                const response = await fetch(`${API_BASE_URL}/analytics/retention?days=${days}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            },
+            async getAnimalStats(days) {
+                const response = await fetch(`${API_BASE_URL}/analytics/animal-stats?days=${days}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            },
+            async getLaunchStats(days) {
+                const response = await fetch(`${API_BASE_URL}/analytics/launch-stats?days=${days}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            },
+            async getLevelStats(days) {
+                const response = await fetch(`${API_BASE_URL}/analytics/level-stats?days=${days}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            },
+            async getAnimalClicks(days, limit) {
+                const response = await fetch(`${API_BASE_URL}/analytics/animal-clicks?days=${days}&limit=${limit || 100}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            },
+            async getAppleDownloads(startDate, endDate, filterType = 'all') {
+                const url = `${API_BASE_URL}/analytics/apple-downloads?startDate=${startDate}&endDate=${endDate}&filterType=${filterType}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            },
+        };
+
+        // Helper functions
+        function getApiBaseUrl() {
+            return localStorage.getItem('apiBaseUrl') || API_BASE_URL;
+        }
+
+        function setApiBaseUrl(url) {
+            localStorage.setItem('apiBaseUrl', url);
+        }
+
+        function isApiConfigured() {
+            return !!getApiBaseUrl();
+        }
+
+        // Setup Message Component
+        function SetupMessage() {
+            return (
+                <div className="setup-message">
+                    <h2>⚙️ API Configuration Required</h2>
+                    <p>Please configure the API base URL in the header above to view analytics data.</p>
+                </div>
+            );
+        }
+
+        // Daily Downloads Component
+        function DailyDownloads() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+            const fetchData = async () => {
+                if (!isApiConfigured()) {
+                    setError('API base URL not configured');
+                    return;
+                }
+                try {
+                    setLoading(true);
+                    setError(null);
+                    const result = await apiService.getDailyDownloads(date);
+                    setData(result);
+                } catch (err) {
+                    let errorMsg = err.message;
+                    if (errorMsg.includes('500')) {
+                        errorMsg = 'Server Error (500): The backend may be missing DynamoDB tables or environment variables.';
+                    }
+                    setError(errorMsg);
+                    setData(null);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchData();
+                // Auto-refresh every 30 seconds to show latest clicks
+                const interval = setInterval(() => {
+                    fetchData();
+                }, 30000);
+                return () => clearInterval(interval);
+            }, []);
+
+            if (!isApiConfigured()) {
+                return <SetupMessage />;
+            }
+
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px', color: '#333' }}>Daily Downloads</h2>
+                    <div className="date-filter">
+                        <input
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            style={{ padding: '10px', border: '2px solid #e0e0e0', borderRadius: '8px' }}
+                        />
+                        <button onClick={fetchData}>Load</button>
+                    </div>
+                    {loading && <div className="loading">Loading...</div>}
+                    {error && (
+                        <div className="error">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+                    {data && (
+                        <div>
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <h3>Downloads</h3>
+                                    <div className="value">{data.downloads}</div>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Date</h3>
+                                    <div className="value" style={{ fontSize: '20px' }}>{data.date}</div>
+                                </div>
+                            </div>
+                            {data.users && data.users.length > 0 && (
+                                <div style={{ marginTop: '30px' }}>
+                                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Download Details</h3>
+                                    <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>User ID</th>
+                                                    <th>Platform</th>
+                                                    <th>IP Address</th>
+                                                    <th>Location</th>
+                                                    <th>MST Time</th>
+                                                    <th>Baku Time</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {data.users.map((user, idx) => (
+                                                    <tr key={idx}>
+                                                        <td style={{ fontSize: '11px', fontFamily: 'monospace' }}>{user.userId.substring(0, 12)}...</td>
+                                                        <td>{user.platform || 'unknown'}</td>
+                                                        <td style={{ fontSize: '11px', fontFamily: 'monospace' }}>{user.ipAddress || 'unknown'}</td>
+                                                        <td style={{ fontSize: '12px' }}>{user.location || 'unknown'}</td>
+                                                        <td style={{ fontSize: '12px' }}>{user.mstTime}</td>
+                                                        <td style={{ fontSize: '12px' }}>{user.bakuTime}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Launch Stats Component
+        function LaunchStats() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [days, setDays] = useState(30);
+
+            const fetchData = async () => {
+                if (!isApiConfigured()) {
+                    setError('API base URL not configured');
+                    return;
+                }
+                try {
+                    setLoading(true);
+                    setError(null);
+                    const result = await apiService.getLaunchStats(days);
+                    setData(result);
+                } catch (err) {
+                    let errorMsg = err.message;
+                    if (errorMsg.includes('500')) {
+                        errorMsg = 'Server Error (500): The backend may be missing DynamoDB tables or environment variables.';
+                    }
+                    setError(errorMsg);
+                    setData(null);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchData();
+                // Auto-refresh every 30 seconds to show latest clicks
+                const interval = setInterval(() => {
+                    fetchData();
+                }, 30000);
+                return () => clearInterval(interval);
+            }, []);
+
+            if (!isApiConfigured()) {
+                return <SetupMessage />;
+            }
+
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px', color: '#333' }}>App Launch Statistics</h2>
+                    <div className="date-filter">
+                        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+                            <option value={7}>Last 7 days</option>
+                            <option value={14}>Last 14 days</option>
+                            <option value={30}>Last 30 days</option>
+                            <option value={90}>Last 90 days</option>
+                        </select>
+                        <button onClick={fetchData}>Load</button>
+                    </div>
+                    {loading && <div className="loading">Loading...</div>}
+                    {error && (
+                        <div className="error">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+                    {data && (
+                        <div>
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <h3>Total Launches</h3>
+                                    <div className="value">{data.totalLaunches}</div>
+                                    {data.note && (
+                                        <p style={{ fontSize: '12px', opacity: 0.8, marginTop: '5px' }}>{data.note}</p>
+                                    )}
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Unique Users</h3>
+                                    <div className="value">{data.uniqueUsers}</div>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Avg Launches/User</h3>
+                                    <div className="value">{data.uniqueUsers > 0 ? Math.round(data.totalLaunches / data.uniqueUsers) : 0}</div>
+                                </div>
+                            </div>
+                            {data.platformStats && Object.keys(data.platformStats).length > 0 && (
+                                <div style={{ marginTop: '30px' }}>
+                                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Launches by Platform</h3>
+                                    <div className="stats-grid">
+                                        {Object.entries(data.platformStats).map(([platform, count], idx) => (
+                                            <div key={idx} className="stat-card">
+                                                <h3>{platform.charAt(0).toUpperCase() + platform.slice(1)}</h3>
+                                                <div className="value">{count}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {data.dailyLaunches && data.dailyLaunches.length > 0 && (
+                                <div style={{ marginTop: '30px' }}>
+                                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Daily Launches</h3>
+                                    <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+                                        Date range: {data.dailyLaunches[0]?.date} to {data.dailyLaunches[data.dailyLaunches.length - 1]?.date} ({data.dailyLaunches.length} days)
+                                    </p>
+                                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Launches</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {data.dailyLaunches
+                                                    .filter(day => day.launches > 0)
+                                                    .map((day, idx) => {
+                                                        const isToday = day.date === new Date().toISOString().split('T')[0];
+                                                        return (
+                                                            <tr key={idx} style={isToday ? { backgroundColor: '#e3f2fd' } : {}}>
+                                                                <td>
+                                                                    {day.date}
+                                                                    {isToday && <span style={{ marginLeft: '8px', color: '#1976d2', fontWeight: '600' }}>(Today)</span>}
+                                                                </td>
+                                                                <td><strong>{day.launches}</strong></td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                {data.dailyLaunches.filter(day => day.launches > 0).length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="2" style={{ textAlign: 'center', color: '#666' }}>
+                                                            No launches in this period
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {data.dailyLaunches.filter(day => day.launches === 0).length > 0 && (
+                                        <p style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+                                            Showing only days with launches. {data.dailyLaunches.filter(day => day.launches === 0).length} days with 0 launches hidden.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Drag Events Component
+        function DragEvents() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [days, setDays] = useState(90);
+            const [limit, setLimit] = useState(200);
+
+            const fetchData = async (showLoading = true) => {
+                if (!isApiConfigured()) {
+                    setError('API base URL not configured');
+                    return;
+                }
+                try {
+                    if (showLoading) setLoading(true);
+                    setError(null);
+                    const result = await apiService.getAnimalClicks(days, limit);
+                    // Filter to only drag events
+                    const dragEvents = {
+                        ...result,
+                        clicks: (result.clicks || []).filter(click => 
+                            click.interactionType === 'drag'
+                        ),
+                        totalClicks: (result.clicks || []).filter(click => 
+                            click.interactionType === 'drag'
+                        ).length
+                    };
+                    setData(dragEvents);
+                } catch (err) {
+                    let errorMsg = err.message;
+                    if (errorMsg.includes('500')) {
+                        errorMsg = 'Server Error (500): The backend may be missing DynamoDB tables or environment variables.';
+                    }
+                    setError(errorMsg);
+                    setData(null);
+                } finally {
+                    if (showLoading) setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchData(true); // Initial load with loading indicator
+                // Auto-refresh every 5 seconds for real-time updates (silent refresh)
+                const interval = setInterval(() => {
+                    fetchData(false); // Silent refresh without loading indicator
+                }, 5000);
+                return () => clearInterval(interval);
+            }, [days, limit]);
+
+            if (!isApiConfigured()) {
+                return <SetupMessage />;
+            }
+
+            return (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h2 style={{ margin: 0, color: '#333' }}>Animal Drag Events</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#666' }}>
+                            <span style={{ 
+                                display: 'inline-block',
+                                width: '10px',
+                                height: '10px',
+                                borderRadius: '50%',
+                                backgroundColor: loading ? '#ffc107' : '#4caf50',
+                                animation: loading ? 'pulse 1s infinite' : 'none'
+                            }}></span>
+                            <span>{loading ? 'Updating...' : 'Live'}</span>
+                        </div>
+                    </div>
+                    <div className="date-filter">
+                        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+                            <option value={7}>Last 7 days</option>
+                            <option value={14}>Last 14 days</option>
+                            <option value={30}>Last 30 days</option>
+                            <option value={90}>Last 90 days</option>
+                        </select>
+                        <select value={limit} onChange={(e) => setLimit(Number(e.target.value))} style={{ padding: '10px 15px', border: '2px solid #e0e0e0', borderRadius: '8px' }}>
+                            <option value={50}>Show 50</option>
+                            <option value={100}>Show 100</option>
+                            <option value={200}>Show 200</option>
+                            <option value={500}>Show 500</option>
+                            <option value={1000}>Show 1000</option>
+                        </select>
+                        <button onClick={fetchData} style={{ marginLeft: '10px' }}>🔄 Refresh</button>
+                        <button onClick={fetchData}>Load</button>
+                    </div>
+                    {loading && <div className="loading">Loading...</div>}
+                    {error && (
+                        <div className="error">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+                    {data && (
+                        <div>
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <h3>Total Drag Events</h3>
+                                    <div className="value">{data.totalClicks}</div>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Period</h3>
+                                    <div className="value" style={{ fontSize: '20px' }}>{data.period}</div>
+                                </div>
+                            </div>
+                            {data.clicks && data.clicks.length > 0 && (
+                                <div style={{ marginTop: '30px' }}>
+                                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Drag Event Details</h3>
+                                    <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Animal</th>
+                                                    <th>Level</th>
+                                                    <th>Dropped</th>
+                                                    <th>Correct</th>
+                                                    <th>Expected</th>
+                                                    <th>Device Type</th>
+                                                    <th>Platform</th>
+                                                    <th>IP Address</th>
+                                                    <th>Location</th>
+                                                    <th>MST Time</th>
+                                                    <th>Baku Time</th>
+                                                    <th>User ID</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {data.clicks.map((click, idx) => {
+                                                    const levelClass = `level-${click.level.toLowerCase()}`;
+                                                    const metadata = click.metadata || {};
+                                                    const dropped = metadata.dropped !== undefined ? metadata.dropped : 'N/A';
+                                                    const correct = metadata.correct !== undefined ? (metadata.correct ? '✓' : '✗') : 'N/A';
+                                                    const expectedAnimal = metadata.expectedAnimal || 'N/A';
+                                                    return (
+                                                        <tr key={idx}>
+                                                            <td><strong>{click.animalName}</strong></td>
+                                                            <td>
+                                                                <span className={`level-pill ${levelClass}`}>
+                                                                    {click.level}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ textAlign: 'center', fontWeight: 'bold', color: dropped === true ? '#4CAF50' : dropped === false ? '#f44336' : '#666' }}>
+                                                                {dropped === true ? '✓' : dropped === false ? '✗' : 'N/A'}
+                                                            </td>
+                                                            <td style={{ textAlign: 'center', fontWeight: 'bold', color: correct === '✓' ? '#4CAF50' : correct === '✗' ? '#f44336' : '#666' }}>
+                                                                {correct}
+                                                            </td>
+                                                            <td style={{ fontSize: '12px' }}>{expectedAnimal}</td>
+                                                            <td>{click.deviceType}</td>
+                                                            <td>{click.platform}</td>
+                                                            <td style={{ fontSize: '11px', fontFamily: 'monospace' }}>{click.ipAddress || 'unknown'}</td>
+                                                            <td style={{ fontSize: '12px' }}>{click.location || 'unknown'}</td>
+                                                            <td style={{ fontSize: '12px' }}>{click.mstTime}</td>
+                                                            <td style={{ fontSize: '12px' }}>{click.bakuTime}</td>
+                                                            <td style={{ fontSize: '11px', fontFamily: 'monospace' }}>{click.userId.substring(0, 8)}...</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                            {data.clicks && data.clicks.length === 0 && (
+                                <div style={{ marginTop: '30px', textAlign: 'center', color: '#666', padding: '40px' }}>
+                                    <p>No drag events found in this period.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Animal Clicks Component
+        function AnimalClicks() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [days, setDays] = useState(90);
+            const [limit, setLimit] = useState(200);
+
+            const fetchData = async (showLoading = true) => {
+                if (!isApiConfigured()) {
+                    setError('API base URL not configured');
+                    return;
+                }
+                try {
+                    if (showLoading) setLoading(true);
+                    setError(null);
+                    const result = await apiService.getAnimalClicks(days, limit);
+                    setData(result);
+                } catch (err) {
+                    let errorMsg = err.message;
+                    if (errorMsg.includes('500')) {
+                        errorMsg = 'Server Error (500): The backend may be missing DynamoDB tables or environment variables.';
+                    }
+                    setError(errorMsg);
+                    setData(null);
+                } finally {
+                    if (showLoading) setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchData(true); // Initial load with loading indicator
+                // Auto-refresh every 5 seconds for real-time updates (silent refresh)
+                const interval = setInterval(() => {
+                    fetchData(false); // Silent refresh without loading indicator
+                }, 5000);
+                return () => clearInterval(interval);
+            }, [days, limit]);
+
+            if (!isApiConfigured()) {
+                return <SetupMessage />;
+            }
+
+            return (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h2 style={{ margin: 0, color: '#333' }}>Animal Click Logs</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#666' }}>
+                            <span style={{ 
+                                display: 'inline-block',
+                                width: '10px',
+                                height: '10px',
+                                borderRadius: '50%',
+                                backgroundColor: loading ? '#ffc107' : '#4caf50',
+                                animation: loading ? 'pulse 1s infinite' : 'none'
+                            }}></span>
+                            <span>{loading ? 'Updating...' : 'Live'}</span>
+                        </div>
+                    </div>
+                    <div className="date-filter">
+                        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+                            <option value={7}>Last 7 days</option>
+                            <option value={14}>Last 14 days</option>
+                            <option value={30}>Last 30 days</option>
+                            <option value={90}>Last 90 days</option>
+                        </select>
+                        <select value={limit} onChange={(e) => setLimit(Number(e.target.value))} style={{ padding: '10px 15px', border: '2px solid #e0e0e0', borderRadius: '8px' }}>
+                            <option value={50}>Show 50</option>
+                            <option value={100}>Show 100</option>
+                            <option value={200}>Show 200</option>
+                            <option value={500}>Show 500</option>
+                            <option value={1000}>Show 1000</option>
+                        </select>
+                        <button onClick={fetchData} style={{ marginLeft: '10px' }}>🔄 Refresh</button>
+                        <button onClick={fetchData}>Load</button>
+                    </div>
+                    {loading && <div className="loading">Loading...</div>}
+                    {error && (
+                        <div className="error">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+                    {data && (
+                        <div>
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <h3>Total Clicks</h3>
+                                    <div className="value">{data.totalClicks}</div>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Period</h3>
+                                    <div className="value" style={{ fontSize: '20px' }}>{data.period}</div>
+                                </div>
+                            </div>
+                            {data.clicks && data.clicks.length > 0 && (
+                                <div style={{ marginTop: '30px' }}>
+                                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Click Details</h3>
+                                    <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Animal</th>
+                                                    <th>Level</th>
+                                                    <th>Device Type</th>
+                                                    <th>Platform</th>
+                                                    <th>IP Address</th>
+                                                    <th>Location</th>
+                                                    <th>MST Time</th>
+                                                    <th>Baku Time</th>
+                                                    <th>User ID</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {data.clicks.map((click, idx) => {
+                                                    const levelClass = `level-${click.level.toLowerCase()}`;
+                                                    return (
+                                                        <tr key={idx}>
+                                                            <td><strong>{click.animalName}</strong></td>
+                                                            <td>
+                                                                <span className={`level-pill ${levelClass}`}>
+                                                                    {click.level}
+                                                                </span>
+                                                            </td>
+                                                            <td>{click.deviceType}</td>
+                                                            <td>{click.platform}</td>
+                                                            <td style={{ fontSize: '11px', fontFamily: 'monospace' }}>{click.ipAddress || 'unknown'}</td>
+                                                            <td style={{ fontSize: '12px' }}>{click.location || 'unknown'}</td>
+                                                            <td style={{ fontSize: '12px' }}>{click.mstTime}</td>
+                                                            <td style={{ fontSize: '12px' }}>{click.bakuTime}</td>
+                                                            <td style={{ fontSize: '11px', fontFamily: 'monospace' }}>{click.userId.substring(0, 8)}...</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                            {(!data.clicks || data.clicks.length === 0) && !loading && (
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                                    <p>No animal clicks found in this period.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Apple Downloads Component
+        function AppleDownloads() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [startDate, setStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+            const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+            const [filterType, setFilterType] = useState('all');
+
+            const fetchData = async () => {
+                if (!isApiConfigured()) {
+                    setError('API base URL not configured');
+                    return;
+                }
+                try {
+                    setLoading(true);
+                    setError(null);
+                    const result = await apiService.getAppleDownloads(startDate, endDate, filterType);
+                    // Filter out invalid entries (empty dates, zero downloads)
+                    if (result.downloads) {
+                        result.downloads = result.downloads.filter(d => d.date && d.date.trim() !== '' && d.downloads > 0);
+                    }
+                    setData(result);
+                } catch (err) {
+                    let errorMsg = err.message;
+                    if (errorMsg.includes('500')) {
+                        errorMsg = 'Server Error (500): Check backend logs for details.';
+                    }
+                    setError(errorMsg);
+                    setData(null);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const fetchAllTimeIAP = async () => {
+                setFilterType('iap');
+                // Use date from 2 years ago (Apple's typical data retention)
+                const twoYearsAgo = new Date();
+                twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+                setStartDate(twoYearsAgo.toISOString().split('T')[0]);
+                setEndDate(new Date().toISOString().split('T')[0]);
+                setTimeout(() => {
+                    fetchData();
+                }, 100);
+            };
+
+            useEffect(() => {
+                fetchData();
+            }, []);
+
+            if (!isApiConfigured()) {
+                return <SetupMessage />;
+            }
+
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px', color: '#333' }}>Apple App Store Download History</h2>
+                    <div style={{ marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', marginBottom: '15px' }}>
+                            <label style={{ fontWeight: 'bold' }}>Filter:</label>
+                            <select
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                                style={{ padding: '10px', border: '2px solid #e0e0e0', borderRadius: '8px' }}
+                            >
+                                <option value="all">All (Downloads + IAP)</option>
+                                <option value="downloads">App Downloads Only</option>
+                                <option value="iap">In-App Purchases Only</option>
+                            </select>
+                            <button onClick={fetchAllTimeIAP} style={{ marginLeft: '10px', background: '#667eea', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Show All-Time IAP
+                            </button>
+                        </div>
+                        <div className="date-filter">
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                style={{ padding: '10px', border: '2px solid #e0e0e0', borderRadius: '8px' }}
+                            />
+                            <span style={{ margin: '0 10px' }}>to</span>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                style={{ padding: '10px', border: '2px solid #e0e0e0', borderRadius: '8px' }}
+                            />
+                            <button onClick={fetchData} style={{ marginLeft: '10px' }}>Load</button>
+                        </div>
+                    </div>
+                    {loading && <div className="loading">Loading...</div>}
+                    {error && (
+                        <div className="error">
+                            <strong>Error:</strong> {error}
+                            {error.includes('credentials') && (
+                                <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+                                    <p>To enable Apple App Store Connect API:</p>
+                                    <ol style={{ marginLeft: '20px', marginTop: '5px' }}>
+                                        <li>Create an API key in App Store Connect</li>
+                                        <li>Set environment variables: APPLE_KEY_ID, APPLE_ISSUER_ID, APPLE_PRIVATE_KEY, APPLE_VENDOR_NUMBER</li>
+                                    </ol>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    {data && (
+                        <div>
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <h3>{data.filterType === 'iap' ? 'Total IAP Purchases' : 'Total Downloads'}</h3>
+                                    <div className="value">{data.totalDownloads || 0}</div>
+                                </div>
+                                {data.totalRevenue !== undefined && (
+                                    <div className="stat-card">
+                                        <h3>Total Revenue</h3>
+                                        <div className="value" style={{ color: '#28a745' }}>${(data.totalRevenue || 0).toFixed(2)}</div>
+                                    </div>
+                                )}
+                                <div className="stat-card">
+                                    <h3>Source</h3>
+                                    <div className="value" style={{ fontSize: '16px' }}>{data.source || 'Apple App Store Connect'}</div>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Period</h3>
+                                    <div className="value" style={{ fontSize: '14px' }}>{data.startDate} to {data.endDate}</div>
+                                </div>
+                            </div>
+                            {data.downloads && data.downloads.length > 0 && (
+                                <div style={{ marginTop: '30px' }}>
+                                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Daily Download History</h3>
+                                    <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>{data.filterType === 'iap' ? 'Purchases' : 'Downloads'}</th>
+                                                    <th>Revenue</th>
+                                                    <th>SKU</th>
+                                                    <th>Product Type</th>
+                                                    <th>Country</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {data.downloads.map((download, idx) => (
+                                                    <tr key={idx}>
+                                                        <td>{download.date || 'N/A'}</td>
+                                                        <td style={{ fontWeight: 'bold' }}>{download.downloads || 0}</td>
+                                                        <td style={{ color: download.revenue > 0 ? '#28a745' : '#666', fontWeight: download.revenue > 0 ? 'bold' : 'normal' }}>
+                                                            {download.revenue ? `$${download.revenue.toFixed(2)}` : '$0.00'}
+                                                        </td>
+                                                        <td>{download.sku || 'N/A'}</td>
+                                                        <td>
+                                                            <span style={{ 
+                                                                padding: '4px 8px', 
+                                                                borderRadius: '4px', 
+                                                                fontSize: '12px',
+                                                                background: download.isIAP ? '#e3f2fd' : '#f5f5f5',
+                                                                color: download.isIAP ? '#1976d2' : '#666'
+                                                            }}>
+                                                                {download.isIAP ? 'IAP' : 'App'}
+                                                            </span>
+                                                        </td>
+                                                        <td>{download.country || 'N/A'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                            {(!data.downloads || data.downloads.length === 0) && !loading && (
+                                <div style={{ marginTop: '30px', textAlign: 'center', color: '#666', padding: '40px' }}>
+                                    <p>No download data found for this period.</p>
+                                    {data.note && (
+                                        <div style={{ marginTop: '15px', padding: '15px', background: '#f5f5f5', borderRadius: '8px', fontSize: '13px', textAlign: 'left', maxWidth: '600px', margin: '15px auto' }}>
+                                            <strong>Note:</strong> {data.note}
+                                        </div>
+                                    )}
+                                    {data.error && <p style={{ fontSize: '12px', color: '#999' }}>{data.error}</p>}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Level Stats Component
+        function LevelStats() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [days, setDays] = useState(30);
+
+            const fetchData = async () => {
+                if (!isApiConfigured()) {
+                    setError('API base URL not configured');
+                    return;
+                }
+                try {
+                    setLoading(true);
+                    setError(null);
+                    const result = await apiService.getLevelStats(days);
+                    setData(result);
+                } catch (err) {
+                    let errorMsg = err.message;
+                    if (errorMsg.includes('500')) {
+                        errorMsg = 'Server Error (500): The backend may be missing DynamoDB tables or environment variables. Check your Lambda function configuration.';
+                    }
+                    setError(errorMsg);
+                    setData(null);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchData();
+                // Auto-refresh every 30 seconds to show latest clicks
+                const interval = setInterval(() => {
+                    fetchData();
+                }, 30000);
+                return () => clearInterval(interval);
+            }, []);
+
+            if (!isApiConfigured()) {
+                return <SetupMessage />;
+            }
+
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px', color: '#333' }}>Level Selection Statistics</h2>
+                    <div className="date-filter">
+                        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+                            <option value={7}>Last 7 days</option>
+                            <option value={14}>Last 14 days</option>
+                            <option value={30}>Last 30 days</option>
+                            <option value={90}>Last 90 days</option>
+                        </select>
+                        <button onClick={fetchData}>Load</button>
+                    </div>
+                    {loading && <div className="loading">Loading...</div>}
+                    {error && (
+                        <div className="error">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+                    {data && (
+                        <div>
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <h3>Total Selections</h3>
+                                    <div className="value">{data.totalSelections}</div>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Unique Users</h3>
+                                    <div className="value">{data.uniqueUsers}</div>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Levels Selected</h3>
+                                    <div className="value">{data.levelStats?.length || 0}</div>
+                                </div>
+                            </div>
+                            {data.levelStats && data.levelStats.length > 0 && (
+                                <div style={{ marginTop: '30px' }}>
+                                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Level Selection Breakdown</h3>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Level</th>
+                                                <th>Selections</th>
+                                                <th>Unique Users</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {data.levelStats.map((level, idx) => {
+                                                const levelClass = `level-${level.level.toLowerCase()}`;
+                                                return (
+                                                    <tr key={idx}>
+                                                        <td>
+                                                            <span className={`level-pill ${levelClass}`}>
+                                                                {level.level}
+                                                            </span>
+                                                        </td>
+                                                        <td>{level.selections}</td>
+                                                        <td>{level.uniqueUsers}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                            {(!data.levelStats || data.levelStats.length === 0) && !loading && (
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                                    <p>No level selections found in this period.</p>
+                                    <p style={{ marginTop: '10px', fontSize: '14px' }}>Try selecting a level in the app to see data here.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Main Dashboard Component
+        function Dashboard() {
+            const [activeTab, setActiveTab] = useState('levels');
+            const [apiUrl, setApiUrl] = useState(getApiBaseUrl());
+            const [saveSuccess, setSaveSuccess] = useState(false);
+
+            useEffect(() => {
+                setApiUrl(getApiBaseUrl());
+            }, []);
+
+            const handleSaveUrl = () => {
+                if (!apiUrl || !apiUrl.trim()) {
+                    alert('Please enter a valid API URL');
+                    return;
+                }
+                if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
+                    alert('API URL must start with http:// or https://');
+                    return;
+                }
+                setApiBaseUrl(apiUrl.trim());
+                setSaveSuccess(true);
+                setTimeout(() => {
+                    setSaveSuccess(false);
+                    window.location.reload();
+                }, 1500);
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>
+                            <img src="logo.png" alt="Animal Detective Logo" className="header-logo" />
+                            Animal Detective - Analytics Dashboard
+                        </h1>
+                        <div className="config-section">
+                            <input
+                                type="text"
+                                placeholder="Override API URL (optional)"
+                                value={apiUrl}
+                                onChange={(e) => setApiUrl(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSaveUrl()}
+                            />
+                            <button onClick={handleSaveUrl}>
+                                {saveSuccess ? '✓ Saved' : 'Save URL'}
+                            </button>
+                        </div>
+                    </div>
+                    <div className="tabs">
+                        <button
+                            className={`tab ${activeTab === 'downloads' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('downloads')}
+                        >
+                            Downloads
+                        </button>
+                        <button
+                            className={`tab ${activeTab === 'launches' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('launches')}
+                        >
+                            Launches
+                        </button>
+                        <button
+                            className={`tab ${activeTab === 'levels' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('levels')}
+                        >
+                            Level Stats
+                        </button>
+                        <button
+                            className={`tab ${activeTab === 'animal-clicks' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('animal-clicks')}
+                        >
+                            Animal Clicks
+                        </button>
+                        <button
+                            className={`tab ${activeTab === 'drag-events' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('drag-events')}
+                        >
+                            Drag Events
+                        </button>
+                        <button
+                            className={`tab ${activeTab === 'apple-downloads' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('apple-downloads')}
+                        >
+                            Apple Downloads
+                        </button>
+                    </div>
+                    <div className="content">
+                        {activeTab === 'downloads' && <DailyDownloads />}
+                        {activeTab === 'launches' && <LaunchStats />}
+                        {activeTab === 'levels' && <LevelStats />}
+                        {activeTab === 'animal-clicks' && <AnimalClicks />}
+                        {activeTab === 'drag-events' && <DragEvents />}
+                        {activeTab === 'apple-downloads' && <AppleDownloads />}
+                    </div>
+                </div>
+            );
+        }
+
+        // Render
+        ReactDOM.render(<Dashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>
