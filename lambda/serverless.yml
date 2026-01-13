@@ -16,8 +16,6 @@ provider:
     GAME_EVENTS_TABLE: ${self:custom.gameEventsTable}
     SESSIONS_TABLE: ${self:custom.sessionsTable}
     ANIMAL_INTERACTIONS_TABLE: ${self:custom.animalInteractionsTable}
-    TIKTOK_APP_SECRET: TTCYJT3g804mY1GuV1MF9q2l4U9kIYJ5
-    TIKTOK_TOKEN_TABLE: ${self:custom.tiktokTokenTable}
   iam:
     role:
       statements:
@@ -40,8 +38,6 @@ provider:
             - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.gameEventsTable}/*"
             - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.sessionsTable}/*"
             - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.animalInteractionsTable}/*"
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.tiktokTokenTable}"
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.tiktokTokenTable}/*"
 
 custom:
   usersTable: animal-detective-users-${self:provider.stage}
@@ -49,7 +45,6 @@ custom:
   gameEventsTable: animal-detective-game-events-${self:provider.stage}
   sessionsTable: animal-detective-sessions-${self:provider.stage}
   animalInteractionsTable: animal-detective-animal-interactions-${self:provider.stage}
-  tiktokTokenTable: tiktok-access-tokens-${self:provider.stage}
 
 functions:
   # Analytics endpoint
@@ -145,24 +140,6 @@ functions:
       - http:
           path: health
           method: get
-          cors: true
-
-  # TikTok Events API test endpoint
-  tiktokTest:
-    handler: dist/handlers/tiktokTest.handler
-    events:
-      - http:
-          path: tiktok-test
-          method: post
-          cors: true
-
-  # TikTok OAuth token exchange endpoint
-  tiktokOAuth:
-    handler: dist/handlers/tiktokOAuth.handler
-    events:
-      - http:
-          path: api/tiktok/exchange
-          method: post
           cors: true
 
 resources:

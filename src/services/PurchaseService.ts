@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import TikTokAnalytics from './TikTokAnalytics';
 
 const UNLOCK_ALL_LEVELS_KEY = 'unlocked_all_levels';
 const PRODUCT_ID_UNLOCK_ALL = 'animalDetectiveUnclock';
@@ -136,18 +135,6 @@ class PurchaseService {
           await AsyncStorage.setItem(UNLOCK_ALL_LEVELS_KEY, 'true');
 
           console.log('✅ Purchase completed successfully');
-          
-          // Track purchase in TikTok Analytics
-          const purchaseAmount = purchase.priceAmountMicros ? purchase.priceAmountMicros / 1000000 : 0;
-          const currency = purchase.priceCurrencyCode || 'USD';
-          const transactionId = purchase.transactionId || purchase.orderId;
-          
-          TikTokAnalytics.trackPurchase(
-            purchaseAmount,
-            currency,
-            PRODUCT_ID_UNLOCK_ALL,
-            transactionId
-          ).catch(() => {});
           
           // Also send detailed event to backend
           AsyncStorage.getItem('userId').then(userId => {

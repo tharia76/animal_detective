@@ -17,7 +17,6 @@ import { useLocalization } from '../hooks/useLocalization';
 import { createAudioPlayer } from 'expo-audio';
 import { useLevelCompletion } from '../hooks/useLevelCompletion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import TikTokAnalytics from '../services/TikTokAnalytics';
 import ApiService from '../services/ApiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -285,13 +284,6 @@ const CongratsModal: React.FC<CongratsModalProps> = ({
         markLevelCompleted(levelName).catch(error => {
           console.warn('Error marking level as completed:', error);
         });
-        
-        // Track level completion in TikTok Analytics
-        TikTokAnalytics.trackLevelCompleted(
-          levelName,
-          7, // All levels have 7 animals
-          undefined // Time spent not available in this component
-        ).catch(() => {});
         
         // Also send detailed event to backend
         AsyncStorage.getItem('userId').then(userId => {

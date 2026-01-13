@@ -26,7 +26,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CommonActions } from '@react-navigation/native';
 import PurchaseService from '../src/services/PurchaseService';
-import TikTokAnalytics from '../src/services/TikTokAnalytics';
 import ApiService from '../src/services/ApiService';
 
 import ReAnimated, { 
@@ -629,18 +628,18 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const modalTransitionRef = useRef(false);
   
   // Load unlocked state from storage on mount
-  // No longer auto-unlocks in debug mode - levels stay locked except farm, forest, ocean
-  // Force clear any existing unlock state to ensure proper locking
+  // Only farm is unlocked by default, all others require $0.99 purchase
   useEffect(() => {
     const loadUnlockedState = async () => {
       try {
-        // Force clear unlock state to ensure proper locking
-        // Only keep unlock if user actually purchased it (will be restored via restorePurchases)
-        await AsyncStorage.removeItem('unlocked_all_levels');
-        setUnlocked(false);
-        console.log('🔒 Cleared unlock state - only farm, forest, ocean unlocked');
+        // Check if user has purchased unlock all
+        const unlockedValue = await AsyncStorage.getItem('unlocked_all_levels');
+        const isUnlocked = unlockedValue === 'true';
+        setUnlocked(isUnlocked);
+        console.log('🔒 Loaded unlock state:', isUnlocked ? 'unlocked (paid)' : 'locked (only farm free)');
       } catch (error) {
         console.warn('Error loading unlocked state:', error);
+        setUnlocked(false);
       }
     };
     loadUnlockedState();
@@ -1189,8 +1188,6 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         console.warn('Error stopping audio before level transition:', e);
       }
       
-      // Track level selection
-      TikTokAnalytics.trackLevelSelected(level, true).catch(() => {});
       
       // Track level started with detailed data
       AsyncStorage.getItem('userId').then(userId => {
@@ -1418,19 +1415,14 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const settingsModalTop = Math.max(0, Math.round((currentHeight - settingsModalHeight) / 2));
   const settingsModalLeft = Math.max(0, Math.round((currentWidth - settingsModalWidth) / 2));
  
-  // Lock all levels except farm, forest, and ocean (or if user has unlocked all)
-  // Debug mode still respects locking (only farm, forest, ocean unlocked)
+  // Lock all levels except farm (or if user has unlocked all)
   const getIsLocked = (level: string) => {
     // If user has unlocked all levels, nothing is locked
     if (unlocked) {
       return false;
     }
-    // Unlock farm, forest, and ocean only
-    if (level === 'farm' || level === 'forest' || level === 'ocean') {
-      return false;
-    }
-    // Lock all other levels
-    return true;
+    // Only farm is unlocked by default
+    return level !== 'farm';
   };
 
   // Gather all menu assets to preload

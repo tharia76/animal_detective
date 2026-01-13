@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // Try to import AdMob, fallback gracefully if not available
 let MobileAds: any = null;
 let admobAvailable = false;
@@ -82,6 +84,22 @@ class AdMobService {
    */
   isAvailable(): boolean {
     return admobAvailable && MobileAds !== null;
+  }
+
+  /**
+   * Get interstitial ad unit ID for the current platform
+   * Returns production ID in production, test ID in development
+   */
+  getInterstitialAdUnitId(): string {
+    if (__DEV__) {
+      // Use test ad unit IDs in development
+      return Platform.OS === 'ios'
+        ? 'ca-app-pub-3940256099942544/4411468910'  // iOS test interstitial
+        : 'ca-app-pub-3940256099942544/1033173712'; // Android test interstitial
+    }
+    
+    // Production ad unit ID (same for both platforms)
+    return 'ca-app-pub-3872152208332642/7000203719';
   }
 }
 

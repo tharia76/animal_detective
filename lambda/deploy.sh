@@ -156,7 +156,6 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if aws lambda update-function-configuration \
         --function-name "$FUNCTION_NAME" \
         --environment "Variables={
-            TIKTOK_APP_SECRET=TTCYJT3g804mY1GuV1MF9q2l4U9kIYJ5,
             USERS_TABLE=animal-detective-users-${STAGE},
             ANALYTICS_TABLE=animal-detective-analytics-${STAGE},
         GAME_EVENTS_TABLE=animal-detective-game-events-${STAGE},

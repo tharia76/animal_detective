@@ -6,9 +6,6 @@ import * as userDataModule from './userData';
 import * as sessionsModule from './sessions';
 import * as animalInteractionsModule from './animalInteractions';
 import * as analyticsQueriesModule from './analyticsQueries';
-import * as tiktokOAuthModule from './tiktokOAuth';
-import * as tiktokEventModule from './tiktokEvent';
-import * as tiktokStoreTokenModule from './tiktokStoreToken';
 
 /**
  * Router handler for Lambda Function URL
@@ -117,18 +114,6 @@ export const handler = async (
         path: '/analytics/animal-stats',
       };
       return await analyticsQueriesModule.handler(modifiedEvent);
-    }
-
-    if (path === '/api/tiktok/exchange' && method === 'POST') {
-      return await tiktokOAuthModule.handler(apiGatewayEvent);
-    }
-
-    if (path === '/api/tiktok/event' && method === 'POST') {
-      return await tiktokEventModule.handler(apiGatewayEvent);
-    }
-
-    if (path === '/api/tiktok/store-token' && method === 'POST') {
-      return await tiktokStoreTokenModule.handler(apiGatewayEvent);
     }
 
     // 404 Not Found

@@ -60,8 +60,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLabelPositioning, shouldRenderLabel } from '../utils/labelPositioning';
 import { getAllLandscapeButtonPositions } from '../utils/landscapeButtonPositioning';
 import BackgroundMusicManager, { BackgroundMusicManager as BGMClass } from '../services/BackgroundMusicManager';
-import TikTokAnalytics from '../services/TikTokAnalytics';
 import ApiService from '../services/ApiService';
+import AdMobInterstitial, { AdMobInterstitialRef } from './AdMobInterstitial';
+import AdMobService from '../services/AdMobService';
+import PurchaseService from '../services/PurchaseService';
 
   // Water Progress Bar Component
   const WaterProgressBar = ({ progress, totalAnimals, level, isCompleted }: { progress: number; totalAnimals: number; level: string; isCompleted?: boolean }) => {
@@ -365,6 +367,12 @@ export default function LevelScreenTemplate({
   const { t } = useLocalization();
     const { isLevelCompleted } = useLevelCompletion();
   const safeAreaInsets = useSafeAreaInsets();
+
+  // Interstitial ad ref
+  const interstitialAdRef = useRef<AdMobInterstitialRef>(null);
+  
+  // Track if user has purchased unlock all (which removes ads)
+  const [hasPurchasedUnlock, setHasPurchasedUnlock] = useState(false);
 
   // 1️⃣ Hoist your hook: only call it once, at the top level
   const dynamicStyles = useDynamicStyles();
@@ -1037,6 +1045,55 @@ export default function LevelScreenTemplate({
     BackgroundMusicManager.onUserInteraction();
   }, []); // Only on mount
 
+  // Check if user has purchased unlock all (which removes ads)
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      try {
+        const isUnlocked = await PurchaseService.isUnlocked();
+        setHasPurchasedUnlock(isUnlocked);
+        console.log('💰 Purchase status checked:', isUnlocked ? 'Paid - no ads' : 'Free - ads will show');
+      } catch (error) {
+        console.warn('Error checking purchase status:', error);
+        setHasPurchasedUnlock(false);
+      }
+    };
+    checkPurchaseStatus();
+  }, []);
+
+  // Show interstitial ad when level opens (only if user hasn't purchased)
+  useEffect(() => {
+    // Don't show ads if user has purchased unlock all
+    if (hasPurchasedUnlock) {
+      console.log('💰 User has purchased unlock all - skipping ads');
+      return;
+    }
+
+    // Wait a moment for level to render, then show ad
+    const timer = setTimeout(() => {
+      if (interstitialAdRef.current?.isLoaded()) {
+        console.log('📺 Showing interstitial ad on level open');
+        interstitialAdRef.current.show();
+      } else {
+        console.log('📺 Interstitial ad not loaded yet, waiting...');
+        // Poll for ad to be loaded, then show it
+        const checkInterval = setInterval(() => {
+          if (interstitialAdRef.current?.isLoaded()) {
+            console.log('📺 Interstitial ad loaded, showing now');
+            interstitialAdRef.current.show();
+            clearInterval(checkInterval);
+          }
+        }, 300);
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+        }, 10000);
+      }
+    }, 1000); // Wait 1 second for level to render
+
+    return () => clearTimeout(timer);
+  }, [levelName, hasPurchasedUnlock]);
+
   // --- BG MUSIC EFFECT (only play if instruction bubble is visible) ---
   // NOTE: Do NOT depend on isMuted here to avoid tearing down/recreating the player and losing position
   useEffect(() => {
@@ -1385,13 +1442,8 @@ export default function LevelScreenTemplate({
       
       // Track animal discovery if it's the first time
       if (!wasAlreadyVisited) {
-        // Animal discovered - track in TikTok Analytics with detailed data
+        // Animal discovered
         const animalName = currentAnimal?.name || 'unknown';
-        TikTokAnalytics.trackAnimalDiscovered(
-          animalName,
-          levelName,
-          currentAnimalIndex
-        ).catch(() => {});
         
         // Also send detailed event to backend
         // Get userId from AsyncStorage or use anonymous
@@ -2705,6 +2757,24 @@ export default function LevelScreenTemplate({
         </View>
       </View>
       </AnimatedReanimated.View>
+      
+      {/* Interstitial Ad Component - Only loads if user hasn't purchased unlock all */}
+      {!hasPurchasedUnlock && (
+        <AdMobInterstitial
+          ref={interstitialAdRef}
+          adUnitId={AdMobService.getInterstitialAdUnitId()}
+          autoLoad={true}
+          onAdLoaded={() => {
+            console.log('📺 Interstitial ad loaded and ready');
+          }}
+          onAdFailedToLoad={(error) => {
+            console.warn('📺 Interstitial ad failed to load:', error);
+          }}
+          onAdClosed={() => {
+            console.log('📺 Interstitial ad closed');
+          }}
+        />
+      )}
     </View>
   );
 }
