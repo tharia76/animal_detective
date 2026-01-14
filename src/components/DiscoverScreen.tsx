@@ -1097,67 +1097,54 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </TouchableOpacity>
         </View>
 
-      {/* Main Content Container - Animals around center square */}
+      {/* Main Content Container - Animals in rectangle around center */}
       <View style={{
         flex: 1, 
-        flexDirection: 'row',
-        paddingLeft: Math.max(safeAreaInsets.left + 10, isTablet ? 20 : 10),
-        paddingRight: Math.max(safeAreaInsets.right + 10, isTablet ? 20 : 10),
-        paddingVertical: 5,
+        flexDirection: 'column',
+        paddingHorizontal: Math.max(safeAreaInsets.left + 5, 10),
+        paddingBottom: Math.max(safeAreaInsets.bottom + 5, 10),
       }}>
-        {/* Left side animals */}
+        {/* Top row of animals */}
         <View style={{ 
-          width: animalCardSize + 20,
-          justifyContent: 'center',
-          alignItems: 'center',
+          height: animalCardSize + 10,
           zIndex: 1000,
         }}>
           <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ alignItems: 'center', paddingVertical: 5 }}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 5 }}
             scrollEnabled={!draggingAnimal}
           >
-            {shuffledAnimals.slice(0, Math.ceil(shuffledAnimals.length / 2)).map((animal, shuffledIdx) => {
+            {shuffledAnimals.slice(0, Math.ceil(shuffledAnimals.length / 4)).map((animal, shuffledIdx) => {
               const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
               if (placedAnimals.has(squareIndex)) return null;
               const imageSource = stillImageMap[animal.englishKey];
               if (!imageSource) return null;
               return (
                 <DraggableAnimal
-                  key={`left-${squareIndex}-${shuffledIdx}`}
+                  key={`top-${squareIndex}-${shuffledIdx}`}
                   animal={animal}
                   imageSource={imageSource}
                   index={squareIndex}
                   squareSize={animalCardSize}
                   isTablet={isTablet}
                   dragAnimValue={dragAnimValue}
-                  onDragStart={(position) => {
-                    setDraggingAnimal({ animal, imageSource, index: squareIndex });
-                    dragAnimValue.setValue({ x: position.x, y: position.y });
-                  }}
-                  onDragMove={(position) => {
-                    dragAnimValue.setValue({ x: position.x, y: position.y });
-                  }}
+                  onDragStart={(position) => { setDraggingAnimal({ animal, imageSource, index: squareIndex }); dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                  onDragMove={(position) => { dragAnimValue.setValue({ x: position.x, y: position.y }); }}
                   onDragEnd={(position) => {
                     const zone = dropZonePosition.current;
-                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width &&
-                                   position.y >= zone.y && position.y <= zone.y + zone.height;
+                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width && position.y >= zone.y && position.y <= zone.y + zone.height;
                     const currentIndex = currentSquareIndexRef.current;
                     const expectedAnimal = unlockedAnimals[currentIndex];
                     if (dropped) {
                       if (animal.englishKey === expectedAnimal?.englishKey) {
                         setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
-                        try { const ahaSound = require('../assets/sounds/other/aha2.mp3'); const ahaPlayer = createAudioPlayer(ahaSound); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (error) {}
+                        try { const ahaPlayer = createAudioPlayer(require('../assets/sounds/other/aha2.mp3')); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (e) {}
                         setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
                       } else {
                         setWrongDrop(true); setWrongAnimalIndex(squareIndex);
-                        try { const noSound = require('../assets/sounds/other/no.mp3'); const noPlayer = createAudioPlayer(noSound); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (error) {}
-                        Animated.sequence([
-                          Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }),
-                          Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }),
-                          Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }),
-                          Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true }),
-                        ]).start();
+                        try { const noPlayer = createAudioPlayer(require('../assets/sounds/other/no.mp3')); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (e) {}
+                        Animated.sequence([Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true })]).start();
                         setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
                       }
                     }
@@ -1170,178 +1157,203 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </ScrollView>
         </View>
 
-        {/* Center: Drop Zone */}
-        <View style={{ 
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1,
-        }}>
-          {unlockedAnimals[currentSquareIndex] && (() => {
-            const currentAnimal = unlockedAnimals[currentSquareIndex];
-            return (
-            <>
-              {/* Name Card with Nav Buttons */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: squareSize * 0.05 }}>
-                <TouchableOpacity
-                  onPress={handlePrevSquare}
-                  disabled={currentSquareIndex === 0}
-                  style={{ 
-                    backgroundColor: currentSquareIndex === 0 ? '#ccc' : '#FF4757',
-                    width: squareSize * 0.18,
-                    height: squareSize * 0.18,
-                    borderRadius: squareSize * 0.09,
-                    marginRight: squareSize * 0.04,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 5,
-                  }}
-                >
-                  <Ionicons name="arrow-back" size={squareSize * 0.12} color={currentSquareIndex === 0 ? '#666' : 'white'} />
-                </TouchableOpacity>
-                
-                <View style={[styles.nameCard, { padding: squareSize * 0.06, borderColor: placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#FFD700' }]}>
-                  <Text style={[styles.animalName, { fontSize: squareSize * 0.1, color: placedAnimals.has(currentSquareIndex) ? '#228B22' : '#333' }]}>
-                    {currentAnimal.name}
-                  </Text>
-                  <Text style={[styles.hintText, { fontSize: squareSize * 0.06 }]}>
-                    {placedAnimals.has(currentSquareIndex) ? '✓ Tap to hear' : t('dragAnimalHere')}
-                  </Text>
+        {/* Middle section: Left animals - Center drop zone - Right animals */}
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          {/* Left column of animals */}
+          <View style={{ width: animalCardSize + 10, zIndex: 1000 }}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ alignItems: 'center', paddingVertical: 3 }}
+              scrollEnabled={!draggingAnimal}
+            >
+              {shuffledAnimals.slice(Math.ceil(shuffledAnimals.length / 4), Math.ceil(shuffledAnimals.length / 2)).map((animal, shuffledIdx) => {
+                const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
+                if (placedAnimals.has(squareIndex)) return null;
+                const imageSource = stillImageMap[animal.englishKey];
+                if (!imageSource) return null;
+                return (
+                  <DraggableAnimal
+                    key={`left-${squareIndex}-${shuffledIdx}`}
+                    animal={animal}
+                    imageSource={imageSource}
+                    index={squareIndex}
+                    squareSize={animalCardSize}
+                    isTablet={isTablet}
+                    dragAnimValue={dragAnimValue}
+                    onDragStart={(position) => { setDraggingAnimal({ animal, imageSource, index: squareIndex }); dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                    onDragMove={(position) => { dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                    onDragEnd={(position) => {
+                      const zone = dropZonePosition.current;
+                      const dropped = position.x >= zone.x && position.x <= zone.x + zone.width && position.y >= zone.y && position.y <= zone.y + zone.height;
+                      const currentIndex = currentSquareIndexRef.current;
+                      const expectedAnimal = unlockedAnimals[currentIndex];
+                      if (dropped) {
+                        if (animal.englishKey === expectedAnimal?.englishKey) {
+                          setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
+                          try { const ahaPlayer = createAudioPlayer(require('../assets/sounds/other/aha2.mp3')); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (e) {}
+                          setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
+                        } else {
+                          setWrongDrop(true); setWrongAnimalIndex(squareIndex);
+                          try { const noPlayer = createAudioPlayer(require('../assets/sounds/other/no.mp3')); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (e) {}
+                          Animated.sequence([Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true })]).start();
+                          setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
+                        }
+                      }
+                      setDraggingAnimal(null);
+                    }}
+                    isWrongAnimal={wrongAnimalIndex === squareIndex}
+                  />
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Center: Drop Zone */}
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1 }}>
+            {unlockedAnimals[currentSquareIndex] && (() => {
+              const currentAnimal = unlockedAnimals[currentSquareIndex];
+              return (
+              <>
+                {/* Name Card with Nav Buttons */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: squareSize * 0.04 }}>
+                  <TouchableOpacity
+                    onPress={handlePrevSquare}
+                    disabled={currentSquareIndex === 0}
+                    style={{ backgroundColor: currentSquareIndex === 0 ? '#ccc' : '#FF4757', width: squareSize * 0.16, height: squareSize * 0.16, borderRadius: squareSize * 0.08, marginRight: squareSize * 0.03, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 5 }}
+                  >
+                    <Ionicons name="arrow-back" size={squareSize * 0.1} color={currentSquareIndex === 0 ? '#666' : 'white'} />
+                  </TouchableOpacity>
+                  
+                  <View style={[styles.nameCard, { padding: squareSize * 0.05, borderColor: placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#FFD700' }]}>
+                    <Text style={[styles.animalName, { fontSize: squareSize * 0.09, color: placedAnimals.has(currentSquareIndex) ? '#228B22' : '#333' }]}>{currentAnimal.name}</Text>
+                    <Text style={[styles.hintText, { fontSize: squareSize * 0.05 }]}>{placedAnimals.has(currentSquareIndex) ? '✓ Tap to hear' : t('dragAnimalHere')}</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={handleNextSquare}
+                    disabled={currentSquareIndex === unlockedAnimals.length - 1}
+                    style={{ backgroundColor: currentSquareIndex === unlockedAnimals.length - 1 ? '#ccc' : '#2196F3', width: squareSize * 0.16, height: squareSize * 0.16, borderRadius: squareSize * 0.08, marginLeft: squareSize * 0.03, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 5 }}
+                  >
+                    <Ionicons name="arrow-forward" size={squareSize * 0.1} color={currentSquareIndex === unlockedAnimals.length - 1 ? '#666' : 'white'} />
+                  </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                  onPress={handleNextSquare}
-                  disabled={currentSquareIndex === unlockedAnimals.length - 1}
-                  style={{ 
-                    backgroundColor: currentSquareIndex === unlockedAnimals.length - 1 ? '#ccc' : '#2196F3',
-                    width: squareSize * 0.18,
-                    height: squareSize * 0.18,
-                    borderRadius: squareSize * 0.09,
-                    marginLeft: squareSize * 0.04,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 5,
-                  }}
-                >
-                  <Ionicons name="arrow-forward" size={squareSize * 0.12} color={currentSquareIndex === unlockedAnimals.length - 1 ? '#666' : 'white'} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Drop Square */}
-              <TouchableOpacity
-                onPress={() => { if (unlockedAnimals[currentSquareIndex].sound) playAnimalSound(unlockedAnimals[currentSquareIndex].sound); }}
-                activeOpacity={0.7}
-              >
-                <Animated.View
-                  ref={dropZoneRef}
-                  style={[styles.dropZoneSquare, {
-                    width: squareSize,
-                    height: squareSize,
-                    backgroundColor: wrongDrop ? '#FFB3B3' : (placedAnimals.has(currentSquareIndex) ? '#90EE90' : 'white'),
-                    borderColor: wrongDrop ? '#FF0000' : (placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#DDD'),
-                    borderStyle: placedAnimals.has(currentSquareIndex) ? 'solid' : 'dashed',
-                    borderWidth: wrongDrop ? 4 : 3,
-                    transform: [{ translateX: dropZoneShake }],
-                  }]}
-                >
-                  {placedAnimals.has(currentSquareIndex) ? (
-                    <>
-                      <Image 
-                        source={stillImageMap[unlockedAnimals[currentSquareIndex].englishKey]}
-                        style={{ width: squareSize * 0.85, height: squareSize * 0.85, resizeMode: 'contain' }}
-                        fadeDuration={0}
-                      />
-                      <View style={styles.checkmark}>
-                        <Ionicons name="checkmark" size={squareSize * 0.15} color="white" />
-                      </View>
-                    </>
-                  ) : (
-                    silhouetteImageMap[unlockedAnimals[currentSquareIndex].englishKey] ? (
-                      <Image 
-                        source={silhouetteImageMap[unlockedAnimals[currentSquareIndex].englishKey]}
-                        style={{ width: squareSize * 0.85, height: squareSize * 0.85, resizeMode: 'contain', opacity: 0.3 }}
-                        fadeDuration={0}
-                      />
+                {/* Drop Square */}
+                <TouchableOpacity onPress={() => { if (unlockedAnimals[currentSquareIndex].sound) playAnimalSound(unlockedAnimals[currentSquareIndex].sound); }} activeOpacity={0.7}>
+                  <Animated.View ref={dropZoneRef} style={[styles.dropZoneSquare, { width: squareSize, height: squareSize, backgroundColor: wrongDrop ? '#FFB3B3' : (placedAnimals.has(currentSquareIndex) ? '#90EE90' : 'white'), borderColor: wrongDrop ? '#FF0000' : (placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#DDD'), borderStyle: placedAnimals.has(currentSquareIndex) ? 'solid' : 'dashed', borderWidth: wrongDrop ? 4 : 3, transform: [{ translateX: dropZoneShake }] }]}>
+                    {placedAnimals.has(currentSquareIndex) ? (
+                      <>
+                        <Image source={stillImageMap[unlockedAnimals[currentSquareIndex].englishKey]} style={{ width: squareSize * 0.85, height: squareSize * 0.85, resizeMode: 'contain' }} fadeDuration={0} />
+                        <View style={styles.checkmark}><Ionicons name="checkmark" size={squareSize * 0.15} color="white" /></View>
+                      </>
                     ) : (
-                      <Text style={[styles.questionMark, { fontSize: squareSize * 0.3 }]}>?</Text>
-                    )
-                  )}
-                </Animated.View>
-              </TouchableOpacity>
-              
-              {/* Progress Counter */}
-              <Text style={[styles.sectionTitle, { marginTop: squareSize * 0.04, fontSize: squareSize * 0.08 }]}>
-                {currentSquareIndex + 1} / {unlockedAnimals.length}
-              </Text>
-            </>
-            );
-          })()}
+                      silhouetteImageMap[unlockedAnimals[currentSquareIndex].englishKey] ? (
+                        <Image source={silhouetteImageMap[unlockedAnimals[currentSquareIndex].englishKey]} style={{ width: squareSize * 0.85, height: squareSize * 0.85, resizeMode: 'contain', opacity: 0.3 }} fadeDuration={0} />
+                      ) : (
+                        <Text style={[styles.questionMark, { fontSize: squareSize * 0.3 }]}>?</Text>
+                      )
+                    )}
+                  </Animated.View>
+                </TouchableOpacity>
+                
+                {/* Progress Counter */}
+                <Text style={[styles.sectionTitle, { marginTop: squareSize * 0.03, fontSize: squareSize * 0.07 }]}>{currentSquareIndex + 1} / {unlockedAnimals.length}</Text>
+              </>
+              );
+            })()}
+          </View>
+
+          {/* Right column of animals */}
+          <View style={{ width: animalCardSize + 10, zIndex: 1000 }}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ alignItems: 'center', paddingVertical: 3 }}
+              scrollEnabled={!draggingAnimal}
+            >
+              {shuffledAnimals.slice(Math.ceil(shuffledAnimals.length / 2), Math.ceil(shuffledAnimals.length * 3 / 4)).map((animal, shuffledIdx) => {
+                const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
+                if (placedAnimals.has(squareIndex)) return null;
+                const imageSource = stillImageMap[animal.englishKey];
+                if (!imageSource) return null;
+                return (
+                  <DraggableAnimal
+                    key={`right-${squareIndex}-${shuffledIdx}`}
+                    animal={animal}
+                    imageSource={imageSource}
+                    index={squareIndex}
+                    squareSize={animalCardSize}
+                    isTablet={isTablet}
+                    dragAnimValue={dragAnimValue}
+                    onDragStart={(position) => { setDraggingAnimal({ animal, imageSource, index: squareIndex }); dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                    onDragMove={(position) => { dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                    onDragEnd={(position) => {
+                      const zone = dropZonePosition.current;
+                      const dropped = position.x >= zone.x && position.x <= zone.x + zone.width && position.y >= zone.y && position.y <= zone.y + zone.height;
+                      const currentIndex = currentSquareIndexRef.current;
+                      const expectedAnimal = unlockedAnimals[currentIndex];
+                      if (dropped) {
+                        if (animal.englishKey === expectedAnimal?.englishKey) {
+                          setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
+                          try { const ahaPlayer = createAudioPlayer(require('../assets/sounds/other/aha2.mp3')); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (e) {}
+                          setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
+                        } else {
+                          setWrongDrop(true); setWrongAnimalIndex(squareIndex);
+                          try { const noPlayer = createAudioPlayer(require('../assets/sounds/other/no.mp3')); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (e) {}
+                          Animated.sequence([Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true })]).start();
+                          setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
+                        }
+                      }
+                      setDraggingAnimal(null);
+                    }}
+                    isWrongAnimal={wrongAnimalIndex === squareIndex}
+                  />
+                );
+              })}
+            </ScrollView>
+          </View>
         </View>
 
-        {/* Right side animals */}
-        <View style={{ 
-          width: animalCardSize + 20,
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-        }}>
+        {/* Bottom row of animals */}
+        <View style={{ height: animalCardSize + 10, zIndex: 1000 }}>
           <ScrollView
             ref={scrollViewRef}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ alignItems: 'center', paddingVertical: 5 }}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 5 }}
             scrollEnabled={!draggingAnimal}
-            onScroll={(event) => { scrollYPosition.current = event.nativeEvent.contentOffset.y; }}
+            onScroll={(event) => { scrollYPosition.current = event.nativeEvent.contentOffset.x; }}
             scrollEventThrottle={16}
           >
-            {shuffledAnimals.slice(Math.ceil(shuffledAnimals.length / 2)).map((animal, shuffledIdx) => {
+            {shuffledAnimals.slice(Math.ceil(shuffledAnimals.length * 3 / 4)).map((animal, shuffledIdx) => {
               const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
               if (placedAnimals.has(squareIndex)) return null;
               const imageSource = stillImageMap[animal.englishKey];
               if (!imageSource) return null;
               return (
                 <DraggableAnimal
-                  key={`right-${squareIndex}-${shuffledIdx}`}
+                  key={`bottom-${squareIndex}-${shuffledIdx}`}
                   animal={animal}
                   imageSource={imageSource}
                   index={squareIndex}
                   squareSize={animalCardSize}
                   isTablet={isTablet}
                   dragAnimValue={dragAnimValue}
-                  onDragStart={(position) => {
-                    setDraggingAnimal({ animal, imageSource, index: squareIndex });
-                    dragAnimValue.setValue({ x: position.x, y: position.y });
-                  }}
-                  onDragMove={(position) => {
-                    dragAnimValue.setValue({ x: position.x, y: position.y });
-                  }}
+                  onDragStart={(position) => { setDraggingAnimal({ animal, imageSource, index: squareIndex }); dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                  onDragMove={(position) => { dragAnimValue.setValue({ x: position.x, y: position.y }); }}
                   onDragEnd={(position) => {
                     const zone = dropZonePosition.current;
-                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width &&
-                                   position.y >= zone.y && position.y <= zone.y + zone.height;
+                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width && position.y >= zone.y && position.y <= zone.y + zone.height;
                     const currentIndex = currentSquareIndexRef.current;
                     const expectedAnimal = unlockedAnimals[currentIndex];
                     if (dropped) {
                       if (animal.englishKey === expectedAnimal?.englishKey) {
                         setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
-                        try { const ahaSound = require('../assets/sounds/other/aha2.mp3'); const ahaPlayer = createAudioPlayer(ahaSound); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (error) {}
+                        try { const ahaPlayer = createAudioPlayer(require('../assets/sounds/other/aha2.mp3')); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (e) {}
                         setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
                       } else {
                         setWrongDrop(true); setWrongAnimalIndex(squareIndex);
-                        try { const noSound = require('../assets/sounds/other/no.mp3'); const noPlayer = createAudioPlayer(noSound); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (error) {}
-                        Animated.sequence([
-                          Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }),
-                          Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }),
-                          Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }),
-                          Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true }),
-                        ]).start();
+                        try { const noPlayer = createAudioPlayer(require('../assets/sounds/other/no.mp3')); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (e) {}
+                        Animated.sequence([Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true })]).start();
                         setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
                       }
                     }
@@ -1511,7 +1523,7 @@ const DraggableAnimal: React.FC<{
 
   return (
     <View {...panResponder.panHandlers} style={{ 
-      marginVertical: 4,
+      margin: 3,
     }}>
         <Animated.View style={{
         opacity,
