@@ -72,7 +72,7 @@ const getAnimalEnglishKey = (animal: any): string => {
     'ворон': 'raven', 'чайка': 'seagull', 'воробей': 'sparrow', 'аист': 'stork',
     'лебедь': 'swan', 'тукан': 'toucan', 'дятел': 'woodpecker',
     'köpek': 'dog', 'kedi': 'cat', 'tavuk': 'chicken', 'civciv': 'chick',
-    'eşek': 'donkey', 'inek': 'cow', 'ördek': 'duck', 'keçi': 'goat',
+    'eşek': 'donkey', 'inek': 'cow', 'İnek': 'cow', 'i̇nek': 'cow', 'ördek': 'duck', 'keçi': 'goat',
     'kaz': 'goose', 'at': 'horse', 'lama': 'llama', 'domuz': 'pig',
     'tavşan': 'rabbit', 'horoz': 'rooster', 'koyun': 'sheep', 'hindi': 'turkey',
     'beyaz ayı': 'white bear', 'kutup tilkisi': 'white fox',
