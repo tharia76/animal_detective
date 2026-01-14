@@ -1098,6 +1098,23 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         </View>
 
       {/* Main Content Container - Animals in rectangle around center */}
+      {(() => {
+        // Calculate even distribution across 4 sides
+        const totalAnimals = shuffledAnimals.length;
+        const perSide = Math.floor(totalAnimals / 4);
+        const remainder = totalAnimals % 4;
+        // Distribute remainder evenly: top, bottom get priority for horizontal scrolling
+        const topCount = perSide + (remainder > 0 ? 1 : 0);
+        const bottomCount = perSide + (remainder > 1 ? 1 : 0);
+        const leftCount = perSide + (remainder > 2 ? 1 : 0);
+        const rightCount = perSide;
+        
+        const topAnimals = shuffledAnimals.slice(0, topCount);
+        const leftAnimals = shuffledAnimals.slice(topCount, topCount + leftCount);
+        const rightAnimals = shuffledAnimals.slice(topCount + leftCount, topCount + leftCount + rightCount);
+        const bottomAnimals = shuffledAnimals.slice(topCount + leftCount + rightCount);
+        
+        return (
       <View style={{
         flex: 1, 
         flexDirection: 'column',
@@ -1112,10 +1129,10 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 5 }}
+            contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 5, justifyContent: 'center', flexGrow: 1 }}
             scrollEnabled={!draggingAnimal}
           >
-            {shuffledAnimals.slice(0, Math.ceil(shuffledAnimals.length / 4)).map((animal, shuffledIdx) => {
+            {topAnimals.map((animal, shuffledIdx) => {
               const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
               if (placedAnimals.has(squareIndex)) return null;
               const imageSource = stillImageMap[animal.englishKey];
@@ -1166,7 +1183,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               contentContainerStyle={{ alignItems: 'center', paddingVertical: 3 }}
               scrollEnabled={!draggingAnimal}
             >
-              {shuffledAnimals.slice(Math.ceil(shuffledAnimals.length / 4), Math.ceil(shuffledAnimals.length / 2)).map((animal, shuffledIdx) => {
+              {leftAnimals.map((animal, shuffledIdx) => {
                 const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
                 if (placedAnimals.has(squareIndex)) return null;
                 const imageSource = stillImageMap[animal.englishKey];
@@ -1270,7 +1287,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               contentContainerStyle={{ alignItems: 'center', paddingVertical: 3 }}
               scrollEnabled={!draggingAnimal}
             >
-              {shuffledAnimals.slice(Math.ceil(shuffledAnimals.length / 2), Math.ceil(shuffledAnimals.length * 3 / 4)).map((animal, shuffledIdx) => {
+              {rightAnimals.map((animal, shuffledIdx) => {
                 const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
                 if (placedAnimals.has(squareIndex)) return null;
                 const imageSource = stillImageMap[animal.englishKey];
@@ -1319,12 +1336,12 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
             ref={scrollViewRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 5 }}
+            contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 5, justifyContent: 'center', flexGrow: 1 }}
             scrollEnabled={!draggingAnimal}
             onScroll={(event) => { scrollYPosition.current = event.nativeEvent.contentOffset.x; }}
             scrollEventThrottle={16}
           >
-            {shuffledAnimals.slice(Math.ceil(shuffledAnimals.length * 3 / 4)).map((animal, shuffledIdx) => {
+            {bottomAnimals.map((animal, shuffledIdx) => {
               const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
               if (placedAnimals.has(squareIndex)) return null;
               const imageSource = stillImageMap[animal.englishKey];
@@ -1366,6 +1383,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </ScrollView>
         </View>
       </View>
+        );
+      })()}
 
       {/* FLOATING OVERLAY AT ABSOLUTE ROOT - HIGHEST z-index */}
       {draggingAnimal && (
