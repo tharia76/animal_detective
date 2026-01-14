@@ -1,7 +1,7 @@
 {
   "name": "Animal Detective",
   "slug": "animal-detective",
-  "version": "2.2",
+  "version": "2.1.4",
   "orientation": "landscape",
   "icon": "./src/assets/images/icon.png",
   "scheme": "animal-detective",
