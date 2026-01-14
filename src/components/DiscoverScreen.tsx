@@ -925,7 +925,11 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   const animalCardSize = isTablet ? 80 : 70;
 
     return (
-    <View style={{ flex: 1, backgroundColor: '#40E0D0' }}>
+    <ImageBackground 
+      source={require('../assets/images/discover-bg.png')}
+      resizeMode="cover"
+      style={{ flex: 1, width: '100%', height: '100%' }}
+    >
       {isLoadingProgress ? (
         // Show loading state while loading progress
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -1503,7 +1507,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       )}
       </>
       )}
-    </View>
+    </ImageBackground>
   );
 };
 
