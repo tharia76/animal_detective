@@ -921,8 +921,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         }, 100);
   };
 
-  const squareSize = isTablet ? 300 : 240;
-  const animalCardSize = isTablet ? 80 : 70;
+  const squareSize = isTablet ? 180 : 130;
+  const animalCardSize = isTablet ? 100 : 80;
 
     return (
     <ImageBackground 
@@ -1086,19 +1086,17 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       {/* Main Content Container */}
           <View style={{
         flex: 1, 
-              flexDirection: 'row',
+              flexDirection: 'column',
         paddingLeft: Math.max(safeAreaInsets.left + (isTablet ? 20 : 10), isTablet ? 30 : 20),
         paddingRight: Math.max(safeAreaInsets.right + (isTablet ? 20 : 10), isTablet ? 30 : 20),
-        paddingVertical: 10,
+        paddingVertical: 5,
       }}>
-        {/* Left Side: Drop Zone with side navigation buttons */}
+        {/* Center: Drop Zone with side navigation buttons */}
         <View style={{ 
-          width: isTablet ? 340 : 280,
           justifyContent: 'center',
-          marginTop: isTablet ? -100 : -120,
               alignItems: 'center',
-          marginRight: isTablet ? 20 : 10,
           zIndex: 1,
+          marginBottom: 10,
         }}>
           <View style={{ alignItems: 'center', width: '100%' }}>
             {unlockedAnimals[currentSquareIndex] && (() => {
@@ -1111,7 +1109,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               return (
               <>
                 {/* Name Card with Nav Buttons on sides */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: isTablet ? 20 : 15, marginTop: isTablet ? 50 : 35 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: isTablet ? 12 : 8 }}>
                   {/* Left Nav Button */}
             <TouchableOpacity
                     onPress={handlePrevSquare}
@@ -1240,7 +1238,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                 </TouchableOpacity>
                 
                 {/* Progress Counter */}
-                <Text style={[styles.sectionTitle, { marginTop: isTablet ? 20 : 15, fontSize: isTablet ? 22 : 18 }]}>
+                <Text style={[styles.sectionTitle, { marginTop: isTablet ? 10 : 6, fontSize: isTablet ? 18 : 14 }]}>
                   {currentSquareIndex + 1} / {unlockedAnimals.length}
                 </Text>
               </>
@@ -1249,46 +1247,51 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </View>
         </View>
 
-        {/* Animated Hand Hint - moves from animals to drop zone */}
-        {placedAnimals.size < unlockedAnimals.length && (
-          <Animated.View style={{
-            position: 'absolute',
-            top: '50%',
-            left: isTablet ? 330 : 270,
-            right: isTablet ? 50 : 40,
-            zIndex: 10000,
-            elevation: 10000,
-            transform: [{
-              translateX: handAnimX.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, (Dimensions.get('window').width) * 0.35], // Move from left to right
-              })
-            }],
-          }}>
-            <Text style={{ fontSize: isTablet ? 50 : 40 }}>👆</Text>
-          </Animated.View>
-        )}
-
-        {/* Right Side: Animals Grid - 3 per row with scroll buttons column */}
+        {/* Bottom: Animals Grid with scroll buttons */}
         <View style={{
           flex: 1,
           flexDirection: 'row',
           zIndex: 1000,
           elevation: 1000,
         }}>
+          {/* Scroll Left Button */}
+          <TouchableOpacity
+            onPress={handleScrollUp}
+            activeOpacity={0.7}
+            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            style={{
+              backgroundColor: '#4CAF50',
+              width: isTablet ? 50 : 40,
+              height: isTablet ? 50 : 40,
+              borderRadius: isTablet ? 25 : 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'center',
+              marginRight: 8,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              elevation: 5,
+            }}
+          >
+            <Ionicons name="arrow-back" size={isTablet ? 28 : 22} color="white" />
+          </TouchableOpacity>
+
           {/* Animals Grid */}
           <ScrollView
             ref={scrollViewRef}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: 5 }}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: 5, alignItems: 'center' }}
             scrollEnabled={!draggingAnimal}
             style={{ flex: 1 }}
             onScroll={(event) => {
-              scrollYPosition.current = event.nativeEvent.contentOffset.y;
+              scrollYPosition.current = event.nativeEvent.contentOffset.x;
             }}
             scrollEventThrottle={16}
           >
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'nowrap', justifyContent: 'flex-start', alignItems: 'center' }}>
               {shuffledAnimals.map((animal, shuffledIdx) => {
                 // Find which position this animal is in the unlockedAnimals array
                 const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
@@ -1410,46 +1413,20 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
             </View>
           </ScrollView>
           
-          {/* Scroll buttons column - Always visible */}
-          <View style={{ 
-            flexDirection: 'column', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            paddingHorizontal: isTablet ? 15 : 10,
-            gap: isTablet ? 20 : 15,
-          }}>
-            <TouchableOpacity
-              onPress={handleScrollUp}
-              activeOpacity={0.7}
-              hitSlop={{ top: 40, bottom: 40, left: 40, right: 40 }}
-              style={{
-                backgroundColor: '#4CAF50',
-                width: isTablet ? 90 : 75,
-                height: isTablet ? 90 : 75,
-                borderRadius: isTablet ? 45 : 37.5,
-                justifyContent: 'center',
-                alignItems: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 5,
-              }}
-            >
-              <Ionicons name="arrow-up" size={isTablet ? 45 : 38} color="white" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
+          {/* Scroll Right Button */}
+          <TouchableOpacity
               onPress={handleScrollDown}
               activeOpacity={0.7}
-              hitSlop={{ top: 40, bottom: 40, left: 40, right: 40 }}
+              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
               style={{
                 backgroundColor: '#4CAF50',
-                width: isTablet ? 90 : 75,
-                height: isTablet ? 90 : 75,
-                borderRadius: isTablet ? 45 : 37.5,
+                width: isTablet ? 50 : 40,
+                height: isTablet ? 50 : 40,
+                borderRadius: isTablet ? 25 : 20,
                 justifyContent: 'center',
                 alignItems: 'center',
+                alignSelf: 'center',
+                marginLeft: 8,
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
@@ -1457,9 +1434,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                 elevation: 5,
               }}
             >
-              <Ionicons name="arrow-down" size={isTablet ? 45 : 38} color="white" />
+              <Ionicons name="arrow-forward" size={isTablet ? 28 : 22} color="white" />
             </TouchableOpacity>
-          </View>
         </View>
         </View>
 
@@ -1619,8 +1595,7 @@ const DraggableAnimal: React.FC<{
 
   return (
     <View {...panResponder.panHandlers} style={{ 
-      width: '50%',
-      padding: 5,
+      marginHorizontal: 6,
     }}>
         <Animated.View style={{
         opacity,
@@ -1629,8 +1604,8 @@ const DraggableAnimal: React.FC<{
         <View style={[
           styles.draggableAnimalCard,
           {
-              width: '100%',
-            aspectRatio: 1,
+            width: squareSize,
+            height: squareSize,
             padding: 6,
             borderColor: isWrongAnimal ? '#FF0000' : '#FFD700',
             borderWidth: isWrongAnimal ? 4 : 3,
@@ -1639,8 +1614,8 @@ const DraggableAnimal: React.FC<{
           <Image 
             source={imageSource}
             style={{
-              width: '95%',
-              height: '95%',
+              width: squareSize * 0.85,
+              height: squareSize * 0.85,
               resizeMode: 'contain',
             }}
             fadeDuration={0}
