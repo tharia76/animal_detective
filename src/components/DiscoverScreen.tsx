@@ -927,15 +927,15 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   
   // Main drop square: use ~40% of the smaller dimension, but cap it
   const squareSize = Math.min(
-    Math.max(availableHeight * 0.45, 140), // At least 140, up to 45% of height
-    Math.max(availableWidth * 0.35, 140),  // At least 140, up to 35% of width
-    isTablet ? 280 : 200 // Max cap
+    Math.max(availableHeight * (isTablet ? 0.55 : 0.45), isTablet ? 200 : 140), // Bigger on tablet
+    Math.max(availableWidth * (isTablet ? 0.40 : 0.35), isTablet ? 200 : 140),
+    isTablet ? 380 : 200 // Max cap - much bigger on iPad
   );
   
-  // Animal cards: fit nicely in side columns - aim for ~3-4 visible at once
+  // Animal cards: fit nicely in side columns - bigger on iPad
   const animalCardSize = Math.min(
-    Math.max(availableHeight * 0.22, 65), // At least 65, up to 22% of height
-    isTablet ? 110 : 85 // Max cap
+    Math.max(availableHeight * (isTablet ? 0.28 : 0.22), isTablet ? 100 : 65),
+    isTablet ? 150 : 85 // Max cap - bigger on iPad
   );
 
     return (
