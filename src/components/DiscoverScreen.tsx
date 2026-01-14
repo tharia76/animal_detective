@@ -1180,7 +1180,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           <View style={{ width: animalCardSize + 16, zIndex: 1000 }}>
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ alignItems: 'center', paddingVertical: 4, paddingHorizontal: 4 }}
+              contentContainerStyle={{ alignItems: 'center', paddingTop: 4, paddingBottom: 20, paddingHorizontal: 4 }}
               scrollEnabled={!draggingAnimal}
             >
               {leftAnimals.map((animal, shuffledIdx) => {
@@ -1284,7 +1284,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           <View style={{ width: animalCardSize + 16, zIndex: 1000 }}>
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ alignItems: 'center', paddingVertical: 4, paddingHorizontal: 4 }}
+              contentContainerStyle={{ alignItems: 'center', paddingTop: 4, paddingBottom: 20, paddingHorizontal: 4 }}
               scrollEnabled={!draggingAnimal}
             >
               {rightAnimals.map((animal, shuffledIdx) => {
