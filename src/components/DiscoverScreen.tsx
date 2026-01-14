@@ -921,8 +921,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         }, 100);
   };
 
-  const squareSize = isTablet ? 180 : 130;
-  const animalCardSize = isTablet ? 100 : 80;
+  const squareSize = isTablet ? 200 : 150;
+  const animalCardSize = isTablet ? 90 : 70;
 
     return (
     <ImageBackground 
@@ -1083,361 +1083,263 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
           </TouchableOpacity>
         </View>
 
-      {/* Main Content Container */}
-          <View style={{
+      {/* Main Content Container - Animals around center square */}
+      <View style={{
         flex: 1, 
-              flexDirection: 'column',
-        paddingLeft: Math.max(safeAreaInsets.left + (isTablet ? 20 : 10), isTablet ? 30 : 20),
-        paddingRight: Math.max(safeAreaInsets.right + (isTablet ? 20 : 10), isTablet ? 30 : 20),
+        flexDirection: 'row',
+        paddingLeft: Math.max(safeAreaInsets.left + 10, isTablet ? 20 : 10),
+        paddingRight: Math.max(safeAreaInsets.right + 10, isTablet ? 20 : 10),
         paddingVertical: 5,
       }}>
-        {/* Center: Drop Zone with side navigation buttons */}
+        {/* Left side animals */}
         <View style={{ 
+          width: isTablet ? 120 : 90,
           justifyContent: 'center',
-              alignItems: 'center',
-          zIndex: 1,
-          marginBottom: 10,
+          alignItems: 'center',
+          zIndex: 1000,
         }}>
-          <View style={{ alignItems: 'center', width: '100%' }}>
-            {unlockedAnimals[currentSquareIndex] && (() => {
-              const currentAnimal = unlockedAnimals[currentSquareIndex];
-              console.log('🎯 Displaying drop zone for:', {
-                name: currentAnimal.name,
-                englishKey: currentAnimal.englishKey,
-                currentSquareIndex,
-              });
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ alignItems: 'center', paddingVertical: 5 }}
+            scrollEnabled={!draggingAnimal}
+          >
+            {shuffledAnimals.slice(0, Math.ceil(shuffledAnimals.length / 2)).map((animal, shuffledIdx) => {
+              const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
+              if (placedAnimals.has(squareIndex)) return null;
+              const imageSource = stillImageMap[animal.englishKey];
+              if (!imageSource) return null;
               return (
-              <>
-                {/* Name Card with Nav Buttons on sides */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: isTablet ? 12 : 8 }}>
-                  {/* Left Nav Button */}
-            <TouchableOpacity
-                    onPress={handlePrevSquare}
-                    disabled={currentSquareIndex === 0}
-                    style={[{ 
-                      backgroundColor: currentSquareIndex === 0 ? '#ccc' : '#FF4757',
-                      width: isTablet ? 55 : 45,
-                      height: isTablet ? 55 : 45,
-                      borderRadius: isTablet ? 27.5 : 22.5,
-                      marginRight: isTablet ? 12 : 8,
-              justifyContent: 'center',
-                      alignItems: 'center',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-                      shadowRadius: 4,
-                      elevation: 5,
-                    }]}
-                  >
-                    <Ionicons name="arrow-back" size={isTablet ? 32 : 26} color={currentSquareIndex === 0 ? '#666' : 'white'} />
-          </TouchableOpacity>
-          
-                  {/* Name Card */}
-                  <View style={[
-                    styles.nameCard,
-                    {
-                      padding: isTablet ? 20 : 16,
-                      borderColor: placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#FFD700',
-                    }
-                  ]}>
-                    <Text style={[
-                      styles.animalName,
-                      {
-                        fontSize: isTablet ? 28 : 22,
-                        color: placedAnimals.has(currentSquareIndex) ? '#228B22' : '#333',
+                <DraggableAnimal
+                  key={`left-${squareIndex}-${shuffledIdx}`}
+                  animal={animal}
+                  imageSource={imageSource}
+                  index={squareIndex}
+                  squareSize={animalCardSize}
+                  isTablet={isTablet}
+                  dragAnimValue={dragAnimValue}
+                  onDragStart={(position) => {
+                    setDraggingAnimal({ animal, imageSource, index: squareIndex });
+                    dragAnimValue.setValue({ x: position.x, y: position.y });
+                  }}
+                  onDragMove={(position) => {
+                    dragAnimValue.setValue({ x: position.x, y: position.y });
+                  }}
+                  onDragEnd={(position) => {
+                    const zone = dropZonePosition.current;
+                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width &&
+                                   position.y >= zone.y && position.y <= zone.y + zone.height;
+                    const currentIndex = currentSquareIndexRef.current;
+                    const expectedAnimal = unlockedAnimals[currentIndex];
+                    if (dropped) {
+                      if (animal.englishKey === expectedAnimal?.englishKey) {
+                        setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
+                        try { const ahaSound = require('../assets/sounds/other/aha2.mp3'); const ahaPlayer = createAudioPlayer(ahaSound); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (error) {}
+                        setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
+                      } else {
+                        setWrongDrop(true); setWrongAnimalIndex(squareIndex);
+                        try { const noSound = require('../assets/sounds/other/no.mp3'); const noPlayer = createAudioPlayer(noSound); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (error) {}
+                        Animated.sequence([
+                          Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }),
+                          Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }),
+                          Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }),
+                          Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true }),
+                        ]).start();
+                        setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
                       }
-                    ]}>
-                      {currentAnimal.name}
-              </Text>
-                    <Text style={[styles.hintText, { fontSize: isTablet ? 16 : 14 }]}>
-                      {placedAnimals.has(currentSquareIndex) ? '✓ Tap to hear' : t('dragAnimalHere')}
-                    </Text>
-                  </View>
-
-                  {/* Right Nav Button */}
-          <TouchableOpacity
-                    onPress={handleNextSquare}
-                    disabled={currentSquareIndex === unlockedAnimals.length - 1}
-                    style={[{ 
-                      backgroundColor: currentSquareIndex === unlockedAnimals.length - 1 ? '#ccc' : '#2196F3',
-                      width: isTablet ? 55 : 45,
-                      height: isTablet ? 55 : 45,
-                      borderRadius: isTablet ? 27.5 : 22.5,
-                      marginLeft: isTablet ? 12 : 8,
-              justifyContent: 'center',
-                      alignItems: 'center',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-                      shadowRadius: 4,
-                      elevation: 5,
-                    }]}
-                  >
-                    <Ionicons name="arrow-forward" size={isTablet ? 32 : 26} color={currentSquareIndex === unlockedAnimals.length - 1 ? '#666' : 'white'} />
-          </TouchableOpacity>
+                    }
+                    setDraggingAnimal(null);
+                  }}
+                  isWrongAnimal={wrongAnimalIndex === squareIndex}
+                />
+              );
+            })}
+          </ScrollView>
         </View>
 
-                {/* Drop Square */}
-            <TouchableOpacity
-                  onPress={() => {
-                    if (unlockedAnimals[currentSquareIndex].sound) {
-                      playAnimalSound(unlockedAnimals[currentSquareIndex].sound);
-                    }
+        {/* Center: Drop Zone */}
+        <View style={{ 
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1,
+        }}>
+          {unlockedAnimals[currentSquareIndex] && (() => {
+            const currentAnimal = unlockedAnimals[currentSquareIndex];
+            return (
+            <>
+              {/* Name Card with Nav Buttons */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: isTablet ? 10 : 6 }}>
+                <TouchableOpacity
+                  onPress={handlePrevSquare}
+                  disabled={currentSquareIndex === 0}
+                  style={{ 
+                    backgroundColor: currentSquareIndex === 0 ? '#ccc' : '#FF4757',
+                    width: isTablet ? 40 : 32,
+                    height: isTablet ? 40 : 32,
+                    borderRadius: isTablet ? 20 : 16,
+                    marginRight: isTablet ? 10 : 6,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
                   }}
-                  activeOpacity={0.7}
                 >
-                  <Animated.View
-                    ref={dropZoneRef}
-                    style={[
-                      styles.dropZoneSquare,
-                      {
-                        width: squareSize,
-                        height: squareSize,
-                      backgroundColor: wrongDrop ? '#FFB3B3' : (placedAnimals.has(currentSquareIndex) ? '#90EE90' : 'white'),
-                      borderColor: wrongDrop ? '#FF0000' : (placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#DDD'),
-                      borderStyle: placedAnimals.has(currentSquareIndex) ? 'solid' : 'dashed',
-                        borderWidth: wrongDrop ? 4 : 3,
-                        transform: [{ translateX: dropZoneShake }],
-                      }
-                    ]}
-                  >
-                    {placedAnimals.has(currentSquareIndex) ? (
-                      <>
-                        <Image 
-                          source={stillImageMap[unlockedAnimals[currentSquareIndex].englishKey]}
-                          style={{
-                            width: squareSize * 0.85,
-                            height: squareSize * 0.85,
-                            resizeMode: 'contain',
-                          }}
-                          fadeDuration={0}
-                          progressiveRenderingEnabled={true}
-                        />
-                        <View style={styles.checkmark}>
-                          <Ionicons name="checkmark" size={30} color="white" />
-          </View>
-                      </>
-                    ) : (
-                      silhouetteImageMap[unlockedAnimals[currentSquareIndex].englishKey] ? (
-                        <Image 
-                          source={silhouetteImageMap[unlockedAnimals[currentSquareIndex].englishKey]}
-                          style={{
-                            width: squareSize * 0.85,
-                            height: squareSize * 0.85,
-                            resizeMode: 'contain',
-                            opacity: 0.3,
-                          }}
-                          fadeDuration={0}
-                          progressiveRenderingEnabled={true}
-                        />
-                      ) : (
-                        <Text style={[styles.questionMark, { fontSize: isTablet ? 60 : 50 }]}>?</Text>
-                      )
-                    )}
-                  </Animated.View>
+                  <Ionicons name="arrow-back" size={isTablet ? 24 : 18} color={currentSquareIndex === 0 ? '#666' : 'white'} />
                 </TouchableOpacity>
                 
-                {/* Progress Counter */}
-                <Text style={[styles.sectionTitle, { marginTop: isTablet ? 10 : 6, fontSize: isTablet ? 18 : 14 }]}>
-                  {currentSquareIndex + 1} / {unlockedAnimals.length}
-                </Text>
-              </>
-              );
-            })()}
-          </View>
+                <View style={[styles.nameCard, { padding: isTablet ? 14 : 10, borderColor: placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#FFD700' }]}>
+                  <Text style={[styles.animalName, { fontSize: isTablet ? 22 : 16, color: placedAnimals.has(currentSquareIndex) ? '#228B22' : '#333' }]}>
+                    {currentAnimal.name}
+                  </Text>
+                  <Text style={[styles.hintText, { fontSize: isTablet ? 12 : 10 }]}>
+                    {placedAnimals.has(currentSquareIndex) ? '✓ Tap to hear' : t('dragAnimalHere')}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  onPress={handleNextSquare}
+                  disabled={currentSquareIndex === unlockedAnimals.length - 1}
+                  style={{ 
+                    backgroundColor: currentSquareIndex === unlockedAnimals.length - 1 ? '#ccc' : '#2196F3',
+                    width: isTablet ? 40 : 32,
+                    height: isTablet ? 40 : 32,
+                    borderRadius: isTablet ? 20 : 16,
+                    marginLeft: isTablet ? 10 : 6,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}
+                >
+                  <Ionicons name="arrow-forward" size={isTablet ? 24 : 18} color={currentSquareIndex === unlockedAnimals.length - 1 ? '#666' : 'white'} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Drop Square */}
+              <TouchableOpacity
+                onPress={() => { if (unlockedAnimals[currentSquareIndex].sound) playAnimalSound(unlockedAnimals[currentSquareIndex].sound); }}
+                activeOpacity={0.7}
+              >
+                <Animated.View
+                  ref={dropZoneRef}
+                  style={[styles.dropZoneSquare, {
+                    width: squareSize,
+                    height: squareSize,
+                    backgroundColor: wrongDrop ? '#FFB3B3' : (placedAnimals.has(currentSquareIndex) ? '#90EE90' : 'white'),
+                    borderColor: wrongDrop ? '#FF0000' : (placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#DDD'),
+                    borderStyle: placedAnimals.has(currentSquareIndex) ? 'solid' : 'dashed',
+                    borderWidth: wrongDrop ? 4 : 3,
+                    transform: [{ translateX: dropZoneShake }],
+                  }]}
+                >
+                  {placedAnimals.has(currentSquareIndex) ? (
+                    <>
+                      <Image 
+                        source={stillImageMap[unlockedAnimals[currentSquareIndex].englishKey]}
+                        style={{ width: squareSize * 0.85, height: squareSize * 0.85, resizeMode: 'contain' }}
+                        fadeDuration={0}
+                      />
+                      <View style={styles.checkmark}>
+                        <Ionicons name="checkmark" size={24} color="white" />
+                      </View>
+                    </>
+                  ) : (
+                    silhouetteImageMap[unlockedAnimals[currentSquareIndex].englishKey] ? (
+                      <Image 
+                        source={silhouetteImageMap[unlockedAnimals[currentSquareIndex].englishKey]}
+                        style={{ width: squareSize * 0.85, height: squareSize * 0.85, resizeMode: 'contain', opacity: 0.3 }}
+                        fadeDuration={0}
+                      />
+                    ) : (
+                      <Text style={[styles.questionMark, { fontSize: isTablet ? 50 : 40 }]}>?</Text>
+                    )
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+              
+              {/* Progress Counter */}
+              <Text style={[styles.sectionTitle, { marginTop: isTablet ? 8 : 5, fontSize: isTablet ? 16 : 12 }]}>
+                {currentSquareIndex + 1} / {unlockedAnimals.length}
+              </Text>
+            </>
+            );
+          })()}
         </View>
 
-        {/* Bottom: Animals Grid with scroll buttons */}
-        <View style={{
-          flex: 1,
-          flexDirection: 'row',
+        {/* Right side animals */}
+        <View style={{ 
+          width: isTablet ? 120 : 90,
+          justifyContent: 'center',
+          alignItems: 'center',
           zIndex: 1000,
-          elevation: 1000,
         }}>
-          {/* Scroll Left Button */}
-          <TouchableOpacity
-            onPress={handleScrollUp}
-            activeOpacity={0.7}
-            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-            style={{
-              backgroundColor: '#4CAF50',
-              width: isTablet ? 50 : 40,
-              height: isTablet ? 50 : 40,
-              borderRadius: isTablet ? 25 : 20,
-              justifyContent: 'center',
-              alignItems: 'center',
-              alignSelf: 'center',
-              marginRight: 8,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-              elevation: 5,
-            }}
-          >
-            <Ionicons name="arrow-back" size={isTablet ? 28 : 22} color="white" />
-          </TouchableOpacity>
-
-          {/* Animals Grid */}
           <ScrollView
             ref={scrollViewRef}
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 5, alignItems: 'center' }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ alignItems: 'center', paddingVertical: 5 }}
             scrollEnabled={!draggingAnimal}
-            style={{ flex: 1 }}
-            onScroll={(event) => {
-              scrollYPosition.current = event.nativeEvent.contentOffset.x;
-            }}
+            onScroll={(event) => { scrollYPosition.current = event.nativeEvent.contentOffset.y; }}
             scrollEventThrottle={16}
           >
-            <View style={{ flexDirection: 'row', flexWrap: 'nowrap', justifyContent: 'flex-start', alignItems: 'center' }}>
-              {shuffledAnimals.map((animal, shuffledIdx) => {
-                // Find which position this animal is in the unlockedAnimals array
-                const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
-                if (placedAnimals.has(squareIndex)) return null;
-                const imageSource = stillImageMap[animal.englishKey];
-                if (!imageSource) return null;
-
-                return (
-                  <DraggableAnimal
-                    key={`animal-${squareIndex}-${shuffledIdx}`}
-                    animal={animal}
-                    imageSource={imageSource}
-                    index={squareIndex}
-                    squareSize={animalCardSize}
-                    isTablet={isTablet}
-                    dragAnimValue={dragAnimValue}
-                    onDragStart={(position) => {
-                      console.log('Dragging animal:', animal.englishKey, 'squareIndex:', squareIndex);
-                      setDraggingAnimal({ animal, imageSource, index: squareIndex });
-                      dragAnimValue.setValue({ x: position.x, y: position.y });
-                    }}
-                    onDragMove={(position) => {
-                      dragAnimValue.setValue({ x: position.x, y: position.y });
-                    }}
-                    onDragEnd={(position) => {
-                      const zone = dropZonePosition.current;
-                      const dropped = position.x >= zone.x && position.x <= zone.x + zone.width &&
-                                     position.y >= zone.y && position.y <= zone.y + zone.height;
-                      
-                      // Use ref to get the CURRENT value, not the closure value
-                      const currentIndex = currentSquareIndexRef.current;
-                      const expectedAnimal = unlockedAnimals[currentIndex];
-                      
-                      console.log('Drop check - Dragged:', animal.englishKey, 'Expected:', expectedAnimal?.englishKey, 'currentIndex from ref:', currentIndex);
-                      
-                      if (dropped) {
-                        if (animal.englishKey === expectedAnimal?.englishKey) {
-                          // Correct drop
-                          console.log('✅ Correct! Placing at currentIndex:', currentIndex);
-                          setPlacedAnimals(prev => {
-                            const newSet = new Set(prev);
-                            newSet.add(currentIndex);
-                            console.log('Updated placedAnimals:', Array.from(newSet));
-                            return newSet;
-                          });
-                          
-                          // Play "aha2" sound for correct drop
-                          try {
-                            const ahaSound = require('../assets/sounds/other/aha2.mp3');
-                            const ahaPlayer = createAudioPlayer(ahaSound);
-                            ahaPlayer.play();
-                            ahaPlayer.addListener('playbackStatusUpdate', (status: any) => {
-                              if (status.didJustFinish) ahaPlayer.remove();
-                            });
-                          } catch (error) {
-                            console.warn('Error playing aha2 sound:', error);
-                          }
-                          
-                          // Then play animal sound
-                          setTimeout(() => {
-                            if (animal.sound) playAnimalSound(animal.sound);
-                          }, 300);
-                        } else {
-                          // Wrong drop - show red feedback and shake
-                          console.log('❌ Wrong!');
-                          setWrongDrop(true);
-                          setWrongAnimalIndex(squareIndex);
-                          
-                          // Play "no" sound for wrong drop
-                          try {
-                            const noSound = require('../assets/sounds/other/no.mp3');
-                            const noPlayer = createAudioPlayer(noSound);
-                            noPlayer.play();
-                            noPlayer.addListener('playbackStatusUpdate', (status: any) => {
-                              if (status.didJustFinish) noPlayer.remove();
-                            });
-                          } catch (error) {
-                            console.warn('Error playing no sound:', error);
-                          }
-                          
-                          // Shake animation
-                          Animated.sequence([
-                            Animated.timing(dropZoneShake, {
-                              toValue: 10,
-                              duration: 50,
-                              useNativeDriver: true,
-                            }),
-                            Animated.timing(dropZoneShake, {
-                              toValue: -10,
-                              duration: 50,
-                              useNativeDriver: true,
-                            }),
-                            Animated.timing(dropZoneShake, {
-                              toValue: 10,
-                              duration: 50,
-                              useNativeDriver: true,
-                            }),
-                            Animated.timing(dropZoneShake, {
-                              toValue: 0,
-                              duration: 50,
-                              useNativeDriver: true,
-                            }),
-                          ]).start();
-                          
-                          // Reset red feedback after animation
-                          setTimeout(() => {
-                            setWrongDrop(false);
-                            setWrongAnimalIndex(null);
-                          }, 400);
-                        }
+            {shuffledAnimals.slice(Math.ceil(shuffledAnimals.length / 2)).map((animal, shuffledIdx) => {
+              const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
+              if (placedAnimals.has(squareIndex)) return null;
+              const imageSource = stillImageMap[animal.englishKey];
+              if (!imageSource) return null;
+              return (
+                <DraggableAnimal
+                  key={`right-${squareIndex}-${shuffledIdx}`}
+                  animal={animal}
+                  imageSource={imageSource}
+                  index={squareIndex}
+                  squareSize={animalCardSize}
+                  isTablet={isTablet}
+                  dragAnimValue={dragAnimValue}
+                  onDragStart={(position) => {
+                    setDraggingAnimal({ animal, imageSource, index: squareIndex });
+                    dragAnimValue.setValue({ x: position.x, y: position.y });
+                  }}
+                  onDragMove={(position) => {
+                    dragAnimValue.setValue({ x: position.x, y: position.y });
+                  }}
+                  onDragEnd={(position) => {
+                    const zone = dropZonePosition.current;
+                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width &&
+                                   position.y >= zone.y && position.y <= zone.y + zone.height;
+                    const currentIndex = currentSquareIndexRef.current;
+                    const expectedAnimal = unlockedAnimals[currentIndex];
+                    if (dropped) {
+                      if (animal.englishKey === expectedAnimal?.englishKey) {
+                        setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
+                        try { const ahaSound = require('../assets/sounds/other/aha2.mp3'); const ahaPlayer = createAudioPlayer(ahaSound); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (error) {}
+                        setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
+                      } else {
+                        setWrongDrop(true); setWrongAnimalIndex(squareIndex);
+                        try { const noSound = require('../assets/sounds/other/no.mp3'); const noPlayer = createAudioPlayer(noSound); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (error) {}
+                        Animated.sequence([
+                          Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }),
+                          Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }),
+                          Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }),
+                          Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true }),
+                        ]).start();
+                        setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
                       }
-                      
-                      setDraggingAnimal(null);
-                    }}
-                    isWrongAnimal={wrongAnimalIndex === squareIndex}
-                  />
-                );
-              })}
-            </View>
+                    }
+                    setDraggingAnimal(null);
+                  }}
+                  isWrongAnimal={wrongAnimalIndex === squareIndex}
+                />
+              );
+            })}
           </ScrollView>
-          
-          {/* Scroll Right Button */}
-          <TouchableOpacity
-              onPress={handleScrollDown}
-              activeOpacity={0.7}
-              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-              style={{
-                backgroundColor: '#4CAF50',
-                width: isTablet ? 50 : 40,
-                height: isTablet ? 50 : 40,
-                borderRadius: isTablet ? 25 : 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-                alignSelf: 'center',
-                marginLeft: 8,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 5,
-              }}
-            >
-              <Ionicons name="arrow-forward" size={isTablet ? 28 : 22} color="white" />
-            </TouchableOpacity>
         </View>
-        </View>
+      </View>
 
       {/* FLOATING OVERLAY AT ABSOLUTE ROOT - HIGHEST z-index */}
       {draggingAnimal && (
@@ -1595,7 +1497,7 @@ const DraggableAnimal: React.FC<{
 
   return (
     <View {...panResponder.panHandlers} style={{ 
-      marginHorizontal: 6,
+      marginVertical: 4,
     }}>
         <Animated.View style={{
         opacity,
@@ -1606,16 +1508,16 @@ const DraggableAnimal: React.FC<{
           {
             width: squareSize,
             height: squareSize,
-            padding: 6,
+            padding: 4,
             borderColor: isWrongAnimal ? '#FF0000' : '#FFD700',
-            borderWidth: isWrongAnimal ? 4 : 3,
+            borderWidth: isWrongAnimal ? 3 : 2,
           }
         ]}>
           <Image 
             source={imageSource}
             style={{
-              width: squareSize * 0.85,
-              height: squareSize * 0.85,
+              width: squareSize * 0.88,
+              height: squareSize * 0.88,
               resizeMode: 'contain',
             }}
             fadeDuration={0}
