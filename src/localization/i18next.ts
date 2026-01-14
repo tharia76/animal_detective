@@ -12,6 +12,8 @@ i18n
       en: { translation: strings.en },
       ru: { translation: strings.ru },
       tr: { translation: strings.tr },
+      es: { translation: strings.es },
+      pt: { translation: strings.pt },
     },
     lng: 'en',
     fallbackLng: 'en',

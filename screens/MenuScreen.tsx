@@ -537,7 +537,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
 
   const dynStyles = useDynamicStyles();
   const { width, height, isLandscape } = useForceOrientation(); // Use forced landscape dimensions
-  const insets = useSafeAreaInsets();
+  // Force zero insets for fullscreen landscape on iPad
+  const insets = { top: 0, bottom: 0, left: 0, right: 0 };
   
   // Selected level state
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
@@ -628,15 +629,19 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
   const modalTransitionRef = useRef(false);
   
   // Load unlocked state from storage on mount
-  // Only farm is unlocked by default, all others require $0.99 purchase
+  // TESTING MODE: All levels unlocked for testing
   useEffect(() => {
     const loadUnlockedState = async () => {
       try {
-        // Check if user has purchased unlock all
-        const unlockedValue = await AsyncStorage.getItem('unlocked_all_levels');
-        const isUnlocked = unlockedValue === 'true';
+        // 🧪 TESTING: Uncomment below line to enable purchase check
+        // const unlockedValue = await AsyncStorage.getItem('unlocked_all_levels');
+        // const isUnlocked = unlockedValue === 'true';
+        
+        // 🧪 TESTING: All levels unlocked
+        const isUnlocked = true;
+        
         setUnlocked(isUnlocked);
-        console.log('🔒 Loaded unlock state:', isUnlocked ? 'unlocked (paid)' : 'locked (only farm free)');
+        console.log('🧪 TESTING MODE: All levels unlocked');
       } catch (error) {
         console.warn('Error loading unlocked state:', error);
         setUnlocked(false);
@@ -1405,6 +1410,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
      { code: 'en', name: 'English' },
      { code: 'ru', name: 'Русский' },
      { code: 'tr', name: 'Türkçe' },
+     { code: 'es', name: 'Español' },
+     { code: 'pt', name: 'Português' },
    ];
 
   // Explicit sizing for Settings modal and absolute centering

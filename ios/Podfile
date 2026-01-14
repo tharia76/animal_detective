@@ -4,7 +4,7 @@ require File.join(File.dirname(`node --print "require.resolve('react-native/pack
 require 'json'
 podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
 
-ENV['RCT_NEW_ARCH_ENABLED'] = podfile_properties['newArchEnabled'] == true || podfile_properties['newArchEnabled'] == 'true' ? '1' : '0'
+ENV['RCT_NEW_ARCH_ENABLED'] = '0' if podfile_properties['newArchEnabled'] == 'false'
 ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] = podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
 
 platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
@@ -31,9 +31,6 @@ target 'AnimalDetective' do
 
   config = use_native_modules!(config_command)
 
-  # Explicitly declare pods with modular headers to override autolinking
-  pod 'GoogleUtilities', :modular_headers => true
-
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
 
@@ -53,87 +50,6 @@ target 'AnimalDetective' do
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
 
-    # Fix React-debug target build issues
-    installer.pods_project.targets.each do |target|
-      # Fix React-debug target to prevent internal inconsistency errors
-      if target.name == 'React-debug' || target.name.include?('React-debug')
-        target.build_configurations.each do |config|
-          # Disable parallel builds for this target to prevent inconsistency
-          config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-          # Ensure proper build settings
-          config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
-        end
-      end
-      
-      # Fix RCT-Folly C++ compilation issues
-      if target.name == 'RCT-Folly' || target.name.include?('Folly')
-        target.build_configurations.each do |config|
-          # Ensure C++20 standard for Folly
-          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
-          config.build_settings['CLANG_CXX_LIBRARY'] = 'libc++'
-          # Disable warnings that can cause build failures
-          config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
-        end
-      end
-      
-      # Enable modular headers for Swift pods that need it
-      # Enable modular headers for GoogleUtilities specifically
-      if target.name == 'GoogleUtilities'
-        target.build_configurations.each do |config|
-          config.build_settings['DEFINES_MODULE'] = 'YES'
-          config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
-          # Force module map generation
-          config.build_settings['CLANG_MODULE_MAP_FILE'] = ''
-        end
-      end
-      # Enable modular headers for other pods that need it
-      if target.name.include?('GoogleAppMeasurement')
-        target.build_configurations.each do |config|
-          config.build_settings['DEFINES_MODULE'] = 'YES'
-          config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
-        end
-      end
-    end
-    
-    # Fix internal inconsistency errors by disabling parallel builds for problematic targets
-    installer.pods_project.targets.each do |target|
-      # Apply to all React-related and Expo targets to prevent build inconsistencies
-      if target.name.include?('React') || target.name.include?('RCT') || 
-         target.name.include?('RNReanimated') || target.name.include?('Expo')
-        target.build_configurations.each do |config|
-          config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-        end
-      end
-      
-      # Fix ALL resource bundle targets - these are resource bundles, not executables
-      # Resource bundles shouldn't copy Swift libraries since they don't contain executables
-      # Check if target is likely a resource bundle by various patterns
-      is_resource_bundle = target.name.include?('resources') || target.name.include?('Resources') ||
-                          target.name.include?('_Privacy') || target.name.include?('privacy') || 
-                          target.name.end_with?('.bundle') || target.name.include?('FBAudienceNetwork') ||
-                          # Match format like "PodName-BundleName" where pod and bundle names match
-                          (target.name.include?('-') && target.name.split('-').uniq.length == 1) ||
-                          # Match Expo Constants bundle pattern
-                          target.name.match?(/EX.*-EX.*/)
-      
-      if is_resource_bundle
-        target.build_configurations.each do |config|
-          # Disable Swift library copying for resource bundles
-          config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'NO'
-          # Clear Swift version since these are resource bundles, not Swift executables
-          config.build_settings['SWIFT_VERSION'] = ''
-          # Disable script sandboxing
-          config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-        end
-      else
-        # For non-resource-bundle pod targets, explicitly set to NO
-        # Only the main app should embed Swift libraries
-        target.build_configurations.each do |config|
-          config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'NO'
-        end
-      end
-    end
-
     # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.
     installer.target_installation_results.pod_target_installation_results
@@ -143,71 +59,6 @@ target 'AnimalDetective' do
           config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
         end
       end
-    end
-    
-    # Fix privacy bundle generation for Archive builds
-    # Ensure privacy bundles are generated for all build configurations including Archive
-    installer.pods_project.targets.each do |target|
-      if target.name == 'glog' || target.name == 'boost' || target.name == 'nanopb'
-        target.build_configurations.each do |config|
-          # Set SKIP_INSTALL to YES to prevent static libraries from being installed to Products/usr
-          # This prevents archives from appearing in "Other Items" in Xcode Organizer
-          config.build_settings['SKIP_INSTALL'] = 'YES'
-          # Make sure resource bundles are generated
-          config.build_settings['GENERATE_INFOPLIST_FILE'] = 'NO'
-        end
-      end
-      
-      # Fix privacy bundle resource targets - prevent Swift library copying
-      if target.name == 'glog-glog_privacy' || target.name == 'boost-boost_privacy' || 
-         target.name == 'nanopb-nanopb_Privacy'
-        target.build_configurations.each do |config|
-          # These are resource bundles, not executables - disable Swift lib copying
-          config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'NO'
-          config.build_settings['SWIFT_VERSION'] = ''
-          config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-        end
-      end
-    end
-    
-    # Fix Archive build issue with privacy bundles
-    # Make privacy bundle input paths optional in the Copy Pods Resources phase
-    installer.pods_project.targets.each do |target|
-      if target.name == 'AnimalDetective'
-        target.build_phases.each do |phase|
-          if phase.respond_to?(:name) && phase.name == '[CP] Copy Pods Resources'
-            # Remove privacy bundle inputs that may not exist during Archive builds
-            # The script will handle missing files gracefully
-            phase.input_paths = phase.input_paths.select do |path|
-              # Keep all paths except privacy bundles that might be missing
-              !path.include?('glog_privacy.bundle') && 
-              !path.include?('boost_privacy.bundle') && 
-              !path.include?('nanopb_Privacy.bundle')
-            end
-          end
-        end
-      end
-    end
-    
-    # Patch the resources script to handle missing privacy bundles gracefully
-    resources_script_path = File.join(installer.sandbox.root, 'Target Support Files', 'Pods-AnimalDetective', 'Pods-AnimalDetective-resources.sh')
-    if File.exist?(resources_script_path)
-      script_content = File.read(resources_script_path)
-      # Modify install_resource function to skip missing privacy bundles instead of failing
-      modified_script = script_content.gsub(
-        /if \[\[ ! -e "\$RESOURCE_PATH" \]\] ; then\n    cat << EOM\nerror: Resource "\$RESOURCE_PATH" not found\. Run 'pod install' to update the copy resources script\.\nEOM\n    exit 1\n  fi/,
-        'if [[ ! -e "$RESOURCE_PATH" ]] ; then
-    # Skip missing privacy bundles (common during Archive builds)
-    if [[ "$RESOURCE_PATH" == *"privacy.bundle"* ]] || [[ "$RESOURCE_PATH" == *"_Privacy.bundle"* ]]; then
-      return 0
-    fi
-    cat << EOM
-error: Resource "$RESOURCE_PATH" not found. Run \'pod install\' to update the copy resources script.
-EOM
-    exit 1
-  fi'
-      )
-      File.write(resources_script_path, modified_script)
     end
   end
 end

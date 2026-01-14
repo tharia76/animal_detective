@@ -1,7 +1,7 @@
 {
   "name": "Animal Detective",
   "slug": "animal-detective",
-  "version": "1.7",
+  "version": "2.2",
   "orientation": "landscape",
   "icon": "./src/assets/images/icon.png",
   "scheme": "animal-detective",
@@ -34,6 +34,11 @@
       "UIRequiresFullScreen~ipad": true,
       "UIInterfaceOrientation~ipad": "UIInterfaceOrientationLandscapeLeft",
       "UIViewControllerBasedStatusBarAppearance~ipad": false,
+      "UIStatusBarHidden": true,
+      "UIStatusBarHidden~ipad": true,
+      "UIViewControllerBasedStatusBarAppearance": false,
+      "UIStatusBarStyle": "UIStatusBarStyleLightContent",
+      "UILaunchStoryboardName": "SplashScreen",
       "MTKViewDisplaySyncEnabled": true,
       "UIApplicationSupportsIndirectInputEvents": true,
       "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized ads and improve your experience."

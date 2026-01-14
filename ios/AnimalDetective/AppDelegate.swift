@@ -50,16 +50,6 @@ public class AppDelegate: ExpoAppDelegate {
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
   }
-
-  // MARK: - Orientation Methods (Moved Here)
-
-  // Force landscape orientation
-  public override func application(
-    _ application: UIApplication,
-    supportedInterfaceOrientationsFor window: UIWindow?
-  ) -> UIInterfaceOrientationMask {
-    return [.landscapeLeft, .landscapeRight]
-  }
 }
 
 class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
@@ -78,5 +68,35 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 #endif
   }
 
-  // Note: The orientation methods have been removed from this class.
+  // Force landscape orientation for all presentations including modals
+  public override func application(
+    _ application: UIApplication,
+    supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
+    return [.landscapeLeft, .landscapeRight]
+  }
+  
+  // Prevent autorotation to portrait
+  public override var shouldAutorotate: Bool {
+    return false
+  }
+  
+  // Force initial orientation
+  public override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+    return .landscapeLeft
+  }
+  
+  // Override for modal presentations
+  public override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    
+    // Force landscape for any modal presentations
+    if let presentedVC = self.presentedViewController {
+      let orientationMask: UIInterfaceOrientationMask = [.landscapeLeft, .landscapeRight]
+      if #available(iOS 16.0, *) {
+        let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+        windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: orientationMask))
+      }
+    }
+  }
 }

@@ -24,9 +24,17 @@ module.exports = function withForceLandscape(config) {
     infoPlist['UIRequiresFullScreen'] = true;
     infoPlist['UIRequiresFullScreen~ipad'] = true;
     
-    // Disable status bar rotation
+    // Hide status bar completely
+    infoPlist['UIStatusBarHidden'] = true;
+    infoPlist['UIStatusBarHidden~ipad'] = true;
     infoPlist['UIViewControllerBasedStatusBarAppearance'] = false;
     infoPlist['UIViewControllerBasedStatusBarAppearance~ipad'] = false;
+    
+    // Prevent split view and slide over on iPad
+    infoPlist['UIRequiresFullScreen'] = true;
+    
+    // Disable home indicator auto-hiding delay
+    infoPlist['UIPreferredScreenEdgesDeferringSystemGestures'] = 15; // All edges
     
     return config;
   });

@@ -83,7 +83,6 @@
    </AnalyzeAction>
    <ArchiveAction
       buildConfiguration = "Release"
-      customArchiveName = "Animal Detective"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

@@ -29,7 +29,6 @@ import InsectsScreen from '../screens/levels/Insects';
 import BirdsScreen from '../screens/levels/Birds';
 import { getAnimals } from '../src/data/animals';
 import BackgroundMusicManager from '../src/services/BackgroundMusicManager';
-import AdMobService from '../src/services/AdMobService';
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -40,24 +39,6 @@ export default function App() {
   const [assetsReady, setAssetsReady] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
 
-  // Initialize AdMob
-  useEffect(() => {
-    const initializeAdMob = async () => {
-      try {
-        await AdMobService.initialize();
-        await AdMobService.setRequestConfiguration({
-          maxAdContentRating: 'G',
-          tagForChildDirectedTreatment: true,
-          tagForUnderAgeOfConsent: true,
-        });
-        console.log('✅ AdMob initialized');
-      } catch (error) {
-        console.error('❌ Failed to initialize AdMob:', error);
-      }
-    };
-    
-    initializeAdMob();
-  }, []);
 
   // Force landscape on mount - especially for iPad
   useEffect(() => {
@@ -376,7 +357,17 @@ export default function App() {
   return (
     <>
       <StatusBar hidden />
-      <View style={{ flex: 1, backgroundColor: '#FFDAB9' }}>
+      <View style={{ 
+        flex: 1, 
+        backgroundColor: '#FFDAB9',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%'
+      }}>
         {selectedLevel == null ? (
           assetsReady ? (
             <MenuScreen
