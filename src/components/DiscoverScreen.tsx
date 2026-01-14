@@ -921,8 +921,22 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         }, 100);
   };
 
-  const squareSize = isTablet ? 200 : 150;
-  const animalCardSize = isTablet ? 90 : 70;
+  // Calculate sizes based on screen dimensions for better space usage
+  const availableHeight = screenH - (safeAreaInsets.top + safeAreaInsets.bottom + 80); // Account for header
+  const availableWidth = screenW - (safeAreaInsets.left + safeAreaInsets.right + 40);
+  
+  // Main drop square: use ~40% of the smaller dimension, but cap it
+  const squareSize = Math.min(
+    Math.max(availableHeight * 0.45, 140), // At least 140, up to 45% of height
+    Math.max(availableWidth * 0.35, 140),  // At least 140, up to 35% of width
+    isTablet ? 280 : 200 // Max cap
+  );
+  
+  // Animal cards: fit nicely in side columns - aim for ~3-4 visible at once
+  const animalCardSize = Math.min(
+    Math.max(availableHeight * 0.22, 65), // At least 65, up to 22% of height
+    isTablet ? 110 : 85 // Max cap
+  );
 
     return (
     <ImageBackground 
@@ -1093,7 +1107,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       }}>
         {/* Left side animals */}
         <View style={{ 
-          width: isTablet ? 120 : 90,
+          width: animalCardSize + 20,
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 1000,
@@ -1168,16 +1182,16 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
             return (
             <>
               {/* Name Card with Nav Buttons */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: isTablet ? 10 : 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: squareSize * 0.05 }}>
                 <TouchableOpacity
                   onPress={handlePrevSquare}
                   disabled={currentSquareIndex === 0}
                   style={{ 
                     backgroundColor: currentSquareIndex === 0 ? '#ccc' : '#FF4757',
-                    width: isTablet ? 40 : 32,
-                    height: isTablet ? 40 : 32,
-                    borderRadius: isTablet ? 20 : 16,
-                    marginRight: isTablet ? 10 : 6,
+                    width: squareSize * 0.18,
+                    height: squareSize * 0.18,
+                    borderRadius: squareSize * 0.09,
+                    marginRight: squareSize * 0.04,
                     justifyContent: 'center',
                     alignItems: 'center',
                     shadowColor: '#000',
@@ -1187,14 +1201,14 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                     elevation: 5,
                   }}
                 >
-                  <Ionicons name="arrow-back" size={isTablet ? 24 : 18} color={currentSquareIndex === 0 ? '#666' : 'white'} />
+                  <Ionicons name="arrow-back" size={squareSize * 0.12} color={currentSquareIndex === 0 ? '#666' : 'white'} />
                 </TouchableOpacity>
                 
-                <View style={[styles.nameCard, { padding: isTablet ? 14 : 10, borderColor: placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#FFD700' }]}>
-                  <Text style={[styles.animalName, { fontSize: isTablet ? 22 : 16, color: placedAnimals.has(currentSquareIndex) ? '#228B22' : '#333' }]}>
+                <View style={[styles.nameCard, { padding: squareSize * 0.06, borderColor: placedAnimals.has(currentSquareIndex) ? '#32CD32' : '#FFD700' }]}>
+                  <Text style={[styles.animalName, { fontSize: squareSize * 0.1, color: placedAnimals.has(currentSquareIndex) ? '#228B22' : '#333' }]}>
                     {currentAnimal.name}
                   </Text>
-                  <Text style={[styles.hintText, { fontSize: isTablet ? 12 : 10 }]}>
+                  <Text style={[styles.hintText, { fontSize: squareSize * 0.06 }]}>
                     {placedAnimals.has(currentSquareIndex) ? '✓ Tap to hear' : t('dragAnimalHere')}
                   </Text>
                 </View>
@@ -1204,10 +1218,10 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                   disabled={currentSquareIndex === unlockedAnimals.length - 1}
                   style={{ 
                     backgroundColor: currentSquareIndex === unlockedAnimals.length - 1 ? '#ccc' : '#2196F3',
-                    width: isTablet ? 40 : 32,
-                    height: isTablet ? 40 : 32,
-                    borderRadius: isTablet ? 20 : 16,
-                    marginLeft: isTablet ? 10 : 6,
+                    width: squareSize * 0.18,
+                    height: squareSize * 0.18,
+                    borderRadius: squareSize * 0.09,
+                    marginLeft: squareSize * 0.04,
                     justifyContent: 'center',
                     alignItems: 'center',
                     shadowColor: '#000',
@@ -1217,7 +1231,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                     elevation: 5,
                   }}
                 >
-                  <Ionicons name="arrow-forward" size={isTablet ? 24 : 18} color={currentSquareIndex === unlockedAnimals.length - 1 ? '#666' : 'white'} />
+                  <Ionicons name="arrow-forward" size={squareSize * 0.12} color={currentSquareIndex === unlockedAnimals.length - 1 ? '#666' : 'white'} />
                 </TouchableOpacity>
               </View>
 
@@ -1246,7 +1260,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                         fadeDuration={0}
                       />
                       <View style={styles.checkmark}>
-                        <Ionicons name="checkmark" size={24} color="white" />
+                        <Ionicons name="checkmark" size={squareSize * 0.15} color="white" />
                       </View>
                     </>
                   ) : (
@@ -1257,14 +1271,14 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                         fadeDuration={0}
                       />
                     ) : (
-                      <Text style={[styles.questionMark, { fontSize: isTablet ? 50 : 40 }]}>?</Text>
+                      <Text style={[styles.questionMark, { fontSize: squareSize * 0.3 }]}>?</Text>
                     )
                   )}
                 </Animated.View>
               </TouchableOpacity>
               
               {/* Progress Counter */}
-              <Text style={[styles.sectionTitle, { marginTop: isTablet ? 8 : 5, fontSize: isTablet ? 16 : 12 }]}>
+              <Text style={[styles.sectionTitle, { marginTop: squareSize * 0.04, fontSize: squareSize * 0.08 }]}>
                 {currentSquareIndex + 1} / {unlockedAnimals.length}
               </Text>
             </>
@@ -1274,7 +1288,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
 
         {/* Right side animals */}
         <View style={{ 
-          width: isTablet ? 120 : 90,
+          width: animalCardSize + 20,
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 1000,
