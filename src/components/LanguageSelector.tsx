@@ -19,7 +19,9 @@ const getFlag = (code: string) => {
     case 'en': return '🇺🇸';
     case 'ru': return '🇷🇺';
     case 'tr': return '🇹🇷';
-    default: return '';
+    case 'es': return '🇪🇸';
+    case 'pt': return '🇧🇷';
+    default: return '🌍';
   }
 };
 
