@@ -637,11 +637,10 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
         // const unlockedValue = await AsyncStorage.getItem('unlocked_all_levels');
         // const isUnlocked = unlockedValue === 'true';
         
-        // 🧪 TESTING: All levels unlocked
+        // 🧪 TESTING: All levels unlocked for QA
         const isUnlocked = true;
         
         setUnlocked(isUnlocked);
-        console.log('🧪 TESTING MODE: All levels unlocked');
       } catch (error) {
         console.warn('Error loading unlocked state:', error);
         setUnlocked(false);
@@ -1113,17 +1112,19 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
                 // Reset completion status for all levels using the dedicated function
                 await clearAllCompletions();
                 
-                // Clear animal progress for each level
+                // Clear animal progress and discover progress for each level
                 for (const level of LEVELS) {
                   const progressKey = `animalProgress_${level.toLowerCase()}`;
+                  const discoverKey = `discover_progress_${level.toLowerCase()}`;
                   await AsyncStorage.removeItem(progressKey);
+                  await AsyncStorage.removeItem(discoverKey);
                 }
                 
                 // Clear unlock status to restore locks
                 await AsyncStorage.removeItem('unlocked_all_levels');
                 setUnlocked(false);
                 
-                console.log('🗑️ Reset all levels, cleared all animal progress, and restored locks');
+                console.log('🗑️ Reset all levels, cleared all animal progress, discover progress, and restored locks');
                 
                 // Reset UI visited counts for all levels immediately
                 setVisitedCounts(() => {

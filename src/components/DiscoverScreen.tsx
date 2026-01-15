@@ -546,6 +546,8 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   
   // Animated hand hint
   const handAnimX = useRef(new Animated.Value(1)).current; // Start from right (1 = 100%)
+  const firstCardRef = useRef<View>(null);
+  const [firstCardPosition, setFirstCardPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
   
   // Storage key for this level's progress
   const storageKey = `discover_progress_${levelName.toLowerCase()}`;
@@ -924,19 +926,34 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
   // Calculate sizes based on screen dimensions for better space usage
   const availableHeight = screenH - (safeAreaInsets.top + safeAreaInsets.bottom + 80); // Account for header
   const availableWidth = screenW - (safeAreaInsets.left + safeAreaInsets.right + 40);
+  const isLandscapeMobile = !isTablet && screenW > screenH;
   
-  // Main drop square: use ~40% of the smaller dimension, but cap it
+  // Calculate how many animals will be in the top row
+  const totalAnimals = shuffledAnimals.length;
+  const perSide = Math.floor(totalAnimals / 4);
+  const remainder = totalAnimals % 4;
+  const topRowCount = perSide + (remainder > 0 ? 1 : 0);
+  
+  // Main drop square: smaller on mobile landscape to leave room for cards
   const squareSize = Math.min(
-    Math.max(availableHeight * (isTablet ? 0.55 : 0.45), isTablet ? 200 : 140), // Bigger on tablet
-    Math.max(availableWidth * (isTablet ? 0.40 : 0.35), isTablet ? 200 : 140),
-    isTablet ? 380 : 200 // Max cap - much bigger on iPad
+    Math.max(availableHeight * (isTablet ? 0.55 : isLandscapeMobile ? 0.5 : 0.45), isTablet ? 200 : isLandscapeMobile ? 120 : 140),
+    Math.max(availableWidth * (isTablet ? 0.40 : isLandscapeMobile ? 0.22 : 0.35), isTablet ? 200 : isLandscapeMobile ? 120 : 140),
+    isTablet ? 380 : isLandscapeMobile ? 160 : 200 // Smaller max cap for mobile landscape
   );
   
-  // Animal cards: fit nicely in side columns - bigger on iPad
-  const animalCardSize = Math.min(
-    Math.max(availableHeight * (isTablet ? 0.28 : 0.22), isTablet ? 100 : 65),
-    isTablet ? 150 : 85 // Max cap - bigger on iPad
+  // Animal cards: bigger on mobile
+  const maxCardsInColumn = isLandscapeMobile ? 4 : 6;
+  const cardSizeForHeight = (availableHeight - 40) / maxCardsInColumn - 8;
+  
+  const baseCardSize = Math.min(
+    Math.max(availableHeight * (isTablet ? 0.28 : isLandscapeMobile ? 0.22 : 0.24), isTablet ? 100 : isLandscapeMobile ? 60 : 75),
+    isTablet ? 150 : isLandscapeMobile ? Math.min(80, cardSizeForHeight) : 95 // Bigger on mobile
   );
+  
+  // Reduce card size when more than 4 cards in top row to fit them all
+  const animalCardSize = topRowCount > 4 
+    ? Math.min(baseCardSize * 0.75, (availableWidth - squareSize - 60) / topRowCount - 8)
+    : baseCardSize;
 
     return (
     <ImageBackground 
@@ -1099,39 +1116,110 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
 
       {/* Main Content Container - Animals in rectangle around center */}
       {(() => {
-        // Calculate even distribution across 4 sides
+        // Calculate distribution - limit top/bottom to 5 on mobile
         const totalAnimals = shuffledAnimals.length;
-        const perSide = Math.floor(totalAnimals / 4);
-        const remainder = totalAnimals % 4;
-        // Distribute remainder evenly: top, bottom get priority for horizontal scrolling
-        const topCount = perSide + (remainder > 0 ? 1 : 0);
-        const bottomCount = perSide + (remainder > 1 ? 1 : 0);
-        const leftCount = perSide + (remainder > 2 ? 1 : 0);
-        const rightCount = perSide;
+        const isMobile = !isTablet;
+        
+        // Max cards per position
+        const maxTopBottom = isMobile ? 4 : 8;
+        const maxPerSide = isMobile ? 4 : 6;
+        
+        // Calculate even distribution, then apply limits
+        const basePerSide = Math.floor(totalAnimals / 4);
+        
+        let topCount = Math.min(basePerSide + 1, maxTopBottom);
+        let bottomCount = Math.min(basePerSide, maxTopBottom);
+        let leftCount = Math.min(basePerSide + 1, maxPerSide);
+        let rightCount = Math.min(basePerSide, maxPerSide);
+        
+        // Distribute any remaining cards
+        const assigned = topCount + bottomCount + leftCount + rightCount;
+        let remaining = totalAnimals - assigned;
+        
+        // Add remaining to sides first (they can scroll)
+        while (remaining > 0) {
+          if (leftCount < maxPerSide) { leftCount++; remaining--; }
+          else if (rightCount < maxPerSide) { rightCount++; remaining--; }
+          else if (topCount < maxTopBottom) { topCount++; remaining--; }
+          else if (bottomCount < maxTopBottom) { bottomCount++; remaining--; }
+          else break; // All maxed out
+        }
         
         const topAnimals = shuffledAnimals.slice(0, topCount);
         const leftAnimals = shuffledAnimals.slice(topCount, topCount + leftCount);
         const rightAnimals = shuffledAnimals.slice(topCount + leftCount, topCount + leftCount + rightCount);
-        const bottomAnimals = shuffledAnimals.slice(topCount + leftCount + rightCount);
+        // Limit bottom to maxTopBottom as well
+        const bottomStart = topCount + leftCount + rightCount;
+        const bottomAnimals = shuffledAnimals.slice(bottomStart, bottomStart + bottomCount);
         
         return (
       <View style={{
         flex: 1, 
-        flexDirection: 'column',
+        flexDirection: 'row',
+        justifyContent: 'center',
         paddingHorizontal: Math.max(safeAreaInsets.left + 5, 10),
         paddingBottom: Math.max(safeAreaInsets.bottom + 5, 10),
       }}>
-        {/* Top row of animals */}
-        <View style={{ 
-          height: animalCardSize + 16,
-          zIndex: 1000,
-        }}>
+        {/* Left column of animals - spans full height */}
+        <View style={{ width: animalCardSize + 16, zIndex: 1000, marginRight: 4 }}>
           <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, justifyContent: 'center', flexGrow: 1 }}
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ alignItems: 'center', paddingTop: 0, paddingBottom: animalCardSize, paddingHorizontal: 4 }}
             scrollEnabled={!draggingAnimal}
           >
+            {leftAnimals.map((animal, shuffledIdx) => {
+              const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
+              if (placedAnimals.has(squareIndex)) return null;
+              const imageSource = stillImageMap[animal.englishKey];
+              if (!imageSource) return null;
+              return (
+                <DraggableAnimal
+                  key={`left-${squareIndex}-${shuffledIdx}`}
+                  animal={animal}
+                  imageSource={imageSource}
+                  index={squareIndex}
+                  squareSize={animalCardSize}
+                  isTablet={isTablet}
+                  dragAnimValue={dragAnimValue}
+                  onDragStart={(position) => { setDraggingAnimal({ animal, imageSource, index: squareIndex }); dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                  onDragMove={(position) => { dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                  onDragEnd={(position) => {
+                    const zone = dropZonePosition.current;
+                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width && position.y >= zone.y && position.y <= zone.y + zone.height;
+                    const currentIndex = currentSquareIndexRef.current;
+                    const expectedAnimal = unlockedAnimals[currentIndex];
+                    if (dropped) {
+                      if (animal.englishKey === expectedAnimal?.englishKey) {
+                        setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
+                        try { const ahaPlayer = createAudioPlayer(require('../assets/sounds/other/aha2.mp3')); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (e) {}
+                        setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
+                      } else {
+                        setWrongDrop(true); setWrongAnimalIndex(squareIndex);
+                        try { const noPlayer = createAudioPlayer(require('../assets/sounds/other/no.mp3')); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (e) {}
+                        Animated.sequence([Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true })]).start();
+                        setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
+                      }
+                    }
+                    setDraggingAnimal(null);
+                  }}
+                  isWrongAnimal={wrongAnimalIndex === squareIndex}
+                />
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Center section: Top row, Drop zone, Bottom row */}
+        <View style={{ flexDirection: 'column', width: squareSize + animalCardSize * 2 + 40 }}>
+          {/* Top row of animals */}
+          <View style={{ height: animalCardSize + 16, zIndex: 1000, marginTop: isTablet ? -55 : -90 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, justifyContent: 'center', flexGrow: 1 }}
+              scrollEnabled={!draggingAnimal}
+            >
             {topAnimals.map((animal, shuffledIdx) => {
               const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
               if (placedAnimals.has(squareIndex)) return null;
@@ -1173,57 +1261,6 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
             })}
           </ScrollView>
         </View>
-
-        {/* Middle section: Left animals - Center drop zone - Right animals */}
-        <View style={{ flex: 1, flexDirection: 'row' }}>
-          {/* Left column of animals */}
-          <View style={{ width: animalCardSize + 16, zIndex: 1000 }}>
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ alignItems: 'center', paddingTop: 4, paddingBottom: 20, paddingHorizontal: 4 }}
-              scrollEnabled={!draggingAnimal}
-            >
-              {leftAnimals.map((animal, shuffledIdx) => {
-                const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
-                if (placedAnimals.has(squareIndex)) return null;
-                const imageSource = stillImageMap[animal.englishKey];
-                if (!imageSource) return null;
-                return (
-                  <DraggableAnimal
-                    key={`left-${squareIndex}-${shuffledIdx}`}
-                    animal={animal}
-                    imageSource={imageSource}
-                    index={squareIndex}
-                    squareSize={animalCardSize}
-                    isTablet={isTablet}
-                    dragAnimValue={dragAnimValue}
-                    onDragStart={(position) => { setDraggingAnimal({ animal, imageSource, index: squareIndex }); dragAnimValue.setValue({ x: position.x, y: position.y }); }}
-                    onDragMove={(position) => { dragAnimValue.setValue({ x: position.x, y: position.y }); }}
-                    onDragEnd={(position) => {
-                      const zone = dropZonePosition.current;
-                      const dropped = position.x >= zone.x && position.x <= zone.x + zone.width && position.y >= zone.y && position.y <= zone.y + zone.height;
-                      const currentIndex = currentSquareIndexRef.current;
-                      const expectedAnimal = unlockedAnimals[currentIndex];
-                      if (dropped) {
-                        if (animal.englishKey === expectedAnimal?.englishKey) {
-                          setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
-                          try { const ahaPlayer = createAudioPlayer(require('../assets/sounds/other/aha2.mp3')); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (e) {}
-                          setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
-                        } else {
-                          setWrongDrop(true); setWrongAnimalIndex(squareIndex);
-                          try { const noPlayer = createAudioPlayer(require('../assets/sounds/other/no.mp3')); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (e) {}
-                          Animated.sequence([Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true })]).start();
-                          setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
-                        }
-                      }
-                      setDraggingAnimal(null);
-                    }}
-                    isWrongAnimal={wrongAnimalIndex === squareIndex}
-                  />
-                );
-              })}
-            </ScrollView>
-          </View>
 
           {/* Center: Drop Zone */}
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1 }}>
@@ -1275,63 +1312,32 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                 
                 {/* Progress Counter */}
                 <Text style={[styles.sectionTitle, { marginTop: squareSize * 0.03, fontSize: squareSize * 0.07 }]}>{currentSquareIndex + 1} / {unlockedAnimals.length}</Text>
+                
               </>
               );
             })()}
           </View>
 
-          {/* Right column of animals */}
-          <View style={{ width: animalCardSize + 16, zIndex: 1000 }}>
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ alignItems: 'center', paddingTop: 4, paddingBottom: 20, paddingHorizontal: 4 }}
-              scrollEnabled={!draggingAnimal}
-            >
-              {rightAnimals.map((animal, shuffledIdx) => {
-                const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
-                if (placedAnimals.has(squareIndex)) return null;
-                const imageSource = stillImageMap[animal.englishKey];
-                if (!imageSource) return null;
-                return (
-                  <DraggableAnimal
-                    key={`right-${squareIndex}-${shuffledIdx}`}
-                    animal={animal}
-                    imageSource={imageSource}
-                    index={squareIndex}
-                    squareSize={animalCardSize}
-                    isTablet={isTablet}
-                    dragAnimValue={dragAnimValue}
-                    onDragStart={(position) => { setDraggingAnimal({ animal, imageSource, index: squareIndex }); dragAnimValue.setValue({ x: position.x, y: position.y }); }}
-                    onDragMove={(position) => { dragAnimValue.setValue({ x: position.x, y: position.y }); }}
-                    onDragEnd={(position) => {
-                      const zone = dropZonePosition.current;
-                      const dropped = position.x >= zone.x && position.x <= zone.x + zone.width && position.y >= zone.y && position.y <= zone.y + zone.height;
-                      const currentIndex = currentSquareIndexRef.current;
-                      const expectedAnimal = unlockedAnimals[currentIndex];
-                      if (dropped) {
-                        if (animal.englishKey === expectedAnimal?.englishKey) {
-                          setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
-                          try { const ahaPlayer = createAudioPlayer(require('../assets/sounds/other/aha2.mp3')); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (e) {}
-                          setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
-                        } else {
-                          setWrongDrop(true); setWrongAnimalIndex(squareIndex);
-                          try { const noPlayer = createAudioPlayer(require('../assets/sounds/other/no.mp3')); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (e) {}
-                          Animated.sequence([Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true })]).start();
-                          setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
-                        }
-                      }
-                      setDraggingAnimal(null);
-                    }}
-                    isWrongAnimal={wrongAnimalIndex === squareIndex}
-                  />
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-
-        {/* Bottom row of animals */}
-        <View style={{ height: animalCardSize + 16, zIndex: 1000 }}>
+          {/* Bottom row of animals */}
+        <View 
+          ref={firstCardRef}
+          style={{ height: animalCardSize + 16, zIndex: 1000 }}
+          onLayout={() => {
+            setTimeout(() => {
+              if (firstCardRef.current) {
+                firstCardRef.current.measureInWindow((x, y, width, height) => {
+                  // Position of first card: center of the first card in the row
+                  setFirstCardPosition({ 
+                    x: x + animalCardSize / 2 + 20, // Center of first card
+                    y: y + height / 2, 
+                    width: animalCardSize, 
+                    height: animalCardSize 
+                  });
+                });
+              }
+            }, 500);
+          }}
+        >
           <ScrollView
             ref={scrollViewRef}
             horizontal
@@ -1349,6 +1355,57 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               return (
                 <DraggableAnimal
                   key={`bottom-${squareIndex}-${shuffledIdx}`}
+                  animal={animal}
+                  imageSource={imageSource}
+                  index={squareIndex}
+                  squareSize={animalCardSize}
+                  isTablet={isTablet}
+                  dragAnimValue={dragAnimValue}
+                  onDragStart={(position) => { setDraggingAnimal({ animal, imageSource, index: squareIndex }); dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                  onDragMove={(position) => { dragAnimValue.setValue({ x: position.x, y: position.y }); }}
+                  onDragEnd={(position) => {
+                    const zone = dropZonePosition.current;
+                    const dropped = position.x >= zone.x && position.x <= zone.x + zone.width && position.y >= zone.y && position.y <= zone.y + zone.height;
+                    const currentIndex = currentSquareIndexRef.current;
+                    const expectedAnimal = unlockedAnimals[currentIndex];
+                    if (dropped) {
+                      if (animal.englishKey === expectedAnimal?.englishKey) {
+                        setPlacedAnimals(prev => { const newSet = new Set(prev); newSet.add(currentIndex); return newSet; });
+                        try { const ahaPlayer = createAudioPlayer(require('../assets/sounds/other/aha2.mp3')); ahaPlayer.play(); ahaPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) ahaPlayer.remove(); }); } catch (e) {}
+                        setTimeout(() => { if (animal.sound) playAnimalSound(animal.sound); }, 300);
+                      } else {
+                        setWrongDrop(true); setWrongAnimalIndex(squareIndex);
+                        try { const noPlayer = createAudioPlayer(require('../assets/sounds/other/no.mp3')); noPlayer.play(); noPlayer.addListener('playbackStatusUpdate', (status: any) => { if (status.didJustFinish) noPlayer.remove(); }); } catch (e) {}
+                        Animated.sequence([Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: -10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 10, duration: 50, useNativeDriver: true }), Animated.timing(dropZoneShake, { toValue: 0, duration: 50, useNativeDriver: true })]).start();
+                        setTimeout(() => { setWrongDrop(false); setWrongAnimalIndex(null); }, 400);
+                      }
+                    }
+                    setDraggingAnimal(null);
+                  }}
+                  isWrongAnimal={wrongAnimalIndex === squareIndex}
+                />
+              );
+            })}
+          </ScrollView>
+        </View>
+        </View>
+
+        {/* Right column of animals - spans full height */}
+        <View style={{ width: animalCardSize + 16, zIndex: 1000, marginLeft: 4 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ alignItems: 'center', paddingTop: 0, paddingBottom: animalCardSize, paddingHorizontal: 4 }}
+            scrollEnabled={!draggingAnimal}
+          >
+            {rightAnimals.map((animal, shuffledIdx) => {
+              const squareIndex = unlockedAnimals.findIndex(a => a.englishKey === animal.englishKey);
+              if (placedAnimals.has(squareIndex)) return null;
+              const imageSource = stillImageMap[animal.englishKey];
+              if (!imageSource) return null;
+              return (
+                <DraggableAnimal
+                  key={`right-${squareIndex}-${shuffledIdx}`}
                   animal={animal}
                   imageSource={imageSource}
                   index={squareIndex}
@@ -1427,6 +1484,51 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               />
         </View>
       </Animated.View>
+      )}
+
+      {/* ANIMATED HAND HINT - Shows drag from top-left card to center drop zone */}
+      {!placedAnimals.has(currentSquareIndex) && !draggingAnimal && (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            zIndex: 200000,
+            elevation: 200000,
+            // Start position: center of screen
+            left: '50%',
+            top: '50%',
+            marginLeft: -25,
+            marginTop: -25,
+            transform: [
+              {
+                // At handAnimX=1: offset to top-left (left column card area)
+                // At handAnimX=0: no offset (center/drop zone)
+                translateX: handAnimX.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -(squareSize * 0.6 + animalCardSize)],
+                }),
+              },
+              {
+                translateY: handAnimX.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -(squareSize * 0.3 + animalCardSize * 0.5)],
+                }),
+              },
+              { rotate: '25deg' },
+            ],
+            opacity: handAnimX.interpolate({
+              inputRange: [0, 0.15, 0.85, 1],
+              outputRange: [0.6, 1, 1, 0.8],
+            }),
+          }}
+        >
+          <Text style={{ 
+            fontSize: isTablet ? 55 : 40, 
+            textShadowColor: 'rgba(0,0,0,0.5)', 
+            textShadowOffset: { width: 3, height: 3 }, 
+            textShadowRadius: 5,
+          }}>👆</Text>
+        </Animated.View>
       )}
       </>
       )}

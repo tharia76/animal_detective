@@ -143,10 +143,10 @@ export default function App() {
 
   // Instant loading overlay with asset preloading
   const handleSelectLevel = useCallback(async (level: string) => {
-    // Safety check: Only allow farm, forest, and ocean levels (unless unlocked)
-    // Debug mode still respects locking - only farm, forest, ocean unlocked
-    const isUnlockedLevel = level === 'farm' || level === 'forest' || level === 'ocean';
-    const hasUnlockedAll = await AsyncStorage.getItem('unlocked_all_levels') === 'true';
+    // Safety check: Only allow farm levels by default (unless unlocked)
+    const isUnlockedLevel = level === 'farm';
+    // 🧪 TESTING: All levels unlocked for QA
+    const hasUnlockedAll = true; // await AsyncStorage.getItem('unlocked_all_levels') === 'true';
     
     if (!isUnlockedLevel && !hasUnlockedAll) {
       console.warn('Attempted to access locked level:', level, '- blocking access');
