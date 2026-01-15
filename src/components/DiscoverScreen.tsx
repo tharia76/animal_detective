@@ -1121,7 +1121,7 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         const isMobile = !isTablet;
         
         // Max cards per position
-        const maxTopBottom = isMobile ? 4 : 8;
+        const maxTopBottom = 4; // Max 4 on top/bottom for all screen sizes
         const maxPerSide = isMobile ? 4 : 6;
         
         // Calculate even distribution, then apply limits

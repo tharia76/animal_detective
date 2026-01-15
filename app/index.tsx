@@ -143,10 +143,9 @@ export default function App() {
 
   // Instant loading overlay with asset preloading
   const handleSelectLevel = useCallback(async (level: string) => {
-    // Safety check: Only allow farm levels by default (unless unlocked)
+    // Safety check: Only allow farm level by default (unless unlocked)
     const isUnlockedLevel = level === 'farm';
-    // 🧪 TESTING: All levels unlocked for QA
-    const hasUnlockedAll = true; // await AsyncStorage.getItem('unlocked_all_levels') === 'true';
+    const hasUnlockedAll = await AsyncStorage.getItem('unlocked_all_levels') === 'true';
     
     if (!isUnlockedLevel && !hasUnlockedAll) {
       console.warn('Attempted to access locked level:', level, '- blocking access');

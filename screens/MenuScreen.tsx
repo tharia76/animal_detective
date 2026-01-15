@@ -634,11 +634,8 @@ export default function MenuScreen({ onSelectLevel, backgroundImageUri, onScreen
     const loadUnlockedState = async () => {
       try {
         // 🧪 TESTING: Uncomment below line to enable purchase check
-        // const unlockedValue = await AsyncStorage.getItem('unlocked_all_levels');
-        // const isUnlocked = unlockedValue === 'true';
-        
-        // 🧪 TESTING: All levels unlocked for QA
-        const isUnlocked = true;
+        const unlockedValue = await AsyncStorage.getItem('unlocked_all_levels');
+        const isUnlocked = unlockedValue === 'true';
         
         setUnlocked(isUnlocked);
       } catch (error) {
