@@ -2227,13 +2227,10 @@ export default function LevelScreenTemplate({
             {!showDiscoverScreen && !showIntroVideo && (
               <View style={{
                 position: 'absolute',
-                top: Math.max(
-                  safeAreaInsets.top + 10, // Always at least 10px below the notch/status bar
-                  Math.min(screenW, screenH) < 768 
-                    ? (isLandscape ? screenH * 0.05 : screenH * 0.05) // 5% from top on phones
-                    : (isLandscape ? 60 : 100) // Keep original for tablets
-                ),
-                left: Math.max(safeAreaInsets.left + 15, 15), // Respect left safe area (for landscape notch)
+                top: (screenH / 2) - 150, // Vertically centered (offset by half the menu height)
+                left: isLandscape 
+                  ? Math.max(safeAreaInsets.left, 50) + 10 // In landscape, ensure at least 60px from left edge for notch
+                  : safeAreaInsets.left + 15, // In portrait, normal safe area
                 backgroundColor: '#FF4444',
                 borderRadius: 30,
                 paddingHorizontal: Math.min(screenW, screenH) >= 768 ? 25 : 20, // Bigger padding on iPads
